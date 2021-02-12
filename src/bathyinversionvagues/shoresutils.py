@@ -93,29 +93,30 @@ def funSinoFFT(sino1, sino2, dx):
 
     return sinoFFT, kfft, Nx
 
-def funGetSpectralPeaks(Im, theta, params):
+def funGetSpectralPeaks(Im, theta, unwrap_phase_shift,dt,dx,min_D,g):
     sinogram1 = radon(funDetrend_2d(Im[:, :, 0]), theta=theta)
     sinogram2 = radon(funDetrend_2d(Im[:, :, 1]), theta=theta)
 
-    sinoFFT, kfft, N = funSinoFFT(sinogram1, sinogram2, params['DX'])
+    sinoFFT, kfft, N = funSinoFFT(sinogram1, sinogram2, dx)
 
     combAmpl = (np.abs(sinoFFT[:, :, 0]) ** 2 + np.abs(sinoFFT[:, :, 1]) ** 2) / (N ** 2)
 
     phase_shift = np.angle(sinoFFT[:, :, 1] * np.conj(sinoFFT[:, :, 0]))
 
-    if params['UNWRAP_PHASE_SHIFT'] == False:
+    if unwrap_phase_shift == False:
         # currently deactivated but we want this functionality:
         phase_shift = phase_shift
     else:
         phase_shift = (phase_shift + 2 * np.pi) % (2 * np.pi)
 
     # deep water limits:
-    phi_deep = (2 * np.pi * params['DT']) / (np.sqrt(1 / (np.round(params['G']/(2*np.pi),2)* kfft))).squeeze()
+    phi_deep = (2 * np.pi * dt) / (np.sqrt(1 / (np.round(g/(2*np.pi),2)* kfft))).squeeze()
     phi_deep = np.tile(phi_deep[:, np.newaxis], (1, theta.shape[0]))
 
     # shallow water limits:
-    min_cel = np.sqrt(params['G'] * params['MIN_D'])
-    phi_min = (2 * np.pi * params['DT'] * kfft * min_cel).squeeze()
+    min_cel = np.sqrt(g * min_D)
+    phi_min = (2 * np.pi * dt * kfft * min_cel).squeeze()
+ 
     phi_min = np.tile(phi_min[:, np.newaxis], (1, theta.shape[0]))
 
     # Deep water limitation [if the wave travels faster that the deep-water limit we consider it non-physical]
@@ -244,17 +245,14 @@ def funSmooth2(M, nx, ny):
 
     return (S)
 
-def funLinearC_k(nu, c,params):
+def funLinearC_k(nu, c,d_precision,d_init,g):
     k = 2 * np.pi * nu  #angular wave number
-    precision = params['D_PRECISION']
-#    ct = 0
+    precision = d_precision
     w = c * k
-    g = params['G']
-    do = params['D_INIT']
+    do = d_init
     d = c ** 2 / g
 
     while (abs(do - d) > precision):
-        #ct = ct + 1
         do = d
         dispe = w ** 2 - (g * k * np.tanh(k * d))
         fdispe = -g * (k ** 2) / (np.cosh(k * d) ** 2)

@@ -15,7 +15,7 @@ import numpy as np
 import copy
 from scipy.signal import find_peaks
 from skimage.transform import radon
-from bathymetry.shoresutils import *
+from shoresutils import *
 
 def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
     """
@@ -62,10 +62,9 @@ def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
     Emax = np.empty(kKeep) * np.nan
     T = np.empty(kKeep) * np.nan
     DCEL = np.empty(kKeep) * np.nan
-    
+     
     # All rotational angles (theta) for the Radon Transform
     thetaFFT = np.linspace(params['MIN_DIR'], params['MAX_DIR'], params['MAX_NDIRS'], endpoint=False)
-  
    
    
     # Check if the image is NOT empty (if statement):
@@ -76,12 +75,12 @@ def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
         # signal length to normalise the spectrum:
         N = sinogram1.shape[0]
         # Retrieve total spectrum, controlled by physical wave propagatinal limits:
-        totalSpecFFT, _, _, phase_check = funGetSpectralPeaks(Im, thetaFFT, params)
+        totalSpecFFT, _, _, phase_check = funGetSpectralPeaks(Im, thetaFFT, params['UNWRAP_PHASE_SHIFT'],params['DT'],params['DX'],params['MIN_D'],params['G'])
         # Find maximum total energy per direction theta
         totalSpecMaxheta = np.max(totalSpecFFT, axis=0) / np.max(np.max(totalSpecFFT, axis=0))
         # Pick the maxima 
         peaksDir = find_peaks(totalSpecMaxheta, prominence=params['PROMINENCE_MAX_PEAK'])
-        
+                
         if peaksDir[0].size > 0:
             for ii in range(0, peaksDir[0].size):
                 tmp = np.arange(np.max([peaksDir[0][ii] - params['ANGLE_AROUND_PEAK_DIR'], 0]), np.min([peaksDir[0][ii] + params['ANGLE_AROUND_PEAK_DIR']+1, 360]))
@@ -137,7 +136,17 @@ def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
                 PHIRat[:len(peaksDir)] = dPHI[:len(peaksDir)] / phi_deep[peaksK, peaksDir]
                 CEL = dPHI / (2 * np.pi * NU * params['DT'])
                 T = 1 / (CEL * NU)
-                 
+
+                for ii in range(0, np.min((DIR.shape[0], kKeep))):
+                    if (dPHI[ii] != 0) or (np.isnan(dPHI[ii]) == False):
+                         if (T[ii] <= params['MIN_T']) or (T[ii] >= params['MAX_T']):
+                            NU[ii] = np.nan
+                            DIR[ii] = np.nan
+                            CEL[ii] = np.nan
+                            DCEL[ii] = np.nan
+                            T[ii] = np.nan
+                            PHIRat[ii] = np.nan
+                
                 # sort now on longest waves:
                 sorting = np.argsort(-((PHIRat ** 2) * Emax))
 
@@ -146,14 +155,10 @@ def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
                 NU = NU[sorting]
                 T = T[sorting]
                 DIR = DIR[sorting]
-                dPHI = dPHI[sorting]
-
 
     return {'cel': CEL,
             'nu': NU,
-            'L': 1 / NU,
             'T': T,
             'dir': DIR,
-            'dPhi': dPHI,
             'dcel': DCEL
             }

@@ -1,11 +1,10 @@
 #configuration
 WAVE_EST_METHOD: "SPATIAL_DFT" # parmi SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
-DEPTH_EST_METHOD: "WITH_FILTER" # parmi SIMPLE, WITH_FILTER
+DEPTH_EST_METHOD: "LINEAR" # parmi LINEAR
 NKEEP: 3 # number of main waves directions to keep
 
-#constant
-G: 9.81 # g acceleration - m/s2
 #expert
+G: 9.81 # g acceleration - m/s2
 #wave estimation methods
 #wave_common: 
 DX: 10 # satellite image resolution - meters
@@ -17,7 +16,7 @@ MAX_T: 25 #maximal wave period - seconds
 DT: 1.005 # mean temporal delay between two images - seconds 
 PROMINENCE_MAX_PEAK: 0.3 # find_peaks function tuning - search for the maximal peaks
 PROMINENCE_MULTIPLE_PEAKS: 0.1 # find_peaks function tuning - search for the kkeep max peaks
-UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period
+UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period (S2 : False)
 MIN_DIR: -180. # min angle for radon transform - degrees
 MAX_DIR: 180. # max angle for radon transform - degrees
 MAX_NDIRS: 360 # nb max of directions for radon transform

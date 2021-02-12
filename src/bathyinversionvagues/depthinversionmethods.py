@@ -12,29 +12,21 @@ Module containing all depth inversion methods
 
 # Imports
 import numpy as np
-from bathymetry.shoresutils import *
+from shoresutils import *
 
-def depth_inversion_with_filter(wave_point,params):
+def depth_linear_inversion(wave_point,params):
 
     kKeep=params['NKEEP']
     DIR=wave_point['dir']
-    dPHI=wave_point['dPhi']
     T=wave_point['T']
     NU=wave_point['nu']
     CEL=wave_point['cel']
     DCEL=wave_point['dcel']
     DEP = np.empty(kKeep) * np.nan
-
+    
     for ii in range(0, np.min((DIR.shape[0], kKeep))):
-        if (dPHI[ii] != 0) or (np.isnan(dPHI[ii]) == False):
-            if (T[ii] > params['MIN_T']) and (T[ii] < params['MAX_T']):
-                DEP[ii] = funLinearC_k(NU[ii], CEL[ii],params)
-            else:
-                NU[ii] = np.nan
-                DIR[ii] = np.nan
-                CEL[ii] = np.nan
-                DCEL[ii] = np.nan
-                T[ii] = np.nan
+        if (np.isnan(CEL[ii])==False):
+            DEP[ii] = funLinearC_k(NU[ii], CEL[ii],params['D_PRECISION'],params['D_INIT'],params['G'])
                 
     return {
         'depth':DEP,
