@@ -15,6 +15,7 @@ from skimage.transform import radon
 from scipy.signal import convolve2d
 from scipy.signal import detrend
 from scipy.signal import medfilt2d
+from scipy.signal import fftconvolve
 from scipy.interpolate import interp1d
 import pandas
 import scipy
@@ -333,8 +334,8 @@ def permute_axes(Im):
 
 def create_sequence_time_series_temporal(Im,percentage_points,spatial_resolution,fft_T_max,fft_T_min):
     """
-    This function takes a sequence of images, crop this sequence around position (position_x,position_y) and takes random time series within the thumbnail.
-    Thumbnail is flatten on the second axis so sequence_thumbnail returned is shape (number_of_frames,number_of_random_points)
+    This function takes a sequence of images, filters (passband) sequence and takes random time series within the thumbnail.
+    Thumbnail is flatten on the first axis so sequence_thumbnail returned is shape (number_of_random_points,number_of_frames)
     :param Im (numpy array of size (number_of_lines,number_of_column,number_of_frames)) : sequence of thumbnails
     :param percentage_points (int) : percentage of points taken within the thumbnail
     :param spatial_resolution (int) : percentage of points taken within the thumbnail
@@ -355,6 +356,34 @@ def create_sequence_time_series_temporal(Im,percentage_points,spatial_resolution
     yy = yy.flatten()
     return (array[random_indexes,:],xx[random_indexes],yy[random_indexes],simg_filtered)
 
+def create_sequence_time_series_spatial(Im,spatial_resolution,fft_T_max,fft_T_min):
+    """
+    This function takes a sequence of images and filters (passband) sequence and takes random time series within the thumbnail.
+    Random are not used and array is not flat
+    :param Im (numpy array of size (number_of_lines,number_of_column,number_of_frames)) : sequence of thumbnails
+    :param spatial_resolution (int) : percentage of points taken within the thumbnail
+    :param fft_T_max (int) : Max wave period to be allowed
+    :param fft_T_min (int) : Min wave period to be allowed
+    :return sequence_images (numpy array of size (number_of_random_points,number_of_frames)) : sequence of filtered (pass band) thumbnails
+            xx (flatten numpy array of size number_of_random_points) : list x value of random points
+            yy (flatten numpy array of size number_of_random_points) : list y value of random points
+    """
+    nx, ny, nframes = np.shape(Im)
+    array, flag = fft_filtering(Im, spatial_resolution=spatial_resolution,T_max=fft_T_max,T_min=fft_T_min)
+    xx = np.arange(nx)
+    yy = np.arange(ny)
+    return (array, xx, yy)
+
+def compute_angles_distances(M):
+    (n1,n2,n3) = np.shape(M)
+    xx = np.array([np.arange(n1)])
+    yy = np.array([np.arange(n2)])
+    dxx = xx - xx.T
+    dyy = yy - yy.T
+    distances = np.sqrt(np.square((dxx)) + np.square((dyy)))
+    angles = np.angle(dxx+1j*dyy)
+    return (angles,distances)
+
 def compute_temporal_correlation(sequence_thumbnail,number_frame_shift):
     """
         This function computes the correlation of each time serie of sequence_thumbnail with each time serie of sequence_thumbnail but shifted of number_frame_shift frames
@@ -364,6 +393,65 @@ def compute_temporal_correlation(sequence_thumbnail,number_frame_shift):
         """
     corr = cross_correlation(sequence_thumbnail[:,number_frame_shift:], sequence_thumbnail[:,:-number_frame_shift])
     return corr
+
+
+def normxcorr2(template, image, mode="full"):
+    ########################################################################################
+    # Author: Ujash Joshi, University of Toronto, 2017                                     #
+    # Based on Octave implementation by: Benjamin Eltzner, 2014 <b.eltzner@gmx.de>         #
+    # Octave/Matlab normxcorr2 implementation in python 3.5                                #
+    # Details:                                                                             #
+    # Normalized cross-correlation. Similiar results upto 3 significant digits.            #
+    # https://github.com/Sabrewarrior/normxcorr2-python/master/norxcorr2.py                #
+    # http://lordsabre.blogspot.ca/2017/09/matlab-normxcorr2-implemented-in-python.html    #
+    ########################################################################################
+    """
+    Input arrays should be floating point numbers.
+    :param template: N-D array, of template or filter you are using for cross-correlation.
+    Must be less or equal dimensions to image.
+    Length of each dimension must be less than length of image.
+    :param image: N-D array
+    :param mode: Options, "full", "valid", "same"
+    full (Default): The output of fftconvolve is the full discrete linear convolution of the inputs.
+    Output size will be image size + 1/2 template size in each dimension.
+    valid: The output consists only of those elements that do not rely on the zero-padding.
+    same: The output is the same size as image, centered with respect to the �full� output.
+    :return: N-D array of same dimensions as image. Size depends on mode parameter.
+    """
+    # If this happens, it is probably a mistake
+    if np.ndim(template) > np.ndim(image) or \
+                    len([i for i in range(np.ndim(template)) if template.shape[i] > image.shape[i]]) > 0:
+        print("normxcorr2: TEMPLATE larger than IMG. Arguments may be swapped.")
+
+    template = template - np.mean(template)
+    image = image - np.mean(image)
+
+    a1 = np.ones(template.shape)
+    # Faster to flip up down and left right then use fftconvolve instead of scipy's correlate
+    ar = np.flipud(np.fliplr(template))
+    out = fftconvolve(image, ar.conj(), mode=mode)
+
+    image = fftconvolve(np.square(image), a1, mode=mode) - \
+            np.square(fftconvolve(image, a1, mode=mode)) / (np.prod(template.shape))
+
+    # Remove small machine precision errors after subtraction
+    image[np.where(image < 0)] = 0
+
+    template = np.sum(np.square(template))
+    out = out / np.sqrt(image * template)
+
+    # Remove any divisions by 0 or very close to 0
+    out[np.where(np.logical_not(np.isfinite(out)))] = 0
+
+    return out
+
+def compute_spatial_correlation(sequence_thumbnail,number_frame_shift):
+    size_x, size_y, number_frames = np.shape(sequence_thumbnail)
+    full_corr = normxcorr2(sequence_thumbnail[:,:,0].T, sequence_thumbnail[:,:,number_frame_shift].T)
+    for index in np.arange(number_frame_shift,number_frames-number_frame_shift,number_frame_shift):
+        corr = normxcorr2(sequence_thumbnail[:,:,index].T, sequence_thumbnail[:,:,index+number_frame_shift].T)
+        full_corr = full_corr + corr
+    return full_corr
 
 def cartesian_projection(corr_matrix,xx,yy,spatial_resolution):
     """

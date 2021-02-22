@@ -20,6 +20,12 @@ from scipy.signal import find_peaks
 from skimage.transform import radon
 from shoresutils import *
 
+
+
+import matplotlib.pyplot as plt
+
+
+
 yaml_file = 'config/wave_bathy_inversion_config.yaml'
 config = ConfigBathy(os.path.join(Path(os.path.dirname(__file__)).parents[1],yaml_file))
 
@@ -177,8 +183,6 @@ def temporal_correlation_method(Im):
     ----------
     Im : numpy.ndarray
         Sub-windowed images in M x N x BANDS
-    params : dictionary
-        This dictionary contains settings and image specifics.
      Returns
     -------
     dict:
@@ -208,6 +212,59 @@ def temporal_correlation_method(Im):
         SS_filtered = temporal_reconstruction_tuning(SS, time_interpolation_resolution=config.temporal_method.resolution.time_interpolation,
                                                                low_frequency_ratio=config.temporal_method.tuning.low_frequency_ratio_temporal_reconstruction, high_frequency_ratio=config.temporal_method.tuning.high_frequency_ratio_temporal_reconstruction)
         T, peaks_max = compute_period(SS_filtered=SS_filtered, min_peaks_distance=config.temporal_method.tuning.min_peaks_distance_period)
+        return {'cel': celerity,
+                'nu': 1 / wave_length,
+                'T': T,
+                'dir': angle,
+                'dcel': 0
+                }
+    except:
+        print("Bathymetry computation failed")
+
+def spatial_correlation_method(Im):
+    """
+        Bathymetry computation function based on spatial correlation
+
+        Parameters
+        ----------
+        Im : numpy.ndarray
+            Sub-windowed images in M x N x BANDS
+         Returns
+        -------
+        dict:
+            As output we deliver a dictionary containing
+                -   cel     =   Wave celerity               [m/s]
+                -   nu       =   linear Wave number                 [1/m]
+                -   L       =   Wavelength                  [m]
+                -   T       =   Approximate wave period     [sec]
+                -   dir     =   Wave direction (RADON)      [degrees]
+
+        """
+    try :
+        simg_filtered, xx, yy = create_sequence_time_series_spatial(Im=Im,spatial_resolution=config.spatial_method.resolution.spatial,fft_T_max=config.preprocessing.passband.high_period,fft_T_min=config.preprocessing.passband.low_period)
+        angles, distances = compute_angles_distances(M=simg_filtered)
+        corr = compute_spatial_correlation(sequence_thumbnail=simg_filtered,number_frame_shift=config.spatial_method.temporal_lag)
+        corr_tuned = correlation_tuning(correlation_matrix=corr,
+                                            ratio=config.spatial_method.tuning.ratio_size_correlation)
+        (sinogram_max_var, angle, variance, radon_matrix) = compute_sinogram(correlation_matrix=corr_tuned,
+                                                                             median_filter_kernel_ratio=config.spatial_method.tuning.median_filter_kernel_ratio_sinogram,
+                                                                             mean_filter_kernel_size=config.spatial_method.tuning.mean_filter_kernel_size_sinogram)
+        sinogram_tuned = sinogram_tuning(sinogram=sinogram_max_var,
+                                         mean_filter_kernel_size=config.spatial_method.tuning.mean_filter_kernel_size_sinogram)
+        wave_length, zeros = compute_wave_length(sinogram=sinogram_tuned)
+        celerity, argmax = compute_celerity(sinogram=sinogram_tuned, wave_length=wave_length,
+                                            spatial_resolution=config.spatial_method.resolution.spatial,
+                                            time_resolution=config.spatial_method.resolution.temporal,
+                                            temporal_lag=config.spatial_method.temporal_lag)
+        SS = temporal_reconstruction(angle=angle, angles=np.degrees(angles), distances=distances, celerity=celerity,
+                                     correlation_matrix=corr,
+                                     time_interpolation_resolution=config.spatial_method.resolution.time_interpolation)
+        SS_filtered = temporal_reconstruction_tuning(SS,
+                                                     time_interpolation_resolution=config.spatial_method.resolution.time_interpolation,
+                                                     low_frequency_ratio=config.spatial_method.tuning.low_frequency_ratio_temporal_reconstruction,
+                                                     high_frequency_ratio=config.spatial_method.tuning.high_frequency_ratio_temporal_reconstruction)
+        T, peaks_max = compute_period(SS_filtered=SS_filtered,
+                                      min_peaks_distance=config.spatial_method.tuning.min_peaks_distance_period)
         return {'cel': celerity,
                 'nu': 1 / wave_length,
                 'T': T,

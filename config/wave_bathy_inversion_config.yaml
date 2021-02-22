@@ -46,3 +46,17 @@ temporal_method:
     low_frequency_ratio_temporal_reconstruction: 0.04
     high_frequency_ratio_temporal_reconstruction: 0.2
     min_peaks_distance_period: 5
+
+spatial_method:
+  resolution:
+    spatial: 0.5
+    temporal: 8
+    time_interpolation: 0.5
+  temporal_lag: 1
+  tuning:
+    ratio_size_correlation: 1
+    median_filter_kernel_ratio_sinogram: 0.25
+    mean_filter_kernel_size_sinogram: 5
+    low_frequency_ratio_temporal_reconstruction: 0.04
+    high_frequency_ratio_temporal_reconstruction: 0.2
+    min_peaks_distance_period: 5
