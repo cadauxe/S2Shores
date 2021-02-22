@@ -11,11 +11,17 @@ Module containing all wave parameters estimation methods
 """
 
 # Imports
+from bathycommun.src.bathycommun.config.config_bathy import ConfigBathy
 import numpy as np
+import os
+from pathlib import Path
 import copy
 from scipy.signal import find_peaks
 from skimage.transform import radon
 from shoresutils import *
+
+yaml_file = 'config/wave_bathy_inversion_config.yaml'
+config = ConfigBathy(os.path.join(Path(os.path.dirname(__file__)).parents[1],yaml_file))
 
 def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
     """
@@ -162,3 +168,51 @@ def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
             'dir': DIR,
             'dcel': DCEL
             }
+
+def temporal_correlation_method(Im):
+    """
+    Bathymetry computation function based on time series correlation
+
+    Parameters
+    ----------
+    Im : numpy.ndarray
+        Sub-windowed images in M x N x BANDS
+    params : dictionary
+        This dictionary contains settings and image specifics.
+     Returns
+    -------
+    dict:
+        As output we deliver a dictionary containing
+            -   cel     =   Wave celerity               [m/s]
+            -   nu       =   linear Wave number                 [1/m]
+            -   L       =   Wavelength                  [m]
+            -   T       =   Approximate wave period     [sec]
+            -   dir     =   Wave direction (RADON)      [degrees]
+
+    """
+    try:
+        stime_series, xx , yy , simg_filtered= create_sequence_time_series_temporal(Im=Im,spatial_resolution=config.temporal_method.resolution.spatial,percentage_points=config.temporal_method.percentage_points,fft_T_max=config.preprocessing.passband.high_period,fft_T_min=config.preprocessing.passband.low_period)
+        corr = compute_temporal_correlation(sequence_thumbnail=stime_series, number_frame_shift=config.temporal_method.temporal_lag)
+        corr_car, distances, angles = cartesian_projection(corr_matrix=corr, xx=xx, yy=yy, spatial_resolution=config.temporal_method.resolution.spatial)
+        corr_car_tuned = correlation_tuning(correlation_matrix=corr_car, ratio=config.temporal_method.tuning.ratio_size_correlation)
+        (sinogram_max_var, angle, variance, radon_matrix) = compute_sinogram(correlation_matrix=corr_car_tuned,
+                                                                                       median_filter_kernel_ratio=config.temporal_method.tuning.median_filter_kernel_ratio_sinogram,
+                                                                                       mean_filter_kernel_size=config.temporal_method.tuning.mean_filter_kernel_size_sinogram)
+        sinogram_tuned = sinogram_tuning(sinogram=sinogram_max_var, mean_filter_kernel_size=config.temporal_method.tuning.mean_filter_kernel_size_sinogram)
+        wave_length, zeros = compute_wave_length(sinogram=sinogram_tuned)
+        celerity, argmax = compute_celerity(sinogram=sinogram_tuned, wave_length=wave_length,spatial_resolution=config.temporal_method.resolution.spatial,
+                                                         time_resolution=config.temporal_method.resolution.temporal,
+                                                         temporal_lag=config.temporal_method.temporal_lag)
+        SS = temporal_reconstruction(angle=angle, angles=np.degrees(angles), distances=distances, celerity=celerity, correlation_matrix=corr,
+                                               time_interpolation_resolution=config.temporal_method.resolution.time_interpolation)
+        SS_filtered = temporal_reconstruction_tuning(SS, time_interpolation_resolution=config.temporal_method.resolution.time_interpolation,
+                                                               low_frequency_ratio=config.temporal_method.tuning.low_frequency_ratio_temporal_reconstruction, high_frequency_ratio=config.temporal_method.tuning.high_frequency_ratio_temporal_reconstruction)
+        T, peaks_max = compute_period(SS_filtered=SS_filtered, min_peaks_distance=config.temporal_method.tuning.min_peaks_distance_period)
+        return {'cel': celerity,
+                'nu': 1 / wave_length,
+                'T': T,
+                'dir': angle,
+                'dcel': 0
+                }
+    except:
+        print("Bathymetry computation failed")
