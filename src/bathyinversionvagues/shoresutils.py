@@ -332,7 +332,7 @@ def permute_axes(Im):
         pIm[:,:,i] = Im[i,:,:]
     return pIm
 
-def create_sequence_time_series_temporal(Im,percentage_points,spatial_resolution,fft_T_max,fft_T_min):
+def create_sequence_time_series_temporal(Im,percentage_points):
     """
     This function takes a sequence of images, filters (passband) sequence and takes random time series within the thumbnail.
     Thumbnail is flatten on the first axis so sequence_thumbnail returned is shape (number_of_random_points,number_of_frames)
@@ -344,19 +344,17 @@ def create_sequence_time_series_temporal(Im,percentage_points,spatial_resolution
     :return sequence_time_series (numpy array of size (number_of_random_points,number_of_frames)) : array of random time series
             xx (flatten numpy array of size number_of_random_points) : list x value of random points
             yy (flatten numpy array of size number_of_random_points) : list y value of random points
-            simg_filtered (numpy array of size (number_of_random_points,number_of_frames)) : sequence of filtered (pass band) thumbnails for debug purposes
     """
     nx, ny ,nframes= np.shape(Im)
-    simg_filtered, flag = fft_filtering(Im,spatial_resolution=spatial_resolution,T_max=fft_T_max,T_min=fft_T_min)
-    array = np.reshape(simg_filtered, (nx*ny,-1))
+    array = np.reshape(Im, (nx*ny,-1))
     nb_random_points = round(nx*ny*percentage_points/100)
     random_indexes = np.random.randint(0,nx*ny,size=nb_random_points)
     yy,xx = np.meshgrid(np.linspace(1,nx,nx),np.linspace(1,ny,ny))
     xx = xx.flatten()
     yy = yy.flatten()
-    return (array[random_indexes,:],xx[random_indexes],yy[random_indexes],simg_filtered)
+    return (array[random_indexes,:],xx[random_indexes],yy[random_indexes])
 
-def create_sequence_time_series_spatial(Im,spatial_resolution,fft_T_max,fft_T_min):
+def create_sequence_time_series_spatial(Im):
     """
     This function takes a sequence of images and filters (passband) sequence and takes random time series within the thumbnail.
     Random are not used and array is not flat
@@ -369,10 +367,9 @@ def create_sequence_time_series_spatial(Im,spatial_resolution,fft_T_max,fft_T_mi
             yy (flatten numpy array of size number_of_random_points) : list y value of random points
     """
     nx, ny, nframes = np.shape(Im)
-    array, flag = fft_filtering(Im, spatial_resolution=spatial_resolution,T_max=fft_T_max,T_min=fft_T_min)
     xx = np.arange(nx)
     yy = np.arange(ny)
-    return (array, xx, yy)
+    return (Im, xx, yy)
 
 def compute_angles_distances(M):
     (n1,n2,n3) = np.shape(M)

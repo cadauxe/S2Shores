@@ -175,7 +175,7 @@ def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
             'dcel': DCEL
             }
 
-def temporal_correlation_method(Im):
+def temporal_correlation_method(Im,PassBandFilter=False):
     """
     Bathymetry computation function based on time series correlation
 
@@ -195,7 +195,9 @@ def temporal_correlation_method(Im):
 
     """
     try:
-        stime_series, xx , yy , simg_filtered= create_sequence_time_series_temporal(Im=Im,spatial_resolution=config.temporal_method.resolution.spatial,percentage_points=config.temporal_method.percentage_points,fft_T_max=config.preprocessing.passband.high_period,fft_T_min=config.preprocessing.passband.low_period)
+        if PassBandFilter:
+            Im, flag = fft_filtering(Im,config.temporal_method.resolution.spatial,T_max=config.preprocessing.passband.high_period,T_min=config.preprocessing.passband.low_period)
+        stime_series, xx , yy = create_sequence_time_series_temporal(Im=Im,percentage_points=config.temporal_method.percentage_points)
         corr = compute_temporal_correlation(sequence_thumbnail=stime_series, number_frame_shift=config.temporal_method.temporal_lag)
         corr_car, distances, angles = cartesian_projection(corr_matrix=corr, xx=xx, yy=yy, spatial_resolution=config.temporal_method.resolution.spatial)
         corr_car_tuned = correlation_tuning(correlation_matrix=corr_car, ratio=config.temporal_method.tuning.ratio_size_correlation)
@@ -221,7 +223,7 @@ def temporal_correlation_method(Im):
     except:
         print("Bathymetry computation failed")
 
-def spatial_correlation_method(Im):
+def spatial_correlation_method(Im,PassBandFilter=False):
     """
         Bathymetry computation function based on spatial correlation
 
@@ -241,7 +243,9 @@ def spatial_correlation_method(Im):
 
         """
     try :
-        simg_filtered, xx, yy = create_sequence_time_series_spatial(Im=Im,spatial_resolution=config.spatial_method.resolution.spatial,fft_T_max=config.preprocessing.passband.high_period,fft_T_min=config.preprocessing.passband.low_period)
+        if PassBandFilter:
+            Im, flag = fft_filtering(Im,config.temporal_method.resolution.spatial,T_max=config.preprocessing.passband.high_period,T_min=config.preprocessing.passband.low_period)
+        simg_filtered, xx, yy = create_sequence_time_series_spatial(Im=Im)
         angles, distances = compute_angles_distances(M=simg_filtered)
         corr = compute_spatial_correlation(sequence_thumbnail=simg_filtered,number_frame_shift=config.spatial_method.temporal_lag)
         corr_tuned = correlation_tuning(correlation_matrix=corr,
