@@ -14,19 +14,19 @@ Module containing all depth inversion methods
 import numpy as np
 from shoresutils import *
 
-def depth_linear_inversion(wave_point,params):
+def depth_linear_inversion(wave_point,config):
 
-    kKeep=params['NKEEP']
+    kKeep=config.NKEEP
     DIR=wave_point['dir']
     T=wave_point['T']
     NU=wave_point['nu']
     CEL=wave_point['cel']
     DCEL=wave_point['dcel']
     DEP = np.empty(kKeep) * np.nan
-    
+
     for ii in range(0, np.min((DIR.shape[0], kKeep))):
         if (np.isnan(CEL[ii])==False):
-            DEP[ii] = funLinearC_k(NU[ii], CEL[ii],params['D_PRECISION'],params['D_INIT'],params['G'])
+            DEP[ii] = funLinearC_k(NU[ii], CEL[ii],config.D_PRECISION,config.D_INIT,config.G)
                 
     return {
         'depth':DEP,

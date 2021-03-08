@@ -11,23 +11,10 @@ Module containing all wave parameters estimation methods
 """
 
 # Imports
-from bathycommun.src.bathycommun.config.config_bathy import ConfigBathy
-import numpy as np
-import os
-from pathlib import Path
 import copy
 from scipy.signal import find_peaks
-from skimage.transform import radon
 from shoresutils import *
 
-
-
-import matplotlib.pyplot as plt
-
-
-
-yaml_file = 'config/wave_bathy_inversion_config.yaml'
-config = ConfigBathy(os.path.join(Path(os.path.dirname(__file__)).parents[1],yaml_file))
 
 def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
     """
@@ -175,7 +162,7 @@ def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):
             'dcel': DCEL
             }
 
-def temporal_correlation_method(Im,PassBandFilter=False):
+def temporal_correlation_method(Im,config,PassBandFilter=False):
     """
     Bathymetry computation function based on time series correlation
 
@@ -214,16 +201,16 @@ def temporal_correlation_method(Im,PassBandFilter=False):
         SS_filtered = temporal_reconstruction_tuning(SS, time_interpolation_resolution=config.temporal_method.resolution.time_interpolation,
                                                                low_frequency_ratio=config.temporal_method.tuning.low_frequency_ratio_temporal_reconstruction, high_frequency_ratio=config.temporal_method.tuning.high_frequency_ratio_temporal_reconstruction)
         T, peaks_max = compute_period(SS_filtered=SS_filtered, min_peaks_distance=config.temporal_method.tuning.min_peaks_distance_period)
-        return {'cel': celerity,
-                'nu': 1 / wave_length,
-                'T': T,
-                'dir': angle,
-                'dcel': 0
+        return {'cel': np.array([celerity]),
+                'nu': np.array([1 / wave_length]),
+                'T': np.array([T]),
+                'dir': np.array([angle]),
+                'dcel': np.array([0])
                 }
     except:
         print("Bathymetry computation failed")
 
-def spatial_correlation_method(Im,PassBandFilter=False):
+def spatial_correlation_method(Im,config,PassBandFilter=False):
     """
         Bathymetry computation function based on spatial correlation
 

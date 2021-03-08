@@ -1,24 +1,29 @@
 from bathycommun.config.config_bathy import ConfigBathy
 from bathyinversionvagues.wavemethods import spatial_dft_method
+from bathyinversionvagues.wavemethods import temporal_correlation_method
+from bathyinversionvagues.wavemethods import spatial_correlation_method
 from bathyinversionvagues.depthinversionmethods import depth_linear_inversion
+from pathlib import Path
+import os
 
 
 def wave_parameters_and_bathy_estimation(sequence, delta_t_arrays=None, k_fft=None, phi_min=None, phi_deep=None):
     wave_bathy_point = None
-    config = ConfigBathy()
+    yaml_file = 'config/wave_bathy_inversion_config.yaml'
+    config = ConfigBathy(os.path.join(Path(os.path.dirname(__file__)).parents[1], yaml_file))
 
     # calcul des paramètres des vagues
-    if config.wave_estimation_method == "TEMPORAL_CORRELATION":
-        pass
-    elif config.wave_estimation_method == "SPATIAL_CORRELATION":
-        pass
-    elif config.wave_estimation_method == "SPATIAL_DFT":
+    if config.WAVE_EST_METHOD == "TEMPORAL_CORRELATION":
+        wave_point = temporal_correlation_method(sequence,config)
+    elif config.WAVE_EST_METHOD == "SPATIAL_CORRELATION":
+        wave_point = spatial_correlation_method(sequence,config)
+    elif config.WAVE_EST_METHOD == "SPATIAL_DFT":
         wave_point = spatial_dft_method(sequence, config, k_fft, phi_min, phi_deep)
     else:
         raise NotImplementedError
 
     # inversion de la bathy à partir des paramètres des vagues
-    if config.depth_estimation_method == "LINEAR":
+    if config.DEPTH_EST_METHOD == "LINEAR":
         wave_bathy_point = depth_linear_inversion(wave_point, config)
     else:
         raise NotImplementedError
