@@ -1,3 +1,5 @@
+# -*- coding: ISO-8859-1 -*-
+
 from bathycommun.config.config_bathy import ConfigBathy
 from bathyinversionvagues.wavemethods import spatial_dft_method
 from bathyinversionvagues.wavemethods import temporal_correlation_method
