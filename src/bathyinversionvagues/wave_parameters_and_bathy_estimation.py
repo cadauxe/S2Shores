@@ -11,8 +11,7 @@ import os
 
 def wave_parameters_and_bathy_estimation(sequence, delta_t_arrays=None, k_fft=None, phi_min=None, phi_deep=None):
     wave_bathy_point = None
-    yaml_file = 'config/wave_bathy_inversion_config.yaml'
-    config = ConfigBathy(os.path.join(Path(os.path.dirname(__file__)).parents[1], yaml_file))
+    config = ConfigBathy()
 
     # calcul des paramètres des vagues
     if config.WAVE_EST_METHOD == "TEMPORAL_CORRELATION":
