@@ -26,7 +26,7 @@ def depth_linear_inversion(wave_point, config):
     DEP = np.empty(kKeep) * np.nan
 
     for ii in range(0, np.min((DIR.shape[0], kKeep))):
-        if (np.isnan(CEL[ii]) == False):
+        if not np.isnan(CEL[ii]):
             DEP[ii] = funLinearC_k(NU[ii], CEL[ii], config.D_PRECISION, config.D_INIT, config.G)
 
     return {

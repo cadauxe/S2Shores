@@ -56,7 +56,7 @@ def funDetrend_2d(Z):
     Z_p = XCoeff * XX + YCoeff * YY + CCoeff
     Z_f = Z - Z_p
 
-    return (Z_f)
+    return Z_f
 
 
 def funSinoFFT(sino1, sino2, dx):
@@ -85,7 +85,7 @@ def funSinoFFT(sino1, sino2, dx):
         Y1 = np.fft.fft(sino1[:, ii])
         Y2 = np.fft.fft(sino2[:, ii])
 
-        if (len(Y1) > 1):
+        if len(Y1) > 1:
             Yout1 = Y1[0:int(np.ceil(Nx / 2))]
             Yout2 = Y2[0:int(np.ceil(Nx / 2))]
         else:
@@ -95,7 +95,7 @@ def funSinoFFT(sino1, sino2, dx):
         sino1_fft.append(Yout1)
         sino2_fft.append(Yout2)
 
-    sinoFFT = np.dstack((np.array(sino1_fft).transpose(), \
+    sinoFFT = np.dstack((np.array(sino1_fft).transpose(),
                          np.array(sino2_fft).transpose()))
 
     return sinoFFT, kfft, Nx
@@ -111,7 +111,7 @@ def funGetSpectralPeaks(Im, theta, unwrap_phase_shift, dt, dx, min_D, g):
 
     phase_shift = np.angle(sinoFFT[:, :, 1] * np.conj(sinoFFT[:, :, 0]))
 
-    if unwrap_phase_shift == False:
+    if not unwrap_phase_shift:
         # currently deactivated but we want this functionality:
         phase_shift = phase_shift
     else:
@@ -219,7 +219,7 @@ def funSmoothc(mI, Nr, Nc):
     for irow in range(0, kr):
         for icol in range(0, kc):
             D = np.sqrt(((midr - irow) ** 2) + ((midc - icol) ** 2))
-            k[irow, icol] = np.cos(D * np.pi / 2 / maxD);
+            k[irow, icol] = np.cos(D * np.pi / 2 / maxD)
 
     k = k / np.sum(k.ravel())
     # Perform convolution
@@ -243,17 +243,17 @@ def funSmooth2(M, nx, ny):
     None.
 
     '''
-    S = np.concatenate((np.tile(M[0, :], (nx, 1)).transpose(), \
-                        M.transpose(), \
+    S = np.concatenate((np.tile(M[0, :], (nx, 1)).transpose(),
+                        M.transpose(),
                         np.tile(M[-1, :], (nx, 1)).transpose()), axis=1).transpose()
 
-    S = np.concatenate((np.tile(S[:, 0], (ny, 1)).transpose(), \
-                        S, \
+    S = np.concatenate((np.tile(S[:, 0], (ny, 1)).transpose(),
+                        S,
                         np.tile(S[:, -1], (ny, 1)).transpose()), axis=1)
 
     S = funSmoothc(S, nx - 1, ny - 1)
 
-    return (S)
+    return S
 
 
 def funLinearC_k(nu, c, d_precision, d_init, g):
@@ -263,13 +263,13 @@ def funLinearC_k(nu, c, d_precision, d_init, g):
     do = d_init
     d = c ** 2 / g
 
-    while (abs(do - d) > precision):
+    while abs(do - d) > precision:
         do = d
         dispe = w ** 2 - (g * k * np.tanh(k * d))
         fdispe = -g * (k ** 2) / (np.cosh(k * d) ** 2)
         d = d - (dispe / fdispe)
 
-    return (d)
+    return d
 
 
 def fft_filtering(simg, spatial_resolution, T_max, T_min):
@@ -364,7 +364,7 @@ def create_sequence_time_series_temporal(Im, percentage_points):
     yy, xx = np.meshgrid(np.linspace(1, nx, nx), np.linspace(1, ny, ny))
     xx = xx.flatten()
     yy = yy.flatten()
-    return (array[random_indexes, :], xx[random_indexes], yy[random_indexes])
+    return array[random_indexes, :], xx[random_indexes], yy[random_indexes]
 
 
 def create_sequence_time_series_spatial(Im):
@@ -382,7 +382,7 @@ def create_sequence_time_series_spatial(Im):
     nx, ny, nframes = np.shape(Im)
     xx = np.arange(nx)
     yy = np.arange(ny)
-    return (Im, xx, yy)
+    return Im, xx, yy
 
 
 def compute_angles_distances(M):
@@ -393,7 +393,7 @@ def compute_angles_distances(M):
     dyy = yy - yy.T
     distances = np.sqrt(np.square((dxx)) + np.square((dyy)))
     angles = np.angle(dxx + 1j * dyy)
-    return (angles, distances)
+    return angles, distances
 
 
 def compute_temporal_correlation(sequence_thumbnail, number_frame_shift):
@@ -505,7 +505,7 @@ def cartesian_projection(corr_matrix, xx, yy, spatial_resolution):
 
     projected_matrix = np.nanmean(corr_matrix) * np.ones((np.max(xr) + 1, np.max(yr) + 1))
     projected_matrix[xr, yr] = values
-    return (projected_matrix, euclidean_distance, angles)
+    return projected_matrix, euclidean_distance, angles
 
 
 def correlation_tuning(correlation_matrix, ratio):
@@ -544,7 +544,7 @@ def compute_sinogram(correlation_matrix, median_filter_kernel_ratio, mean_filter
     variance = filter_mean(np.var(radon_matrix_tuned, axis=0), mean_filter_kernel_size)
     propagation_angle = np.argmax(variance)
     sinogram_max_var = radon_matrix[:, propagation_angle]
-    return (sinogram_max_var, propagation_angle, variance, radon_matrix)
+    return sinogram_max_var, propagation_angle, variance, radon_matrix
 
 
 def sinogram_tuning(sinogram, mean_filter_kernel_size):
@@ -569,7 +569,7 @@ def compute_wave_length(sinogram):
     diff = np.diff(sign)
     zeros = np.where(diff != 0)[0]
     wave_length = 2 * np.mean(np.diff(zeros))
-    return (wave_length, zeros)
+    return wave_length, zeros
 
 
 def compute_celerity(sinogram, wave_length, spatial_resolution, time_resolution, temporal_lag):
@@ -589,7 +589,7 @@ def compute_celerity(sinogram, wave_length, spatial_resolution, time_resolution,
     rhomx = spatial_resolution * np.abs(argmax + m1 - size_sinogram / 2)
     t = time_resolution * temporal_lag
     celerity = np.abs(rhomx / t)
-    return (celerity, argmax + m1)
+    return celerity, argmax + m1
 
 
 def temporal_reconstruction(angle, angles, distances, celerity, correlation_matrix, time_interpolation_resolution):
@@ -616,4 +616,4 @@ def temporal_reconstruction_tuning(SS, time_interpolation_resolution, low_freque
 def compute_period(SS_filtered, min_peaks_distance):
     peaks_max, properties_max = scipy.signal.find_peaks(SS_filtered, distance=min_peaks_distance)
     period = np.mean(np.diff(peaks_max))
-    return (period, peaks_max)
+    return period, peaks_max

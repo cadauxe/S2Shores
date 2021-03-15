@@ -122,7 +122,7 @@ def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
             # the phase comes between -pi and pi but we want to know the fraction of the total wave thus  0 < dphi < 2pi
             phase_shift_unw = copy.deepcopy(phase_shift)
 
-            if params['UNWRAP_PHASE_SHIFT'] == False:
+            if not params['UNWRAP_PHASE_SHIFT']:
                 # currently deactivated but we want this functionality:
                 phase_shift_unw = np.abs(phase_shift_unw)
             else:
