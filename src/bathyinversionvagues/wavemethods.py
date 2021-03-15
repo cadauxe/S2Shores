@@ -17,9 +17,16 @@ import os
 import matplotlib
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.signal import find_peaks
 
-from bathyinversionvagues.shoresutils import sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr
+from bathyinversionvagues.shoresutils import (sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr, radon, fft_filtering,
+                                              create_sequence_time_series_temporal, compute_temporal_correlation,
+                                              cartesian_projection, correlation_tuning, compute_sinogram,
+                                              sinogram_tuning, compute_wave_length, compute_celerity,
+                                              temporal_reconstruction, temporal_reconstruction_tuning, compute_period,
+                                              create_sequence_time_series_spatial, compute_angles_distances,
+                                              compute_spatial_correlation)
 
 
 def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
