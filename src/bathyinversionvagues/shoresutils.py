@@ -11,14 +11,15 @@ Module containing all functions common to waves and bathy estimation methods
 
 """
 import numpy as np
-from skimage.transform import radon
-from scipy.signal import convolve2d
-from scipy.signal import detrend
-from scipy.signal import medfilt2d
-from scipy.signal import fftconvolve
-from scipy.interpolate import interp1d
 import pandas
 import scipy
+from scipy.interpolate import interp1d
+from scipy.signal import convolve2d
+from scipy.signal import detrend
+from scipy.signal import fftconvolve
+from scipy.signal import medfilt2d
+from skimage.transform import radon
+
 
 # check array is not empty
 def sc_all(array):
@@ -56,6 +57,7 @@ def funDetrend_2d(Z):
     Z_f = Z - Z_p
 
     return (Z_f)
+
 
 def funSinoFFT(sino1, sino2, dx):
     '''
@@ -98,7 +100,8 @@ def funSinoFFT(sino1, sino2, dx):
 
     return sinoFFT, kfft, Nx
 
-def funGetSpectralPeaks(Im, theta, unwrap_phase_shift,dt,dx,min_D,g):
+
+def funGetSpectralPeaks(Im, theta, unwrap_phase_shift, dt, dx, min_D, g):
     sinogram1 = radon(funDetrend_2d(Im[:, :, 0]), theta=theta)
     sinogram2 = radon(funDetrend_2d(Im[:, :, 1]), theta=theta)
 
@@ -115,13 +118,13 @@ def funGetSpectralPeaks(Im, theta, unwrap_phase_shift,dt,dx,min_D,g):
         phase_shift = (phase_shift + 2 * np.pi) % (2 * np.pi)
 
     # deep water limits:
-    phi_deep = (2 * np.pi * dt) / (np.sqrt(1 / (np.round(g/(2*np.pi),2)* kfft))).squeeze()
+    phi_deep = (2 * np.pi * dt) / (np.sqrt(1 / (np.round(g / (2 * np.pi), 2) * kfft))).squeeze()
     phi_deep = np.tile(phi_deep[:, np.newaxis], (1, theta.shape[0]))
 
     # shallow water limits:
     min_cel = np.sqrt(g * min_D)
     phi_min = (2 * np.pi * dt * kfft * min_cel).squeeze()
- 
+
     phi_min = np.tile(phi_min[:, np.newaxis], (1, theta.shape[0]))
 
     # Deep water limitation [if the wave travels faster that the deep-water limit we consider it non-physical]
@@ -146,6 +149,7 @@ def DFT_fr(x, fr, fs):
     e = np.exp(-2j * np.pi * fr * n / fs)
     return np.dot(e, x)
 
+
 def funConv2(x, y, mode='same'):
     '''
 
@@ -166,6 +170,7 @@ def funConv2(x, y, mode='same'):
 
     '''
     return np.rot90(convolve2d(np.rot90(x, 2), np.rot90(y, 2), mode=mode), 2)
+
 
 def funSmoothc(mI, Nr, Nc):
     '''
@@ -250,8 +255,9 @@ def funSmooth2(M, nx, ny):
 
     return (S)
 
-def funLinearC_k(nu, c,d_precision,d_init,g):
-    k = 2 * np.pi * nu  #angular wave number
+
+def funLinearC_k(nu, c, d_precision, d_init, g):
+    k = 2 * np.pi * nu  # angular wave number
     precision = d_precision
     w = c * k
     do = d_init
@@ -265,7 +271,8 @@ def funLinearC_k(nu, c,d_precision,d_init,g):
 
     return (d)
 
-def fft_filtering(simg,spatial_resolution,T_max,T_min):
+
+def fft_filtering(simg, spatial_resolution, T_max, T_min):
     """
     Compute the fft filtering of a subtile
     :param simg:(np.array) the given sequence of images to filter
@@ -275,7 +282,7 @@ def fft_filtering(simg,spatial_resolution,T_max,T_min):
     :return: simg_filtered:
     """
     flag = 0
-    n,m,c = simg.shape
+    n, m, c = simg.shape
     kx = np.fft.fftshift(np.fft.fftfreq(n, spatial_resolution))
     ky = np.fft.fftshift(np.fft.fftfreq(m, spatial_resolution))
     kx = np.repeat(np.reshape(kx, (n, 1)), m, axis=1)
@@ -288,7 +295,7 @@ def fft_filtering(simg,spatial_resolution,T_max,T_min):
     kr[kr > threshold_max] = 0
     boolKr = (kr > 0)
     for channel in range(c):
-        r = simg[:, :,channel]
+        r = simg[:, :, channel]
         r = detrend(detrend(r, axis=1), axis=0)
         fftr = np.fft.fft2(r)
         energy_r = np.fft.fftshift(fftr)
@@ -296,8 +303,9 @@ def fft_filtering(simg,spatial_resolution,T_max,T_min):
         max_energy = np.max(np.abs(energy_r))
         if max_energy > 3 or max_energy < 0.01:
             flag = 1
-            simg_filtered[:, :,channel] = np.real(np.fft.ifft2(np.fft.ifftshift(energy_r)))
+            simg_filtered[:, :, channel] = np.real(np.fft.ifft2(np.fft.ifftshift(energy_r)))
     return simg_filtered, flag
+
 
 def cross_correlation(A, B):
     """
@@ -318,21 +326,25 @@ def cross_correlation(A, B):
     # Finally get corr coeff
     return np.dot(A_mA, B_mB.T) / np.sqrt(np.dot(ssA[:, None], ssB[None]))
 
-def filter_mean(time_serie,window):
-    if len(time_serie)<2*window :
+
+def filter_mean(time_serie, window):
+    if len(time_serie) < 2 * window:
         raise ValueError("time serie is too small compared to the window")
     else:
-        padded_time_serie = np.concatenate((np.full(window,np.mean(time_serie[:window])),time_serie,np.full(window,np.mean(time_serie[-(window+1):]))),axis=0)
-        return np.convolve(padded_time_serie,np.ones(2*window+1)/(2*window+1),'valid')
+        padded_time_serie = np.concatenate((np.full(window, np.mean(time_serie[:window])), time_serie,
+                                            np.full(window, np.mean(time_serie[-(window + 1):]))), axis=0)
+        return np.convolve(padded_time_serie, np.ones(2 * window + 1) / (2 * window + 1), 'valid')
+
 
 def permute_axes(Im):
-    n1,n2,n3 = np.shape(Im)
-    pIm = np.zeros((n2,n3,n1))
+    n1, n2, n3 = np.shape(Im)
+    pIm = np.zeros((n2, n3, n1))
     for i in np.arange(n1):
-        pIm[:,:,i] = Im[i,:,:]
+        pIm[:, :, i] = Im[i, :, :]
     return pIm
 
-def create_sequence_time_series_temporal(Im,percentage_points):
+
+def create_sequence_time_series_temporal(Im, percentage_points):
     """
     This function takes a sequence of images, filters (passband) sequence and takes random time series within the thumbnail.
     Thumbnail is flatten on the first axis so sequence_thumbnail returned is shape (number_of_random_points,number_of_frames)
@@ -345,14 +357,15 @@ def create_sequence_time_series_temporal(Im,percentage_points):
             xx (flatten numpy array of size number_of_random_points) : list x value of random points
             yy (flatten numpy array of size number_of_random_points) : list y value of random points
     """
-    nx, ny ,nframes= np.shape(Im)
-    array = np.reshape(Im, (nx*ny,-1))
-    nb_random_points = round(nx*ny*percentage_points/100)
-    random_indexes = np.random.randint(0,nx*ny,size=nb_random_points)
-    yy,xx = np.meshgrid(np.linspace(1,nx,nx),np.linspace(1,ny,ny))
+    nx, ny, nframes = np.shape(Im)
+    array = np.reshape(Im, (nx * ny, -1))
+    nb_random_points = round(nx * ny * percentage_points / 100)
+    random_indexes = np.random.randint(0, nx * ny, size=nb_random_points)
+    yy, xx = np.meshgrid(np.linspace(1, nx, nx), np.linspace(1, ny, ny))
     xx = xx.flatten()
     yy = yy.flatten()
-    return (array[random_indexes,:],xx[random_indexes],yy[random_indexes])
+    return (array[random_indexes, :], xx[random_indexes], yy[random_indexes])
+
 
 def create_sequence_time_series_spatial(Im):
     """
@@ -371,24 +384,26 @@ def create_sequence_time_series_spatial(Im):
     yy = np.arange(ny)
     return (Im, xx, yy)
 
+
 def compute_angles_distances(M):
-    (n1,n2,n3) = np.shape(M)
+    (n1, n2, n3) = np.shape(M)
     xx = np.array([np.arange(n1)])
     yy = np.array([np.arange(n2)])
     dxx = xx - xx.T
     dyy = yy - yy.T
     distances = np.sqrt(np.square((dxx)) + np.square((dyy)))
-    angles = np.angle(dxx+1j*dyy)
-    return (angles,distances)
+    angles = np.angle(dxx + 1j * dyy)
+    return (angles, distances)
 
-def compute_temporal_correlation(sequence_thumbnail,number_frame_shift):
+
+def compute_temporal_correlation(sequence_thumbnail, number_frame_shift):
     """
         This function computes the correlation of each time serie of sequence_thumbnail with each time serie of sequence_thumbnail but shifted of number_frame_shift frames
         :param sequence_thumbnail (numpy array of size (number_of_frames,number_of_time_series)) : video of waves
         :param number_frame_shift (int) : number of shifted frames
         :return corr (numpy array of size (number_of_time_series,number_of_time_series)) : cross correlation of time series
         """
-    corr = cross_correlation(sequence_thumbnail[:,number_frame_shift:], sequence_thumbnail[:,:-number_frame_shift])
+    corr = cross_correlation(sequence_thumbnail[:, number_frame_shift:], sequence_thumbnail[:, :-number_frame_shift])
     return corr
 
 
@@ -417,7 +432,7 @@ def normxcorr2(template, image, mode="full"):
     """
     # If this happens, it is probably a mistake
     if np.ndim(template) > np.ndim(image) or \
-                    len([i for i in range(np.ndim(template)) if template.shape[i] > image.shape[i]]) > 0:
+            len([i for i in range(np.ndim(template)) if template.shape[i] > image.shape[i]]) > 0:
         print("normxcorr2: TEMPLATE larger than IMG. Arguments may be swapped.")
 
     template = template - np.mean(template)
@@ -442,15 +457,17 @@ def normxcorr2(template, image, mode="full"):
 
     return out
 
-def compute_spatial_correlation(sequence_thumbnail,number_frame_shift):
+
+def compute_spatial_correlation(sequence_thumbnail, number_frame_shift):
     size_x, size_y, number_frames = np.shape(sequence_thumbnail)
-    full_corr = normxcorr2(sequence_thumbnail[:,:,0].T, sequence_thumbnail[:,:,number_frame_shift].T)
-    for index in np.arange(number_frame_shift,number_frames-number_frame_shift,number_frame_shift):
-        corr = normxcorr2(sequence_thumbnail[:,:,index].T, sequence_thumbnail[:,:,index+number_frame_shift].T)
+    full_corr = normxcorr2(sequence_thumbnail[:, :, 0].T, sequence_thumbnail[:, :, number_frame_shift].T)
+    for index in np.arange(number_frame_shift, number_frames - number_frame_shift, number_frame_shift):
+        corr = normxcorr2(sequence_thumbnail[:, :, index].T, sequence_thumbnail[:, :, index + number_frame_shift].T)
         full_corr = full_corr + corr
     return full_corr
 
-def cartesian_projection(corr_matrix,xx,yy,spatial_resolution):
+
+def cartesian_projection(corr_matrix, xx, yy, spatial_resolution):
     """
     This function does cartesian projection of correlation matrix.
     xx and yy are list of x and y coordinates on which values in matrix are projected
@@ -490,20 +507,23 @@ def cartesian_projection(corr_matrix,xx,yy,spatial_resolution):
     projected_matrix[xr, yr] = values
     return (projected_matrix, euclidean_distance, angles)
 
-def correlation_tuning(correlation_matrix,ratio):
+
+def correlation_tuning(correlation_matrix, ratio):
     """
         This function tunes carrelation matrix by detrending the signal and removing the edges.
         :param correlation_matrix (numpy array) : entry correlation matrix
         :param ratio (float) : edges to be remove (1 takes all signal and 0 remove all signal)
         :return correlation_matrix (numpy array) : correlation matrix tuned
         """
-    correlation_matrix[np.isnan(correlation_matrix)]=np.nanmedian(correlation_matrix)
+    correlation_matrix[np.isnan(correlation_matrix)] = np.nanmedian(correlation_matrix)
     correlation_matrix = funDetrend_2d(correlation_matrix)
     s1, s2 = np.shape(correlation_matrix)
-    corr_car_tuned = correlation_matrix[int(s1 / 2-ratio * s1 /2):int(s1 / 2+ratio * s1 /2),int(s2 / 2-ratio * s2 /2):int(s2 / 2+ratio * s2 /2)]
+    corr_car_tuned = correlation_matrix[int(s1 / 2 - ratio * s1 / 2):int(s1 / 2 + ratio * s1 / 2),
+                     int(s2 / 2 - ratio * s2 / 2):int(s2 / 2 + ratio * s2 / 2)]
     return corr_car_tuned
 
-def compute_sinogram(correlation_matrix,median_filter_kernel_ratio,mean_filter_kernel_size):
+
+def compute_sinogram(correlation_matrix, median_filter_kernel_ratio, mean_filter_kernel_size):
     """
     This function take a correlation matrix, compute the radon transform of this matrix and return the sinogram for the angle which maximizes the variance of the radon transform.
     The purpose here is to find direction.
@@ -513,28 +533,30 @@ def compute_sinogram(correlation_matrix,median_filter_kernel_ratio,mean_filter_k
     :return: sinogram_max_var (numpy array in one dimension) : sinogram maximizing the variance
              argmax_var (float) : angle maximizing the variance
     """
-    theta = np.arange(0,180)
+    theta = np.arange(0, 180)
     radon_matrix = radon(correlation_matrix, theta=theta, circle=True)
-    kernel_size_1 = round(median_filter_kernel_ratio*np.shape(radon_matrix)[0])
-    if (kernel_size_1%2)==0:
-        kernel_size_1 = kernel_size_1 +1
+    kernel_size_1 = round(median_filter_kernel_ratio * np.shape(radon_matrix)[0])
+    if (kernel_size_1 % 2) == 0:
+        kernel_size_1 = kernel_size_1 + 1
     kernel_size_2 = 3
     # each element of kernel must be odd
-    radon_matrix_tuned = radon_matrix - medfilt2d(radon_matrix,kernel_size=(kernel_size_1,kernel_size_2))
-    variance = filter_mean(np.var(radon_matrix_tuned,axis=0),mean_filter_kernel_size)
+    radon_matrix_tuned = radon_matrix - medfilt2d(radon_matrix, kernel_size=(kernel_size_1, kernel_size_2))
+    variance = filter_mean(np.var(radon_matrix_tuned, axis=0), mean_filter_kernel_size)
     propagation_angle = np.argmax(variance)
-    sinogram_max_var = radon_matrix[:,propagation_angle]
-    return (sinogram_max_var,propagation_angle,variance,radon_matrix)
+    sinogram_max_var = radon_matrix[:, propagation_angle]
+    return (sinogram_max_var, propagation_angle, variance, radon_matrix)
 
-def sinogram_tuning(sinogram,mean_filter_kernel_size):
+
+def sinogram_tuning(sinogram, mean_filter_kernel_size):
     """
     This function tuned the sinogram using mean filter
     :param sinogram (numpy array) : sinogram
            mean_filter_kernel_size (int) : mean filter window size applied on sinogram
     :return: sinogram_max_var_tuned (numpy array) : tuned sinogram
     """
-    sinogram_max_var_tuned=filter_mean(sinogram,mean_filter_kernel_size)
+    sinogram_max_var_tuned = filter_mean(sinogram, mean_filter_kernel_size)
     return sinogram_max_var_tuned
+
 
 def compute_wave_length(sinogram):
     """
@@ -545,11 +567,12 @@ def compute_wave_length(sinogram):
     """
     sign = np.sign(sinogram)
     diff = np.diff(sign)
-    zeros = np.where(diff!=0)[0]
+    zeros = np.where(diff != 0)[0]
     wave_length = 2 * np.mean(np.diff(zeros))
-    return (wave_length,zeros)
+    return (wave_length, zeros)
 
-def compute_celerity(sinogram,wave_length,spatial_resolution,time_resolution,temporal_lag):
+
+def compute_celerity(sinogram, wave_length, spatial_resolution, time_resolution, temporal_lag):
     """
     This function computes celerity of waves
     :param sinogram (numpy array) : sinogram
@@ -560,34 +583,37 @@ def compute_celerity(sinogram,wave_length,spatial_resolution,time_resolution,tem
              argmax (int) : position of maximum used to compute celerity
     """
     size_sinogram = len(sinogram)
-    m1 = max(int(size_sinogram/2-wave_length/2),0)
-    m2 = min(int(size_sinogram/2+wave_length/2),size_sinogram)
+    m1 = max(int(size_sinogram / 2 - wave_length / 2), 0)
+    m2 = min(int(size_sinogram / 2 + wave_length / 2), size_sinogram)
     argmax = np.argmax(sinogram[m1:m2])
-    rhomx = spatial_resolution * np.abs(argmax +m1 - size_sinogram/2)
+    rhomx = spatial_resolution * np.abs(argmax + m1 - size_sinogram / 2)
     t = time_resolution * temporal_lag
     celerity = np.abs(rhomx / t)
-    return (celerity, argmax+m1)
+    return (celerity, argmax + m1)
 
-def temporal_reconstruction(angle,angles,distances,celerity,correlation_matrix,time_interpolation_resolution):
-    D = np.cos(np.radians(angle-angles.T.flatten()))*distances.flatten()
-    time=D/celerity
-    time_unique,index_unique = np.unique(time,return_index=True)
+
+def temporal_reconstruction(angle, angles, distances, celerity, correlation_matrix, time_interpolation_resolution):
+    D = np.cos(np.radians(angle - angles.T.flatten())) * distances.flatten()
+    time = D / celerity
+    time_unique, index_unique = np.unique(time, return_index=True)
     index_unique_sorted = np.argsort(time_unique)
     time_unique_sorted = time_unique[index_unique_sorted]
     timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted), time_interpolation_resolution)
     corr_unique_sorted = correlation_matrix.T.flatten()[index_unique[index_unique_sorted]]
-    interpolation = interp1d(time_unique_sorted,corr_unique_sorted)
+    interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
     SS = interpolation(timevec)
     return SS
 
-def temporal_reconstruction_tuning(SS,time_interpolation_resolution,low_frequency_ratio,high_frequency_ratio):
+
+def temporal_reconstruction_tuning(SS, time_interpolation_resolution, low_frequency_ratio, high_frequency_ratio):
     low_frequency = low_frequency_ratio * time_interpolation_resolution
     high_frequency = high_frequency_ratio * time_interpolation_resolution
-    sos_filter = scipy.signal.butter(1, (2*low_frequency, 2*high_frequency), btype='bandpass', output='sos')
+    sos_filter = scipy.signal.butter(1, (2 * low_frequency, 2 * high_frequency), btype='bandpass', output='sos')
     SS_filtered = scipy.signal.sosfiltfilt(sos_filter, SS)
     return SS_filtered
 
-def compute_period(SS_filtered,min_peaks_distance):
+
+def compute_period(SS_filtered, min_peaks_distance):
     peaks_max, properties_max = scipy.signal.find_peaks(SS_filtered, distance=min_peaks_distance)
     period = np.mean(np.diff(peaks_max))
-    return (period,peaks_max)
+    return (period, peaks_max)
