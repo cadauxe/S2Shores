@@ -13,11 +13,12 @@ Module containing all wave parameters estimation methods
 # Imports
 import copy
 from scipy.signal import find_peaks
-from shoresutils import *
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib
 import os
+
+from bathyinversionvagues.shoresutils import sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr
 
 
 def spatial_dft_method(Im,params,kfft, phi_min, phi_deep):

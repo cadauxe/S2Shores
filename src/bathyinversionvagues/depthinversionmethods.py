@@ -12,7 +12,7 @@ Module containing all depth inversion methods
 
 # Imports
 import numpy as np
-from shoresutils import *
+from bathyinversionvagues.shoresutils import funLinearC_k
 
 def depth_linear_inversion(wave_point,config):
 
