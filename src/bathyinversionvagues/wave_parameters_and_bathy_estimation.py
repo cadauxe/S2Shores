@@ -7,9 +7,10 @@ from bathyinversionvagues.wavemethods import spatial_dft_method
 from bathyinversionvagues.wavemethods import temporal_correlation_method
 
 
-def wave_parameters_and_bathy_estimation(sequence, delta_t_arrays=None, k_fft=None, phi_min=None, phi_deep=None):
+def wave_parameters_and_bathy_estimation(sequence, delta_t_arrays=None, k_fft=None, phi_min=None, phi_deep=None,
+                                         files_config=None):
     wave_bathy_point = None
-    config = ConfigBathy()
+    config = ConfigBathy(files_config)
 
     # calcul des paramètres des vagues
     if config.WAVE_EST_METHOD == "TEMPORAL_CORRELATION":
