@@ -336,7 +336,7 @@ def draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, 
     (l1, l2) = np.shape(radon_matrix)
     plt.plot(l1 * variance / np.max(variance), 'r')
     ax3.arrow(angle, 0, 0, l1)
-    plt.annotate('%d °' % angle, (angle + 5, 10), c='orange')
+    plt.annotate('%d °'% angle,(angle + 5, 10),color='orange')
     plt.title('Radon matrix')
 
     ax4 = fig.add_subplot(gs[2, :3])
@@ -345,7 +345,7 @@ def draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, 
     ax4.plot(x, sinogram_max_var, '--')
     ax4.plot(x, sinogram_tuned)
     ax4.plot(x[wave_length_peaks], sinogram_tuned[wave_length_peaks], 'ro')
-    ax4.annotate('L=%d m' % wave_length, (0, np.min(sinogram_tuned)), c='r')
+    ax4.annotate('L=%d m' % wave_length, (0, np.min(sinogram_tuned)), color='r')
     ax4.arrow(x[int(length_signal / 2 + wave_length / (2 * config.TEMPORAL_METHOD.RESOLUTION.SPATIAL))],
               np.min(sinogram_tuned), 0,
               np.abs(np.min(sinogram_tuned)) + np.max(sinogram_tuned), linestyle='dashed', color='g')
@@ -359,12 +359,12 @@ def draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, 
         (argmax - len(sinogram_tuned) / (2 * config.TEMPORAL_METHOD.RESOLUTION.SPATIAL)),
         config.TEMPORAL_METHOD.TEMPORAL_LAG * config.TEMPORAL_METHOD.RESOLUTION.TEMPORAL, celerity), (
         x[int(argmax - wave_length / (2 * config.TEMPORAL_METHOD.RESOLUTION.SPATIAL) + length_signal / 2)],
-        np.max(sinogram_tuned) - 10), c='orange')
+        np.max(sinogram_tuned) - 10), color='orange')
     plt.title('Sinogram')
 
     ax5 = fig.add_subplot(gs[3, :3])
     ax5.plot(SS_filtered)
     ax5.plot(peaks_max, SS_filtered[peaks_max], 'ro')
-    ax5.annotate('T={:.2f} s'.format(T), (0, np.min(SS_filtered)), c='r')
+    ax5.annotate('T={:.2f} s'.format(T), (0, np.min(SS_filtered)), color='r')
     plt.title('Temporal reconstruction')
     fig.savefig(os.path.join(path, 'Infos_point.png'), dpi=300)
