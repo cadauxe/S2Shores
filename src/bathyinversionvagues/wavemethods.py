@@ -90,7 +90,8 @@ def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
         # signal length to normalise the spectrum:
         N = sinogram1.shape[0]
         # Retrieve total spectrum, controlled by physical wave propagatinal limits:
-        totalSpecFFT, _, _, phase_check = funGetSpectralPeaks(Im, thetaFFT, params.UNWRAP_PHASE_SHIFT, params.DT,
+        totalSpecFFT, _, _, phase_check = funGetSpectralPeaks(sinogram1, sinogram2, thetaFFT,
+                                                              params.UNWRAP_PHASE_SHIFT, params.DT,
                                                               params.DX, params.MIN_D, params.G)
         # Find maximum total energy per direction theta
         totalSpecMaxheta = np.max(totalSpecFFT, axis=0) / np.max(np.max(totalSpecFFT, axis=0))

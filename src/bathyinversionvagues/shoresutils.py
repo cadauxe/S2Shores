@@ -103,9 +103,7 @@ def funSinoFFT(sino1, sino2, dx):
     return sinoFFT, kfft, Nx
 
 
-def funGetSpectralPeaks(Im, theta, unwrap_phase_shift, dt, dx, min_D, g):
-    sinogram1 = radon(funDetrend_2d(Im[:, :, 0]), theta=theta)
-    sinogram2 = radon(funDetrend_2d(Im[:, :, 1]), theta=theta)
+def funGetSpectralPeaks(sinogram1, sinogram2, theta, unwrap_phase_shift, dt, dx, min_D, g):
 
     sinoFFT, kfft, N = funSinoFFT(sinogram1, sinogram2, dx)
 
