@@ -10,6 +10,8 @@ Module containing all functions common to waves and bathy estimation methods
          degoulromain
 
 """
+from functools import lru_cache
+
 from scipy.signal import convolve2d
 from scipy.signal import detrend
 from scipy.signal import fftconvolve
@@ -181,6 +183,52 @@ def funConv2(x, y, mode='same'):
     return np.rot90(convolve2d(np.rot90(x, 2), np.rot90(y, 2), mode=mode), 2)
 
 
+@lru_cache()
+def get_smoothing_kernel(Nr, Nc):
+    '''
+
+    Parameters
+    ----------
+    Nr : TYPE
+        DESCRIPTION.
+    Nc : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    '''
+    '''
+    % SMOOTHC.M: Smooths matrix data, cosine taper.
+    % MO=SMOOTHC(MI,Nr,Nc) smooths the data in MI
+    % using a cosine taper over 2*N+1 successive points, Nr, Nc points on
+    % each side of the current point.
+    %
+    % Nr - number of points used to smooth rows
+    % Nc - number of points to smooth columns
+    % Outputs: kernel to be used for smoothing
+    %
+    %
+    '''
+
+    # Determine convolution kernel k
+    kr = 2 * Nr + 1
+    kc = 2 * Nc + 1
+    midr = Nr + 1
+    midc = Nc + 1
+    maxD = (Nr ** 2 + Nc ** 2) ** 0.5
+
+    k = np.zeros((kr, kc))
+    for irow in range(0, kr):
+        for icol in range(0, kc):
+            D = np.sqrt(((midr - irow) ** 2) + ((midc - icol) ** 2))
+            k[irow, icol] = np.cos(D * np.pi / 2 / maxD)
+
+    return k / np.sum(k.ravel())
+
+
 def funSmoothc(mI, Nr, Nc):
     '''
 
@@ -212,25 +260,8 @@ def funSmoothc(mI, Nr, Nc):
     %
     %
     '''
-
     # Determine convolution kernel k
-    Nr = Nr + 1
-    Nc = Nc + 1
-
-    kr = 2 * Nr + 1
-    kc = 2 * Nc + 1
-
-    midr = Nr + 1
-    midc = Nc + 1
-    maxD = (Nr ** 2 + Nc ** 2) ** 0.5
-
-    k = np.zeros((kr, kc))
-    for irow in range(0, kr):
-        for icol in range(0, kc):
-            D = np.sqrt(((midr - irow) ** 2) + ((midc - icol) ** 2))
-            k[irow, icol] = np.cos(D * np.pi / 2 / maxD)
-
-    k = k / np.sum(k.ravel())
+    k = get_smoothing_kernel(Nr, Nc)
     # Perform convolution
     out = funConv2(mI, k, 'same')
     return out[Nr:-Nr, Nc:-Nc]
@@ -256,13 +287,11 @@ def funSmooth2(M, nx, ny):
                         M.transpose(),
                         np.tile(M[-1, :], (nx, 1)).transpose()), axis=1).transpose()
 
-    S = np.concatenate((np.tile(S[:, 0], (ny, 1)).transpose(),
+    T = np.concatenate((np.tile(S[:, 0], (ny, 1)).transpose(),
                         S,
                         np.tile(S[:, -1], (ny, 1)).transpose()), axis=1)
 
-    S = funSmoothc(S, nx - 1, ny - 1)
-
-    return S
+    return funSmoothc(T, nx, ny)
 
 
 def funLinearC_k(nu, c, d_precision, d_init, g):
