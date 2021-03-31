@@ -139,18 +139,26 @@ def funGetSpectralPeaks(Im, theta, unwrap_phase_shift, dt, dx, min_D, g):
     return (combAmpl * phase_shift) / N, kfft, N, phase_shift
 
 
-def DFT_fr(x, fr, fs):
+def get_unity_roots(number_of_roots, fr, fs):
     """
-    Compute the discrete Fourier Transform of the 1D array x
-    :param x: (array)
+    Compute the fs-th complex roots of the unity
+    :param int number_of_roots: Number of unity roots to compute, starting from 0
+    :param np.ndarray fr: 1D array of frequencies where roots are needed
+    :param float fs: sampling frequency
+    :returns: the number_of_roots fs-th complex roots of the unity corresponding to fr frequencies
     """
+    n = np.arange(number_of_roots)
+    return np.exp(-2j * np.pi * fr * n / fs)
 
-    N = x.size
-    n = np.arange(N)
-    # k = n.reshape((N, 1))
 
-    e = np.exp(-2j * np.pi * fr * n / fs)
-    return np.dot(e, x)
+def DFT_fr(x, unity_roots):
+    """ Compute the discrete Fourier Transform of a 1D array
+
+    :param np.ndarray x: 1D array containing the signal
+    :param np.ndarray
+    """
+    # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
+    return np.dot(unity_roots, x)
 
 
 def funConv2(x, y, mode='same'):

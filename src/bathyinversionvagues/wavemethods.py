@@ -19,7 +19,7 @@ import matplotlib
 
 from bathyinversionvagues.shoresutils import (sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr,
                                               radon, fft_filtering, compute_sinogram,
-                                              create_sequence_time_series_temporal,
+                                              create_sequence_time_series_temporal, get_unity_roots,
                                               compute_temporal_correlation, compute_celerity,
                                               cartesian_projection, correlation_tuning,
                                               sinogram_tuning, compute_wave_length, compute_period,
@@ -116,9 +116,10 @@ def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
             sinoFFT1 = np.empty((kfft.size, dirInd.shape[0])) * (np.nan + 0.j)
             sinoFFT2 = np.empty((kfft.size, dirInd.shape[0])) * (np.nan + 0.j)
 
+            unity_roots = get_unity_roots(sinogram1.shape[0], kfft, 1 / params.DX)
             for ii in range(0, dirInd.shape[0]):
-                sinoFFT1[:, ii] = DFT_fr(sinogram1[:, dirInd[ii]], kfft, 1 / params.DX)
-                sinoFFT2[:, ii] = DFT_fr(sinogram2[:, dirInd[ii]], kfft, 1 / params.DX)
+                sinoFFT1[:, ii] = DFT_fr(sinogram1[:, dirInd[ii]], unity_roots)
+                sinoFFT2[:, ii] = DFT_fr(sinogram2[:, dirInd[ii]], unity_roots)
 
             sinoFFt = np.dstack((sinoFFT1, sinoFFT2))
             # This allows to calucalate the phase, amplitude:
