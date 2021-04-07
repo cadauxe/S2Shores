@@ -13,20 +13,23 @@ Module containing all wave parameters estimation methods
 # Imports
 import copy
 import os
+from scipy.signal import find_peaks
 
 import matplotlib
+
+from bathyinversionvagues.shoresutils import (sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr,
+                                              radon, fft_filtering, compute_sinogram,
+                                              create_sequence_time_series_temporal, get_unity_roots,
+                                              compute_temporal_correlation, compute_celerity,
+                                              cartesian_projection, correlation_tuning,
+                                              sinogram_tuning, compute_wave_length, compute_period,
+                                              temporal_reconstruction,
+                                              temporal_reconstruction_tuning,
+                                              create_sequence_time_series_spatial,
+                                              compute_angles_distances, compute_spatial_correlation)
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import find_peaks
-
-from bathyinversionvagues.shoresutils import (sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr, radon, fft_filtering,
-                                              create_sequence_time_series_temporal, compute_temporal_correlation,
-                                              cartesian_projection, correlation_tuning, compute_sinogram,
-                                              sinogram_tuning, compute_wave_length, compute_celerity,
-                                              temporal_reconstruction, temporal_reconstruction_tuning, compute_period,
-                                              create_sequence_time_series_spatial, compute_angles_distances,
-                                              compute_spatial_correlation)
 
 
 def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
@@ -80,13 +83,15 @@ def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
 
     # Check if the image is NOT empty (if statement):
     if sc_all(Im):
-        # Create Radon sinograms per sub image [we can make this a for loop for the number of frames]
+        # Create Radon sinograms per sub image [we can make this a for loop for
+        # the number of frames]
         sinogram1 = radon(funDetrend_2d(Im[:, :, 0]), theta=thetaFFT)
         sinogram2 = radon(funDetrend_2d(Im[:, :, 1]), theta=thetaFFT)
         # signal length to normalise the spectrum:
         N = sinogram1.shape[0]
         # Retrieve total spectrum, controlled by physical wave propagatinal limits:
-        totalSpecFFT, _, _, phase_check = funGetSpectralPeaks(Im, thetaFFT, params.UNWRAP_PHASE_SHIFT, params.DT,
+        totalSpecFFT, _, _, phase_check = funGetSpectralPeaks(sinogram1, sinogram2, thetaFFT,
+                                                              params.UNWRAP_PHASE_SHIFT, params.DT,
                                                               params.DX, params.MIN_D, params.G)
         # Find maximum total energy per direction theta
         totalSpecMaxheta = np.max(totalSpecFFT, axis=0) / np.max(np.max(totalSpecFFT, axis=0))
@@ -112,14 +117,16 @@ def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
             sinoFFT1 = np.empty((kfft.size, dirInd.shape[0])) * (np.nan + 0.j)
             sinoFFT2 = np.empty((kfft.size, dirInd.shape[0])) * (np.nan + 0.j)
 
+            unity_roots = get_unity_roots(sinogram1.shape[0], kfft, 1 / params.DX)
             for ii in range(0, dirInd.shape[0]):
-                sinoFFT1[:, ii] = DFT_fr(sinogram1[:, dirInd[ii]], kfft, 1 / params.DX)
-                sinoFFT2[:, ii] = DFT_fr(sinogram2[:, dirInd[ii]], kfft, 1 / params.DX)
+                sinoFFT1[:, ii] = DFT_fr(sinogram1[:, dirInd[ii]], unity_roots)
+                sinoFFT2[:, ii] = DFT_fr(sinogram2[:, dirInd[ii]], unity_roots)
 
             sinoFFt = np.dstack((sinoFFT1, sinoFFT2))
             # This allows to calucalate the phase, amplitude:
             phase_shift = np.angle(sinoFFt[:, :, 1] * np.conj(sinoFFt[:, :, 0]))
-            # the phase comes between -pi and pi but we want to know the fraction of the total wave thus  0 < dphi < 2pi
+            # the phase comes between -pi and pi but we want to know the fraction of
+            # the total wave thus  0 < dphi < 2pi
             phase_shift_unw = copy.deepcopy(phase_shift)
 
             if not params.UNWRAP_PHASE_SHIFT:
@@ -128,7 +135,8 @@ def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
             else:
                 phase_shift_unw = (phase_shift_unw + 2 * np.pi) % (2 * np.pi)
 
-            # Deep water limitation [if the wave travels faster that the deep-water limit we consider it non-physical]
+            # Deep water limitation [if the wave travels faster that the deep-water
+            # limit we consider it non-physical]
             phase_shift[phase_shift_unw > phi_deep[:, :dirInd.shape[0]]] = 0
             phase_shift_unw[phase_shift_unw > phi_deep[:, :dirInd.shape[0]]] = 0
             # Minimal propagation speed; this depends on the Satellite; Venus or Sentinel 2
@@ -152,7 +160,7 @@ def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
                 T = 1 / (CEL * NU)
 
                 for ii in range(0, np.min((DIR.shape[0], kKeep))):
-                    if (dPHI[ii] != 0) or (np.isnan(dPHI[ii]) == False):
+                    if (dPHI[ii] != 0) or (not np.isnan(dPHI[ii])):
                         if (T[ii] <= params.MIN_T) or (T[ii] >= params.MAX_T):
                             NU[ii] = np.nan
                             DIR[ii] = np.nan
@@ -240,7 +248,7 @@ def temporal_correlation_method(Im, config):
                 'dir': np.array([angle]),
                 'dcel': np.array([0])
                 }
-    except:
+    except Exception:
         print("Bathymetry computation failed")
 
 
@@ -300,7 +308,7 @@ def spatial_correlation_method(Im, config):
                 'dir': np.array([angle]),
                 'dcel': np.array([0])
                 }
-    except:
+    except Exception:
         print("Bathymetry computation failed")
 
 
@@ -328,7 +336,8 @@ def draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, 
     ax2 = fig.add_subplot(gs[0, 2])
     plt.imshow(corr_car)
     (l1, l2) = np.shape(corr_car)
-    ax2.arrow(l1 // 2, l2 // 2, np.cos(np.deg2rad(angle)) * (l1 // 4), -np.sin(np.deg2rad(angle)) * (l1 // 4))
+    ax2.arrow(l1 // 2, l2 // 2,
+              np.cos(np.deg2rad(angle)) * (l1 // 4), -np.sin(np.deg2rad(angle)) * (l1 // 4))
     plt.title('Correlation matrix')
 
     ax3 = fig.add_subplot(gs[1, :3])
@@ -336,7 +345,7 @@ def draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, 
     (l1, l2) = np.shape(radon_matrix)
     plt.plot(l1 * variance / np.max(variance), 'r')
     ax3.arrow(angle, 0, 0, l1)
-    plt.annotate('%d °'% angle,(angle + 5, 10),color='orange')
+    plt.annotate('%d °' % angle, (angle + 5, 10), color='orange')
     plt.title('Radon matrix')
 
     ax4 = fig.add_subplot(gs[2, :3])
