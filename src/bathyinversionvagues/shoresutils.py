@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Feb 3 10:12:00 2021
@@ -12,14 +11,13 @@ Module containing all functions common to waves and bathy estimation methods
 """
 from functools import lru_cache
 
+import pandas
+import scipy
+from scipy.interpolate import interp1d
 from scipy.signal import convolve2d
 from scipy.signal import detrend
 from scipy.signal import fftconvolve
 from scipy.signal import medfilt2d
-
-import pandas
-import scipy
-from scipy.interpolate import interp1d
 from skimage.transform import radon
 
 import numpy as np

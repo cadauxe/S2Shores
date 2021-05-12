@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Feb 3 10:12:00 2021
@@ -13,12 +12,12 @@ Module containing all wave parameters estimation methods
 # Imports
 import copy
 import os
-from scipy.signal import find_peaks
 
 import matplotlib
+from scipy.signal import find_peaks
 
 from bathyinversionvagues.shoresutils import (sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr,
-                                              radon, fft_filtering, compute_sinogram,
+                                              fft_filtering, compute_sinogram,
                                               create_sequence_time_series_temporal, get_unity_roots,
                                               compute_temporal_correlation, compute_celerity,
                                               cartesian_projection, correlation_tuning,
@@ -27,6 +26,7 @@ from bathyinversionvagues.shoresutils import (sc_all, funDetrend_2d, funGetSpect
                                               temporal_reconstruction_tuning,
                                               create_sequence_time_series_spatial,
                                               compute_angles_distances, compute_spatial_correlation)
+from bathyinversionvagues.waves_radon import symmetric_radon
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
@@ -85,8 +85,8 @@ def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
     if sc_all(Im):
         # Create Radon sinograms per sub image [we can make this a for loop for
         # the number of frames]
-        sinogram1 = radon(funDetrend_2d(Im[:, :, 0]), theta=thetaFFT)
-        sinogram2 = radon(funDetrend_2d(Im[:, :, 1]), theta=thetaFFT)
+        sinogram1 = symmetric_radon(funDetrend_2d(Im[:, :, 0]), theta=thetaFFT)
+        sinogram2 = symmetric_radon(funDetrend_2d(Im[:, :, 1]), theta=thetaFFT)
         # signal length to normalise the spectrum:
         N = sinogram1.shape[0]
         # Retrieve total spectrum, controlled by physical wave propagatinal limits:
