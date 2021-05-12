@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from bathycommun.config.config_bathy import ConfigBathy
 from bathyinversionvagues.depthinversionmethods import depth_linear_inversion
 from bathyinversionvagues.wavemethods import spatial_correlation_method
 from bathyinversionvagues.wavemethods import spatial_dft_method
 from bathyinversionvagues.wavemethods import temporal_correlation_method
 
 
-def wave_parameters_and_bathy_estimation(sequence, delta_t_arrays=None, k_fft=None, phi_min=None, phi_deep=None,
-                                         files_config=None):
+def wave_parameters_and_bathy_estimation(sequence, delta_t_arrays=None, k_fft=None, phi_min=None, phi_deep=None, config=None):
     wave_bathy_point = None
-    config = ConfigBathy(files_config)
 
     # calcul des paramètres des vagues
     if config.WAVE_EST_METHOD == "TEMPORAL_CORRELATION":
