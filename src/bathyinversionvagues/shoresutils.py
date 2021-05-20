@@ -292,11 +292,11 @@ def funSmooth2(M, nx, ny):
     return funSmoothc(T, nx, ny)
 
 
-def funLinearC_k(nu, c, d_precision, d_init, g):
+def funLinearC_k(nu, c, d_precision, g):
     k = 2 * np.pi * nu  # angular wave number
     precision = d_precision
     w = c * k
-    do = d_init
+    do = np.Infinity
     d = c ** 2 / g
 
     while abs(do - d) > precision:
