@@ -209,7 +209,7 @@ def temporal_correlation_method(Im, config):
         if config.TEMPORAL_METHOD.PASS_BAND_FILTER:
             Im, flag = fft_filtering(Im, config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,
                                      T_max=config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
-                                     T_min=config.PREPROCESSING.PASSBAND.LOW_PERIOD)
+                                     T_min=config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
         stime_series, xx, yy = create_sequence_time_series_temporal(Im=Im,
                                                                     percentage_points=config.TEMPORAL_METHOD.PERCENTAGE_POINTS)
         corr = compute_temporal_correlation(sequence_thumbnail=stime_series,
@@ -275,7 +275,7 @@ def spatial_correlation_method(Im, config):
         if config.TEMPORAL_METHOD.PASS_BAND_FILTER:
             Im, flag = fft_filtering(Im, config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,
                                      T_max=config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
-                                     T_min=config.PREPROCESSING.PASSBAND.LOW_PERIOD)
+                                     T_min=config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
         simg_filtered, xx, yy = create_sequence_time_series_spatial(Im=Im)
         angles, distances = compute_angles_distances(M=simg_filtered)
         corr = compute_spatial_correlation(sequence_thumbnail=simg_filtered,

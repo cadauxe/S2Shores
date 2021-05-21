@@ -308,7 +308,7 @@ def funLinearC_k(nu, c, d_precision, d_init, g):
     return d
 
 
-def fft_filtering(simg, spatial_resolution, T_max, T_min):
+def fft_filtering(simg, spatial_resolution, T_max, T_min, gravity):
     """
     Compute the fft filtering of a subtile
     :param simg:(np.array) the given sequence of images to filter
@@ -323,8 +323,8 @@ def fft_filtering(simg, spatial_resolution, T_max, T_min):
     ky = np.fft.fftshift(np.fft.fftfreq(m, spatial_resolution))
     kx = np.repeat(np.reshape(kx, (n, 1)), m, axis=1)
     ky = np.repeat(np.reshape(ky, (1, m)), n, axis=0)
-    threshold_min = 1 / (1.56 * T_max ** 2)
-    threshold_max = 1 / (1.56 * T_min ** 2)
+    threshold_min = 2. * np.pi / (gravity * T_max ** 2)
+    threshold_max = 2. * np.pi / (gravity * T_min ** 2)
     simg_filtered = np.zeros(simg.shape)
     kr = np.sqrt(kx ** 2 + ky ** 2)
     kr[kr < threshold_min] = 0
