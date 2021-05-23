@@ -25,7 +25,6 @@ ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spec
 #depth estimation methods
 #depth_common:
 D_PRECISION: 0.0005 # regression stop criteria - meters
-D_INIT: 1000 # regression - initial value - meters
 
 preprocessing:
   passband:
