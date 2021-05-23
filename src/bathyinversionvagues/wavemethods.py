@@ -16,20 +16,21 @@ import os
 import matplotlib
 from scipy.signal import find_peaks
 
-from bathyinversionvagues.shoresutils import (sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr,
-                                              fft_filtering, compute_sinogram,
-                                              create_sequence_time_series_temporal, get_unity_roots,
-                                              compute_temporal_correlation, compute_celerity,
-                                              cartesian_projection, correlation_tuning,
-                                              sinogram_tuning, compute_wave_length, compute_period,
-                                              temporal_reconstruction,
-                                              temporal_reconstruction_tuning,
-                                              create_sequence_time_series_spatial,
-                                              compute_angles_distances, compute_spatial_correlation)
-from bathyinversionvagues.waves_radon import symmetric_radon
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+
+from .shoresutils import (sc_all, funDetrend_2d, funGetSpectralPeaks, DFT_fr,
+                          fft_filtering, compute_sinogram,
+                          create_sequence_time_series_temporal, get_unity_roots,
+                          compute_temporal_correlation, compute_celerity,
+                          cartesian_projection, correlation_tuning,
+                          sinogram_tuning, compute_wave_length, compute_period,
+                          temporal_reconstruction,
+                          temporal_reconstruction_tuning,
+                          create_sequence_time_series_spatial,
+                          compute_angles_distances, compute_spatial_correlation)
+from .waves_radon_symmetric import symmetric_radon
 
 
 def spatial_dft_method(Im, params, kfft, phi_min, phi_deep):
@@ -208,8 +209,8 @@ def temporal_correlation_method(Im, config):
     try:
         if config.TEMPORAL_METHOD.PASS_BAND_FILTER:
             Im, flag = fft_filtering(Im, config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,
-                                     T_max=config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
-                                     T_min=config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
+                                     config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
+                                     config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
         stime_series, xx, yy = create_sequence_time_series_temporal(Im=Im,
                                                                     percentage_points=config.TEMPORAL_METHOD.PERCENTAGE_POINTS)
         corr = compute_temporal_correlation(sequence_thumbnail=stime_series,
@@ -274,8 +275,8 @@ def spatial_correlation_method(Im, config):
     try:
         if config.TEMPORAL_METHOD.PASS_BAND_FILTER:
             Im, flag = fft_filtering(Im, config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,
-                                     T_max=config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
-                                     T_min=config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
+                                     config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
+                                     config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
         simg_filtered, xx, yy = create_sequence_time_series_spatial(Im=Im)
         angles, distances = compute_angles_distances(M=simg_filtered)
         corr = compute_spatial_correlation(sequence_thumbnail=simg_filtered,
