@@ -23,14 +23,6 @@ from skimage.transform import radon
 import numpy as np
 
 
-# check array is not empty
-def sc_all(array):
-    for x in array.flat:
-        if not x:
-            return False
-    return True
-
-
 def funDetrend_2d(Z):
     M = Z.shape[1]
     N = Z.shape[0]
@@ -61,82 +53,6 @@ def funDetrend_2d(Z):
     return Z_f
 
 
-def funSinoFFT(sino1, sino2, dx):
-    '''
-    Parameters
-    ----------
-    I : 2D np.array that contains NxMx2 structure.
-        Typically these are two different images at the same location at a different moment in time.
-    dx : Spatial resolution of the image I.
-        DESCRIPTION. The default is 10 (sentinel)
-
-    Returns
-    -------
-    out : Dictioinary with all infomation on the Radon spectrum
-        DESCRIPTION.
-
-    '''
-    Nx = np.shape(sino1)[0]
-    Fs = 1 / float(dx)
-    kfft = np.arange(0, Fs / 2, Fs / Nx) + (Fs / (2 * Nx))
-
-    sino1_fft = []
-    sino2_fft = []
-
-    for ii in range(0, sino1.shape[1]):
-        Y1 = np.fft.fft(sino1[:, ii])
-        Y2 = np.fft.fft(sino2[:, ii])
-
-        if len(Y1) > 1:
-            Yout1 = Y1[0:int(np.ceil(Nx / 2))]
-            Yout2 = Y2[0:int(np.ceil(Nx / 2))]
-        else:
-            Yout1 = Y1
-            Yout2 = Y2
-
-        sino1_fft.append(Yout1)
-        sino2_fft.append(Yout2)
-
-    sinoFFT = np.dstack((np.array(sino1_fft).transpose(),
-                         np.array(sino2_fft).transpose()))
-
-    return sinoFFT, kfft, Nx
-
-
-def funGetSpectralPeaks(sinogram1, sinogram2, theta, unwrap_phase_shift, dt, dx, min_D, g):
-
-    sinoFFT, kfft, N = funSinoFFT(sinogram1, sinogram2, dx)
-
-    combAmpl = (np.abs(sinoFFT[:, :, 0]) ** 2 + np.abs(sinoFFT[:, :, 1]) ** 2) / (N ** 2)
-
-    phase_shift = np.angle(sinoFFT[:, :, 1] * np.conj(sinoFFT[:, :, 0]))
-
-    if not unwrap_phase_shift:
-        # currently deactivated but we want this functionality:
-        phase_shift = phase_shift
-    else:
-        phase_shift = (phase_shift + 2 * np.pi) % (2 * np.pi)
-
-    # deep water limits:
-    phi_deep = (2 * np.pi * dt) / (np.sqrt(1 / (np.round(g / (2 * np.pi), 2) * kfft))).squeeze()
-    phi_deep = np.tile(phi_deep[:, np.newaxis], (1, theta.shape[0]))
-
-    # shallow water limits:
-    min_cel = np.sqrt(g * min_D)
-    phi_min = (2 * np.pi * dt * kfft * min_cel).squeeze()
-
-    phi_min = np.tile(phi_min[:, np.newaxis], (1, theta.shape[0]))
-
-    # Deep water limitation [if the wave travels faster that the deep-water limit
-    # we consider it non-physical]
-    phase_shift[np.abs(phase_shift) > phi_deep] = 0
-
-    # Minimal propagation speed; this depends on the Satellite; Venus or Sentinel 2
-    phase_shift[np.abs(phase_shift) < phi_min] = 0
-
-    return (combAmpl * phase_shift) / N, kfft, N, phase_shift
-
-
 def get_unity_roots(number_of_roots, fr, fs):
     """
     Compute the fs-th complex roots of the unity
@@ -159,30 +75,8 @@ def DFT_fr(x, unity_roots):
     return np.dot(unity_roots, x)
 
 
-def funConv2(x, y, mode='same'):
-    '''
-
-
-    Parameters
-    ----------
-    x : TYPE
-        DESCRIPTION.
-    y : TYPE
-        DESCRIPTION.
-    mode : TYPE, optional
-        DESCRIPTION. The default is 'same'.
-
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-
-    '''
-    return np.rot90(convolve2d(np.rot90(x, 2), np.rot90(y, 2), mode=mode), 2)
-
-
 @lru_cache()
-def get_smoothing_kernel(Nr, Nc):
+def get_smoothing_kernel(Nr: int, Nc: int) -> np.ndarray:
     '''
 
     Parameters
@@ -261,7 +155,7 @@ def funSmoothc(mI, Nr, Nc):
     # Determine convolution kernel k
     k = get_smoothing_kernel(Nr, Nc)
     # Perform convolution
-    out = funConv2(mI, k, 'same')
+    out = np.rot90(convolve2d(np.rot90(mI, 2), np.rot90(k, 2), mode='same'), 2)
     return out[Nr:-Nr, Nc:-Nc]
 
 
@@ -290,22 +184,6 @@ def funSmooth2(M, nx, ny):
                         np.tile(S[:, -1], (ny, 1)).transpose()), axis=1)
 
     return funSmoothc(T, nx, ny)
-
-
-def funLinearC_k(nu, c, d_precision, g):
-    k = 2 * np.pi * nu  # angular wave number
-    precision = d_precision
-    w = c * k
-    do = np.Infinity
-    d = c ** 2 / g
-
-    while abs(do - d) > precision:
-        do = d
-        dispe = w ** 2 - (g * k * np.tanh(k * d))
-        fdispe = -g * (k ** 2) / (np.cosh(k * d) ** 2)
-        d = d - (dispe / fdispe)
-
-    return d
 
 
 def fft_filtering(simg, spatial_resolution, T_max, T_min, gravity):
@@ -372,14 +250,6 @@ def filter_mean(time_serie, window):
                                             np.full(window, np.mean(time_serie[-(window + 1):]))),
                                            axis=0)
         return np.convolve(padded_time_serie, np.ones(2 * window + 1) / (2 * window + 1), 'valid')
-
-
-def permute_axes(Im):
-    n1, n2, n3 = np.shape(Im)
-    pIm = np.zeros((n2, n3, n1))
-    for i in np.arange(n1):
-        pIm[:, :, i] = Im[i, :, :]
-    return pIm
 
 
 def create_sequence_time_series_temporal(Im, percentage_points):
