@@ -79,8 +79,7 @@ def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarra
     return results, metrics
 
 
-def wave_parameters_and_bathy_estimation(
-        sequence, delta_t_arrays=None, config=None, estimator=None):
+def wave_parameters_and_bathy_estimation(sequence, config, delta_t_arrays=None, estimator=None):
     wave_bathy_point = None
 
     # calcul des paramètres des vagues

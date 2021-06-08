@@ -23,5 +23,5 @@ Im = sequence_subtile[:, 400:600, 400:600]
 
 Im_MATLAB = permute_axes(Im_MATLAB)
 
-result = wave_parameters_and_bathy_estimation(Im_MATLAB)
+result = wave_parameters_and_bathy_estimation(Im_MATLAB, config)
 print(result)
