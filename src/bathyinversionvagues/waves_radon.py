@@ -1,239 +1,183 @@
 # -*- coding: utf-8 -*-
-""" Module containing a modified radon transform compatible with skimage.transform.radon, but able
-to manage tomographic angles in several ways.
+"""
+module -- Class encapsulating operations on the radon transform of an image for waves processing
+
 
 :author: Alain Giros
-:created: Thu Apr 1 2021
+:organization: CNES
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
+:created: 4 mars 2021
 """
-from functools import lru_cache
-from numbers import Real
-from warnings import warn
-from typing import Union, Tuple, List, cast, Optional  # @NoMove
+from typing import Optional, Dict  # @NoMove
 
-from skimage.transform import warp
-from skimage.util.dtype import img_as_float
+import numpy as np  # @NoMove
 
-import numpy as np
-
-
-def symmetric_radon(image: np.ndarray,
-                    theta: Optional[np.ndarray] = None,
-                    circle: bool = True,
-                    *,
-                    preserve_range: bool = False) -> np.ndarray:
-    """ Calculates the radon transform of an image given specified
-    projection angles.
-
-    Parameters
-    ----------
-    image : array_like
-        Input image. The rotation axis will be located in the pixel with
-        indices ``(image.shape[0] // 2, image.shape[1] // 2)``.
-    theta : array_like, optional
-        Projection angles (in degrees). If `None`, the value is set to
-        np.arange(180).
-    circle : boolean, optional
-        Assume image is zero outside the inscribed circle, making the
-        width of each projection (the first dimension of the sinogram)
-        equal to ``min(image.shape)``.
-    preserve_range : bool, optional
-        Whether to keep the original range of values. Otherwise, the input
-        image is converted according to the conventions of `img_as_float`.
-        Also see https://scikit-image.org/docs/dev/user_guide/data_types.html
-
-    Returns
-    -------
-    radon_image : ndarray
-        Radon transform (sinogram).  The tomography rotation axis will lie
-        at the pixel index ``radon_image.shape[0] // 2`` along the 0th
-        dimension of ``radon_image``.
-
-    References
-    ----------
-    .. [1] AC Kak, M Slaney, "Principles of Computerized Tomographic
-           Imaging", IEEE Press 1988.
-    .. [2] B.R. Ramesh, N. Srinivasa, K. Rajgopal, "An Algorithm for Computing
-           the Discrete Radon Transform With Some Applications", Proceedings of
-           the Fourth IEEE Region 10 International Conference, TENCON '89, 1989
-
-    Notes
-    -----
-    Based on code of Justin K. Romberg
-    (https://www.clear.rice.edu/elec431/projects96/DSP/bpanalysis.html)
-
-    """
-    if image.ndim != 2:
-        raise ValueError('The input image must be 2-D')
-    if theta is None:
-        theta = np.arange(180)
-
-    if preserve_range:
-        # Convert image to double only if it is not single or double
-        # precision float
-        if image.dtype.char not in 'df':
-            image = image.astype(float)
-    else:
-        image = img_as_float(image)
-
-    if circle:
-        shape_min = min(image.shape)
-        radius = shape_min // 2
-        img_shape = np.array(image.shape)
-        coords = np.array(np.ogrid[:image.shape[0], :image.shape[1]],
-                          dtype=object)
-        dist = ((coords - img_shape // 2) ** 2).sum(0)
-        outside_reconstruction_circle = dist > radius ** 2
-        if np.any(image[outside_reconstruction_circle]):
-            warn('Radon transform: image must be zero outside the '
-                 'reconstruction circle')
-        # Crop image to make it square
-        slices = tuple(slice(int(np.ceil(excess / 2)),
-                             int(np.ceil(excess / 2) + shape_min))
-                       if excess > 0 else slice(None)
-                       for excess in (img_shape - shape_min))
-        padded_image = image[slices]
-    else:
-        diagonal = np.sqrt(2) * max(image.shape)
-        pad = [int(np.ceil(diagonal - s)) for s in image.shape]
-        new_center = [(s + p) // 2 for s, p in zip(image.shape, pad)]
-        old_center = [s // 2 for s in image.shape]
-        pad_before = [nc - oc for oc, nc in zip(old_center, new_center)]
-        pad_width = [(pb, p - pb) for pb, p in zip(pad_before, pad)]
-        padded_image = np.pad(image, pad_width, mode='constant',
-                              constant_values=0)
-
-    # padded_image is always square
-    if padded_image.shape[0] != padded_image.shape[1]:
-        raise ValueError('padded_image must be a square')
-    center = padded_image.shape[0] // 2
-    radon_image = np.zeros((padded_image.shape[0], len(theta)),
-                           dtype=image.dtype)
-
-    # split angles in 2 sets: one for angles which must be processed, the other for angles
-    # which can be produced from the computed angles by a flip.
-    angles_to_compute, angles_to_flip = get_angles_sets(theta)
-
-    for i, angle in angles_to_compute:
-        rotation_matrix = get_rotation_matrix(center, angle)
-        rotated = warp(padded_image, rotation_matrix, clip=False)
-        radon_image[:, i] = rotated.sum(0)
-
-    for i, j in angles_to_flip:
-        radon_image[:, i] = np.flip(radon_image[:, j])
-    return radon_image
+from .directional_array import (DirectionalArray, linear_directions,
+                                DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
+from .shoresutils import DFT_fr, get_unity_roots
+from .waves_exceptions import NoRadonTransformError
+from .waves_image import WavesImage
+from .waves_radon_symmetric import symmetric_radon
+from .waves_sinogram import WavesSinogram
 
 
-@lru_cache(maxsize=1024)
-def get_rotation_matrix(center: Real, theta: Real) -> np.ndarray:
-    """ Computes the rotation matrix to be applied to compute the radon transform for one angle
+# TODO: finalize directions indices removal
+class WavesRadon:
+    def __init__(self, image: WavesImage, directions_step: float = 1.,
+                 weighted: bool = False) -> None:
+        """ Constructor
 
-    :param center: the position of the rotation center in the image along its smallest dimension
-    :param theta: the tomographic angle
-    :returns: A 3*3 array expressing the rotation to apply to the image.
-    """
-    angle = np.deg2rad(theta)
-    cos_a, sin_a = np.cos(angle), np.sin(angle)
-    return np.array([[cos_a, sin_a, -center * (cos_a + sin_a - 1)],
-                     [-sin_a, cos_a, -center * (cos_a - sin_a - 1)],
-                     [0, 0, 1]])
+        :param image: a 2D array containing an image over water
+        :param directions_step: the step to use for quantizing direction angles, for indexing
+                                purposes. Direction quantization is such that the 0 degree direction
+                                is used as the origin, and any direction angle is transformed to the
+                                nearest quantized angle for indexing that direction in the radon
+                                transform.
+        """
+        self.pixels = image.pixels
+        self.sampling_frequency = image.sampling_frequency
+        self.nb_samples = min(self.pixels.shape)
 
+        self.directions_step = directions_step
 
-ANGLE_0 = cast(Real, 0.)
-ANGLE_180 = cast(Real, 180.)
+        self._sinograms = {}
+        self._radon_transform: Optional[DirectionalArray] = None
 
-
-def get_angles_sets(theta: np.ndarray) -> Tuple[List[Tuple[int, Real]], List[Tuple[int, int]]]:
-    """ Split the projection angles in to sets: one containing angles which must be computed,
-    and the other one angles which can be produced by a flip of the computed ones.
-
-    :param theta: the set of tomographic angles
-    :returns: The list of angles which must be computed together with their index in the projection
-              The list of angles indexes which can be produced by a flip of another angle specified
-              by its index.
-    """
-
-    normalized_angles = _normalize_angle(theta)
-    angles = _quantize(normalized_angles)
-
-    positive_angles_indices = np.argwhere(angles >= ANGLE_0)[:, 0]
-    negative_angles_indices = np.argwhere(angles < ANGLE_0)[:, 0]
-
-    if positive_angles_indices.size >= negative_angles_indices.size:
-        angles_to_compute, angles_to_flip = _process_angles_subsets(angles,
-                                                                    positive_angles_indices,
-                                                                    negative_angles_indices,
-                                                                    ANGLE_180)
-    else:
-        angles_to_compute, angles_to_flip = _process_angles_subsets(angles,
-                                                                    negative_angles_indices,
-                                                                    positive_angles_indices,
-                                                                    -ANGLE_180)
-
-    return angles_to_compute, angles_to_flip
-
-
-def _process_angles_subsets(angles: np.ndarray, largest: np.ndarray, smallest: np.ndarray,
-                            angle_offset: Real) \
-        -> Tuple[List[Tuple[int, Real]], List[Tuple[int, int]]]:
-    """ Utility to manage angles split in both cases of largest angles set being positive
-    or negative. The largest set must be computed and the smallest one must be either computed
-    or must be produced by a flip of computed angles.
-
-    :param angles: the set of tomographic angles to split
-    :param largest: largest set of indices of angles of the same sign which must be computed
-    :param smallest: remaining angles indices (their sign is opposite to the sign of angles
-                     pointed by the largest set)
-    :param angle_offset: the value to use to find the opposite direction (either -180. or 180.)
-    :returns: The list of angles which must be computed together with their index in the projection
-              The list of angles indexes which can be produced by a flip of another angle specified
-              by its index.
-    """
-    angles_to_flip = []
-    angles_to_compute = [(index, angles[index]) for index in largest]
-    for index_angle in smallest:
-        angle = angles[index_angle]
-        opposite_angle = angle + angle_offset
-        quantized_opposite_angle = _quantize(opposite_angle)
-        if quantized_opposite_angle in angles[largest]:
-            index_opposite_angle = np.where(angles == quantized_opposite_angle)[0][0]
-            angles_to_flip.append((index_angle, index_opposite_angle))
+        if weighted:
+            self._weights = np.cos(np.linspace(-np.pi / 2., (np.pi / 2.), self.nb_samples))
+            self._weights[0] = self._weights[1]
+            self._weights[-1] = self._weights[-2]
         else:
-            angles_to_compute.append((index_angle, angle))
-    return angles_to_compute, angles_to_flip
+            self._weights = None
+
+    @property
+    def directions(self) -> np.ndarray:
+        """ :return: the directions over which the radon transform has been / must be computed """
+        if self._radon_transform is None:
+            raise AttributeError('No radon transform computed yet')
+        return self._radon_transform.directions
+
+    @property
+    def nb_directions(self) -> int:
+        """ :return: the number of directions defined for this radon transform"""
+        return self.radon_transform.nb_directions
+
+    @property
+    def radon_transform(self) -> Optional[DirectionalArray]:
+        """
+        :returns: the radon transform of the image for the currently defined set of directions
+        :raises AttributeError: if the directions have not been specified yet
+        """
+        return self._radon_transform
+
+    @property
+    def spectrum_wave_numbers(self) -> np.ndarray:
+        """ :returns: wave numbers for each sample of the positive part of the FFT of a direction.
+        """
+        return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
+
+    def compute(self, selected_directions: Optional[np.ndarray]) -> None:
+        """
+        :returns: the radon transform of the image for the currently defined set of directions
+        :raises AttributeError: if the directions have not been specified yet
+        """
+        if selected_directions is None:
+            selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
+                                                    self.directions_step)
+        # FIXME: quantization may imply that radon transform is not computed on stored directions
+        radon_transform_array = symmetric_radon(self.pixels, theta=selected_directions)
+        self._radon_transform = DirectionalArray(array=radon_transform_array,
+                                                 directions=selected_directions,
+                                                 directions_step=self.directions_step)
+        if self._weights is not None and self._radon_transform is not None:
+            for direction in range(self.nb_directions):
+                self._radon_transform.array[:, direction] = (
+                    self._radon_transform.array[:, direction] * self._weights)
 
 
-def _normalize_angle(angle: Union[Real, np.ndarray]) -> Union[Real, np.ndarray]:
-    """ Normalize angle(s) expressed in degrees to the interval [-180°, 180°[
+# +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
 
-    :param angle: the real valuied angle(s) expressed in degrees
-    :returns: multiple(s) of quantization_step such that:
-              quantized_value - quantization_step/2 < value <= quantized_value + quantization_step/2
-    """
-    # Limit angle between 0 and 360 degrees
-    normalized_angle = angle % 360.
-    # angle between -180 and +180 degrees
-    if isinstance(normalized_angle, Real):
-        # Real case
-        if normalized_angle >= ANGLE_180:
-            normalized_angle -= 360.
-    else:
-        # np.ndarray case
-        normalized_angle[normalized_angle >= ANGLE_180] -= 360.
-    return normalized_angle
+    @property
+    def sinograms(self) -> Dict[float, WavesSinogram]:
+        if not self._sinograms.keys():
+            if self._radon_transform is None:
+                raise NoRadonTransformError()
+            self._sinograms = self.get_sinograms_as_dict()
+        return self._sinograms
 
+    def get_sinograms_as_dict(self,
+                              directions: Optional[np.ndarray] = None) -> Dict[float, WavesSinogram]:
+        directions = self.directions if directions is None else directions
+        sinograms_dict: Dict[float, WavesSinogram] = {}
+        if self.radon_transform is not None:
+            for direction in self.directions:
+                sinograms_dict[direction] = self.get_sinogram(direction)
+        return sinograms_dict
 
-def _quantize(value: Union[Real, np.ndarray],
-              quantization_step: Real = cast(Real, 0.1)) -> Union[Real, np.ndarray]:
-    """ Quantize real numbers such that 0. is the center of the quantization scale.
+    def get_sinogram(self, direction: float) -> WavesSinogram:
+        if self._radon_transform is None:
+            raise NoRadonTransformError()
+        return WavesSinogram(self._radon_transform.values_for(direction), self.sampling_frequency)
 
-    :param value: the real value(s) to quantize
-    :param quantization_step: the quantization interval length
-    :returns: multiple(s) of quantization_step such that:
-              quantized_value - quantization_step/2 < value <= quantized_value + quantization_step/2
-    """
-    if isinstance(value, Real):
-        half_delta = np.sign(value) * quantization_step / 2.
-        index = int((value + half_delta) / quantization_step)
-    else:
-        index = np.rint(value / quantization_step)
-    return index * quantization_step
+    def compute_sinograms_dfts(self,
+                               directions: Optional[np.ndarray] = None,
+                               kfft: Optional[np.ndarray] = None) -> None:
+        """ Computes the fft of the radon transform along the projection directions
+
+        """
+        # If no selected directions, DFT will be computed on all directions
+        directions = self.directions if directions is None else directions
+        # Build array on which the dft will be computed
+        radon_excerpt = self.radon_transform.get_as_array(directions)
+
+        if kfft is None:
+            # Compute standard DFT along the column axis and keep positive frequencies only
+            nb_positive_coeffs = int(np.ceil(radon_excerpt.shape[0] / 2))
+            radon_dft_1d = np.fft.fft(radon_excerpt, axis=0)
+            result = radon_dft_1d[0:nb_positive_coeffs, :]
+        else:
+            result = self._dft_interpolated(radon_excerpt, self.sampling_frequency, kfft)
+        # Store individual 1D DFTs in sinograms
+        for sino_index in range(result.shape[1]):
+            sinogram = self.sinograms[directions[sino_index]]
+            sinogram.dft = result[:, sino_index]
+
+    # Make a function close to DFT_fr
+    @staticmethod
+    def _dft_interpolated(signal_2d: np.ndarray, column_sampling_frequency: float,
+                          kfft: np.ndarray) -> np.ndarray:
+        """ Computes the 1D dft of a 2D signal along the columns using specific sampling frequencies
+
+        :param signal_2d: a 2D signal
+        :param column_sampling_frequency: the sampling frequency along the signal columns
+        :param kfft: a table of unevenly spaced frequencies at which the DFT must be computed
+        :param column_indices: the column indices on which the DFT is required
+
+        :returns: a 2D array with the DFTs of the selected input columns are stored as contiguous
+                  columns
+        """
+        nb_columns = signal_2d.shape[1]
+        signal_dft_1d = np.empty((kfft.size, nb_columns), dtype=np.complex128)
+
+        unity_roots = get_unity_roots(signal_2d.shape[0], kfft, column_sampling_frequency)
+        for i in range(nb_columns):
+            signal_dft_1d[:, i] = DFT_fr(signal_2d[:, i], unity_roots)
+        return signal_dft_1d
+
+    def get_sinograms_dfts(self, directions: Optional[np.ndarray]=None) -> np.ndarray:
+        directions = self.directions if directions is None else directions
+        fft_sino_length = self.sinograms[directions[0]].dft.shape[0]
+        result = np.empty((fft_sino_length, len(directions)), dtype=np.complex128)
+        for result_index, sinogram_index in enumerate(directions):
+            sinogram = self.sinograms[sinogram_index]
+            result[:, result_index] = sinogram.dft
+        return result
+
+    def get_sinograms_mean_power(self, directions: Optional[np.ndarray]=None) -> np.ndarray:
+        directions = self.directions if directions is None else directions
+        sinograms_powers = np.empty(len(directions), dtype=np.float64)
+        for result_index, sinogram_index in enumerate(directions):
+            sinogram = self.sinograms[sinogram_index]
+            sinograms_powers[result_index] = sinogram.mean_power
+        return sinograms_powers
