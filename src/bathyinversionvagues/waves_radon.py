@@ -30,9 +30,8 @@ def sinogram_weights(nb_samples: int) -> np.ndarray:
     weights[-1] = weights[-2]
     return weights
 
+
 # TODO: finalize directions indices removal
-
-
 class WavesRadon:
     def __init__(self, image: WavesImage, directions_step: float = 1.,
                  weighted: bool = False) -> None:

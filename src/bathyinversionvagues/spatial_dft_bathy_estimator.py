@@ -32,7 +32,6 @@ class SpatialDFTBathyEstimator:
         :param selected_directions: the set of directions onto which the sinogram must be computed
         """
         # TODO: Check that the images have the same resolution, satellite (and same size ?)
-        # FIXME: results seems identical without calling funDetrend_2d
         self.parent_estimator = estimator
         self._params = self.parent_estimator.waveparams
 
