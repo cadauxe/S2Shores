@@ -20,7 +20,6 @@ from .shoresutils import (fft_filtering, compute_sinogram,
                           create_sequence_time_series_spatial,
                           compute_angles_distances, compute_spatial_correlation)
 from .waves_fields_display import draw_results
-from .waves_radon_symmetric import symmetric_radon
 
 
 def temporal_correlation_method(Im, config):
