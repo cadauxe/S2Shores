@@ -9,6 +9,7 @@ module -- Class encapsulating operations on the radon transform of an image for 
 :license: see LICENSE file
 :created: 4 mars 2021
 """
+from functools import lru_cache
 from typing import Optional, Dict  # @NoMove
 
 import numpy as np  # @NoMove
@@ -22,7 +23,16 @@ from .waves_radon_symmetric import symmetric_radon
 from .waves_sinogram import WavesSinogram
 
 
+@lru_cache()
+def sinogram_weights(nb_samples: int) -> np.ndarray:
+    weights = np.cos(np.linspace(-np.pi / 2., (np.pi / 2.), nb_samples))
+    weights[0] = weights[1]
+    weights[-1] = weights[-2]
+    return weights
+
 # TODO: finalize directions indices removal
+
+
 class WavesRadon:
     def __init__(self, image: WavesImage, directions_step: float = 1.,
                  weighted: bool = False) -> None:
@@ -41,15 +51,10 @@ class WavesRadon:
 
         self.directions_step = directions_step
 
-        self._sinograms = {}
+        self._sinograms: Dict[float, WavesSinogram] = {}
         self._radon_transform: Optional[DirectionalArray] = None
 
-        if weighted:
-            self._weights = np.cos(np.linspace(-np.pi / 2., (np.pi / 2.), self.nb_samples))
-            self._weights[0] = self._weights[1]
-            self._weights[-1] = self._weights[-2]
-        else:
-            self._weights = None
+        self._weights = sinogram_weights(self.nb_samples) if weighted else None
 
     @property
     def directions(self) -> np.ndarray:

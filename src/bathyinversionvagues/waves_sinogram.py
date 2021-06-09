@@ -29,10 +29,6 @@ class WavesSinogram():
         self.sampling_frequency = sampling_frequency
         self._dft = None
 
-        self._weights = np.cos(np.linspace(-np.pi / 2., (np.pi / 2), self.nb_samples))
-        self._weights[0] = self._weights[1]
-        self._weights[-1] = self._weights[-2]
-
     @property
     def dft(self) -> np.ndarray:
         """ :returns: the current DFT of the sinogram. If it does not exists, it is computed
