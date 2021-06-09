@@ -98,7 +98,7 @@ class WavesRadon:
         if self._weights is not None and self._radon_transform is not None:
             for direction in range(self.nb_directions):
                 self._radon_transform.array[:, direction] = (
-                    self._radon_transform.array[:, direction] * self._weights)
+                    self._radon_transform.array[:, direction] / self._weights)
 
 
 # +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++

@@ -11,8 +11,8 @@ module -- Class encapsulating an image onto which waves estimation will be made
 """
 import numpy as np
 
-from .shoresutils import funDetrend_2d
 from .numpy_utils import circular_mask
+from .shoresutils import funDetrend_2d
 
 
 # TODO: add the management of the image position
