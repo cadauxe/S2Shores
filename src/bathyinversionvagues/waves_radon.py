@@ -81,7 +81,7 @@ class WavesRadon:
         """
         return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
 
-    def compute(self, selected_directions: Optional[np.ndarray]) -> None:
+    def compute(self, selected_directions: Optional[np.ndarray]= None) -> None:
         """
         :returns: the radon transform of the image for the currently defined set of directions
         :raises AttributeError: if the directions have not been specified yet

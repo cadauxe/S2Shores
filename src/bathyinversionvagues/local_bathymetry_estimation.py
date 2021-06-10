@@ -60,8 +60,13 @@ def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarra
 
         # Create waves fields estimator [we can make this a for loop for the number of frames]
         # TODO: Link WavesImage to OrthoImage and use resolution from it
-        waves_image_ref = WavesImage(Im[:, :, 0], resolution)
-        waves_image_sec = WavesImage(Im[:, :, 1], resolution)
+        if estimator.smoothing_requested:
+            smoothing = (estimator.smoothing_lines_size, estimator.smoothing_columns_size)
+        else:
+            smoothing = None
+
+        waves_image_ref = WavesImage(Im[:, :, 0], resolution, smoothing=smoothing)
+        waves_image_sec = WavesImage(Im[:, :, 1], resolution, smoothing=smoothing)
 
         local_bathy_estimator = SpatialDFTBathyEstimator(waves_image_ref, waves_image_sec,
                                                          estimator,
