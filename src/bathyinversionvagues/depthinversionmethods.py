@@ -8,29 +8,25 @@ Module containing all depth inversion methods
          gregoirethoumyre
          degoulromain
 """
+import copy
+
 import numpy as np
 
 from .bathy_physics import funLinearC_k
 
 
+# TODO: remove this function and rely on waves_field_samples attributes
 def depth_linear_inversion(wave_point, config):
     kKeep = config.NKEEP
-    DIR = wave_point['dir']
-    T = wave_point['T']
     NU = wave_point['nu']
     CEL = wave_point['cel']
-    DCEL = wave_point['dcel']
     DEP = np.empty(kKeep) * np.nan
 
-    for ii in range(0, np.min((DIR.shape[0], kKeep))):
+    for ii in range(0, np.min((CEL.shape[0], kKeep))):
         if not np.isnan(CEL[ii]):
             DEP[ii] = funLinearC_k(NU[ii], CEL[ii], config.D_PRECISION, config.G)
 
-    return {
-        'depth': DEP,
-        'cel': CEL,
-        'dcel': DCEL,
-        'L': 1 / NU,
-        'T': T,
-        'dir': DIR
-    }
+    wave_point_out_dic = copy.deepcopy(wave_point)
+    wave_point_out_dic['depth'] = DEP
+    wave_point_out_dic['L'] = 1 / NU
+    return wave_point_out_dic
