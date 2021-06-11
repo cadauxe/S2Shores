@@ -2,6 +2,7 @@
 WAVE_EST_METHOD: "SPATIAL_DFT" # parmi SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
 DEPTH_EST_METHOD: "LINEAR" # parmi LINEAR
 NKEEP: 3 # number of main waves directions to keep
+LAYERS_TYPE: "DEBUG" # parmi NOMINAL ou DEBUG. Permet de selectionner les couches du produit netCDF
 
 #expert
 G: 9.81 # g acceleration - m/s2
