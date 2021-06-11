@@ -12,6 +12,8 @@ DX: 10 # satellite image resolution - meters
 MIN_D: 2 #minimal depth - meters
 MIN_T: 5 # minimal wave period - seconds
 MAX_T: 25 #maximal wave period - seconds
+MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
+MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
 
 #spatial_dft:
 DT: 1.005 # mean temporal delay between two images - seconds 

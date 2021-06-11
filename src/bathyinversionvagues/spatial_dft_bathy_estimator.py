@@ -133,12 +133,11 @@ class SpatialDFTBathyEstimator:
 
         self.waves_fields_estimations = []
         for ii, peak_freq_index in enumerate(peaksFreq):
-            peak_wavenumber_index = peaksK[ii]
-
             waves_field_estimation = WavesFieldEstimation(self.delta_time,
                                                           self._params.D_PRECISION,
                                                           self._params.G)
 
+            peak_wavenumber_index = peaksK[ii]
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
             estimated_direction = self.radon_transform1.directions[self.directions[peak_freq_index]]
             if estimated_phase_shift < 0.:
@@ -152,10 +151,8 @@ class SpatialDFTBathyEstimator:
             waves_field_estimation.wavenumber = kfft[peak_wavenumber_index][0]
             self.waves_fields_estimations.append(waves_field_estimation)
 
-        # sort the peaks by energy_max level
+        # sort the waves fields by energy_max level
         self.waves_fields_estimations.sort(key=lambda x: x.energy_max, reverse=True)
-        # for w in self.waves_fields_estimations:
-        #     print(str(w))
 
     def get_wave_fields(self, phi_min, phi_max, prominence: float):
         # Detailed analysis of the signal for positive phase shifts
@@ -211,11 +208,15 @@ class SpatialDFTBathyEstimator:
         return result
 
     def get_results_as_dict(self, nb_max_wave_fields: int,
-                            min_period: float, max_period: float) -> Dict[str, np.ndarray]:
+                            min_period: float, max_period: float,
+                            min_waves_linearity: float,
+                            max_waves_linearity: float) -> Dict[str, np.ndarray]:
         """
         :param nb_max_wave_fields: maximum number of wave fields to keep
-        :param min_period: minimum waves period. Waves fields with lower periods will be discarded
-        :param max_period: maximum waves period. Waves fields with higher periods will be discarded
+        :param min_period: minimum waves period to keep.
+        :param max_period: maximum waves period to keep.
+        :param min_waves_linearity: minimum waves linearity to keep.
+        :param max_waves_linearity: maximum waves linearity to keep.
 
         """
         delta_phase_ratios = np.empty((nb_max_wave_fields)) * np.nan
@@ -235,7 +236,11 @@ class SpatialDFTBathyEstimator:
         # FIXME: Should this filtering be made at estimation stage ?
         # TODO: too high number of fields would provide a hint on poor quality measure
         filtered_out_waves_fields = [field for field in self.waves_fields_estimations if
-                                     field.period >= min_period and field.period <= max_period]
+                                     field.period >= min_period and
+                                     field.period <= max_period]
+        filtered_out_waves_fields = [field for field in filtered_out_waves_fields if
+                                     field.ckg >= min_waves_linearity and
+                                     field.ckg <= max_waves_linearity]
         print(len(filtered_out_waves_fields))
         for ii, waves_field in enumerate(filtered_out_waves_fields[:nb_max_wave_fields]):
             directions[ii] = waves_field.direction

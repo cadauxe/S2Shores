@@ -29,29 +29,7 @@ def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarra
     ----------
     Im : numpy.ndarray
         Sub-windowed images in M x N x BANDS -- currently only 2 bands are used!
-    bathy : dictionary
-        This dictionary contains settings and image specifics.
-    theta : numpy.ndarray
-        M x 1 array with angles to execute the Radon transform over.
-    kfft : numpy.ndarray
-        M x 1 array with LINEAR wave number.
-    phi_min : numpy.ndarray
-        M x N of size(kfft,theta) that contains the minimum phase shift based on shallow water.
-    phi_deep : numpy.ndarray
-        M x N of size(kfft,theta) that contains the maximum phase shift based on deep water.
 
-     Returns
-    -------
-    dict:
-        As output we deliver a dictionary containing
-            -   cel     =   Wave celerity               [m/s]
-            -   k       =   Wave number                 [1/m]
-            -   L       =   Wavelength                  [m]
-            -   T       =   Approximate wave period     [sec]
-            -   dir     =   Wave direction (RADON)      [degrees]
-            -   coh     =   Coherence squared           [-]
-            -   dPhi    =   Measured phase shift        [rad]
-            -   depth   =   Estimated depth             [m]
     """
     config = estimator.waveparams
     resolution = estimator.waveparams.DX  # in meter
@@ -78,9 +56,14 @@ def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarra
             warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
 
         results = local_bathy_estimator.get_results_as_dict(config.NKEEP,
-                                                            config.MIN_T, config.MAX_T)
+                                                            config.MIN_T,
+                                                            config.MAX_T,
+                                                            config.MIN_WAVES_LINEARITY,
+                                                            config.MAX_WAVES_LINEARITY)
         metrics = local_bathy_estimator.metrics
 
+    # TODO: replace dictionaries by local_bathy_estimator object return when other estimator
+    # are updated.
     return results, metrics
 
 
@@ -88,18 +71,22 @@ def wave_parameters_and_bathy_estimation(sequence, config, delta_t_arrays=None, 
     wave_bathy_point = None
 
     # calcul des paramètres des vagues
-    if config.WAVE_EST_METHOD == "TEMPORAL_CORRELATION":
+    if config.WAVE_EST_METHOD == "SPATIAL_DFT":
+        wave_bathy_point, wave_metrics = spatial_dft_estimator(sequence, estimator)
+    elif config.WAVE_EST_METHOD == "TEMPORAL_CORRELATION":
         wave_point = temporal_correlation_method(sequence, config)
+        # inversion de la bathy à partir des paramètres des vagues
+        if config.DEPTH_EST_METHOD == "LINEAR":
+            wave_bathy_point = depth_linear_inversion(wave_point, config)
+        else:
+            raise NotImplementedError
     elif config.WAVE_EST_METHOD == "SPATIAL_CORRELATION":
         wave_point = spatial_correlation_method(sequence, config)
-    elif config.WAVE_EST_METHOD == "SPATIAL_DFT":
-        wave_point, wave_metrics = spatial_dft_estimator(sequence, estimator)
-    else:
-        raise NotImplementedError
-
-    # inversion de la bathy à partir des paramètres des vagues
-    if config.DEPTH_EST_METHOD == "LINEAR":
-        wave_bathy_point = depth_linear_inversion(wave_point, config)
+        # inversion de la bathy à partir des paramètres des vagues
+        if config.DEPTH_EST_METHOD == "LINEAR":
+            wave_bathy_point = depth_linear_inversion(wave_point, config)
+        else:
+            raise NotImplementedError
     else:
         raise NotImplementedError
 
