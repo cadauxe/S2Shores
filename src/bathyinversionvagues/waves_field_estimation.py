@@ -93,6 +93,6 @@ class WavesFieldEstimation(WavesFieldSampleDynamics):
         result += f'  delta phase ratio: {self.delta_phase_ratio:5.2f} '
         result += f'\nenergy_max: {self.energy_max:5.2f} (???)'
         result += f'  energy_max ratio: {self.energy_ratio:5.2f} '
-        result += f'\nckg: {self.energy_max:5.2f} '
+        result += f'\nckg: {self.ckg:5.2f} '
         result += f'  depth: {self.depth:5.2f} (m)'
         return result
