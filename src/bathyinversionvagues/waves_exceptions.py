@@ -8,11 +8,21 @@ Exceptions used in bathymetry estimation
 :license: see LICENSE file
 :created: 20 mai 2021
 """
+from typing import Optional
 
 
 class WavesException(Exception):
     """ Base class for all waves estimation exceptions
     """
+
+    def __init__(self, reason: Optional[str] = None) -> None:
+        super().__init__()
+        self.reason = reason
+
+    def __str__(self) -> str:
+        if self.reason is None:
+            return ''
+        return f'{self.reason}'
 
 
 class WavesEstimationError(WavesException):
