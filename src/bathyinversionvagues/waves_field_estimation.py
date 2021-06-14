@@ -12,6 +12,8 @@ import numpy as np
 from .bathy_physics import get_period_offshore, funLinearC_k
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
+KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
+
 
 class WavesFieldEstimation(WavesFieldSampleDynamics):
     """ This class encapsulates the information estimating a waves field sample.
@@ -20,12 +22,15 @@ class WavesFieldEstimation(WavesFieldSampleDynamics):
     estimation based on physical bathymetry.
     """
 
-    def __init__(self, delta_time: float, depth_precision: float, gravity: float) -> None:
+    def __init__(self, delta_time: float, depth_precision: float, gravity: float,
+                 depth_estimation_method: str) -> None:
         """ Constructor
 
         :param delta_time: the time difference between the 2 images used for the estimation
         :param depth_precision: precision (in meters) to be used for depth estimation
         :param gravity: the acceleration of gravity to use (m.s-2)
+        :param depth_estimation_method: the name of the depth estimation method to use
+        :raises NotImplementedError: when the depth estimation method is unsupported
         """
         super().__init__()
         self._delta_time = delta_time
@@ -34,6 +39,11 @@ class WavesFieldEstimation(WavesFieldSampleDynamics):
         self._energy_max = np.nan
         self._gravity = gravity
         self._depth_precision = depth_precision
+        if depth_estimation_method not in KNOWN_DEPTH_ESTIMATION_METHODS:
+            msg = f'{depth_estimation_method} is not a supported depth estimation method.'
+            msg += f' Must be one of {KNOWN_DEPTH_ESTIMATION_METHODS}'
+            raise NotImplementedError(msg)
+        self._depth_estimation_method = depth_estimation_method
 
     @property
     def delta_phase(self) -> float:
@@ -78,8 +88,18 @@ class WavesFieldEstimation(WavesFieldSampleDynamics):
 
     @property
     def depth(self) -> float:
-        """ :returns: The depth (m) """
-        return funLinearC_k(self.wavenumber, self.celerity, self._depth_precision, self._gravity)
+        """ The estimated depth
+
+        :returns: The depth (m)
+        :raises AttributeError: when the depth estimation method is not supported
+        """
+        if self._depth_estimation_method == 'LINEAR':
+            estimated_depth = funLinearC_k(self.wavenumber, self.celerity,
+                                           self._depth_precision, self._gravity)
+        else:
+            msg = 'depth attribute undefined when depth estimation method is not supported'
+            raise AttributeError(msg)
+        return estimated_depth
 
     @property
     def period_offshore(self) -> float:

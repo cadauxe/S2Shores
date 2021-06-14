@@ -137,7 +137,8 @@ class SpatialDFTBathyEstimator:
         for ii, peak_freq_index in enumerate(peaksFreq):
             waves_field_estimation = WavesFieldEstimation(self.delta_time,
                                                           self._params.D_PRECISION,
-                                                          self._params.G)
+                                                          self._params.G,
+                                                          self._params.DEPTH_EST_METHOD)
 
             peak_wavenumber_index = peaksK[ii]
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
