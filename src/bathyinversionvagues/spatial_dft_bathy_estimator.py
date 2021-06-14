@@ -25,15 +25,15 @@ from .waves_radon import WavesRadon
 class SpatialDFTBathyEstimator:
     # TODO: change detrend by passing a pre_processing function, with optional parameters
     def __init__(self, waves_image_ref: WavesImage, waves_image_sec: WavesImage,
-                 estimator,
+                 global_estimator,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
         :param selected_directions: the set of directions onto which the sinogram must be computed
         """
         # TODO: Check that the images have the same resolution, satellite (and same size ?)
-        self.parent_estimator = estimator
-        self._params = self.parent_estimator.waveparams
+        self.global_estimator = global_estimator
+        self._params = self.global_estimator.waveparams
 
         self.radon_transform1 = WavesRadon(waves_image_ref)
         self.radon_transform1.compute(selected_directions)
@@ -41,7 +41,9 @@ class SpatialDFTBathyEstimator:
         self.radon_transform2.compute(selected_directions)
 
         self.waves_fields_estimations: List[WavesFieldEstimation] = []
-        self.delta_time = self.parent_estimator.waveparams.DT  # delta time between the two images in seconds
+
+        # delta time between the two images in seconds
+        self.delta_time = self.global_estimator.waveparams.DT
 
         self._metrics: Dict[str, Any] = {}
         self.peaks_dir = None
@@ -63,7 +65,7 @@ class SpatialDFTBathyEstimator:
     def find_directions(self) -> None:
 
         # TODO: this processing sequence is related to bathymetry. Move elsewhere.
-        phi_max, phi_min = self.parent_estimator.get_phi_limits(
+        phi_max, phi_min = self.global_estimator.get_phi_limits(
             self.radon_transform1.spectrum_wave_numbers)
 
         # TODO: modify peak finding such that only one radon transform is computed (50% gain)
@@ -72,7 +74,7 @@ class SpatialDFTBathyEstimator:
         _, _, self.optimized_curve, self.peaks_dir = \
             self.get_wave_fields(phi_min, phi_max, self._params.PROMINENCE_MAX_PEAK)
         if len(self.peaks_dir[0]) == 0:  # pylint: disable=len-as-condition
-            raise WavesEstimationError('Unable to find a directional peak')
+            raise WavesEstimationError('Unable to find any directional peak')
 
     def find_directions_bis(self) -> None:
         sinograms1_powers = self.radon_transform1.get_sinograms_mean_power()
@@ -119,8 +121,8 @@ class SpatialDFTBathyEstimator:
     def find_spectral_peaks(self) -> None:
                 # Detailed analysis of the signal for positive phase shifts
 
-        kfft = self.parent_estimator.get_kfft()
-        phi_max, phi_min = self.parent_estimator.get_phi_limits()
+        kfft = self.global_estimator.get_kfft()
+        phi_max, phi_min = self.global_estimator.get_phi_limits()
         self._metrics['kfft'] = kfft
 
         self.radon_transform1.compute_sinograms_dfts(self.directions, kfft)
