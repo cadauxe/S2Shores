@@ -67,9 +67,12 @@ def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarra
     return results, metrics
 
 
-def wave_parameters_and_bathy_estimation(sequence, config, delta_t_arrays=None, estimator=None):
+# FIXME: config in pointed by estimator (estimator.waveparams), thus it is redundant
+def wave_parameters_and_bathy_estimation(sequence, estimator, delta_t_arrays=None):
+
     wave_bathy_point = None
 
+    config = estimator.waveparams
     # calcul des paramètres des vagues
     if config.WAVE_EST_METHOD == "SPATIAL_DFT":
         wave_bathy_point, wave_metrics = spatial_dft_estimator(sequence, estimator)
@@ -79,15 +82,18 @@ def wave_parameters_and_bathy_estimation(sequence, config, delta_t_arrays=None, 
         if config.DEPTH_EST_METHOD == "LINEAR":
             wave_bathy_point = depth_linear_inversion(wave_point, config)
         else:
-            raise NotImplementedError
+            msg = f'{config.DEPTH_EST_METHOD} is not a supported depth estimation method.'
+            raise NotImplementedError(msg)
     elif config.WAVE_EST_METHOD == "SPATIAL_CORRELATION":
         wave_point = spatial_correlation_method(sequence, config)
         # inversion de la bathy à partir des paramètres des vagues
         if config.DEPTH_EST_METHOD == "LINEAR":
             wave_bathy_point = depth_linear_inversion(wave_point, config)
         else:
-            raise NotImplementedError
+            msg = f'{config.DEPTH_EST_METHOD} is not a supported depth estimation method.'
+            raise NotImplementedError(msg)
     else:
-        raise NotImplementedError
+        msg = f'{config.WAVE_EST_METHOD} is not a supported local bathymetry estimation method.'
+        raise NotImplementedError(msg)
 
     return wave_bathy_point
