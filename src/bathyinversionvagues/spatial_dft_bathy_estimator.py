@@ -171,7 +171,7 @@ class SpatialDFTBathyEstimator:
         phase_shift_thresholded = self.process_phase(phase_shift, phi_min, phi_max)
 
         amplitude_sino1 = np.abs(sino1_fft) ** 2
-        amplitude_sino2 = np.abs(sino1_fft) ** 2
+        amplitude_sino2 = np.abs(sino2_fft) ** 2
         combined_amplitude = (amplitude_sino1 + amplitude_sino2)
 
         # Find maximum total energy per direction theta and normalize by the greater one
