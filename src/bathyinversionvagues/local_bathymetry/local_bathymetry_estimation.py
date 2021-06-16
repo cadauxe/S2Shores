@@ -27,7 +27,6 @@ def spatial_dft_estimator(images_sequence: List[WavesImage], estimator,
                           selected_directions: Optional[np.ndarray]=None):
     """
     """
-    config = estimator.waveparams
     local_bathy_estimator = SpatialDFTBathyEstimator(images_sequence,
                                                      estimator,
                                                      selected_directions=selected_directions)
@@ -37,11 +36,7 @@ def spatial_dft_estimator(images_sequence: List[WavesImage], estimator,
     except WavesException as excp:
         warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
 
-    results = local_bathy_estimator.get_results_as_dict(config.NKEEP,
-                                                        config.MIN_T,
-                                                        config.MAX_T,
-                                                        config.MIN_WAVES_LINEARITY,
-                                                        config.MAX_WAVES_LINEARITY)
+    results = local_bathy_estimator.get_results_as_dict()
     metrics = local_bathy_estimator.metrics
 
     # TODO: replace dictionaries by local_bathy_estimator object return when other estimator

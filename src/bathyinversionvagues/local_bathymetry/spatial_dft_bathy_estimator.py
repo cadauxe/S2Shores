@@ -245,18 +245,11 @@ class SpatialDFTBathyEstimator:
         result[np.abs(phase_shift) < phi_min] = 0
         return result
 
-    def get_results_as_dict(self, nb_max_wave_fields: int,
-                            min_period: float, max_period: float,
-                            min_waves_linearity: float,
-                            max_waves_linearity: float) -> Dict[str, np.ndarray]:
+    def get_results_as_dict(self) -> Dict[str, np.ndarray]:
         """
-        :param nb_max_wave_fields: maximum number of wave fields to keep
-        :param min_period: minimum waves period to keep.
-        :param max_period: maximum waves period to keep.
-        :param min_waves_linearity: minimum waves linearity to keep.
-        :param max_waves_linearity: maximum waves linearity to keep.
+        """
+        nb_max_wave_fields = self._params.NKEEP,
 
-        """
         delta_phase_ratios = np.empty((nb_max_wave_fields)) * np.nan
         celerities = np.empty((nb_max_wave_fields)) * np.nan  # Estimated celerity
         directions = np.empty((nb_max_wave_fields)) * np.nan
@@ -274,11 +267,11 @@ class SpatialDFTBathyEstimator:
         # FIXME: Should this filtering be made at estimation stage ?
         # TODO: too high number of fields would provide a hint on poor quality measure
         filtered_out_waves_fields = [field for field in self.waves_fields_estimations if
-                                     field.period >= min_period and
-                                     field.period <= max_period]
+                                     field.period >= self._params.MIN_T and
+                                     field.period <= self._params.MAX_T]
         filtered_out_waves_fields = [field for field in filtered_out_waves_fields if
-                                     field.ckg >= min_waves_linearity and
-                                     field.ckg <= max_waves_linearity]
+                                     field.ckg >= self._params.MIN_WAVES_LINEARITY and
+                                     field.ckg <= self._params.MAX_WAVES_LINEARITY]
         print(len(filtered_out_waves_fields))
         for ii, waves_field in enumerate(filtered_out_waves_fields[:nb_max_wave_fields]):
             directions[ii] = waves_field.direction
