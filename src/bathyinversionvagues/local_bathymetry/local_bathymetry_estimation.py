@@ -60,19 +60,19 @@ def wave_parameters_and_bathy_estimation(images_sequence: List[WavesImage],
 
         wave_bathy_point, wave_metrics = spatial_dft_estimator(images_sequence, global_estimator)
     elif global_estimator.waveparams.WAVE_EST_METHOD == 'TEMPORAL_CORRELATION':
-        wave_point = temporal_correlation_method(images_sequence, global_estimator.waveparams)
+        wave_point = temporal_correlation_method(images_sequence, global_estimator)
         # inversion de la bathy à partir des paramètres des vagues
         if global_estimator.waveparams.DEPTH_EST_METHOD == 'LINEAR':
-            wave_bathy_point = depth_linear_inversion(wave_point, global_estimator.waveparams)
+            wave_bathy_point = depth_linear_inversion(wave_point, global_estimator)
         else:
             msg = f'{global_estimator.waveparams.DEPTH_EST_METHOD} '
             msg += 'is not a supported depth estimation method.'
             raise NotImplementedError(msg)
     elif global_estimator.waveparams.WAVE_EST_METHOD == 'SPATIAL_CORRELATION':
-        wave_point = spatial_correlation_method(images_sequence, global_estimator.waveparams)
+        wave_point = spatial_correlation_method(images_sequence, global_estimator)
         # inversion de la bathy à partir des paramètres des vagues
         if global_estimator.waveparams.DEPTH_EST_METHOD == 'LINEAR':
-            wave_bathy_point = depth_linear_inversion(wave_point, global_estimator.waveparams)
+            wave_bathy_point = depth_linear_inversion(wave_point, global_estimator)
         else:
             msg = f'{global_estimator.waveparams.DEPTH_EST_METHOD} '
             msg += 'is not a supported depth estimation method.'

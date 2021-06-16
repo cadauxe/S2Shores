@@ -25,7 +25,7 @@ from ..image_processing.waves_image import WavesImage
 from ..waves_fields_display import draw_results
 
 
-def temporal_correlation_method(images_sequence: List[WavesImage], config):
+def temporal_correlation_method(images_sequence: List[WavesImage], global_estimator):
     """
     Bathymetry computation function based on time series correlation
 
@@ -44,6 +44,7 @@ def temporal_correlation_method(images_sequence: List[WavesImage], config):
             -   dir     =   Wave direction (RADON)      [degrees]
 
     """
+    config = global_estimator.waveparams
     # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
     Im = np.dstack([image.pixels for image in images_sequence])
 
@@ -94,7 +95,7 @@ def temporal_correlation_method(images_sequence: List[WavesImage], config):
         print("Bathymetry computation failed")
 
 
-def spatial_correlation_method(images_sequence: List[WavesImage], config):
+def spatial_correlation_method(images_sequence: List[WavesImage], global_estimator):
     """
         Bathymetry computation function based on spatial correlation
 
@@ -113,6 +114,7 @@ def spatial_correlation_method(images_sequence: List[WavesImage], config):
                 -   dir     =   Wave direction (RADON)      [degrees]
 
         """
+    config = global_estimator.waveparams
     # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
     Im = np.dstack([image.pixels for image in images_sequence])
 

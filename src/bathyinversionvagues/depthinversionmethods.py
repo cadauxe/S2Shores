@@ -16,7 +16,8 @@ from .bathy_physics import funLinearC_k
 
 
 # TODO: remove this function and rely on waves_field_samples attributes
-def depth_linear_inversion(wave_point, config):
+def depth_linear_inversion(wave_point, global_estimator):
+    config = global_estimator.waveparams
     kKeep = config.NKEEP
     NU = wave_point['nu']
     CEL = wave_point['cel']
