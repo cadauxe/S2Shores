@@ -10,16 +10,16 @@ Module containing all wave parameters estimation methods
 """
 import numpy as np
 
-from .shoresutils import (fft_filtering, compute_sinogram,
-                          create_sequence_time_series_temporal,
-                          compute_temporal_correlation, compute_celerity,
-                          cartesian_projection, correlation_tuning,
-                          sinogram_tuning, compute_wave_length, compute_period,
-                          temporal_reconstruction,
-                          temporal_reconstruction_tuning,
-                          create_sequence_time_series_spatial,
-                          compute_angles_distances, compute_spatial_correlation)
-from .waves_fields_display import draw_results
+from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
+                                            create_sequence_time_series_temporal,
+                                            compute_temporal_correlation, compute_celerity,
+                                            cartesian_projection, correlation_tuning,
+                                            sinogram_tuning, compute_wave_length, compute_period,
+                                            temporal_reconstruction,
+                                            temporal_reconstruction_tuning,
+                                            create_sequence_time_series_spatial,
+                                            compute_angles_distances, compute_spatial_correlation)
+from ..waves_fields_display import draw_results
 
 
 def temporal_correlation_method(Im, config):

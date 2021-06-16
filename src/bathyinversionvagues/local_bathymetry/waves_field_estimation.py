@@ -9,7 +9,7 @@
 """
 import numpy as np
 
-from .bathy_physics import get_period_offshore, funLinearC_k
+from ..bathy_physics import get_period_offshore, funLinearC_k
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']

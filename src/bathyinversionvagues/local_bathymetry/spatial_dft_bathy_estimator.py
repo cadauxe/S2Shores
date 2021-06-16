@@ -15,12 +15,13 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
-from .waves_exceptions import WavesEstimationError
+from ..image_processing.waves_image import WavesImage
+from ..image_processing.waves_radon import WavesRadon
+from ..waves_exceptions import WavesEstimationError
+from ..waves_fields_display import (display_curve, display_4curves,
+                                    display_3curves, display_estimation)
+
 from .waves_field_estimation import WavesFieldEstimation
-from .waves_fields_display import (display_curve, display_4curves,
-                                   display_3curves, display_estimation)
-from .waves_image import WavesImage
-from .waves_radon import WavesRadon
 
 
 class SpatialDFTBathyEstimator:

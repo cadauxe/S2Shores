@@ -14,12 +14,13 @@ import warnings
 
 import numpy as np
 
-from .depthinversionmethods import depth_linear_inversion
+from ..depthinversionmethods import depth_linear_inversion
+from ..image_processing.waves_image import WavesImage
+from ..waves_exceptions import WavesException
+
 from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
 from .wavemethods import spatial_correlation_method
 from .wavemethods import temporal_correlation_method
-from .waves_exceptions import WavesException
-from .waves_image import WavesImage
 
 
 def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarray]=None):
@@ -70,21 +71,21 @@ def wave_parameters_and_bathy_estimation(sequence, global_estimator, delta_t_arr
     wave_bathy_point = None
 
     # calcul des paramètres des vagues
-    if global_estimator.waveparams.WAVE_EST_METHOD == "SPATIAL_DFT":
+    if global_estimator.waveparams.WAVE_EST_METHOD == 'SPATIAL_DFT':
         wave_bathy_point, wave_metrics = spatial_dft_estimator(sequence, global_estimator)
-    elif global_estimator.waveparams.WAVE_EST_METHOD == "TEMPORAL_CORRELATION":
+    elif global_estimator.waveparams.WAVE_EST_METHOD == 'TEMPORAL_CORRELATION':
         wave_point = temporal_correlation_method(sequence, global_estimator.waveparams)
         # inversion de la bathy à partir des paramètres des vagues
-        if global_estimator.waveparams.DEPTH_EST_METHOD == "LINEAR":
+        if global_estimator.waveparams.DEPTH_EST_METHOD == 'LINEAR':
             wave_bathy_point = depth_linear_inversion(wave_point, global_estimator.waveparams)
         else:
             msg = f'{global_estimator.waveparams.DEPTH_EST_METHOD} '
             msg += 'is not a supported depth estimation method.'
             raise NotImplementedError(msg)
-    elif global_estimator.waveparams.WAVE_EST_METHOD == "SPATIAL_CORRELATION":
+    elif global_estimator.waveparams.WAVE_EST_METHOD == 'SPATIAL_CORRELATION':
         wave_point = spatial_correlation_method(sequence, global_estimator.waveparams)
         # inversion de la bathy à partir des paramètres des vagues
-        if global_estimator.waveparams.DEPTH_EST_METHOD == "LINEAR":
+        if global_estimator.waveparams.DEPTH_EST_METHOD == 'LINEAR':
             wave_bathy_point = depth_linear_inversion(wave_point, global_estimator.waveparams)
         else:
             msg = f'{global_estimator.waveparams.DEPTH_EST_METHOD} '
