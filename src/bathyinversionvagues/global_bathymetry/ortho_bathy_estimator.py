@@ -13,7 +13,7 @@ from xarray import Dataset  # @NoMove
 import xarray as xr  # @NoMove
 
 from ..image.sampled_ortho_image import SampledOrthoImage
-from ..local_bathymetry_estimation import wave_parameters_and_bathy_estimation
+from ..local_bathymetry.local_bathymetry_estimation import wave_parameters_and_bathy_estimation
 
 from .estimated_bathy import EstimatedBathy
 
