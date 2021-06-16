@@ -8,6 +8,8 @@ Module containing all wave parameters estimation methods
          gregoirethoumyre
          degoulromain
 """
+from typing import List
+
 import numpy as np
 
 from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
@@ -19,10 +21,11 @@ from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
                                             temporal_reconstruction_tuning,
                                             create_sequence_time_series_spatial,
                                             compute_angles_distances, compute_spatial_correlation)
+from ..image_processing.waves_image import WavesImage
 from ..waves_fields_display import draw_results
 
 
-def temporal_correlation_method(Im, config):
+def temporal_correlation_method(images_sequence: List[WavesImage], config):
     """
     Bathymetry computation function based on time series correlation
 
@@ -41,6 +44,9 @@ def temporal_correlation_method(Im, config):
             -   dir     =   Wave direction (RADON)      [degrees]
 
     """
+    # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
+    Im = np.dstack([image.pixels for image in images_sequence])
+
     try:
         if config.TEMPORAL_METHOD.PASS_BAND_FILTER:
             Im, flag = fft_filtering(Im, config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,
@@ -88,7 +94,7 @@ def temporal_correlation_method(Im, config):
         print("Bathymetry computation failed")
 
 
-def spatial_correlation_method(Im, config):
+def spatial_correlation_method(images_sequence: List[WavesImage], config):
     """
         Bathymetry computation function based on spatial correlation
 
@@ -107,6 +113,9 @@ def spatial_correlation_method(Im, config):
                 -   dir     =   Wave direction (RADON)      [degrees]
 
         """
+    # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
+    Im = np.dstack([image.pixels for image in images_sequence])
+
     try:
         if config.TEMPORAL_METHOD.PASS_BAND_FILTER:
             Im, flag = fft_filtering(Im, config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,

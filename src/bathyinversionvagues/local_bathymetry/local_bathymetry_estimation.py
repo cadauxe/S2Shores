@@ -23,24 +23,11 @@ from .wavemethods import spatial_correlation_method
 from .wavemethods import temporal_correlation_method
 
 
-def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarray]=None):
+def spatial_dft_estimator(images_sequence: List[WavesImage], estimator,
+                          selected_directions: Optional[np.ndarray]=None):
     """
     """
     config = estimator.waveparams
-    resolution = estimator.waveparams.DX  # in meter
-    # Check if the image is NOT empty (if statement):
-
-    # Create waves fields estimator [we can make this a for loop for the number of frames]
-    # TODO: Link WavesImage to OrthoImage and use resolution from it
-    if estimator.smoothing_requested:
-        smoothing = (estimator.smoothing_lines_size, estimator.smoothing_columns_size)
-    else:
-        smoothing = None
-
-    images_sequence: List[WavesImage] = []
-    for index in range(2):
-        images_sequence.append(WavesImage(Im[:, :, index], resolution, smoothing=smoothing))
-
     local_bathy_estimator = SpatialDFTBathyEstimator(images_sequence,
                                                      estimator,
                                                      selected_directions=selected_directions)
@@ -63,15 +50,17 @@ def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarra
 
 
 # FIXME: replace np.ndarray for sequence by a list, to prepare for passing objects
-def wave_parameters_and_bathy_estimation(sequence, global_estimator, delta_t_arrays=None):
+def wave_parameters_and_bathy_estimation(images_sequence: List[WavesImage],
+                                         global_estimator, delta_t_arrays=None):
 
     wave_bathy_point = None
 
     # calcul des paramètres des vagues
     if global_estimator.waveparams.WAVE_EST_METHOD == 'SPATIAL_DFT':
-        wave_bathy_point, wave_metrics = spatial_dft_estimator(sequence, global_estimator)
+
+        wave_bathy_point, wave_metrics = spatial_dft_estimator(images_sequence, global_estimator)
     elif global_estimator.waveparams.WAVE_EST_METHOD == 'TEMPORAL_CORRELATION':
-        wave_point = temporal_correlation_method(sequence, global_estimator.waveparams)
+        wave_point = temporal_correlation_method(images_sequence, global_estimator.waveparams)
         # inversion de la bathy à partir des paramètres des vagues
         if global_estimator.waveparams.DEPTH_EST_METHOD == 'LINEAR':
             wave_bathy_point = depth_linear_inversion(wave_point, global_estimator.waveparams)
@@ -80,7 +69,7 @@ def wave_parameters_and_bathy_estimation(sequence, global_estimator, delta_t_arr
             msg += 'is not a supported depth estimation method.'
             raise NotImplementedError(msg)
     elif global_estimator.waveparams.WAVE_EST_METHOD == 'SPATIAL_CORRELATION':
-        wave_point = spatial_correlation_method(sequence, global_estimator.waveparams)
+        wave_point = spatial_correlation_method(images_sequence, global_estimator.waveparams)
         # inversion de la bathy à partir des paramètres des vagues
         if global_estimator.waveparams.DEPTH_EST_METHOD == 'LINEAR':
             wave_bathy_point = depth_linear_inversion(wave_point, global_estimator.waveparams)

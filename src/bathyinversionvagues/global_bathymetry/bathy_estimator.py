@@ -70,14 +70,8 @@ class BathyEstimator(ABC):
 
     @property
     @abstractproperty
-    def ref_band_id(self) -> str:
-        """ :returns: the spectral band of the product to use as reference band
-        """
-
-    @property
-    @abstractproperty
-    def sec_band_id(self) -> str:
-        """ :returns: the spectral band of the product to use as secondary band
+    def bands_identifiers(self) -> List[str]:
+        """ :returns: the spectral band identifiers in the product to use for bathymetry estimation
         """
 
     @property

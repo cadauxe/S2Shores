@@ -5,17 +5,17 @@
 :created: 05/05/2021
 """
 import time
+from typing import Dict, List, TYPE_CHECKING
 
-from typing import Dict, TYPE_CHECKING
+from ..image.sampled_ortho_image import SampledOrthoImage
+from ..image_processing.waves_image import WavesImage
+from ..local_bathymetry.local_bathymetry_estimation import wave_parameters_and_bathy_estimation
+from .estimated_bathy import EstimatedBathy
+
 
 import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
 import xarray as xr  # @NoMove
-
-from ..image.sampled_ortho_image import SampledOrthoImage
-from ..local_bathymetry.local_bathymetry_estimation import wave_parameters_and_bathy_estimation
-
-from .estimated_bathy import EstimatedBathy
 
 
 if TYPE_CHECKING:
@@ -51,9 +51,10 @@ class OrthoBathyEstimator:
         # distance to shore (km)
         distoshore = xr.open_dataset(self.parent_estimator.distoshore_file_path)
 
-        # images reading
-        sub_image_ref = self.sampled_ortho.read_pixels(self.parent_estimator.ref_band_id)
-        sub_image_sec = self.sampled_ortho.read_pixels(self.parent_estimator.sec_band_id)
+        # subtile reading
+        sub_tile_images: List[np.ndarray] = []
+        for band_id in self.parent_estimator.bands_identifiers:
+            sub_tile_images.append(self.sampled_ortho.read_pixels(band_id))
         print(f'Loading time: {time.time() - start_load:.2f} s')
 
         start = time.time()
@@ -72,25 +73,8 @@ class OrthoBathyEstimator:
                 # FIXME: distance to shore test should take into account windows sizes
                 if distance > 0:
                     in_water_points += 1
-                    # computes the window in the image space
-                    window = self.sampled_ortho.window_extent((x_sample, y_sample))
-
-                    subimageref = sub_image_ref[window[0]:window[1] + 1, window[2]:window[3] + 1]
-                    subimagesec = sub_image_sec[window[0]:window[1] + 1, window[2]:window[3] + 1]
-                    if self.parent_estimator.debug_sample:
-                        print(f'Subtile shape {sub_image_ref.shape}')
-                        print(f'Window in ortho image coordinate: {window}')
-                        print(f'------- {self.parent_estimator.ref_band_id} reference imagette:')
-                        print(subimageref)
-                        print(f'Mean ref: {np.mean(subimageref)}')
-                        print(f'------- {self.parent_estimator.sec_band_id} secondary imagette:')
-                        print(subimagesec)
-                        print(f'Mean sec: {np.mean(subimagesec)}')
-                    # Bathymetry computation
-                    images_sequence = np.dstack((subimageref, subimagesec))
-                    wave_bathy_point = wave_parameters_and_bathy_estimation(images_sequence,
-                                                                            self.parent_estimator)
-
+                    # computes the bathymetry at the specified position
+                    wave_bathy_point = self.compute_local_bathy(sub_tile_images, x_sample, y_sample)
                 else:
                     wave_bathy_point = estimated_bathy.empty_sample
 
@@ -104,6 +88,35 @@ class OrthoBathyEstimator:
         print(f'Computed {in_water_points}/{total_points} points in: {comput_time:.2f} s')
 
         return estimated_bathy.build_dataset(layers_type)
+
+    def compute_local_bathy(self, sub_tile_images, x_sample, y_sample):
+
+        window = self.sampled_ortho.window_extent((x_sample, y_sample))
+        # TODO: Link WavesImage to OrthoImage and use resolution from it?
+        resolution = self.parent_estimator.waveparams.DX  # in meter
+        # Create the sequence of WavesImages (to be used by ALL estimators)
+        if self.parent_estimator.smoothing_requested:
+            smoothing = (self.parent_estimator.smoothing_lines_size,
+                         self.parent_estimator.smoothing_columns_size)
+        else:
+            smoothing = None
+
+        images_sequence: List[WavesImage] = []
+        for index, band_id in enumerate(self.parent_estimator.bands_identifiers):
+            window_image = WavesImage(sub_tile_images[index][window[0]:window[1] + 1,
+                                                             window[2]:window[3] + 1],
+                                      resolution, smoothing=smoothing)
+            images_sequence.append(window_image)
+            if self.parent_estimator.debug_sample:
+                print(f'Subtile shape {sub_tile_images[index].shape}')
+                print(f'Window in ortho image coordinate: {window}')
+                print(f'--{band_id} imagette {window_image.pixels.shape}:')
+                print(window_image.pixels)
+
+        # Local bathymetry computation
+        wave_bathy_point = wave_parameters_and_bathy_estimation(images_sequence,
+                                                                self.parent_estimator)
+        return wave_bathy_point
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this estimator
