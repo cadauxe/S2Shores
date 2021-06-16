@@ -10,17 +10,19 @@ module -- Class encapsulating operations on the radon transform of an image for 
 :created: 4 mars 2021
 """
 from functools import lru_cache
-
-from .generic_utils.directional_array import (DirectionalArray, linear_directions,
-                                              DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
-from .generic_utils.symmetric_radon import symmetric_radon
-from .shoresutils import DFT_fr, get_unity_roots
-from .waves_exceptions import NoRadonTransformError
-from .waves_image import WavesImage
-from .waves_sinogram import WavesSinogram
 from typing import Optional, Dict  # @NoMove
 
 import numpy as np  # @NoMove
+
+
+from ..generic_utils.directional_array import (DirectionalArray, linear_directions,
+                                               DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
+from ..generic_utils.symmetric_radon import symmetric_radon
+from ..waves_exceptions import NoRadonTransformError
+
+from .shoresutils import DFT_fr, get_unity_roots
+from .waves_image import WavesImage
+from .waves_sinogram import WavesSinogram
 
 
 @lru_cache()
@@ -82,8 +84,8 @@ class WavesRadon:
         return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
 
     def compute(self, selected_directions: Optional[np.ndarray]= None) -> None:
-        """
-        :returns: the radon transform of the image for the currently defined set of directions
+        """ Compute the radon transform of the image for the currently defined set of directions
+
         :raises AttributeError: if the directions have not been specified yet
         """
         if selected_directions is None:
