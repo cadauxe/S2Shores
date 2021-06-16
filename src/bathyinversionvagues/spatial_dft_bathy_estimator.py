@@ -17,7 +17,8 @@ import numpy as np
 
 from .waves_exceptions import WavesEstimationError
 from .waves_field_estimation import WavesFieldEstimation
-from .waves_fields_display import display_curve, display_4curves, display_3curves
+from .waves_fields_display import (display_curve, display_4curves,
+                                   display_3curves, display_estimation)
 from .waves_image import WavesImage
 from .waves_radon import WavesRadon
 
@@ -68,13 +69,18 @@ class SpatialDFTBathyEstimator:
         phi_max, phi_min = self.global_estimator.get_phi_limits(
             self.radon_transform1.spectrum_wave_numbers)
 
-        # TODO: modify peak finding such that only one radon transform is computed (50% gain)
+        # TODO: modify directions finding such that only one radon transform is computed (50% gain)
         self.radon_transform1.compute_sinograms_dfts()
         self.radon_transform2.compute_sinograms_dfts()
-        _, _, self.optimized_curve, self.peaks_dir = \
-            self.get_wave_fields(phi_min, phi_max, self._params.PROMINENCE_MAX_PEAK)
+        _, _, totalSpecMax_ref = self.get_wave_fields(phi_min, phi_max)
+        self.optimized_curve = totalSpecMax_ref
+        # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
+        self.peaks_dir = find_peaks(totalSpecMax_ref, prominence=self._params.PROMINENCE_MAX_PEAK)
         if len(self.peaks_dir[0]) == 0:  # pylint: disable=len-as-condition
             raise WavesEstimationError('Unable to find any directional peak')
+        if self.global_estimator.debug_sample:
+            print('initial directions')
+            print(self.peaks_dir)
 
     def find_directions_bis(self) -> None:
         sinograms1_powers = self.radon_transform1.get_sinograms_mean_power()
@@ -127,8 +133,8 @@ class SpatialDFTBathyEstimator:
 
         self.radon_transform1.compute_sinograms_dfts(self.directions, kfft)
         self.radon_transform2.compute_sinograms_dfts(self.directions, kfft)
-        phase_shift, totSpec, totalSpecMax_ref, peaksFreq = \
-            self.get_wave_fields(phi_min, phi_max, self._params.PROMINENCE_MULTIPLE_PEAKS)
+        phase_shift, totSpec, totalSpecMax_ref = self.get_wave_fields(phi_min, phi_max)
+        peaksFreq = find_peaks(totalSpecMax_ref, prominence=self._params.PROMINENCE_MULTIPLE_PEAKS)
         peaksFreq = peaksFreq[0]
         peaksK = np.argmax(totSpec[:, peaksFreq], axis=0)
         self._metrics['totSpec'] = np.abs(totSpec) / np.mean(totSpec)
@@ -153,11 +159,19 @@ class SpatialDFTBathyEstimator:
             waves_field_estimation.energy_max = totalSpecMax_ref[peak_freq_index]
             waves_field_estimation.wavenumber = kfft[peak_wavenumber_index][0]
             self.waves_fields_estimations.append(waves_field_estimation)
+        if self.global_estimator.debug_sample:
+            print('refined directions')
+            for waves_field in self.waves_fields_estimations:
+                print(waves_field)
 
         # sort the waves fields by energy_max level
         self.waves_fields_estimations.sort(key=lambda x: x.energy_max, reverse=True)
+        if self.global_estimator.debug_sample:
+            print('sorted directions')
+            for waves_field in self.waves_fields_estimations:
+                print(waves_field)
 
-    def get_wave_fields(self, phi_min, phi_max, prominence: float):
+    def get_wave_fields(self, phi_min, phi_max):
         # Detailed analysis of the signal for positive phase shifts
         if self.directions is None:
             nb_directions = self.radon_transform1.nb_directions
@@ -179,21 +193,39 @@ class SpatialDFTBathyEstimator:
 
         # Find maximum total energy per direction theta and normalize by the greater one
         totSpec = np.abs(combined_amplitude * phase_shift_thresholded)
-        maxHeta = np.amax(totSpec, axis=0)
+        maxHeta = np.max(totSpec, axis=0)
         totalSpecMax_ref = maxHeta / np.max(maxHeta)
-
         # Pick the maxima
-        peaksDir = find_peaks(totalSpecMax_ref, prominence=prominence)
 
-        # print(peaksDir)
-        # display_curve(totalSpecMax_ref, 'Total Spec Max ref')
+        if self.global_estimator.debug_sample:
+            self._dump(self.radon_transform1.pixels, 'Radon transform 1 input pixels')
+            self._dump(self.radon_transform1.radon_transform.get_as_array(), 'Radon transform 1')
+            self._dump(self.directions, 'Directions used for radon transform 1')
+            self._dump(sino1_fft, 'sinoFFT1')
+            self._dump(phase_shift, 'phase shift')
+            for index in range(0, phase_shift.shape[1]):
+                print(phase_shift[0][index])
 
-        # display_estimation(
-        #     combined_amplitude, amplitude_sino1,
-        #     phase_shift,
-        #     phase_shift_thresholded, totSpec,
-        #     totalSpecMax_ref)
-        return phase_shift_thresholded, totSpec, totalSpecMax_ref, peaksDir
+            self._dump(phase_shift_thresholded, 'phase shift thresholded')
+            for index in range(0, phase_shift_thresholded.shape[1]):
+                print(index, phase_shift_thresholded[1][index])
+
+            self._dump(combined_amplitude, 'combined_amplitude')
+            self._dump(totalSpecMax_ref, 'totalSpecMax_ref')
+
+            display_curve(totalSpecMax_ref, 'Total Spec Max ref')
+            display_estimation(
+                combined_amplitude, amplitude_sino1,
+                phase_shift,
+                phase_shift_thresholded, totSpec,
+                totalSpecMax_ref)
+
+        return phase_shift_thresholded, totSpec, totalSpecMax_ref
+
+    def _dump(self, variable: np.ndarray, variable_name: str) -> None:
+        if variable is not None:
+            print(f'{variable_name} {variable.shape} {variable.dtype}')
+        print(variable)
 
     def process_phase(self, phase_shift, phi_min, phi_max):
 
