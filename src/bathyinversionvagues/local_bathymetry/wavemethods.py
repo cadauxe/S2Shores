@@ -8,10 +8,11 @@ Module containing all wave parameters estimation methods
          gregoirethoumyre
          degoulromain
 """
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 
+from ..depthinversionmethods import depth_linear_inversion
 from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
                                             create_sequence_time_series_temporal,
                                             compute_temporal_correlation, compute_celerity,
@@ -157,3 +158,37 @@ def spatial_correlation_method(images_sequence: List[WavesImage], global_estimat
                 }
     except Exception:
         print("Bathymetry computation failed")
+
+
+def run_temporal_correlation_estimation(images_sequence: List[WavesImage], global_estimator,
+                                        selected_directions: Optional[np.ndarray]=None):
+    """
+    """
+    wave_point = temporal_correlation_method(images_sequence, global_estimator)
+    return process_correlation_outputs(wave_point, global_estimator)
+
+
+def run_spatial_correlation_estimation(images_sequence: List[WavesImage], global_estimator,
+                                       selected_directions: Optional[np.ndarray]=None):
+    """
+    """
+    wave_point = spatial_correlation_method(images_sequence, global_estimator)
+    return process_correlation_outputs(wave_point, global_estimator)
+
+
+def process_correlation_outputs(wave_point, global_estimator):
+    """
+    """
+    # inversion de la bathy à partir des paramètres des vagues
+    if global_estimator.waveparams.DEPTH_EST_METHOD == 'LINEAR':
+        wave_bathy_point = depth_linear_inversion(wave_point, global_estimator)
+    else:
+        msg = f'{global_estimator.waveparams.DEPTH_EST_METHOD} '
+        msg += 'is not a supported depth estimation method.'
+        raise NotImplementedError(msg)
+
+    results = wave_bathy_point
+    metrics = {}
+    # TODO: replace dictionaries by local_bathy_estimator object return when this estimator
+    # is updated.
+    return results, metrics

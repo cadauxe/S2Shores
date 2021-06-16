@@ -9,7 +9,7 @@ from typing import Dict, List, TYPE_CHECKING
 
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
-from ..local_bathymetry.local_bathymetry_estimation import wave_parameters_and_bathy_estimation
+from ..local_bathymetry.local_bathymetry_estimation import get_local_bathy_estimator
 from .estimated_bathy import EstimatedBathy
 
 
@@ -114,8 +114,10 @@ class OrthoBathyEstimator:
                 print(window_image.pixels)
 
         # Local bathymetry computation
-        wave_bathy_point = wave_parameters_and_bathy_estimation(images_sequence,
-                                                                self.parent_estimator)
+        local_bathy_estimator = get_local_bathy_estimator(
+            self.parent_estimator.waveparams.WAVE_EST_METHOD)
+        wave_bathy_point, metrics = local_bathy_estimator(images_sequence,
+                                                          self.parent_estimator)
         return wave_bathy_point
 
     def build_infos(self) -> Dict[str, str]:
