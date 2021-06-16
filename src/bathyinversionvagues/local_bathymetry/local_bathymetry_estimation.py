@@ -8,7 +8,7 @@ depth inversion. Initially designed for TODO
 @author: erwinbergsma
          gregoirethoumyre
 """
-from typing import Optional  # @NoMove
+from typing import Optional, List  # @NoMove
 
 import warnings
 
@@ -25,11 +25,6 @@ from .wavemethods import temporal_correlation_method
 
 def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarray]=None):
     """
-    Parameters
-    ----------
-    Im : numpy.ndarray
-        Sub-windowed images in M x N x BANDS -- currently only 2 bands are used!
-
     """
     config = estimator.waveparams
     resolution = estimator.waveparams.DX  # in meter
@@ -42,10 +37,11 @@ def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarra
     else:
         smoothing = None
 
-    waves_image_ref = WavesImage(Im[:, :, 0], resolution, smoothing=smoothing)
-    waves_image_sec = WavesImage(Im[:, :, 1], resolution, smoothing=smoothing)
+    images_sequence: List[WavesImage] = []
+    for index in range(2):
+        images_sequence.append(WavesImage(Im[:, :, index], resolution, smoothing=smoothing))
 
-    local_bathy_estimator = SpatialDFTBathyEstimator(waves_image_ref, waves_image_sec,
+    local_bathy_estimator = SpatialDFTBathyEstimator(images_sequence,
                                                      estimator,
                                                      selected_directions=selected_directions)
 
@@ -66,6 +62,7 @@ def spatial_dft_estimator(Im, estimator, selected_directions: Optional[np.ndarra
     return results, metrics
 
 
+# FIXME: replace np.ndarray for sequence by a list, to prepare for passing objects
 def wave_parameters_and_bathy_estimation(sequence, global_estimator, delta_t_arrays=None):
 
     wave_bathy_point = None

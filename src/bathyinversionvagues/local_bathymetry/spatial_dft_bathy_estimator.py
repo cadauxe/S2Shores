@@ -26,8 +26,7 @@ from .waves_field_estimation import WavesFieldEstimation
 
 class SpatialDFTBathyEstimator:
     # TODO: change detrend by passing a pre_processing function, with optional parameters
-    def __init__(self, waves_image_ref: WavesImage, waves_image_sec: WavesImage,
-                 global_estimator,
+    def __init__(self, images_sequence: List[WavesImage], global_estimator,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
@@ -37,10 +36,11 @@ class SpatialDFTBathyEstimator:
         self.global_estimator = global_estimator
         self._params = self.global_estimator.waveparams
 
-        self.radon_transform1 = WavesRadon(waves_image_ref)
-        self.radon_transform1.compute(selected_directions)
-        self.radon_transform2 = WavesRadon(waves_image_sec)
-        self.radon_transform2.compute(selected_directions)
+        self.radon_transforms: List[WavesRadon] = []
+        for image in images_sequence:
+            radon_transform = WavesRadon(image)
+            radon_transform.compute(selected_directions)
+            self.radon_transforms.append(radon_transform)
 
         self.waves_fields_estimations: List[WavesFieldEstimation] = []
 
@@ -68,12 +68,12 @@ class SpatialDFTBathyEstimator:
 
         # TODO: this processing sequence is related to bathymetry. Move elsewhere.
         phi_max, phi_min = self.global_estimator.get_phi_limits(
-            self.radon_transform1.spectrum_wave_numbers)
+            self.radon_transforms[0].spectrum_wave_numbers)
 
         # TODO: modify directions finding such that only one radon transform is computed (50% gain)
-        self.radon_transform1.compute_sinograms_dfts()
-        self.radon_transform2.compute_sinograms_dfts()
-        _, _, totalSpecMax_ref = self.get_wave_fields(phi_min, phi_max)
+        self.radon_transforms[0].compute_sinograms_dfts()
+        self.radon_transforms[1].compute_sinograms_dfts()
+        _, _, totalSpecMax_ref = self.get_energy_function(phi_min, phi_max)
         self.optimized_curve = totalSpecMax_ref
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
         self.peaks_dir = find_peaks(totalSpecMax_ref, prominence=self._params.PROMINENCE_MAX_PEAK)
@@ -84,28 +84,29 @@ class SpatialDFTBathyEstimator:
             print(self.peaks_dir)
 
     def find_directions_bis(self) -> None:
-        sinograms1_powers = self.radon_transform1.get_sinograms_mean_power()
-        sinograms_powers_normalized1 = sinograms1_powers / np.max(sinograms1_powers)
-        peaks_direction_radon1 = find_peaks(sinograms_powers_normalized1, prominence=0.1)
-        print(peaks_direction_radon1)
 
-        sinograms2_powers = self.radon_transform2.get_sinograms_mean_power()
-        sinograms_powers_normalized2 = sinograms2_powers / np.max(sinograms2_powers)
-        peaks_direction_radon2 = find_peaks(sinograms_powers_normalized2, prominence=0.1)
-        print(peaks_direction_radon2)
-        display_curve(sinograms_powers_normalized1, 'Power sinograms image 1')
-        display_curve(sinograms_powers_normalized2, 'Power sinograms image 2')
+        sinograms_powers_normalized_list: List[np.ndarray] = []
+        for radon_transform in self.radon_transforms:
+            sinograms_powers = radon_transform.get_sinograms_mean_power()
+            sinograms_powers_normalized = sinograms_powers / np.max(sinograms_powers)
+            sinograms_powers_normalized_list.append(sinograms_powers_normalized)
+            peaks_direction_radon = find_peaks(sinograms_powers_normalized, prominence=0.1)
+            print(peaks_direction_radon)
+
+        for index, radon_transform in enumerate(self.radon_transforms):
+            display_curve(sinograms_powers_normalized_list[index],
+                          f'Power sinograms image {index+1}')
         display_3curves(
             self.optimized_curve,
-            sinograms_powers_normalized1,
-            sinograms_powers_normalized2)
-        derived_metric = sinograms_powers_normalized1 * sinograms_powers_normalized2
+            sinograms_powers_normalized_list[0],
+            sinograms_powers_normalized_list[1])
+        derived_metric = sinograms_powers_normalized_list[0] * sinograms_powers_normalized_list[1]
         peaks_derived_metric = find_peaks(derived_metric, prominence=0.05)
         print(peaks_derived_metric)
         display_4curves(self.optimized_curve,
                         derived_metric,
-                        sinograms_powers_normalized1[::5],
-                        sinograms_powers_normalized2[::5])
+                        sinograms_powers_normalized[0][::5],
+                        sinograms_powers_normalized[1][::5])
 
     def prepare_refinement(self) -> None:
         refined_directions: List[np.ndarray] = []
@@ -123,7 +124,7 @@ class SpatialDFTBathyEstimator:
         # FIXME: this reorders the directions which is not always desired
         directions_indices = np.unique(refined_directions)
         self.directions = np.zeros_like(directions_indices)
-        self.directions[:] = self.radon_transform1.directions[directions_indices]
+        self.directions[:] = self.radon_transforms[0].directions[directions_indices]
 
     def find_spectral_peaks(self) -> None:
                 # Detailed analysis of the signal for positive phase shifts
@@ -132,9 +133,9 @@ class SpatialDFTBathyEstimator:
         phi_max, phi_min = self.global_estimator.get_phi_limits()
         self._metrics['kfft'] = kfft
 
-        self.radon_transform1.compute_sinograms_dfts(self.directions, kfft)
-        self.radon_transform2.compute_sinograms_dfts(self.directions, kfft)
-        phase_shift, totSpec, totalSpecMax_ref = self.get_wave_fields(phi_min, phi_max)
+        self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)
+        self.radon_transforms[1].compute_sinograms_dfts(self.directions, kfft)
+        phase_shift, totSpec, totalSpecMax_ref = self.get_energy_function(phi_min, phi_max)
         peaksFreq = find_peaks(totalSpecMax_ref, prominence=self._params.PROMINENCE_MULTIPLE_PEAKS)
         peaksFreq = peaksFreq[0]
         peaksK = np.argmax(totSpec[:, peaksFreq], axis=0)
@@ -149,7 +150,8 @@ class SpatialDFTBathyEstimator:
 
             peak_wavenumber_index = peaksK[ii]
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
-            estimated_direction = self.radon_transform1.directions[self.directions[peak_freq_index]]
+            estimated_direction = \
+                self.radon_transforms[0].directions[self.directions[peak_freq_index]]
             if estimated_phase_shift < 0.:
                 estimated_direction += 180
 
@@ -172,17 +174,17 @@ class SpatialDFTBathyEstimator:
             for waves_field in self.waves_fields_estimations:
                 print(waves_field)
 
-    def get_wave_fields(self, phi_min, phi_max):
-        # Detailed analysis of the signal for positive phase shifts
+    def get_energy_function(self, phi_min, phi_max):
+
         if self.directions is None:
-            nb_directions = self.radon_transform1.nb_directions
+            nb_directions = self.radon_transforms[0].nb_directions
         else:
             nb_directions = self.directions.shape[0]
         phi_min = np.tile(phi_min[:, np.newaxis], (1, nb_directions))
         phi_max = np.tile(phi_max[:, np.newaxis], (1, nb_directions))
 
-        sino1_fft = self.radon_transform1.get_sinograms_dfts(self.directions)
-        sino2_fft = self.radon_transform2.get_sinograms_dfts(self.directions)
+        sino1_fft = self.radon_transforms[0].get_sinograms_dfts(self.directions)
+        sino2_fft = self.radon_transforms[1].get_sinograms_dfts(self.directions)
 
         sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
         phase_shift = np.angle(sinograms_correlation_fft)
@@ -199,8 +201,8 @@ class SpatialDFTBathyEstimator:
         # Pick the maxima
 
         if self.global_estimator.debug_sample:
-            self._dump(self.radon_transform1.pixels, 'Radon transform 1 input pixels')
-            self._dump(self.radon_transform1.radon_transform.get_as_array(), 'Radon transform 1')
+            self._dump(self.radon_transforms[0].pixels, 'Radon transform 1 input pixels')
+            self._dump(self.radon_transforms[0].radon_transform.get_as_array(), 'Radon transform 1')
             self._dump(self.directions, 'Directions used for radon transform 1')
             self._dump(sino1_fft, 'sinoFFT1')
             self._dump(phase_shift, 'phase shift')
@@ -312,8 +314,8 @@ class SpatialDFTBathyEstimator:
     def metrics(self) -> Dict[str, Any]:
         """ :returns: a dictionary of metrics concerning the estimation process
         """
-        self._metrics['N'] = self.radon_transform1.nb_samples
-        self._metrics['radon_image1'] = self.radon_transform1
-        self._metrics['radon_image2'] = self.radon_transform2
+        self._metrics['N'] = self.radon_transforms[0].nb_samples
+        self._metrics['radon_image1'] = self.radon_transforms[0]
+        self._metrics['radon_image2'] = self.radon_transforms[1]
 
         return self._metrics
