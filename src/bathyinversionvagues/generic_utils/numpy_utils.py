@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 23 09:45:01 2020
+""" Module gathering several functions using numpy for different data handling purposes
 
-This is a bathymetry inversion package with all kinds of functions for
-depth inversion. Initially designed for TODO
-
-@author: erwinbergsma
-         gregoirethoumyre
+:created: 16/06/2021
+:author: Alain Giros
 """
 from functools import lru_cache
+from typing import List, Tuple
 
 import numpy as np
 
@@ -20,7 +17,7 @@ def sc_all(array: np.ndarray) -> bool:
     return True
 
 
-def find(condition):
+def find(condition: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     res, = np.nonzero(np.ravel(condition))
     return res
 
@@ -43,6 +40,7 @@ def circular_mask(nb_lines: int, nb_columns: int, dtype: int) -> np.ndarray:
 
     :param nb_lines: the number of lines of the image
     :param nb_columns: the number of columns of the image
+    :param dtype: the numpy data type to use for creating the mask
     :returns: The inscribed disk as a 2D array with ones inside the centered disk and zeros outside
     """
     inscribed_diameter = min(nb_lines, nb_columns)
@@ -56,3 +54,21 @@ def circular_mask(nb_lines: int, nb_columns: int, dtype: int) -> np.ndarray:
             if dist_to_center <= radius**2:
                 image[line][column] = 1  # used integral 1 to allow casting to the desired dtype
     return image
+
+
+def split_samples(samples: np.ndarray, nb_parts: int) -> List[np.ndarray]:
+    """ Split a sequence or array in a number of almost equal sized parts
+
+    :param samples: sequence or array to split in several parts
+    :param nb_parts: number of parts to create from samples
+    :returns: the list of created parts
+    """
+    parts = []
+    part_length = int(len(samples) / nb_parts)
+    for part_index in range(nb_parts):
+        start_index = part_index * part_length
+        stop_index = start_index + part_length
+        if part_index == nb_parts - 1:
+            stop_index = len(samples)
+        parts.append(samples[start_index:stop_index])
+    return parts

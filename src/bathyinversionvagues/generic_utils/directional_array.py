@@ -152,6 +152,7 @@ class DirectionalArray:
         """ Returns a 2D array with the requested directional values as columns
 
         :param directions: a vector of directions to store in the returned array, in their order
+        :returns: a 2D array with the requested directional values as columns
         """
         if directions is None:
             return self._array
