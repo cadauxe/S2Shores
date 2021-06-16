@@ -10,7 +10,7 @@
 import unittest
 import numpy as np  # @NoMove
 
-from bathyinversionvagues.directional_array import DirectionalArray, normalize_direction
+from bathyinversionvagues.generic_utils.directional_array import DirectionalArray
 
 TEST_ARRAY1 = np.array([[1, 9, 4],
                         [4., 7, -8],

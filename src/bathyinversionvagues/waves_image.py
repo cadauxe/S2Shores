@@ -13,7 +13,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from .numpy_utils import circular_mask
+from .generic_utils.numpy_utils import circular_mask
 from .shoresutils import funDetrend_2d, funSmooth2
 
 

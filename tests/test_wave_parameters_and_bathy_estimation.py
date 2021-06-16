@@ -3,8 +3,8 @@ from osgeo import gdal
 from scipy.io import loadmat
 
 from bathycommun.config.config_bathy import ConfigBathy
+from bathyinversionvagues.generic_utils.numpy_utils import permute_axes
 from bathyinversionvagues.local_bathymetry_estimation import wave_parameters_and_bathy_estimation
-from bathyinversionvagues.numpy_utils import permute_axes
 import numpy as np
 
 

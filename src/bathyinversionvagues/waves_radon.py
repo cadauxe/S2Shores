@@ -10,17 +10,17 @@ module -- Class encapsulating operations on the radon transform of an image for 
 :created: 4 mars 2021
 """
 from functools import lru_cache
-from typing import Optional, Dict  # @NoMove
 
-import numpy as np  # @NoMove
-
-from .directional_array import (DirectionalArray, linear_directions,
-                                DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
+from .generic_utils.directional_array import (DirectionalArray, linear_directions,
+                                              DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
+from .generic_utils.symmetric_radon import symmetric_radon
 from .shoresutils import DFT_fr, get_unity_roots
 from .waves_exceptions import NoRadonTransformError
 from .waves_image import WavesImage
-from .waves_radon_symmetric import symmetric_radon
 from .waves_sinogram import WavesSinogram
+from typing import Optional, Dict  # @NoMove
+
+import numpy as np  # @NoMove
 
 
 @lru_cache()
