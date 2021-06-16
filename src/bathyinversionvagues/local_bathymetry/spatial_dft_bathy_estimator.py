@@ -248,7 +248,7 @@ class SpatialDFTBathyEstimator:
     def get_results_as_dict(self) -> Dict[str, np.ndarray]:
         """
         """
-        nb_max_wave_fields = self._params.NKEEP,
+        nb_max_wave_fields = self._params.NKEEP
 
         delta_phase_ratios = np.empty((nb_max_wave_fields)) * np.nan
         celerities = np.empty((nb_max_wave_fields)) * np.nan  # Estimated celerity
