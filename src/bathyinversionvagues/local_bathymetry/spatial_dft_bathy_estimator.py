@@ -33,7 +33,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         :param selected_directions: the set of directions onto which the sinogram must be computed
         """
-        super().__init__(images_sequence, global_estimator, selected_directions)
+        super().__init__(images_sequence, global_estimator)
+        self.selected_directions = selected_directions
 
         self.radon_transforms: List[WavesRadon] = []
         for image in images_sequence:
