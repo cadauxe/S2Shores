@@ -10,6 +10,7 @@ Module containing all wave parameters estimation methods
 """
 from typing import List, Optional
 
+from bathyinversionvagues.local_bathymetry.waves_field_estimation import WavesFieldEstimation
 import numpy as np
 
 from ..depthinversionmethods import depth_linear_inversion
@@ -24,6 +25,25 @@ from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
                                             compute_angles_distances, compute_spatial_correlation)
 from ..image_processing.waves_image import WavesImage
 from ..waves_fields_display import draw_results
+
+
+def build_correlation_output(direction, wavelength, period, celerity, config):
+    waves_field_estimation = WavesFieldEstimation(config.DT,
+                                                  config.D_PRECISION,
+                                                  config.G,
+                                                  config.DEPTH_EST_METHOD)
+    waves_field_estimation.direction = direction
+    waves_field_estimation.wavelength = wavelength
+    waves_field_estimation.period = period
+    waves_field_estimation.celerity = celerity
+
+    waves_fieldestimation_as_dict = {'cel': np.array([celerity]),
+                                     'nu': np.array([1 / wavelength]),
+                                     'T': np.array([period]),
+                                     'dir': np.array([direction]),
+                                     'dcel': np.array([0])
+                                     }
+    return waves_field_estimation, waves_fieldestimation_as_dict
 
 
 def temporal_correlation_method(images_sequence: List[WavesImage], global_estimator):
@@ -86,12 +106,10 @@ def temporal_correlation_method(images_sequence: List[WavesImage], global_estima
             draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, sinogram_tuned, argmax,
                          wave_length_peaks, wave_length, params, celerity, peaks_max, SS_filtered, T)
 
-        return {'cel': np.array([celerity]),
-                'nu': np.array([1 / wave_length]),
-                'T': np.array([T]),
-                'dir': np.array([angle]),
-                'dcel': np.array([0])
-                }
+        waves_field_estimation, waves_fieldestimation_as_dict = build_correlation_output(
+            angle, wave_length, T, celerity, config)
+        return waves_fieldestimation_as_dict
+
     except Exception as excp:
         print(f'Bathymetry computation failed: {str(excp)}')
         return {}
@@ -152,12 +170,10 @@ def spatial_correlation_method(images_sequence: List[WavesImage], global_estimat
         T, peaks_max = compute_period(SS_filtered=SS_filtered,
                                       min_peaks_distance=params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
 
-        return {'cel': np.array([celerity]),
-                'nu': np.array([1 / wave_length]),
-                'T': np.array([T]),
-                'dir': np.array([angle]),
-                'dcel': np.array([0])
-                }
+        waves_field_estimation, waves_fieldestimation_as_dict = build_correlation_output(
+            angle, wave_length, T, celerity, config)
+        return waves_fieldestimation_as_dict
+
     except Exception as excp:
         print(f'Bathymetry computation failed: {str(excp)}')
         return {}
