@@ -156,7 +156,11 @@ class EstimatedBathy:
         for y_index in range(nb_samples_y):
             for x_index in range(nb_samples_x):
                 bathy_point = self.estimated_bathy[y_index, x_index]
-                bathy_property = bathy_point[sample_property]
+                # FIXME: Should raise an exception? Parameterize MANDATORY/OPTIONAL ?
+                try:
+                    bathy_property = bathy_point[sample_property]
+                except KeyError:
+                    bathy_property = np.nan
                 if bathy_property.ndim == 1:
                     layer_data[y_index, x_index, :] = bathy_property[:min(
                         self.nbkeep, bathy_property.size)]
