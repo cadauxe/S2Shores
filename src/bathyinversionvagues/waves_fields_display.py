@@ -69,7 +69,7 @@ def display_estimation(amplitude, amplitude_sino1, phase,
 
 
 def draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, sinogram_tuned, argmax,
-                 wave_length_peaks, wave_length, config, celerity, peaks_max, SS_filtered, T, path):
+                 wave_length_peaks, wave_length, params, celerity, peaks_max, SS_filtered, T):
     fig = plt.figure(constrained_layout=True)
     gs = gridspec.GridSpec(5, 4, figure=fig)
     imin = np.min(Im[:, :, 0])
@@ -111,19 +111,19 @@ def draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, 
     ax4.plot(x, sinogram_tuned)
     ax4.plot(x[wave_length_peaks], sinogram_tuned[wave_length_peaks], 'ro')
     ax4.annotate('L=%d m' % wave_length, (0, np.min(sinogram_tuned)), color='r')
-    ax4.arrow(x[int(length_signal / 2 + wave_length / (2 * config.TEMPORAL_METHOD.RESOLUTION.SPATIAL))],
+    ax4.arrow(x[int(length_signal / 2 + wave_length / (2 * params.RESOLUTION.SPATIAL))],
               np.min(sinogram_tuned), 0,
               np.abs(np.min(sinogram_tuned)) + np.max(sinogram_tuned), linestyle='dashed', color='g')
-    ax4.arrow(x[int(length_signal / 2 - wave_length / (2 * config.TEMPORAL_METHOD.RESOLUTION.SPATIAL))],
+    ax4.arrow(x[int(length_signal / 2 - wave_length / (2 * params.RESOLUTION.SPATIAL))],
               np.min(sinogram_tuned), 0,
               np.abs(np.min(sinogram_tuned)) + np.max(sinogram_tuned), linestyle='dashed', color='g')
     ax4.plot(x[int(argmax)], sinogram_tuned[int(argmax)], 'go')
     ax4.arrow(x[int(length_signal / 2)], 0,
-              argmax - len(sinogram_tuned) / (2 * config.TEMPORAL_METHOD.RESOLUTION.SPATIAL), 0, color='g')
+              argmax - len(sinogram_tuned) / (2 * params.RESOLUTION.SPATIAL), 0, color='g')
     ax4.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(
-        (argmax - len(sinogram_tuned) / (2 * config.TEMPORAL_METHOD.RESOLUTION.SPATIAL)),
-        config.TEMPORAL_METHOD.TEMPORAL_LAG * config.TEMPORAL_METHOD.RESOLUTION.TEMPORAL, celerity), (
-        x[int(argmax - wave_length / (2 * config.TEMPORAL_METHOD.RESOLUTION.SPATIAL) + length_signal / 2)],
+        (argmax - len(sinogram_tuned) / (2 * params.RESOLUTION.SPATIAL)),
+        params.TEMPORAL_LAG * params.RESOLUTION.TEMPORAL, celerity), (
+        x[int(argmax - wave_length / (2 * params.RESOLUTION.SPATIAL) + length_signal / 2)],
         np.max(sinogram_tuned) - 10), color='orange')
     plt.title('Sinogram')
 
@@ -132,4 +132,4 @@ def draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, 
     ax5.plot(peaks_max, SS_filtered[peaks_max], 'ro')
     ax5.annotate('T={:.2f} s'.format(T), (0, np.min(SS_filtered)), color='r')
     plt.title('Temporal reconstruction')
-    fig.savefig(os.path.join(path, 'Infos_point.png'), dpi=300)
+    fig.savefig(os.path.join(params.DEBUG_PATH, 'Infos_point.png'), dpi=300)

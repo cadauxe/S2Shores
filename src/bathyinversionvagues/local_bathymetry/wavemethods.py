@@ -46,45 +46,45 @@ def temporal_correlation_method(images_sequence: List[WavesImage], global_estima
 
     """
     config = global_estimator.waveparams
+    params = config.TEMPORAL_METHOD
     # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
     Im = np.dstack([image.pixels for image in images_sequence])
 
     try:
-        if config.TEMPORAL_METHOD.PASS_BAND_FILTER:
-            Im, flag = fft_filtering(Im, config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,
+        if params.PASS_BAND_FILTER:
+            Im, flag = fft_filtering(Im, params.RESOLUTION.SPATIAL,
                                      config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
                                      config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
         stime_series, xx, yy = create_sequence_time_series_temporal(Im=Im,
-                                                                    percentage_points=config.TEMPORAL_METHOD.PERCENTAGE_POINTS)
+                                                                    percentage_points=params.PERCENTAGE_POINTS)
         corr = compute_temporal_correlation(sequence_thumbnail=stime_series,
-                                            number_frame_shift=config.TEMPORAL_METHOD.TEMPORAL_LAG)
+                                            number_frame_shift=params.TEMPORAL_LAG)
         corr_car, distances, angles = cartesian_projection(corr_matrix=corr, xx=xx, yy=yy,
-                                                           spatial_resolution=config.TEMPORAL_METHOD.RESOLUTION.SPATIAL)
+                                                           spatial_resolution=params.RESOLUTION.SPATIAL)
         corr_car_tuned = correlation_tuning(correlation_matrix=corr_car,
-                                            ratio=config.TEMPORAL_METHOD.TUNING.RATIO_SIZE_CORRELATION)
+                                            ratio=params.TUNING.RATIO_SIZE_CORRELATION)
         (sinogram_max_var, angle, variance, radon_matrix) = compute_sinogram(correlation_matrix=corr_car_tuned,
-                                                                             median_filter_kernel_ratio=config.TEMPORAL_METHOD.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM,
-                                                                             mean_filter_kernel_size=config.TEMPORAL_METHOD.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
+                                                                             median_filter_kernel_ratio=params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM,
+                                                                             mean_filter_kernel_size=params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
         sinogram_tuned = sinogram_tuning(sinogram=sinogram_max_var,
-                                         mean_filter_kernel_size=config.TEMPORAL_METHOD.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
+                                         mean_filter_kernel_size=params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
         wave_length, wave_length_peaks = compute_wave_length(sinogram=sinogram_tuned)
         celerity, argmax = compute_celerity(sinogram=sinogram_tuned, wave_length=wave_length,
-                                            spatial_resolution=config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,
-                                            time_resolution=config.TEMPORAL_METHOD.RESOLUTION.TEMPORAL,
-                                            temporal_lag=config.TEMPORAL_METHOD.TEMPORAL_LAG)
+                                            spatial_resolution=params.RESOLUTION.SPATIAL,
+                                            time_resolution=params.RESOLUTION.TEMPORAL,
+                                            temporal_lag=params.TEMPORAL_LAG)
         SS = temporal_reconstruction(angle=angle, angles=np.degrees(angles), distances=distances, celerity=celerity,
                                      correlation_matrix=corr,
-                                     time_interpolation_resolution=config.TEMPORAL_METHOD.RESOLUTION.TIME_INTERPOLATION)
+                                     time_interpolation_resolution=params.RESOLUTION.TIME_INTERPOLATION)
         SS_filtered = temporal_reconstruction_tuning(SS,
-                                                     time_interpolation_resolution=config.TEMPORAL_METHOD.RESOLUTION.TIME_INTERPOLATION,
-                                                     low_frequency_ratio=config.TEMPORAL_METHOD.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION,
-                                                     high_frequency_ratio=config.TEMPORAL_METHOD.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION)
+                                                     time_interpolation_resolution=params.RESOLUTION.TIME_INTERPOLATION,
+                                                     low_frequency_ratio=params.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION,
+                                                     high_frequency_ratio=params.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION)
         T, peaks_max = compute_period(SS_filtered=SS_filtered,
-                                      min_peaks_distance=config.TEMPORAL_METHOD.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
-        if config.TEMPORAL_METHOD.DEBUG_MODE:
+                                      min_peaks_distance=params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
+        if params.DEBUG_MODE:
             draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, sinogram_tuned, argmax,
-                         wave_length_peaks, wave_length, config, celerity, peaks_max, SS_filtered, T,
-                         config.TEMPORAL_METHOD.DEBUG_PATH)
+                         wave_length_peaks, wave_length, params, celerity, peaks_max, SS_filtered, T)
 
         return {'cel': np.array([celerity]),
                 'nu': np.array([1 / wave_length]),
@@ -117,39 +117,40 @@ def spatial_correlation_method(images_sequence: List[WavesImage], global_estimat
 
         """
     config = global_estimator.waveparams
+    params = config.SPATIAL_METHOD
     # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
     Im = np.dstack([image.pixels for image in images_sequence])
 
     try:
-        if config.TEMPORAL_METHOD.PASS_BAND_FILTER:
-            Im, flag = fft_filtering(Im, config.TEMPORAL_METHOD.RESOLUTION.SPATIAL,
+        if params.PASS_BAND_FILTER:
+            Im, flag = fft_filtering(Im, params.RESOLUTION.SPATIAL,
                                      config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
                                      config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
         simg_filtered, xx, yy = create_sequence_time_series_spatial(Im=Im)
         angles, distances = compute_angles_distances(M=simg_filtered)
         corr = compute_spatial_correlation(sequence_thumbnail=simg_filtered,
-                                           number_frame_shift=config.SPATIAL_METHOD.TEMPORAL_LAG)
+                                           number_frame_shift=params.TEMPORAL_LAG)
         corr_tuned = correlation_tuning(correlation_matrix=corr,
-                                        ratio=config.SPATIAL_METHOD.TUNING.RATIO_SIZE_CORRELATION)
+                                        ratio=params.TUNING.RATIO_SIZE_CORRELATION)
         (sinogram_max_var, angle, variance, radon_matrix) = compute_sinogram(correlation_matrix=corr_tuned,
-                                                                             median_filter_kernel_ratio=config.SPATIAL_METHOD.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM,
-                                                                             mean_filter_kernel_size=config.SPATIAL_METHOD.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
+                                                                             median_filter_kernel_ratio=params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM,
+                                                                             mean_filter_kernel_size=params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
         sinogram_tuned = sinogram_tuning(sinogram=sinogram_max_var,
-                                         mean_filter_kernel_size=config.SPATIAL_METHOD.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
+                                         mean_filter_kernel_size=params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
         wave_length, zeros = compute_wave_length(sinogram=sinogram_tuned)
         celerity, argmax = compute_celerity(sinogram=sinogram_tuned, wave_length=wave_length,
-                                            spatial_resolution=config.SPATIAL_METHOD.RESOLUTION.SPATIAL,
-                                            time_resolution=config.SPATIAL_METHOD.RESOLUTION.TEMPORAL,
-                                            temporal_lag=config.SPATIAL_METHOD.TEMPORAL_LAG)
+                                            spatial_resolution=params.RESOLUTION.SPATIAL,
+                                            time_resolution=params.RESOLUTION.TEMPORAL,
+                                            temporal_lag=params.TEMPORAL_LAG)
         SS = temporal_reconstruction(angle=angle, angles=np.degrees(angles), distances=distances, celerity=celerity,
                                      correlation_matrix=corr,
-                                     time_interpolation_resolution=config.SPATIAL_METHOD.RESOLUTION.TIME_INTERPOLATION)
+                                     time_interpolation_resolution=params.RESOLUTION.TIME_INTERPOLATION)
         SS_filtered = temporal_reconstruction_tuning(SS,
-                                                     time_interpolation_resolution=config.SPATIAL_METHOD.RESOLUTION.TIME_INTERPOLATION,
-                                                     low_frequency_ratio=config.SPATIAL_METHOD.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION,
-                                                     high_frequency_ratio=config.SPATIAL_METHOD.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION)
+                                                     time_interpolation_resolution=params.RESOLUTION.TIME_INTERPOLATION,
+                                                     low_frequency_ratio=params.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION,
+                                                     high_frequency_ratio=params.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION)
         T, peaks_max = compute_period(SS_filtered=SS_filtered,
-                                      min_peaks_distance=config.SPATIAL_METHOD.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
+                                      min_peaks_distance=params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
 
         return {'cel': np.array([celerity]),
                 'nu': np.array([1 / wave_length]),
