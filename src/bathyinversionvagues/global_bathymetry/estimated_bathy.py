@@ -160,7 +160,7 @@ class EstimatedBathy:
                 try:
                     bathy_property = bathy_point[sample_property]
                 except KeyError:
-                    bathy_property = np.nan
+                    bathy_property = np.array([np.nan])
                 if bathy_property.ndim == 1:
                     layer_data[y_index, x_index, :] = bathy_property[:min(
                         self.nbkeep, bathy_property.size)]
