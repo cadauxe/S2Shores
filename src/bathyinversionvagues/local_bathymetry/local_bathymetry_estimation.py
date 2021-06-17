@@ -8,7 +8,7 @@ depth inversion. Initially designed for TODO
 @author: erwinbergsma
          gregoirethoumyre
 """
-from typing import Optional, List, Callable  # @NoMove
+from typing import Optional, List, Callable, Type  # @NoMove
 
 import warnings
 
@@ -23,10 +23,15 @@ from .wavemethods import run_temporal_correlation_estimation
 
 def run_spatial_dft_estimation(images_sequence: List[WavesImage], global_estimator,
                                selected_directions: Optional[np.ndarray]=None):
-    """
-    """
-    local_bathy_estimator_cls = SpatialDFTBathyEstimator
+    return run_local_bathy_estimation(SpatialDFTBathyEstimator, images_sequence, global_estimator,
+                                      selected_directions)
 
+
+def run_local_bathy_estimation(local_bathy_estimator_cls: Type,
+                               images_sequence: List[WavesImage], global_estimator,
+                               selected_directions: Optional[np.ndarray]=None):
+    """
+    """
     local_bathy_estimator = local_bathy_estimator_cls(images_sequence,
                                                       global_estimator,
                                                       selected_directions=selected_directions)
@@ -48,6 +53,10 @@ def run_spatial_dft_estimation(images_sequence: List[WavesImage], global_estimat
 LOCAL_BATHY_ESTIMATION_FUNC = {'SPATIAL_DFT': run_spatial_dft_estimation,
                                'TEMPORAL_CORRELATION': run_temporal_correlation_estimation,
                                'SPATIAL_CORRELATION': run_spatial_correlation_estimation}
+
+LOCAL_BATHY_ESTIMATION_CLS = {'SPATIAL_DFT': SpatialDFTBathyEstimator,
+                              'TEMPORAL_CORRELATION': None,
+                              'SPATIAL_CORRELATION': None}
 
 
 def get_local_bathy_estimator(local_estimator_code: str) -> Callable:
