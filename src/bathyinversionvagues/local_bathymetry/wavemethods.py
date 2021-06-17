@@ -92,8 +92,9 @@ def temporal_correlation_method(images_sequence: List[WavesImage], global_estima
                 'dir': np.array([angle]),
                 'dcel': np.array([0])
                 }
-    except Exception:
-        print("Bathymetry computation failed")
+    except Exception as excp:
+        print(f'Bathymetry computation failed: {str(excp)}')
+        return {}
 
 
 def spatial_correlation_method(images_sequence: List[WavesImage], global_estimator):
@@ -156,8 +157,9 @@ def spatial_correlation_method(images_sequence: List[WavesImage], global_estimat
                 'dir': np.array([angle]),
                 'dcel': np.array([0])
                 }
-    except Exception:
-        print("Bathymetry computation failed")
+    except Exception as excp:
+        print(f'Bathymetry computation failed: {str(excp)}')
+        return {}
 
 
 def run_temporal_correlation_estimation(images_sequence: List[WavesImage], global_estimator,

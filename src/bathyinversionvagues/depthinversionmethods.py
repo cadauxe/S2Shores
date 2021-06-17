@@ -19,15 +19,20 @@ from .bathy_physics import funLinearC_k
 def depth_linear_inversion(wave_point, global_estimator):
     config = global_estimator.waveparams
     kKeep = config.NKEEP
-    NU = wave_point['nu']
-    CEL = wave_point['cel']
     DEP = np.empty(kKeep) * np.nan
+    WAVELENGTH = np.empty(kKeep) * np.nan
+    try:
+        NU = wave_point['nu']
+        CEL = wave_point['cel']
 
-    for ii in range(0, np.min((CEL.shape[0], kKeep))):
-        if not np.isnan(CEL[ii]):
-            DEP[ii] = funLinearC_k(NU[ii], CEL[ii], config.D_PRECISION, config.G)
+        for ii in range(0, np.min((CEL.shape[0], kKeep))):
+            if not np.isnan(CEL[ii]):
+                DEP[ii] = funLinearC_k(NU[ii], CEL[ii], config.D_PRECISION, config.G)
+        WAVELENGTH = 1 / NU
+    except KeyError:
+        pass
 
     wave_point_out_dic = copy.deepcopy(wave_point)
     wave_point_out_dic['depth'] = DEP
-    wave_point_out_dic['L'] = 1 / NU
+    wave_point_out_dic['L'] = WAVELENGTH
     return wave_point_out_dic
