@@ -7,6 +7,7 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
+from typing import Optional
 import numpy as np
 
 from .waves_field_sample_geometry import WavesFieldSampleGeometry
@@ -25,6 +26,7 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
     def __init__(self) -> None:
         super().__init__()
         self._period = np.nan
+        self._celerity: Optional[float] = None
 
     @property
     def period(self) -> float:
@@ -37,8 +39,17 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
     @property
     def celerity(self) -> float:
-        """ :returns: The waves field velocity (m/s) """
-        return 1. / (self.wavenumber * self.period)
+        """ :returns: The waves field velocity (m/s) either the celerity which was directly set or
+                      computed from the wavelength and the period
+        """
+        if self._celerity is None:
+            self._celerity = 1. / (self.wavenumber * self.period)
+        return self._celerity
+
+    # FIXME: being able to provide a celerity which does not satisfy wavelength = c*T seems crazy
+    @celerity.setter
+    def celerity(self, value: float) -> None:
+        self._celerity = value
 
     def __str__(self) -> str:
         result = WavesFieldSampleGeometry.__str__(self)
