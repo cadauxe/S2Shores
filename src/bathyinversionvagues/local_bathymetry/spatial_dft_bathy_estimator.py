@@ -9,7 +9,7 @@ Class managing the computation of waves fields from two images taken at a small 
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Optional, Dict, Any, List  # @NoMove
+from typing import Optional, List  # @NoMove
 
 from scipy.signal import find_peaks
 
@@ -21,10 +21,11 @@ from ..waves_exceptions import WavesEstimationError
 from ..waves_fields_display import (display_curve, display_4curves,
                                     display_3curves, display_estimation)
 
+from .local_bathy_estimator import LocalBathyEstimator
 from .waves_field_estimation import WavesFieldEstimation
 
 
-class SpatialDFTBathyEstimator:
+class SpatialDFTBathyEstimator(LocalBathyEstimator):
     # TODO: change detrend by passing a pre_processing function, with optional parameters
     def __init__(self, images_sequence: List[WavesImage], global_estimator,
                  selected_directions: Optional[np.ndarray] = None) -> None:
@@ -32,9 +33,7 @@ class SpatialDFTBathyEstimator:
 
         :param selected_directions: the set of directions onto which the sinogram must be computed
         """
-        # TODO: Check that the images have the same resolution, satellite (and same size ?)
-        self.global_estimator = global_estimator
-        self._params = self.global_estimator.waveparams
+        super().__init__(images_sequence, global_estimator, selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []
         for image in images_sequence:
@@ -42,12 +41,9 @@ class SpatialDFTBathyEstimator:
             radon_transform.compute(selected_directions)
             self.radon_transforms.append(radon_transform)
 
-        self.waves_fields_estimations: List[WavesFieldEstimation] = []
-
         # delta time between the two images in seconds
         self.delta_time = self.global_estimator.waveparams.DT
 
-        self._metrics: Dict[str, Any] = {}
         self.peaks_dir = None
         self.directions = None
 
@@ -63,6 +59,10 @@ class SpatialDFTBathyEstimator:
         self.prepare_refinement()
 
         self.find_spectral_peaks()
+
+        self._metrics['N'] = self.radon_transforms[0].nb_samples
+        self._metrics['radon_image1'] = self.radon_transforms[0]
+        self._metrics['radon_image2'] = self.radon_transforms[1]
 
     def find_directions(self) -> None:
 
@@ -225,11 +225,6 @@ class SpatialDFTBathyEstimator:
 
         return phase_shift_thresholded, totSpec, totalSpecMax_ref
 
-    def _dump(self, variable: np.ndarray, variable_name: str) -> None:
-        if variable is not None:
-            print(f'{variable_name} {variable.shape} {variable.dtype}')
-        print(variable)
-
     def process_phase(self, phase_shift, phi_min, phi_max):
 
         if not self._params.UNWRAP_PHASE_SHIFT:
@@ -244,71 +239,3 @@ class SpatialDFTBathyEstimator:
         # Minimal propagation speed; this depends on the Satellite; Venus or Sentinel 2
         result[np.abs(phase_shift) < phi_min] = 0
         return result
-
-    def get_results_as_dict(self) -> Dict[str, np.ndarray]:
-        """
-        """
-        nb_max_wave_fields = self._params.NKEEP
-
-        delta_phase_ratios = np.empty((nb_max_wave_fields)) * np.nan
-        celerities = np.empty((nb_max_wave_fields)) * np.nan  # Estimated celerity
-        directions = np.empty((nb_max_wave_fields)) * np.nan
-        deltas_phase = np.empty((nb_max_wave_fields)) * np.nan
-        wavenumbers = np.empty((nb_max_wave_fields)) * np.nan
-        wavelengths = np.empty((nb_max_wave_fields)) * np.nan
-        energies_max = np.empty((nb_max_wave_fields)) * np.nan
-        energies_ratios = np.empty((nb_max_wave_fields)) * np.nan
-        depths = np.empty((nb_max_wave_fields)) * np.nan
-        periods = np.empty((nb_max_wave_fields)) * np.nan
-        periods_offshore = np.empty((nb_max_wave_fields)) * np.nan
-        ckgs = np.empty((nb_max_wave_fields)) * np.nan
-        delta_celerities = np.empty((nb_max_wave_fields)) * np.nan
-
-        # FIXME: Should this filtering be made at estimation stage ?
-        # TODO: too high number of fields would provide a hint on poor quality measure
-        filtered_out_waves_fields = [field for field in self.waves_fields_estimations if
-                                     field.period >= self._params.MIN_T and
-                                     field.period <= self._params.MAX_T]
-        filtered_out_waves_fields = [field for field in filtered_out_waves_fields if
-                                     field.ckg >= self._params.MIN_WAVES_LINEARITY and
-                                     field.ckg <= self._params.MAX_WAVES_LINEARITY]
-        print(len(filtered_out_waves_fields))
-        for ii, waves_field in enumerate(filtered_out_waves_fields[:nb_max_wave_fields]):
-            directions[ii] = waves_field.direction
-            wavenumbers[ii] = waves_field.wavenumber
-            wavelengths[ii] = waves_field.wavelength
-            celerities[ii] = waves_field.celerity
-            periods[ii] = waves_field.period
-            periods_offshore[ii] = waves_field.period_offshore
-            ckgs[ii] = waves_field.ckg
-            depths[ii] = waves_field.depth
-
-            deltas_phase[ii] = waves_field.delta_phase
-            delta_phase_ratios[ii] = waves_field.delta_phase_ratio
-            energies_max[ii] = waves_field.energy_max
-            energies_ratios[ii] = waves_field.energy_ratio
-
-        return {'cel': celerities,
-                'nu': wavenumbers,
-                'L': wavelengths,
-                'T': periods,
-                'T_off': periods_offshore,
-                'dir': directions,
-                'dPhi': deltas_phase,
-                'dPhiRat': delta_phase_ratios,
-                'c2kg': ckgs,
-                'energy': energies_max,
-                'energyRat': energies_ratios,
-                'depth': depths,
-                'dcel': delta_celerities
-                }
-
-    @property
-    def metrics(self) -> Dict[str, Any]:
-        """ :returns: a dictionary of metrics concerning the estimation process
-        """
-        self._metrics['N'] = self.radon_transforms[0].nb_samples
-        self._metrics['radon_image1'] = self.radon_transforms[0]
-        self._metrics['radon_image2'] = self.radon_transforms[1]
-
-        return self._metrics
