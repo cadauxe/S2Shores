@@ -16,15 +16,29 @@ import numpy as np
 
 from ..image_processing.waves_image import WavesImage
 from ..waves_exceptions import WavesException
+from .spatial_correlation_bathy_estimator import spatial_correlation_method
 from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
-from .wavemethods import run_spatial_correlation_estimation
-from .wavemethods import run_temporal_correlation_estimation
+from .temporal_correlation_bathy_estimator import temporal_correlation_method
 
 
 def run_spatial_dft_estimation(images_sequence: List[WavesImage], global_estimator,
                                selected_directions: Optional[np.ndarray]=None):
     return run_local_bathy_estimation(SpatialDFTBathyEstimator, images_sequence, global_estimator,
                                       selected_directions)
+
+
+def run_temporal_correlation_estimation(images_sequence: List[WavesImage], global_estimator,
+                                        selected_directions: Optional[np.ndarray]=None):
+    """
+    """
+    return temporal_correlation_method(images_sequence, global_estimator)
+
+
+def run_spatial_correlation_estimation(images_sequence: List[WavesImage], global_estimator,
+                                       selected_directions: Optional[np.ndarray]=None):
+    """
+    """
+    return spatial_correlation_method(images_sequence, global_estimator)
 
 
 def run_local_bathy_estimation(local_bathy_estimator_cls: Type,
@@ -42,11 +56,12 @@ def run_local_bathy_estimation(local_bathy_estimator_cls: Type,
         warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
 
     results = local_bathy_estimator.get_results_as_dict()
+    # FIXME: decide what to do with metrics
     metrics = local_bathy_estimator.metrics
 
     # TODO: replace dictionaries by local_bathy_estimator object return when other estimator
     # are updated.
-    return results, metrics
+    return results
 
 
 # FIXME: to be replaced by the classes to be instanciated for local bathy estimators

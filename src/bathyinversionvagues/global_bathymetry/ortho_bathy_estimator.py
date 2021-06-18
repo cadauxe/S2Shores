@@ -116,8 +116,8 @@ class OrthoBathyEstimator:
         # Local bathymetry computation
         local_bathy_estimator = get_local_bathy_estimator(
             self.parent_estimator.waveparams.WAVE_EST_METHOD)
-        wave_bathy_point, metrics = local_bathy_estimator(images_sequence,
-                                                          self.parent_estimator)
+        wave_bathy_point = local_bathy_estimator(images_sequence,
+                                                 self.parent_estimator)
         return wave_bathy_point
 
     def build_infos(self) -> Dict[str, str]:

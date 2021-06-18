@@ -33,10 +33,12 @@ class WavesFieldEstimation(WavesFieldSampleDynamics):
         :raises NotImplementedError: when the depth estimation method is unsupported
         """
         super().__init__()
+
         self._delta_time = delta_time
         self._delta_phase = np.nan
         self._delta_phase_ratio = np.nan
         self._energy_max = np.nan
+
         self._gravity = gravity
         self._depth_precision = depth_precision
         if depth_estimation_method not in KNOWN_DEPTH_ESTIMATION_METHODS:
