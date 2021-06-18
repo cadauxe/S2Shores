@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Class managing the computation of waves fields from two images taken at a small time interval.
-
+""" Class managing the computation of waves fields from two images taken at a small time interval.
 
 :author: Alain Giros
 :organization: CNES
@@ -33,8 +31,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         :param selected_directions: the set of directions onto which the sinogram must be computed
         """
-        super().__init__(images_sequence, global_estimator)
-        self.selected_directions = selected_directions
+        super().__init__(images_sequence, global_estimator, selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []
         for image in images_sequence:

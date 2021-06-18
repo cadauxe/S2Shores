@@ -22,7 +22,7 @@ from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
                                             )
 from ..image_processing.waves_image import WavesImage
 from ..waves_fields_display import draw_results
-
+from .local_bathy_estimator import LocalBathyEstimator
 from .wavemethods import build_correlation_output
 
 
@@ -89,8 +89,15 @@ def temporal_correlation_method(images_sequence: List[WavesImage], global_estima
         waves_field_estimation, waves_fieldestimation_as_dict = build_correlation_output(
             angle, wave_length, T, celerity, config)
 
-        return waves_fieldestimation_as_dict
+        return waves_field_estimation
 
     except Exception as excp:
         print(f'Bathymetry computation failed: {str(excp)}')
         return {}
+
+
+class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
+
+    def run(self) -> None:
+        result = temporal_correlation_method(self.images_sequence, self.global_estimator)
+        self.waves_fields_estimations.append(result)

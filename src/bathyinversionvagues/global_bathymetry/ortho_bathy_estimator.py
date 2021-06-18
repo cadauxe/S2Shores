@@ -5,7 +5,11 @@
 :created: 05/05/2021
 """
 import time
+import warnings
+
 from typing import Dict, List, TYPE_CHECKING
+
+from bathyinversionvagues.waves_exceptions import WavesException
 
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
@@ -114,10 +118,21 @@ class OrthoBathyEstimator:
                 print(window_image.pixels)
 
         # Local bathymetry computation
-        local_bathy_estimator = get_local_bathy_estimator(
+        local_bathy_estimator_cls = get_local_bathy_estimator(
             self.parent_estimator.waveparams.WAVE_EST_METHOD)
-        wave_bathy_point = local_bathy_estimator(images_sequence,
-                                                 self.parent_estimator)
+        local_bathy_estimator = local_bathy_estimator_cls(images_sequence,
+                                                          self.parent_estimator)
+
+        try:
+            local_bathy_estimator.run()
+        except WavesException as excp:
+            warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
+        # FIXME: decide what to do with metrics
+        metrics = local_bathy_estimator.metrics
+
+        # TODO: replace dictionaries by local_bathy_estimator object return when other estimator
+        # are updated.
+        wave_bathy_point = local_bathy_estimator.get_results_as_dict()
         return wave_bathy_point
 
     def build_infos(self) -> Dict[str, str]:

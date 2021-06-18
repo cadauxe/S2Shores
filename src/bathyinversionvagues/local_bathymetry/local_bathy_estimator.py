@@ -9,7 +9,7 @@ Class managing the computation of waves fields from two images taken at a small 
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Dict, Any, List  # @NoMove
+from typing import Dict, Any, List, Optional  # @NoMove
 
 from abc import abstractmethod, ABC
 
@@ -20,7 +20,8 @@ from .waves_field_estimation import WavesFieldEstimation
 
 
 class LocalBathyEstimator(ABC):
-    def __init__(self, images_sequence: List[WavesImage], global_estimator) -> None:
+    def __init__(self, images_sequence: List[WavesImage], global_estimator,
+                 selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
         :param selected_directions: the set of directions onto which the sinogram must be computed
@@ -30,6 +31,7 @@ class LocalBathyEstimator(ABC):
         self._params = self.global_estimator.waveparams
 
         self.images_sequence = images_sequence
+        self.selected_directions = selected_directions
 
         self.waves_fields_estimations: List[WavesFieldEstimation] = []
 
