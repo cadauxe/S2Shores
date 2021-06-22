@@ -48,6 +48,12 @@ class WavesFieldEstimation(WavesFieldSampleDynamics):
         self._depth_estimation_method = depth_estimation_method
 
     @property
+    def delta_celerity(self) -> float:
+        # FIXME: define this quantity
+        """ :returns: ????????????????? """
+        return np.nan
+
+    @property
     def delta_phase(self) -> float:
         """ :returns: the measured phase difference between both observations (rd) """
         return self._delta_phase
