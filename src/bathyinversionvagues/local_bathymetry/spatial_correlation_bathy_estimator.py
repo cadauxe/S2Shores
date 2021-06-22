@@ -29,7 +29,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         """ Run the local bathy estimator using the spatial correlation method
 
         """
-        config = self.global_estimator.waveparams
+        config = self._params
         params = config.SPATIAL_METHOD
         # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
         Im = np.dstack([image.pixels for image in self.images_sequence])
