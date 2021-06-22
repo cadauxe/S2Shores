@@ -21,7 +21,7 @@ from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
 
 from ..waves_fields_display import draw_results
 from .local_bathy_estimator import LocalBathyEstimator
-from .wavemethods import build_correlation_output
+from .wavemethods import build_waves_field_estimation
 
 
 class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
@@ -71,8 +71,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 draw_results(Im, angle, corr_car, radon_matrix, variance, sinogram_max_var, sinogram_tuned, argmax,
                              wave_length_peaks, wave_length, params, celerity, peaks_max, SS_filtered, T)
 
-            waves_field_estimation, waves_fieldestimation_as_dict = build_correlation_output(
-                angle, wave_length, T, celerity, config)
+            waves_field_estimation = build_waves_field_estimation(angle, wave_length, T,
+                                                                  celerity, config)
 
             self.waves_fields_estimations.append(waves_field_estimation)
 
