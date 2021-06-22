@@ -11,6 +11,7 @@ Module containing all wave parameters estimation methods
 from .waves_field_estimation import WavesFieldEstimation
 
 
+# TODO: generalize as a  local_bathy_estimator method taking into account the anomaly l=c*t
 def build_waves_field_estimation(direction: float, wavelength: float, period: float,
                                  celerity: float, config) -> WavesFieldEstimation:
     # FIXME: DT does not seem to be the right value to take here. Use DeltaTimeProvider when written
