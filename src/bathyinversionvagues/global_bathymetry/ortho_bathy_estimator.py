@@ -48,7 +48,6 @@ class OrthoBathyEstimator:
 
         start_load = time.time()
         nb_keep = self.parent_estimator.waveparams.NKEEP
-        layers_type = self.parent_estimator.waveparams.LAYERS_TYPE
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
                                          self.sampled_ortho.image.acquisition_time, nb_keep)
@@ -83,20 +82,19 @@ class OrthoBathyEstimator:
                     wave_bathy_point = estimated_bathy.empty_sample
 
                 # Store bathymetry sample
-                # FIXME: distance is a DataArray xarray instance
-                wave_bathy_point['distoshore'] = distance
-                estimated_bathy.store_sample(i, j, wave_bathy_point)
+                estimated_bathy.store_sample(i, j, (wave_bathy_point, distance))
 
         total_points = self.sampled_ortho.nb_samples
         comput_time = time.time() - start
         print(f'Computed {in_water_points}/{total_points} points in: {comput_time:.2f} s')
 
-        return estimated_bathy.build_dataset(layers_type)
+        return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE)
 
     def compute_local_bathy(self, sub_tile_images, x_sample, y_sample):
 
         window = self.sampled_ortho.window_extent((x_sample, y_sample))
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
+        # FIXME: At least resolution should come from GeoTransform
         resolution = self.parent_estimator.waveparams.DX  # in meter
         # Create the sequence of WavesImages (to be used by ALL estimators)
         if self.parent_estimator.smoothing_requested:

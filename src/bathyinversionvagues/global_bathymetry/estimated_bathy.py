@@ -6,7 +6,7 @@
 """
 from datetime import datetime
 
-from typing import Mapping, Hashable, Any, Dict
+from typing import Mapping, Hashable, Any, Dict, Tuple, List
 
 import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
@@ -15,59 +15,79 @@ import xarray as xr  # @NoMove
 
 ALL_LAYERS_TYPES = ['NOMINAL', 'DEBUG']
 
+DIMS_Y_X_NKEEP_TIME = ['y', 'x', 'kKeep', 'time']
+DIMS_Y_X_TIME = ['y', 'x', 'time']
 # TODO: adapt to samples attributes access when local estimators will return samples objects
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
-BATHY_PRODUCT_DEF = {'depth': {'layer_type': ALL_LAYERS_TYPES,
-                               'layer_name': 'depth',
-                               'precision': 8,
-                               'attrs': {'Dimension': 'Meters [m]',
-                                         'name': 'Raw estimated depth'}},
-                     'dir': {'layer_type': ALL_LAYERS_TYPES,
-                             'layer_name': 'direction',
-                             'precision': 8,
-                             'attrs': {'Dimension': 'degree',
-                                       'name': 'Wave_direction'}},
-                     'T': {'layer_type': ALL_LAYERS_TYPES,
-                           'layer_name': 'period',
-                           'precision': 2,
-                           'attrs': {'Dimension': 'Seconds [sec]',
-                                     'name': 'Wave_period'}},
-                     'cel': {'layer_type': ALL_LAYERS_TYPES,
-                             'layer_name': 'celerity',
-                             'precision': 8,
-                             'attrs': {'Dimension': 'Meters per second [m/sec]',
-                                       'name': 'Wave_celerity'}},
-                     'L': {'layer_type': ALL_LAYERS_TYPES,
-                           'layer_name': 'wavelength',
-                           'precision': 8,
-                           'attrs': {'Dimension': 'Meters [m]',
-                                     'name': 'wavelength'}},
-                     'nu': {'layer_type': ALL_LAYERS_TYPES,
-                            'layer_name': 'wavenumber',
-                            'precision': 8,
-                            'attrs': {'Dimension': 'Per Meter [m-1]',
-                                      'name': 'wavenumber'}},
-                     'distoshore': {'layer_type': ALL_LAYERS_TYPES,
-                                    'layer_name': 'distoshore',
-                                    'precision': 8,
-                                    'attrs': {'Dimension': 'Kilometers [km]',
-                                              'name': 'Distance_to_shore'}},
-                     'dcel': {'layer_type': ['DEBUG'],
-                              'layer_name': 'deltaC',
-                              'precision': 8,
-                              'attrs': {'Dimension': 'Meters per seconds2 [m/sec2]',
-                                        'name': 'delta_celerity'}},
-                     'dPhi': {'layer_type': ['DEBUG'],
-                              'layer_name': 'PhaseShift',
-                              'precision': 8,
-                              'attrs': {'Dimension': 'Radians [rd]',
-                                        'name': 'Phase shift'}},
-                     'energy': {'layer_type': ['DEBUG'],
-                                'layer_name': 'Energy',
-                                'precision': 8,
-                                'attrs': {'Dimension': '????',
-                                          'name': 'Energy'}},
-                     }
+# TODO: introduce dims as an attribute and build dims and coords dynamically.
+BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
+    'depth': {'layer_type': ALL_LAYERS_TYPES,
+              'layer_name': 'depth',
+              'dimensions': DIMS_Y_X_NKEEP_TIME,
+              'precision': 8,
+              'attrs': {'Dimension': 'Meters [m]',
+                        'name': 'Raw estimated depth'}},
+    'dir': {'layer_type': ALL_LAYERS_TYPES,
+            'layer_name': 'direction',
+            'dimensions': DIMS_Y_X_NKEEP_TIME,
+            'precision': 8,
+            'attrs': {'Dimension': 'degree',
+                      'name': 'Wave_direction'}},
+    'T': {'layer_type': ALL_LAYERS_TYPES,
+          'layer_name': 'period',
+          'dimensions': DIMS_Y_X_NKEEP_TIME,
+          'precision': 2,
+          'attrs': {'Dimension': 'Seconds [sec]',
+                    'name': 'Wave_period'}},
+    'cel': {'layer_type': ALL_LAYERS_TYPES,
+            'layer_name': 'celerity',
+            'dimensions': DIMS_Y_X_NKEEP_TIME,
+            'precision': 8,
+            'attrs': {'Dimension': 'Meters per second [m/sec]',
+                      'name': 'Wave_celerity'}},
+    'L': {'layer_type': ALL_LAYERS_TYPES,
+          'layer_name': 'wavelength',
+          'dimensions': DIMS_Y_X_NKEEP_TIME,
+          'precision': 8,
+          'attrs': {'Dimension': 'Meters [m]',
+                    'name': 'wavelength'}},
+    'nu': {'layer_type': ALL_LAYERS_TYPES,
+           'layer_name': 'wavenumber',
+           'dimensions': DIMS_Y_X_NKEEP_TIME,
+           'precision': 8,
+           'attrs': {'Dimension': 'Per Meter [m-1]',
+                     'name': 'wavenumber'}},
+    'distoshore': {'layer_type': ALL_LAYERS_TYPES,
+                   'layer_name': 'distoshore',
+                   'dimensions': DIMS_Y_X_TIME,
+                   'precision': 8,
+                   'attrs': {'Dimension': 'Kilometers [km]',
+                             'name': 'Distance_to_shore'}},
+    'dcel': {'layer_type': ['DEBUG'],
+             'layer_name': 'deltaC',
+             'dimensions': DIMS_Y_X_NKEEP_TIME,
+             'precision': 8,
+             'attrs': {'Dimension': 'Meters per seconds2 [m/sec2]',
+                       'name': 'delta_celerity'}},
+    'dPhi': {'layer_type': ['DEBUG'],
+             'layer_name': 'PhaseShift',
+             'dimensions': DIMS_Y_X_NKEEP_TIME,
+             'precision': 8,
+             'attrs': {'Dimension': 'Radians [rd]',
+                       'name': 'Phase shift'}},
+    'energy': {'layer_type': ['DEBUG'],
+               'layer_name': 'Energy',
+               'dimensions': DIMS_Y_X_NKEEP_TIME,
+               'precision': 8,
+               'attrs': {'Dimension': '????',
+                         'name': 'Energy'}},
+}
+# FIXME: Missing:
+#                {'T_off': periods_offshore,
+#                 'dPhiRat': delta_phase_ratios,
+#                 'c2kg': ckgs,
+#                 'energyRat': energies_ratios,
+#                 }
 
 
 # FIXME: In the future nbkeep should be used only by this class and shall not be propagated
@@ -93,11 +113,9 @@ class EstimatedBathy:
 
         timestamp = datetime(int(acq_time[:4]), int(acq_time[4:6]), int(acq_time[6:8]),
                              int(acq_time[9:11]), int(acq_time[11:13]), int(acq_time[13:15]))
-
-        self.coords: Mapping[Hashable, Any] = {'y': y_samples,
-                                               'x': x_samples,
-                                               'kKeep': np.arange(1, nb_keep + 1),
-                                               'time': [timestamp]}
+        self.timestamps = [timestamp]
+        self.x_samples = x_samples
+        self.y_samples = y_samples
 
         # Dictionary containing empty results to be used when computation is not successful.
         # FIXME: Defined here because: 1) there is no intermediary class representing a set of bathy
@@ -106,15 +124,15 @@ class EstimatedBathy:
         for sample_property in BATHY_PRODUCT_DEF:
             self.empty_sample[sample_property] = np.empty(nb_keep) * np.nan
 
-    def store_sample(self, x_index: int, y_index: int, bathy_point: dict) -> None:
+    def store_sample(self, x_index: int, y_index: int, bathy_info: Tuple[dict, float]) -> None:
         """ Store a bathymetry sample
 
         :param x_index: index of the sample along the X axis
         :param y_index: index of the sample along the Y axis
-        :param bathy_point: the estimated sample values
+        :param bathy_info: a tuple with the estimated sample values and the distance to shore
         """
         # TODO: use the x and y coordinates instead of an index, for better modularity
-        self.estimated_bathy[y_index, x_index] = bathy_point
+        self.estimated_bathy[y_index, x_index] = bathy_info
 
     def build_dataset(self, layers_type: str) -> Dataset:
         """ Build an xarray DataSet containing the estimated bathymetry.
@@ -132,9 +150,8 @@ class EstimatedBathy:
         # make individual dataset with attributes:
         for sample_property, layer_definition in BATHY_PRODUCT_DEF.items():
             if layers_type in layer_definition['layer_type']:
-                product_layer = layer_definition['layer_name']
                 data_array = self._build_data_array(sample_property, layer_definition)
-                datasets.append(data_array.to_dataset(name=product_layer))
+                datasets.append(data_array.to_dataset(name=layer_definition['layer_name']))
 
         # Combine all datasets:
         return xr.merge(datasets)
@@ -148,30 +165,53 @@ class EstimatedBathy:
         :raises IndexError: when the property is not a scalar or a vector
         :returns: an xarray DataArray containing the formatted property
         """
-        precision = layer_definition['precision']
-        nb_samples_y = self.estimated_bathy.shape[0]
-        nb_samples_x = self.estimated_bathy.shape[1]
+        nb_samples_y, nb_samples_x = self.estimated_bathy.shape
 
-        layer_data = np.full((nb_samples_y, nb_samples_x, self.nbkeep), np.nan)
+        dims = layer_definition['dimensions']
+        if 'kKeep' in dims:
+            layer_shape = (nb_samples_y, nb_samples_x, self.nbkeep)
+        else:
+            layer_shape = (nb_samples_y, nb_samples_x)
+        layer_data = np.full(layer_shape, np.nan)
+
         for y_index in range(nb_samples_y):
             for x_index in range(nb_samples_x):
-                bathy_point = self.estimated_bathy[y_index, x_index]
-                # FIXME: Should raise an exception? Parameterize MANDATORY/OPTIONAL ?
-                try:
-                    bathy_property = bathy_point[sample_property]
-                except KeyError:
-                    bathy_property = np.array([np.nan])
+                bathy_point, distance = self.estimated_bathy[y_index, x_index]
+                if sample_property == 'distoshore':
+                    bathy_property = np.array(distance)
+                else:
+                    try:
+                        bathy_property = bathy_point[sample_property]
+                    # FIXME: Should raise an exception? Parameterize MANDATORY/OPTIONAL ?
+                    except KeyError:
+                        bathy_property = np.array([np.nan])
+
                 if bathy_property.ndim == 1:
                     layer_data[y_index, x_index, :] = bathy_property[:min(
                         self.nbkeep, bathy_property.size)]
                 elif bathy_property.ndim == 0:
-                    # Distoshore case
-                    # FIXME: distoshore should not depend on nbkeep, should be 2D, not 3D
-                    layer_data[y_index, x_index, :] = np.full(self.nbkeep, bathy_property)
+                    layer_data[y_index, x_index] = bathy_property
                 else:
                     msg = f'Cannot output array with {bathy_property.ndim} dimensions'
                     raise IndexError(msg)
-        rounded_layer = np.round(layer_data, precision)
-        array = np.expand_dims(rounded_layer, axis=3)
-        return DataArray(array, coords=self.coords, dims=['y', 'x', 'kKeep', 'time'],
-                         attrs=layer_definition['attrs'])
+
+        rounded_layer = np.round(layer_data, layer_definition['precision'])
+        # Add a dimension at the end for time singleton
+        array = np.expand_dims(rounded_layer, axis=rounded_layer.ndim)
+        return DataArray(array, coords=self._get_coords(dims),
+                         dims=dims, attrs=layer_definition['attrs'])
+
+    def _get_coords(self, dims: List[str]) -> Mapping[Hashable, Any]:
+        dict_coords: Mapping[Hashable, Any] = {}
+        for element in dims:
+            if element == 'y':
+                value = self.y_samples
+            elif element == 'x':
+                value = self.x_samples
+            elif element == 'kKeep':
+                value = np.arange(1, self.nbkeep + 1)
+            else:
+                value = self.timestamps
+            dict_coords[element] = value
+        print(dict_coords)
+        return dict_coords
