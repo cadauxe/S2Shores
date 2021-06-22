@@ -30,7 +30,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ Run the local bathy estimator using the temporal correlation method
 
         """
-        config = self._params
+        config = self.local_estimator_params
         params = config.TEMPORAL_METHOD
         # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
         Im = np.dstack([image.pixels for image in self.images_sequence])

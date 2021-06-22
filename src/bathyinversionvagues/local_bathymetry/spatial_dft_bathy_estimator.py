@@ -74,7 +74,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         _, _, totalSpecMax_ref = self.normalized_cross_correl_spectrum(phi_min, phi_max)
         self.optimized_curve = totalSpecMax_ref
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
-        self.peaks_dir = find_peaks(totalSpecMax_ref, prominence=self._params.PROMINENCE_MAX_PEAK)
+        self.peaks_dir = find_peaks(totalSpecMax_ref,
+                                    prominence=self.local_estimator_params.PROMINENCE_MAX_PEAK)
         if len(self.peaks_dir[0]) == 0:  # pylint: disable=len-as-condition
             raise WavesEstimationError('Unable to find any directional peak')
         if self.global_estimator.debug_sample:
@@ -111,7 +112,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         peaks_dir_indices = self.peaks_dir[0]
         if peaks_dir_indices.size > 0:
             for ii in range(0, peaks_dir_indices.size):
-                angles_half_range = self._params.ANGLE_AROUND_PEAK_DIR
+                angles_half_range = self.local_estimator_params.ANGLE_AROUND_PEAK_DIR
                 tmp = np.arange(np.max([peaks_dir_indices[ii] - angles_half_range, 0]),
                                 np.min([peaks_dir_indices[ii] + angles_half_range + 1, 180]))
                 if ii == 0:
@@ -135,16 +136,18 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.radon_transforms[1].compute_sinograms_dfts(self.directions, kfft)
         phase_shift, totSpec, totalSpecMax_ref = self.normalized_cross_correl_spectrum(phi_min,
                                                                                        phi_max)
-        peaksFreq = find_peaks(totalSpecMax_ref, prominence=self._params.PROMINENCE_MULTIPLE_PEAKS)
+        peaksFreq = find_peaks(totalSpecMax_ref,
+                               prominence=self.local_estimator_params.PROMINENCE_MULTIPLE_PEAKS)
         peaksFreq = peaksFreq[0]
         peaksK = np.argmax(totSpec[:, peaksFreq], axis=0)
         self._metrics['totSpec'] = np.abs(totSpec) / np.mean(totSpec)
 
         for ii, peak_freq_index in enumerate(peaksFreq):
-            waves_field_estimation = WavesFieldEstimation(self.delta_time,
-                                                          self._params.D_PRECISION,
-                                                          self._params.G,
-                                                          self._params.DEPTH_EST_METHOD)
+            waves_field_estimation = WavesFieldEstimation(
+                self.delta_time,
+                self.local_estimator_params.D_PRECISION,
+                self.local_estimator_params.G,
+                self.local_estimator_params.DEPTH_EST_METHOD)
 
             peak_wavenumber_index = peaksK[ii]
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
@@ -219,7 +222,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
     def process_phase(self, phase_shift, phi_min, phi_max):
 
-        if not self._params.UNWRAP_PHASE_SHIFT:
+        if not self.local_estimator_params.UNWRAP_PHASE_SHIFT:
             # currently deactivated but we want this functionality:
             # FIXME: should we take absolute value here?
             result = np.copy(phase_shift)

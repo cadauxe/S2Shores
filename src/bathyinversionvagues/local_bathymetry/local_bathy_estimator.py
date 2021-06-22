@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Class managing the computation of waves fields from two images taken at a small time interval.
-
+""" Base class for the estimators of waves fields from several images taken at a small
+time intervals.
 
 :author: Alain Giros
 :organization: CNES
@@ -29,7 +28,7 @@ class LocalBathyEstimator(ABC):
         """
         # TODO: Check that the images have the same resolution, satellite (and same size ?)
         self.global_estimator = global_estimator
-        self._params = self.global_estimator.waveparams
+        self.local_estimator_params = self.global_estimator.waveparams
 
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
@@ -69,11 +68,12 @@ class LocalBathyEstimator(ABC):
     def get_filtered_results(self) -> List[WavesFieldEstimation]:
         # FIXME: Should this filtering be made at local estimation level ?
         filtered_out_waves_fields = [field for field in self.waves_fields_estimations if
-                                     field.period >= self._params.MIN_T and
-                                     field.period <= self._params.MAX_T]
+                                     field.period >= self.local_estimator_params.MIN_T and
+                                     field.period <= self.local_estimator_params.MAX_T]
         filtered_out_waves_fields = [field for field in filtered_out_waves_fields if
-                                     field.ckg >= self._params.MIN_WAVES_LINEARITY and
-                                     field.ckg <= self._params.MAX_WAVES_LINEARITY]
+                                     field.ckg >= self.local_estimator_params.MIN_WAVES_LINEARITY
+                                     and
+                                     field.ckg <= self.local_estimator_params.MAX_WAVES_LINEARITY]
         # TODO: too high number of fields would provide a hint on poor quality measure
         print(len(filtered_out_waves_fields))
         return filtered_out_waves_fields
@@ -82,7 +82,7 @@ class LocalBathyEstimator(ABC):
         """
         """
         filtered_out_waves_fields = self.get_filtered_results()
-        nb_max_wave_fields = self._params.NKEEP
+        nb_max_wave_fields = self.local_estimator_params.NKEEP
 
         delta_phase_ratios = np.empty((nb_max_wave_fields)) * np.nan
         celerities = np.empty((nb_max_wave_fields)) * np.nan  # Estimated celerity
