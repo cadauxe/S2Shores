@@ -13,7 +13,7 @@ from bathyinversionvagues.waves_exceptions import WavesException
 
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
-from ..local_bathymetry.local_bathymetry_estimation import get_local_bathy_estimator
+from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from .estimated_bathy import EstimatedBathy
 
 
@@ -118,10 +118,8 @@ class OrthoBathyEstimator:
                 print(window_image.pixels)
 
         # Local bathymetry computation
-        local_bathy_estimator_cls = get_local_bathy_estimator(
-            self.parent_estimator.waveparams.WAVE_EST_METHOD)
-        local_bathy_estimator = local_bathy_estimator_cls(images_sequence,
-                                                          self.parent_estimator)
+        local_bathy_estimator = local_bathy_estimator_factory(images_sequence,
+                                                              self.parent_estimator)
 
         try:
             local_bathy_estimator.run()
