@@ -71,7 +71,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # TODO: modify directions finding such that only one radon transform is computed (50% gain)
         self.radon_transforms[0].compute_sinograms_dfts()
         self.radon_transforms[1].compute_sinograms_dfts()
-        _, _, totalSpecMax_ref = self.get_energy_function(phi_min, phi_max)
+        _, _, totalSpecMax_ref = self.normalized_cross_correl_spectrum(phi_min, phi_max)
         self.optimized_curve = totalSpecMax_ref
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
         self.peaks_dir = find_peaks(totalSpecMax_ref, prominence=self._params.PROMINENCE_MAX_PEAK)
@@ -133,7 +133,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)
         self.radon_transforms[1].compute_sinograms_dfts(self.directions, kfft)
-        phase_shift, totSpec, totalSpecMax_ref = self.get_energy_function(phi_min, phi_max)
+        phase_shift, totSpec, totalSpecMax_ref = self.normalized_cross_correl_spectrum(phi_min,
+                                                                                       phi_max)
         peaksFreq = find_peaks(totalSpecMax_ref, prominence=self._params.PROMINENCE_MULTIPLE_PEAKS)
         peaksFreq = peaksFreq[0]
         peaksK = np.argmax(totSpec[:, peaksFreq], axis=0)
@@ -172,7 +173,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             for waves_field in self.waves_fields_estimations:
                 print(waves_field)
 
-    def get_energy_function(self, phi_min, phi_max):
+    def normalized_cross_correl_spectrum(self, phi_min, phi_max):
 
         if self.directions is None:
             nb_directions = self.radon_transforms[0].nb_directions
