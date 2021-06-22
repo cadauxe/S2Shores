@@ -118,3 +118,9 @@ class LocalBathyEstimator(ABC):
         if variable is not None:
             print(f'{variable_name} {variable.shape} {variable.dtype}')
         print(variable)
+
+    def print_estimations_debug(self, step: str) -> None:
+        if self.global_estimator.debug_sample:
+            print(f'estimations at step: {step}')
+            for waves_field in self.waves_fields_estimations:
+                print(waves_field)

@@ -140,7 +140,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         peaksK = np.argmax(totSpec[:, peaksFreq], axis=0)
         self._metrics['totSpec'] = np.abs(totSpec) / np.mean(totSpec)
 
-        self.waves_fields_estimations = []
         for ii, peak_freq_index in enumerate(peaksFreq):
             waves_field_estimation = WavesFieldEstimation(self.delta_time,
                                                           self._params.D_PRECISION,
@@ -161,17 +160,11 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             waves_field_estimation.energy_max = totalSpecMax_ref[peak_freq_index]
             waves_field_estimation.wavenumber = kfft[peak_wavenumber_index][0]
             self.waves_fields_estimations.append(waves_field_estimation)
-        if self.global_estimator.debug_sample:
-            print('refined directions')
-            for waves_field in self.waves_fields_estimations:
-                print(waves_field)
+        self.print_estimations_debug('after direction refinement')
 
         # sort the waves fields by energy_max level
         self.waves_fields_estimations.sort(key=lambda x: x.energy_max, reverse=True)
-        if self.global_estimator.debug_sample:
-            print('sorted directions')
-            for waves_field in self.waves_fields_estimations:
-                print(waves_field)
+        self.print_estimations_debug('after estimations sorting')
 
     def normalized_cross_correl_spectrum(self, phi_min, phi_max):
 
