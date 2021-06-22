@@ -159,7 +159,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 phi_max[peak_wavenumber_index]
             waves_field_estimation.energy_max = totalSpecMax_ref[peak_freq_index]
             waves_field_estimation.wavenumber = kfft[peak_wavenumber_index][0]
-            self.waves_fields_estimations.append(waves_field_estimation)
+            self.store_estimation(waves_field_estimation)
         self.print_estimations_debug('after direction refinement')
 
         # sort the waves fields by energy_max level

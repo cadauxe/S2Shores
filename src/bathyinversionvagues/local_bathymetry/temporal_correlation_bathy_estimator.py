@@ -74,7 +74,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             waves_field_estimation = build_waves_field_estimation(angle, wave_length, T,
                                                                   celerity, config)
 
-            self.waves_fields_estimations.append(waves_field_estimation)
+            self.store_estimation(waves_field_estimation)
 
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')

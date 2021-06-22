@@ -9,9 +9,10 @@ Class managing the computation of waves fields from two images taken at a small 
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Dict, Any, List, Optional  # @NoMove
-
 from abc import abstractmethod, ABC
+from copy import deepcopy
+
+from typing import Dict, Any, List, Optional  # @NoMove
 
 import numpy as np
 
@@ -39,14 +40,33 @@ class LocalBathyEstimator(ABC):
 
     @abstractmethod
     def run(self) -> None:
-        """  Run the spatial bathymetry estimation, using some method specific to the inheriting
+        """  Run the local bathymetry estimation, using some method specific to the inheriting
         class.
 
-        This method stores its results in waves_fields_estimations attribute as well as
+        This method stores its results in waves_fields_estimations attribute and
         its metrics in _metrics attribute.
         """
 
-    def get_filtered_results(self):
+    def store_estimation(self, waves_field_estimation: WavesFieldEstimation) -> None:
+        """ Store a single estimation into the estimations list
+
+        :param waves_field_estimation: a new estimation to store for this local bathy estimator
+        """
+        self.waves_fields_estimations.append(waves_field_estimation)
+
+    def get_estimations(self) -> List[WavesFieldEstimation]:
+        """ :returns: a copy of the estimations recorded by this estimator.
+                      Used for freeing references to memory expensive data (images, transform, ...)
+        """
+        return deepcopy(self.waves_fields_estimations)
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """ :returns: a copy of the metrics recorded by this estimator.
+                      Used for freeing references to memory expensive data (images, transform, ...)
+        """
+        return deepcopy(self._metrics)
+
+    def get_filtered_results(self) -> List[WavesFieldEstimation]:
         # FIXME: Should this filtering be made at local estimation level ?
         filtered_out_waves_fields = [field for field in self.waves_fields_estimations if
                                      field.period >= self._params.MIN_T and
