@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Definition several types useful for static typing checks
+""" Definition of several types useful for static typing checks
 
 :author: GIROS Alain
 :created: 18/05/2021

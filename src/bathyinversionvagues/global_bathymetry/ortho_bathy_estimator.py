@@ -13,12 +13,11 @@ import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
 import xarray as xr  # @NoMove
 
-from bathyinversionvagues.waves_exceptions import WavesException
-
+from ..waves_exceptions import WavesException
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
+from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimations
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
-from ..local_bathymetry.waves_field_estimation import WavesFieldEstimation
 
 from .estimated_bathy import EstimatedBathy
 
@@ -113,7 +112,7 @@ class OrthoBathyEstimator:
 
         return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE, nb_keep)
 
-    def compute_local_bathy(self, sub_tile_images, x_sample, y_sample) -> List[WavesFieldEstimation]:
+    def compute_local_bathy(self, sub_tile_images, x_sample, y_sample) -> WavesFieldsEstimations:
 
         window = self.sampled_ortho.window_extent((x_sample, y_sample))
         # TODO: Link WavesImage to OrthoImage and use resolution from it?

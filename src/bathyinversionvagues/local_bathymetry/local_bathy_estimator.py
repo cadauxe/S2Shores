@@ -18,6 +18,8 @@ import numpy as np
 from ..image_processing.waves_image import WavesImage
 from .waves_field_estimation import WavesFieldEstimation
 
+WavesFieldsEstimations = List[WavesFieldEstimation]
+
 
 class LocalBathyEstimator(ABC):
     def __init__(self, images_sequence: List[WavesImage], global_estimator,
@@ -33,7 +35,7 @@ class LocalBathyEstimator(ABC):
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
-        self._waves_fields_estimations: List[WavesFieldEstimation] = []
+        self._waves_fields_estimations: WavesFieldsEstimations = []
 
         self._metrics: Dict[str, Any] = {}
 
@@ -54,7 +56,7 @@ class LocalBathyEstimator(ABC):
         self._waves_fields_estimations.append(waves_field_estimation)
 
     @property
-    def waves_fields_estimations(self) -> List[WavesFieldEstimation]:
+    def waves_fields_estimations(self) -> WavesFieldsEstimations:
         """ :returns: a copy of the estimations recorded by this estimator.
                       Used for freeing references to memory expensive data (images, transform, ...)
         """
