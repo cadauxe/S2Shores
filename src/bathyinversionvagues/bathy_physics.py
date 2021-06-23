@@ -32,7 +32,7 @@ def funLinearC_k(nu: float, celerity: float,
 def phi_limits(wave_numbers: np.ndarray, delta_t: float,
                min_depth: float, gravity: float) -> Tuple[np.ndarray, np.ndarray]:
 
-    delta_phi = 2 * np.pi * delta_t
+    delta_phi = 2 * np.pi * abs(delta_t)
     squeezed_wave_numbers = wave_numbers.squeeze()
     # shallow water limits:
     min_celerity = np.sqrt(gravity * min_depth)

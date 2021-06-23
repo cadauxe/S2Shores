@@ -55,7 +55,11 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
         if np.isnan(value) or value == 0:
             self.period = np.nan
         else:
-            self.period = self._delta_time * (2 * np.pi / value)
+            if (self._delta_time < 0. and value > 0.) or (self._delta_time > 0. and value < 0.):
+                self.direction += 180
+                if value < 0:
+                    self._delta_phase = -self._delta_phase
+            self.period = abs(self._delta_time * (2 * np.pi / self._delta_phase))
 
     @property
     def delta_phase_ratio(self) -> float:

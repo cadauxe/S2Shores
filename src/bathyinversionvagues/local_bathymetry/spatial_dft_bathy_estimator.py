@@ -144,15 +144,13 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
             estimated_direction = \
                 self.radon_transforms[0].directions[self.directions[peak_freq_index]]
-            if estimated_phase_shift < 0.:
-                estimated_direction += 180
 
             wavelength = 1 / kfft[peak_wavenumber_index][0]
             waves_field_estimation = self.create_waves_field_estimation(estimated_direction,
                                                                         wavelength)
 
-            waves_field_estimation.delta_phase = abs(estimated_phase_shift)
-            waves_field_estimation.delta_phase_ratio = waves_field_estimation.delta_phase / \
+            waves_field_estimation.delta_phase = estimated_phase_shift
+            waves_field_estimation.delta_phase_ratio = abs(waves_field_estimation.delta_phase) / \
                 phi_max[peak_wavenumber_index]
             waves_field_estimation.energy_max = totalSpecMax_ref[peak_freq_index]
             self.store_estimation(waves_field_estimation)
