@@ -9,15 +9,17 @@ import warnings
 
 from typing import Dict, List, TYPE_CHECKING
 
+
 import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
 import xarray as xr  # @NoMove
 
-from ..waves_exceptions import WavesException
+
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimations
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
+from ..waves_exceptions import WavesException
 
 from .estimated_bathy import EstimatedBathy
 
@@ -89,8 +91,8 @@ class OrthoBathyEstimator:
                     field.period <= self.parent_estimator.waveparams.MAX_T]
                 filtered_out_waves_fields = [
                     field for field in filtered_out_waves_fields if
-                    field.ckg >= self.parent_estimator.waveparams.MIN_WAVES_LINEARITY and
-                    field.ckg <= self.parent_estimator.waveparams.MAX_WAVES_LINEARITY]
+                    field.linearity >= self.parent_estimator.waveparams.MIN_WAVES_LINEARITY and
+                    field.linearity <= self.parent_estimator.waveparams.MAX_WAVES_LINEARITY]
                 # TODO: too high number of fields would provide a hint on poor quality measure
                 print(len(filtered_out_waves_fields))
 

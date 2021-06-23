@@ -21,7 +21,6 @@ from ..waves_fields_display import (display_curve, display_4curves,
                                     display_3curves, display_estimation)
 
 from .local_bathy_estimator import LocalBathyEstimator
-from .waves_field_estimation import WavesFieldEstimation
 
 
 class SpatialDFTBathyEstimator(LocalBathyEstimator):
