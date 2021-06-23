@@ -41,7 +41,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self.radon_transforms.append(radon_transform)
 
         # delta time between the two images in seconds
-        self.delta_time = self.global_estimator.waveparams.DT
+        self.delta_time = self.local_estimator_params.DT
 
         self.peaks_dir = None
         self.directions = None
