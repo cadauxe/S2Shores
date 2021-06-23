@@ -13,6 +13,7 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
+from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..image_processing.waves_image import WavesImage
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
@@ -192,20 +193,22 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # Pick the maxima
 
         if self.global_estimator.debug_sample:
-            self._dump(self.radon_transforms[0].pixels, 'Radon transform 1 input pixels')
-            self._dump(self.radon_transforms[0].radon_transform.get_as_array(), 'Radon transform 1')
-            self._dump(self.directions, 'Directions used for radon transform 1')
-            self._dump(sino1_fft, 'sinoFFT1')
-            self._dump(phase_shift, 'phase shift')
+            dump_numpy_variable(self.radon_transforms[0].pixels, 'Radon transform 1 input pixels')
+            dump_numpy_variable(
+                self.radon_transforms[0].radon_transform.get_as_array(),
+                'Radon transform 1')
+            dump_numpy_variable(self.directions, 'Directions used for radon transform 1')
+            dump_numpy_variable(sino1_fft, 'sinoFFT1')
+            dump_numpy_variable(phase_shift, 'phase shift')
             for index in range(0, phase_shift.shape[1]):
                 print(phase_shift[0][index])
 
-            self._dump(phase_shift_thresholded, 'phase shift thresholded')
+            dump_numpy_variable(phase_shift_thresholded, 'phase shift thresholded')
             for index in range(0, phase_shift_thresholded.shape[1]):
                 print(index, phase_shift_thresholded[1][index])
 
-            self._dump(combined_amplitude, 'combined_amplitude')
-            self._dump(totalSpecMax_ref, 'totalSpecMax_ref')
+            dump_numpy_variable(combined_amplitude, 'combined_amplitude')
+            dump_numpy_variable(totalSpecMax_ref, 'totalSpecMax_ref')
 
             display_curve(totalSpecMax_ref, 'Total Spec Max ref')
             display_estimation(

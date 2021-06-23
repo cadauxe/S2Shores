@@ -72,3 +72,9 @@ def split_samples(samples: np.ndarray, nb_parts: int) -> List[np.ndarray]:
             stop_index = len(samples)
         parts.append(samples[start_index:stop_index])
     return parts
+
+
+def dump_numpy_variable(variable: np.ndarray, variable_name: str) -> None:
+    if variable is not None:
+        print(f'{variable_name} {variable.shape} {variable.dtype}')
+    print(variable)

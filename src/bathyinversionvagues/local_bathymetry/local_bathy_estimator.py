@@ -67,10 +67,5 @@ class LocalBathyEstimator(ABC):
         """
         return deepcopy(self._metrics)
 
-    def _dump(self, variable: np.ndarray, variable_name: str) -> None:
-        if variable is not None:
-            print(f'{variable_name} {variable.shape} {variable.dtype}')
-        print(variable)
-
     def print_estimations_debug(self, step: str) -> None:
         self.global_estimator.print_estimations_debug(self._waves_fields_estimations, step)
