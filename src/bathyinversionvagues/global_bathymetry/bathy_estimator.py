@@ -5,7 +5,6 @@
 :created: 17/05/2021
 """
 from abc import ABC, abstractproperty
-from pathlib import Path
 from typing import Tuple, Optional, List  # @NoMove
 
 import numpy as np  # @NoMove
@@ -14,11 +13,11 @@ from munch import Munch
 
 from bathyinversionvagues.bathy_physics import phi_limits
 
+from ..data_providers.dis_to_shore_provider import DefaultDisToShoreProvider, DisToShoreProvider
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_image import OrthoImage
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimations
-
 from .ortho_bathy_estimator import OrthoBathyEstimator
 
 
@@ -29,20 +28,20 @@ class BathyEstimator(ABC):
     """
 
     def __init__(self, image: OrthoImage, wave_params: Munch, params: Munch,
-                 distoshore_file_path: Path, nb_subtiles_max: int = 1) -> None:
+                 nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
         :param image: the orthorectified image onto which bathymetry must be estimated.
         :param wave_params: parameters for the wavebathyestimation method
         :param params: parameters for the bathymetry estimator
-        :param distoshore_file_path: file containing the distance to shore for this image.
         :param nb_subtiles_max: Nb of subtiles for bathymetry estimation
         """
         self.image = image
         # Store arguments in attributes for further use
         self._params = params
         self.waveparams = wave_params
-        self.distoshore_file_path = distoshore_file_path
+
+        self._distoshore_provider: DisToShoreProvider = DefaultDisToShoreProvider()
 
         # Create subtiles onto which bathymetry estimation will be done
         self.subtiles = SampledOrthoImage.build_subtiles(image, nb_subtiles_max,
@@ -164,3 +163,13 @@ class BathyEstimator(ABC):
             print(f'estimations at step: {step}')
             for waves_field in waves_fields_estimations:
                 print(waves_field)
+
+    def set_distoshore_provider(self, distoshore_provider: DisToShoreProvider) -> None:
+        """ Sets the DisToShoreProvider to use with this estimator
+
+        :param distoshore_provider: the DisToShoreProvider to use
+        """
+        self._distoshore_provider = distoshore_provider
+
+    def get_distoshore(self, point: PointType) -> float:
+        return self._distoshore_provider.get_distance(point)

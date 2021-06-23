@@ -53,8 +53,6 @@ class OrthoBathyEstimator:
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
                                          self.sampled_ortho.image.acquisition_time)
-        # distance to shore (km)
-        distoshore = xr.open_dataset(self.parent_estimator.distoshore_file_path)
 
         # subtile reading
         sub_tile_images: List[np.ndarray] = []
@@ -67,13 +65,11 @@ class OrthoBathyEstimator:
         for i, x_sample in enumerate(self.sampled_ortho.x_samples):
             for j, y_sample in enumerate(self.sampled_ortho.y_samples):
                 self.parent_estimator.set_debug((x_sample, y_sample))
-                # distance to shore loading
+
                 # FIXME: following line needed to deal with upside down distoshore files
                 corrected_yp = self.sampled_ortho.image.upper_left_y + \
                     self.sampled_ortho.image.lower_right_y - y_sample
-                distance = distoshore.disToShore.sel(y=corrected_yp, x=x_sample,
-                                                     method='nearest')  # km
-
+                distance = self.parent_estimator.get_distoshore((x_sample, corrected_yp))
                 # do not compute on land
                 # FIXME: distance to shore test should take into account windows sizes
                 if distance > 0:
