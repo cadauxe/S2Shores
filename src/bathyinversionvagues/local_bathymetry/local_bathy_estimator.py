@@ -48,6 +48,19 @@ class LocalBathyEstimator(ABC):
         its metrics in _metrics attribute.
         """
 
+    def create_waves_field_estimation(self, direction: float, wavelength: float
+                                      ) -> WavesFieldEstimation:
+        # FIXME: DT is not the right value to take into account. Use
+        # DeltaTimeProvider when written. The same for gravity
+        waves_field_estimation = WavesFieldEstimation(self.local_estimator_params.DT,
+                                                      self.local_estimator_params.D_PRECISION,
+                                                      self.local_estimator_params.G,
+                                                      self.local_estimator_params.DEPTH_EST_METHOD)
+        waves_field_estimation.direction = direction
+        waves_field_estimation.wavelength = wavelength
+
+        return waves_field_estimation
+
     def store_estimation(self, waves_field_estimation: WavesFieldEstimation) -> None:
         """ Store a single estimation into the estimations list
 

@@ -40,9 +40,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             radon_transform.compute(selected_directions)
             self.radon_transforms.append(radon_transform)
 
-        # delta time between the two images in seconds
-        self.delta_time = self.local_estimator_params.DT
-
         self.peaks_dir = None
         self.directions = None
 
@@ -151,14 +148,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             if estimated_phase_shift < 0.:
                 estimated_direction += 180
 
-            waves_field_estimation = WavesFieldEstimation(
-                self.delta_time,
-                self.local_estimator_params.D_PRECISION,
-                self.local_estimator_params.G,
-                self.local_estimator_params.DEPTH_EST_METHOD)
+            wavelength = 1 / kfft[peak_wavenumber_index][0]
+            waves_field_estimation = self.create_waves_field_estimation(estimated_direction,
+                                                                        wavelength)
 
-            waves_field_estimation.direction = estimated_direction
-            waves_field_estimation.wavenumber = kfft[peak_wavenumber_index][0]
             waves_field_estimation.delta_phase = abs(estimated_phase_shift)
             waves_field_estimation.delta_phase_ratio = waves_field_estimation.delta_phase / \
                 phi_max[peak_wavenumber_index]

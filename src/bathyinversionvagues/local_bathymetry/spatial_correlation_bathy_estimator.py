@@ -20,7 +20,6 @@ from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
                                             )
 
 from .local_bathy_estimator import LocalBathyEstimator
-from .wavemethods import build_waves_field_estimation
 
 
 class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
@@ -65,8 +64,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             T, peaks_max = compute_period(SS_filtered=SS_filtered,
                                           min_peaks_distance=params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
 
-            waves_field_estimation = build_waves_field_estimation(angle, wave_length, T,
-                                                                  celerity, config)
+            waves_field_estimation = self.create_waves_field_estimation(angle, wave_length)
+            waves_field_estimation.period = T
+            waves_field_estimation.celerity = celerity
 
             self.store_estimation(waves_field_estimation)
 
