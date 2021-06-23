@@ -143,12 +143,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self._metrics['totSpec'] = np.abs(totSpec) / np.mean(totSpec)
 
         for ii, peak_freq_index in enumerate(peaksFreq):
-            waves_field_estimation = WavesFieldEstimation(
-                self.delta_time,
-                self.local_estimator_params.D_PRECISION,
-                self.local_estimator_params.G,
-                self.local_estimator_params.DEPTH_EST_METHOD)
-
             peak_wavenumber_index = peaksK[ii]
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
             estimated_direction = \
@@ -156,18 +150,20 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             if estimated_phase_shift < 0.:
                 estimated_direction += 180
 
+            waves_field_estimation = WavesFieldEstimation(
+                self.delta_time,
+                self.local_estimator_params.D_PRECISION,
+                self.local_estimator_params.G,
+                self.local_estimator_params.DEPTH_EST_METHOD)
+
             waves_field_estimation.direction = estimated_direction
+            waves_field_estimation.wavenumber = kfft[peak_wavenumber_index][0]
             waves_field_estimation.delta_phase = abs(estimated_phase_shift)
             waves_field_estimation.delta_phase_ratio = waves_field_estimation.delta_phase / \
                 phi_max[peak_wavenumber_index]
             waves_field_estimation.energy_max = totalSpecMax_ref[peak_freq_index]
-            waves_field_estimation.wavenumber = kfft[peak_wavenumber_index][0]
             self.store_estimation(waves_field_estimation)
         self.print_estimations_debug('after direction refinement')
-
-        # sort the waves fields by energy_max level
-        self.waves_fields_estimations.sort(key=lambda x: x.energy_max, reverse=True)
-        self.print_estimations_debug('after estimations sorting')
 
     def normalized_cross_correl_spectrum(self, phi_min, phi_max):
 

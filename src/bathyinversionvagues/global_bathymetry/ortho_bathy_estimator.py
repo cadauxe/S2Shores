@@ -9,17 +9,18 @@ import warnings
 
 from typing import Dict, List, TYPE_CHECKING
 
+import numpy as np  # @NoMove
+from xarray import Dataset  # @NoMove
+import xarray as xr  # @NoMove
+
 from bathyinversionvagues.waves_exceptions import WavesException
 
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
+from ..local_bathymetry.waves_field_estimation import WavesFieldEstimation
+
 from .estimated_bathy import EstimatedBathy
-
-
-import numpy as np  # @NoMove
-from xarray import Dataset  # @NoMove
-import xarray as xr  # @NoMove
 
 
 if TYPE_CHECKING:
@@ -50,7 +51,7 @@ class OrthoBathyEstimator:
         nb_keep = self.parent_estimator.waveparams.NKEEP
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
-                                         self.sampled_ortho.image.acquisition_time, nb_keep)
+                                         self.sampled_ortho.image.acquisition_time)
         # distance to shore (km)
         distoshore = xr.open_dataset(self.parent_estimator.distoshore_file_path)
 
@@ -77,20 +78,42 @@ class OrthoBathyEstimator:
                 if distance > 0:
                     in_water_points += 1
                     # computes the bathymetry at the specified position
-                    wave_bathy_point = self.compute_local_bathy(sub_tile_images, x_sample, y_sample)
+                    waves_fields_estimations = self.compute_local_bathy(
+                        sub_tile_images, x_sample, y_sample)
                 else:
-                    wave_bathy_point = estimated_bathy.empty_sample
+                    waves_fields_estimations = []
+
+                # Filter non physical waves fields and bathy estimations
+                filtered_out_waves_fields = [
+                    field for field in waves_fields_estimations if
+                    field.period >= self.parent_estimator.waveparams.MIN_T and
+                    field.period <= self.parent_estimator.waveparams.MAX_T]
+                filtered_out_waves_fields = [
+                    field for field in filtered_out_waves_fields if
+                    field.ckg >= self.parent_estimator.waveparams.MIN_WAVES_LINEARITY and
+                    field.ckg <= self.parent_estimator.waveparams.MAX_WAVES_LINEARITY]
+                # TODO: too high number of fields would provide a hint on poor quality measure
+                print(len(filtered_out_waves_fields))
+
+                # sort the waves fields by energy_max level
+                filtered_out_waves_fields.sort(key=lambda x: x.energy_max, reverse=True)
+                self.parent_estimator.print_estimations_debug(filtered_out_waves_fields,
+                                                              'after estimations sorting')
+
+                # Keep only a limited number of waves fields and bathy estimations
+                while len(filtered_out_waves_fields) > nb_keep:
+                    filtered_out_waves_fields.pop()
 
                 # Store bathymetry sample
-                estimated_bathy.store_sample(i, j, (wave_bathy_point, distance))
+                estimated_bathy.store_sample(i, j, (filtered_out_waves_fields, distance))
 
         total_points = self.sampled_ortho.nb_samples
         comput_time = time.time() - start
         print(f'Computed {in_water_points}/{total_points} points in: {comput_time:.2f} s')
 
-        return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE)
+        return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE, nb_keep)
 
-    def compute_local_bathy(self, sub_tile_images, x_sample, y_sample):
+    def compute_local_bathy(self, sub_tile_images, x_sample, y_sample) -> List[WavesFieldEstimation]:
 
         window = self.sampled_ortho.window_extent((x_sample, y_sample))
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
@@ -123,13 +146,13 @@ class OrthoBathyEstimator:
             local_bathy_estimator.run()
         except WavesException as excp:
             warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
+
         # FIXME: decide what to do with metrics
         metrics = local_bathy_estimator.metrics
 
-        # TODO: replace dictionaries by local_bathy_estimator object return when other estimator
-        # are updated.
-        wave_bathy_point = local_bathy_estimator.get_results_as_dict()
-        return wave_bathy_point
+        waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
+
+        return waves_fields_estimations
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this estimator
