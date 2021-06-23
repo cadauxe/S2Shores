@@ -53,10 +53,16 @@ class OrthoImage(ABC):
         """ :returns: the acquisition time of the image
         """
 
+    @property
+    def epsg_code(self) -> int:
+        """ :returns: the epsg code of the projection
+        """
+        return int(self._projection.split(',')[-1][1:-3])
+
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this ortho image
         """
-        infos = {'epsg': 'EPSG:' + self._projection.split(',')[-1][1:-3]}
+        infos = {'epsg': 'EPSG:' + str(self.epsg_code)}
         return infos
 
     # TODO: define steps default values based on resolution
