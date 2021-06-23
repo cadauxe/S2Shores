@@ -8,6 +8,8 @@
 :created: 6 mars 2021
 """
 from typing import Optional
+import warnings
+
 import numpy as np
 
 from .waves_field_sample_geometry import WavesFieldSampleGeometry
@@ -46,9 +48,11 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
             self._celerity = 1. / (self.wavenumber * self.period)
         return self._celerity
 
-    # FIXME: being able to provide a celerity which does not satisfy wavelength = c*T seems crazy
+    # FIXME: being able to store a celerity which does not satisfy wavelength = c*T seems crazy
+    # FIXME: remove this setter, which has been added temporarily for integration purpose
     @celerity.setter
     def celerity(self, value: float) -> None:
+        warnings.warn('Setting celerity independently of period and wavelength is non physical')
         self._celerity = value
 
     def __str__(self) -> str:
