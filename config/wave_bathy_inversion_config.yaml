@@ -15,6 +15,13 @@ MAX_T: 25 #maximal wave period - seconds
 MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
 MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
 
+#global estimator
+DXP: 500.0 # output grid resolution - meters - S2 : 500
+DYP: 500.0 # output grid resolution - meters - S2 : 500
+WINDOW: 800.0 # thumbnail size - meters - S2 : 800
+SM_LENGTH: 10 # smooth filter size - pixels - S2 : 10
+STEP_T: 0.05 # step for period sampling - seconds - 
+
 #spatial_dft:
 DT: 1.005 # mean temporal delay between two images - seconds 
 PROMINENCE_MAX_PEAK: 0.3 # find_peaks function tuning - search for the maximal peaks
