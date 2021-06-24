@@ -46,6 +46,8 @@ class OrthoBathyEstimator:
         """
 
         start_load = time.time()
+        # nbkeep shall be understood as a filtering in terms of the number of proposed samples.
+        # Will disappear when true Waves Fields will be identified and implemented.
         nb_keep = self.parent_estimator.waveparams.NKEEP
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,

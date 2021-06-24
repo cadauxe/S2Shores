@@ -19,9 +19,8 @@ ALL_LAYERS_TYPES = ['NOMINAL', 'DEBUG']
 
 DIMS_Y_X_NKEEP_TIME = ['y', 'x', 'kKeep', 'time']
 DIMS_Y_X_TIME = ['y', 'x', 'time']
-# TODO: adapt to samples attributes access when local estimators will return samples objects
+
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
-# TODO: introduce dims as an attribute and build dims and coords dynamically.
 BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
     'depth': {'layer_type': ALL_LAYERS_TYPES,
               'layer_name': 'depth',
@@ -53,7 +52,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'precision': 8,
                    'attrs': {'Dimension': 'Meters [m]',
                              'name': 'wavelength'}},
-    'wavenumber': {'layer_type': ALL_LAYERS_TYPES,
+    'wavenumber': {'layer_type': ['DEBUG'],
                    'layer_name': 'wavenumber',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
                    'precision': 8,
@@ -65,7 +64,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'precision': 8,
                    'attrs': {'Dimension': 'Kilometers [km]',
                              'name': 'Distance_to_shore'}},
-    'delta_celerity': {'layer_type': ['DEBUG'],
+    'delta_celerity': {'layer_type': ALL_LAYERS_TYPES,
                        'layer_name': 'deltaC',
                        'dimensions': DIMS_Y_X_NKEEP_TIME,
                        'precision': 8,
@@ -81,7 +80,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'layer_name': 'Energy',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
                    'precision': 8,
-                   'attrs': {'Dimension': '????',
+                   'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
                              'name': 'Energy'}},
 }
 # FIXME: Missing:
@@ -92,9 +91,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
 #                 }
 
 
-# FIXME: In the future nbkeep should be used only by this class and shall not be propagated
-# elsewhere. nbkeep shall be understood as a filtering in terms of the number of proposed samples.
-# Will disappear when true Waves Fields will be identified and implemented.
 class EstimatedBathy:
     """ This class gathers all the estimated bathymetry samples in a whole dataset.
     """
@@ -192,7 +188,7 @@ class EstimatedBathy:
                 for index, waves_field_estimations in enumerate(waves_fields_estimations):
                     bathy_property[index] = getattr(waves_field_estimations,
                                                     sample_property)
-            # FIXME: Should raise an exception? Parameterize MANDATORY/OPTIONAL ?
+            # FIXME: Should we raise an exception? Parameterize MANDATORY/OPTIONAL ?
             except AttributeError:
                 bathy_property = np.array([np.nan])
 
