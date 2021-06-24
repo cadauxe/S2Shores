@@ -11,8 +11,7 @@ import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
 from munch import Munch
 
-from bathyinversionvagues.bathy_physics import phi_limits
-
+from ..bathy_physics import phi_limits
 from ..data_providers.dis_to_shore_provider import DefaultDisToShoreProvider, DisToShoreProvider
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_image import OrthoImage
@@ -27,25 +26,23 @@ class BathyEstimator(ABC):
     sequentially.
     """
 
-    def __init__(self, image: OrthoImage, wave_params: Munch, params: Munch,
+    def __init__(self, image: OrthoImage, wave_params: Munch,
                  nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
         :param image: the orthorectified image onto which bathymetry must be estimated.
-        :param wave_params: parameters for the wavebathyestimation method
-        :param params: parameters for the bathymetry estimator
+        :param wave_params: parameters for the global and local bathymetry estimators
         :param nb_subtiles_max: Nb of subtiles for bathymetry estimation
         """
-        self.image = image
         # Store arguments in attributes for further use
-        self._params = params
+        self.image = image
         self.waveparams = wave_params
 
         self._distoshore_provider: DisToShoreProvider = DefaultDisToShoreProvider()
 
         # Create subtiles onto which bathymetry estimation will be done
         self.subtiles = SampledOrthoImage.build_subtiles(image, nb_subtiles_max,
-                                                         self._params.DXP, self._params.DYP,
+                                                         self.waveparams.DXP, self.waveparams.DYP,
                                                          self.measure_extent)
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
@@ -84,27 +81,20 @@ class BathyEstimator(ABC):
     def smoothing_columns_size(self) -> int:
         """ :returns: the size of the smoothing filter along columns in pixels
         """
-        return self._params.SM_LENGTH
+        return self.waveparams.SM_LENGTH
 
     @property
     def smoothing_lines_size(self) -> int:
         """ :returns: the size of the smoothing filter along lines in pixels
         """
-        return self._params.SM_LENGTH
-
-    @property
-    def step_t(self) -> int:
-        """ :returns: the step to use for sampling period in kfft
-        """
-        # FIXME: this parameter should be located inside waveparams, and this property deleted
-        return self._params.STEP_T
+        return self.waveparams.SM_LENGTH
 
     @property
     def measure_extent(self) -> MarginsType:
         """ :returns: the cartographic extent to be used for bathy estimation around a point
         """
-        return (self._params.WINDOW / 2., self._params.WINDOW / 2.,
-                self._params.WINDOW / 2., self._params.WINDOW / 2.)
+        return (self.waveparams.WINDOW / 2., self.waveparams.WINDOW / 2.,
+                self.waveparams.WINDOW / 2., self.waveparams.WINDOW / 2.)
 
     def get_phi_limits(self,
                        wavenumbers: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -124,7 +114,7 @@ class BathyEstimator(ABC):
         # frequencies based on wave characteristics:
         k_forced = 1 / ((np.arange(self.waveparams.MIN_T,
                                    self.waveparams.MAX_T,
-                                   self.step_t) ** 2) * self.waveparams.G / (2. * np.pi))
+                                   self.waveparams.STEP_T) ** 2) * self.waveparams.G / (2. * np.pi))
         kfft = k_forced.reshape((k_forced.size, 1))
 
         return kfft
