@@ -5,14 +5,11 @@
 :created: 05/05/2021
 """
 import time
-import warnings
-
 from typing import Dict, List, TYPE_CHECKING
-
+import warnings
 
 import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
-import xarray as xr  # @NoMove
 
 
 from ..image.sampled_ortho_image import SampledOrthoImage
@@ -162,5 +159,6 @@ class OrthoBathyEstimator:
 
         # metadata from the parameters
         infos['waveEstimationMethod'] = self.parent_estimator.waveparams.WAVE_EST_METHOD
+        infos['ChainVersions'] = self.parent_estimator.waveparams.CHAINS_VERSIONS
 
         return infos
