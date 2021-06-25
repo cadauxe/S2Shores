@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Feb 3 10:12:00 2021
@@ -10,7 +9,8 @@ Module containing all functions common to waves and bathy estimation methods
          degoulromain
 
 """
-import numpy as np
+from functools import lru_cache
+
 import pandas
 import scipy
 from scipy.interpolate import interp1d
@@ -20,13 +20,7 @@ from scipy.signal import fftconvolve
 from scipy.signal import medfilt2d
 from skimage.transform import radon
 
-
-# check array is not empty
-def sc_all(array):
-    for x in array.flat:
-        if not x:
-            return False
-    return True
+import numpy as np
 
 
 def funDetrend_2d(Z):
@@ -59,109 +53,38 @@ def funDetrend_2d(Z):
     return Z_f
 
 
-def funSinoFFT(sino1, sino2, dx):
-    '''
-    Parameters
-    ----------
-    I : 2D np.array that contains NxMx2 structure.
-        Typically these are two different images at the same location at a different moment in time.
-    dx : Spatial resolution of the image I.
-        DESCRIPTION. The default is 10 (sentinel)
-
-    Returns
-    -------
-    out : Dictioinary with all infomation on the Radon spectrum
-        DESCRIPTION.
-
-    '''
-    Nx = np.shape(sino1)[0]
-    Fs = 1 / float(dx)
-    kfft = np.arange(0, Fs / 2, Fs / Nx) + (Fs / (2 * Nx))
-
-    sino1_fft = []
-    sino2_fft = []
-
-    for ii in range(0, sino1.shape[1]):
-        Y1 = np.fft.fft(sino1[:, ii])
-        Y2 = np.fft.fft(sino2[:, ii])
-
-        if len(Y1) > 1:
-            Yout1 = Y1[0:int(np.ceil(Nx / 2))]
-            Yout2 = Y2[0:int(np.ceil(Nx / 2))]
-        else:
-            Yout1 = Y1
-            Yout2 = Y2
-
-        sino1_fft.append(Yout1)
-        sino2_fft.append(Yout2)
-
-    sinoFFT = np.dstack((np.array(sino1_fft).transpose(),
-                         np.array(sino2_fft).transpose()))
-
-    return sinoFFT, kfft, Nx
-
-
-def funGetSpectralPeaks(Im, theta, unwrap_phase_shift, dt, dx, min_D, g):
-    sinogram1 = radon(funDetrend_2d(Im[:, :, 0]), theta=theta)
-    sinogram2 = radon(funDetrend_2d(Im[:, :, 1]), theta=theta)
-
-    sinoFFT, kfft, N = funSinoFFT(sinogram1, sinogram2, dx)
-
-    combAmpl = (np.abs(sinoFFT[:, :, 0]) ** 2 + np.abs(sinoFFT[:, :, 1]) ** 2) / (N ** 2)
-
-    phase_shift = np.angle(sinoFFT[:, :, 1] * np.conj(sinoFFT[:, :, 0]))
-
-    if not unwrap_phase_shift:
-        # currently deactivated but we want this functionality:
-        phase_shift = phase_shift
-    else:
-        phase_shift = (phase_shift + 2 * np.pi) % (2 * np.pi)
-
-    # deep water limits:
-    phi_deep = (2 * np.pi * dt) / (np.sqrt(1 / (np.round(g / (2 * np.pi), 2) * kfft))).squeeze()
-    phi_deep = np.tile(phi_deep[:, np.newaxis], (1, theta.shape[0]))
-
-    # shallow water limits:
-    min_cel = np.sqrt(g * min_D)
-    phi_min = (2 * np.pi * dt * kfft * min_cel).squeeze()
-
-    phi_min = np.tile(phi_min[:, np.newaxis], (1, theta.shape[0]))
-
-    # Deep water limitation [if the wave travels faster that the deep-water limit we consider it non-physical]
-    phase_shift[np.abs(phase_shift) > phi_deep] = 0
-
-    # Minimal propagation speed; this depends on the Satellite; Venus or Sentinel 2
-    phase_shift[np.abs(phase_shift) < phi_min] = 0
-
-    return (combAmpl * phase_shift) / N, kfft, N, phase_shift
-
-
-def DFT_fr(x, fr, fs):
+def get_unity_roots(number_of_roots, fr, fs):
     """
-    Compute the discrete Fourier Transform of the 1D array x
-    :param x: (array)
+    Compute the fs-th complex roots of the unity
+    :param int number_of_roots: Number of unity roots to compute, starting from 0
+    :param np.ndarray fr: 1D array of frequencies where roots are needed
+    :param float fs: sampling frequency
+    :returns: the number_of_roots fs-th complex roots of the unity corresponding to fr frequencies
     """
-
-    N = x.size
-    n = np.arange(N)
-    # k = n.reshape((N, 1))
-
-    e = np.exp(-2j * np.pi * fr * n / fs)
-    return np.dot(e, x)
+    n = np.arange(number_of_roots)
+    return np.exp(-2j * np.pi * fr * n / fs)
 
 
-def funConv2(x, y, mode='same'):
+def DFT_fr(x, unity_roots):
+    """ Compute the discrete Fourier Transform of a 1D array
+
+    :param np.ndarray x: 1D array containing the signal
+    :param np.ndarray
+    """
+    # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
+    return np.dot(unity_roots, x)
+
+
+@lru_cache()
+def get_smoothing_kernel(Nr: int, Nc: int) -> np.ndarray:
     '''
-
 
     Parameters
     ----------
-    x : TYPE
+    Nr : TYPE
         DESCRIPTION.
-    y : TYPE
+    Nc : TYPE
         DESCRIPTION.
-    mode : TYPE, optional
-        DESCRIPTION. The default is 'same'.
 
     Returns
     -------
@@ -169,7 +92,33 @@ def funConv2(x, y, mode='same'):
         DESCRIPTION.
 
     '''
-    return np.rot90(convolve2d(np.rot90(x, 2), np.rot90(y, 2), mode=mode), 2)
+    '''
+    % SMOOTHC.M: Smooths matrix data, cosine taper.
+    % MO=SMOOTHC(MI,Nr,Nc) smooths the data in MI
+    % using a cosine taper over 2*N+1 successive points, Nr, Nc points on
+    % each side of the current point.
+    %
+    % Nr - number of points used to smooth rows
+    % Nc - number of points to smooth columns
+    % Outputs: kernel to be used for smoothing
+    %
+    %
+    '''
+
+    # Determine convolution kernel k
+    kr = 2 * Nr + 1
+    kc = 2 * Nc + 1
+    midr = Nr + 1
+    midc = Nc + 1
+    maxD = (Nr ** 2 + Nc ** 2) ** 0.5
+
+    k = np.zeros((kr, kc))
+    for irow in range(0, kr):
+        for icol in range(0, kc):
+            D = np.sqrt(((midr - irow) ** 2) + ((midc - icol) ** 2))
+            k[irow, icol] = np.cos(D * np.pi / 2 / maxD)
+
+    return k / np.sum(k.ravel())
 
 
 def funSmoothc(mI, Nr, Nc):
@@ -203,27 +152,10 @@ def funSmoothc(mI, Nr, Nc):
     %
     %
     '''
-
     # Determine convolution kernel k
-    Nr = Nr + 1
-    Nc = Nc + 1
-
-    kr = 2 * Nr + 1
-    kc = 2 * Nc + 1
-
-    midr = Nr + 1
-    midc = Nc + 1
-    maxD = (Nr ** 2 + Nc ** 2) ** 0.5
-
-    k = np.zeros((kr, kc))
-    for irow in range(0, kr):
-        for icol in range(0, kc):
-            D = np.sqrt(((midr - irow) ** 2) + ((midc - icol) ** 2))
-            k[irow, icol] = np.cos(D * np.pi / 2 / maxD)
-
-    k = k / np.sum(k.ravel())
+    k = get_smoothing_kernel(Nr, Nc)
     # Perform convolution
-    out = funConv2(mI, k, 'same')
+    out = np.rot90(convolve2d(np.rot90(mI, 2), np.rot90(k, 2), mode='same'), 2)
     return out[Nr:-Nr, Nc:-Nc]
 
 
@@ -247,32 +179,14 @@ def funSmooth2(M, nx, ny):
                         M.transpose(),
                         np.tile(M[-1, :], (nx, 1)).transpose()), axis=1).transpose()
 
-    S = np.concatenate((np.tile(S[:, 0], (ny, 1)).transpose(),
+    T = np.concatenate((np.tile(S[:, 0], (ny, 1)).transpose(),
                         S,
                         np.tile(S[:, -1], (ny, 1)).transpose()), axis=1)
 
-    S = funSmoothc(S, nx - 1, ny - 1)
-
-    return S
+    return funSmoothc(T, nx, ny)
 
 
-def funLinearC_k(nu, c, d_precision, d_init, g):
-    k = 2 * np.pi * nu  # angular wave number
-    precision = d_precision
-    w = c * k
-    do = d_init
-    d = c ** 2 / g
-
-    while abs(do - d) > precision:
-        do = d
-        dispe = w ** 2 - (g * k * np.tanh(k * d))
-        fdispe = -g * (k ** 2) / (np.cosh(k * d) ** 2)
-        d = d - (dispe / fdispe)
-
-    return d
-
-
-def fft_filtering(simg, spatial_resolution, T_max, T_min):
+def fft_filtering(simg, spatial_resolution, T_max, T_min, gravity):
     """
     Compute the fft filtering of a subtile
     :param simg:(np.array) the given sequence of images to filter
@@ -287,8 +201,8 @@ def fft_filtering(simg, spatial_resolution, T_max, T_min):
     ky = np.fft.fftshift(np.fft.fftfreq(m, spatial_resolution))
     kx = np.repeat(np.reshape(kx, (n, 1)), m, axis=1)
     ky = np.repeat(np.reshape(ky, (1, m)), n, axis=0)
-    threshold_min = 1 / (1.56 * T_max ** 2)
-    threshold_max = 1 / (1.56 * T_min ** 2)
+    threshold_min = 2. * np.pi / (gravity * T_max ** 2)
+    threshold_max = 2. * np.pi / (gravity * T_min ** 2)
     simg_filtered = np.zeros(simg.shape)
     kr = np.sqrt(kx ** 2 + ky ** 2)
     kr[kr < threshold_min] = 0
@@ -331,17 +245,11 @@ def filter_mean(time_serie, window):
     if len(time_serie) < 2 * window:
         raise ValueError("time serie is too small compared to the window")
     else:
-        padded_time_serie = np.concatenate((np.full(window, np.mean(time_serie[:window])), time_serie,
-                                            np.full(window, np.mean(time_serie[-(window + 1):]))), axis=0)
+        padded_time_serie = np.concatenate((np.full(window, np.mean(time_serie[:window])),
+                                            time_serie,
+                                            np.full(window, np.mean(time_serie[-(window + 1):]))),
+                                           axis=0)
         return np.convolve(padded_time_serie, np.ones(2 * window + 1) / (2 * window + 1), 'valid')
-
-
-def permute_axes(Im):
-    n1, n2, n3 = np.shape(Im)
-    pIm = np.zeros((n2, n3, n1))
-    for i in np.arange(n1):
-        pIm[:, :, i] = Im[i, :, :]
-    return pIm
 
 
 def create_sequence_time_series_temporal(Im, percentage_points):
@@ -398,12 +306,17 @@ def compute_angles_distances(M):
 
 def compute_temporal_correlation(sequence_thumbnail, number_frame_shift):
     """
-        This function computes the correlation of each time serie of sequence_thumbnail with each time serie of sequence_thumbnail but shifted of number_frame_shift frames
-        :param sequence_thumbnail (numpy array of size (number_of_frames,number_of_time_series)) : video of waves
-        :param number_frame_shift (int) : number of shifted frames
-        :return corr (numpy array of size (number_of_time_series,number_of_time_series)) : cross correlation of time series
+        This function computes the correlation of each time serie of sequence_thumbnail with each
+        time serie of sequence_thumbnail but shifted of number_frame_shift frames
+
+        :param np.ndarray sequence_thumbnail: (number_of_frames,number_of_time_series)
+                                              video of waves
+        :param int number_frame_shift: number of shifted frames
+        :return np.ndarray corr: (number_of_time_series,number_of_time_series)
+                                 cross correlation of time series
         """
-    corr = cross_correlation(sequence_thumbnail[:, number_frame_shift:], sequence_thumbnail[:, :-number_frame_shift])
+    corr = cross_correlation(sequence_thumbnail[:, number_frame_shift:],
+                             sequence_thumbnail[:, :-number_frame_shift])
     return corr
 
 
@@ -444,7 +357,7 @@ def normxcorr2(template, image, mode="full"):
     out = fftconvolve(image, ar.conj(), mode=mode)
 
     image = fftconvolve(np.square(image), a1, mode=mode) - \
-            np.square(fftconvolve(image, a1, mode=mode)) / (np.prod(template.shape))
+        np.square(fftconvolve(image, a1, mode=mode)) / (np.prod(template.shape))
 
     # Remove small machine precision errors after subtraction
     image[np.where(image < 0)] = 0
@@ -460,9 +373,12 @@ def normxcorr2(template, image, mode="full"):
 
 def compute_spatial_correlation(sequence_thumbnail, number_frame_shift):
     size_x, size_y, number_frames = np.shape(sequence_thumbnail)
-    full_corr = normxcorr2(sequence_thumbnail[:, :, 0].T, sequence_thumbnail[:, :, number_frame_shift].T)
-    for index in np.arange(number_frame_shift, number_frames - number_frame_shift, number_frame_shift):
-        corr = normxcorr2(sequence_thumbnail[:, :, index].T, sequence_thumbnail[:, :, index + number_frame_shift].T)
+    full_corr = normxcorr2(sequence_thumbnail[:, :, 0].T,
+                           sequence_thumbnail[:, :, number_frame_shift].T)
+    for index in np.arange(number_frame_shift, number_frames -
+                           number_frame_shift, number_frame_shift):
+        corr = normxcorr2(sequence_thumbnail[:, :, index].T,
+                          sequence_thumbnail[:, :, index + number_frame_shift].T)
         full_corr = full_corr + corr
     return full_corr
 
@@ -519,7 +435,7 @@ def correlation_tuning(correlation_matrix, ratio):
     correlation_matrix = funDetrend_2d(correlation_matrix)
     s1, s2 = np.shape(correlation_matrix)
     corr_car_tuned = correlation_matrix[int(s1 / 2 - ratio * s1 / 2):int(s1 / 2 + ratio * s1 / 2),
-                     int(s2 / 2 - ratio * s2 / 2):int(s2 / 2 + ratio * s2 / 2)]
+                                        int(s2 / 2 - ratio * s2 / 2):int(s2 / 2 + ratio * s2 / 2)]
     return corr_car_tuned
 
 
@@ -540,7 +456,8 @@ def compute_sinogram(correlation_matrix, median_filter_kernel_ratio, mean_filter
         kernel_size_1 = kernel_size_1 + 1
     kernel_size_2 = 3
     # each element of kernel must be odd
-    radon_matrix_tuned = radon_matrix - medfilt2d(radon_matrix, kernel_size=(kernel_size_1, kernel_size_2))
+    radon_matrix_tuned = radon_matrix - medfilt2d(radon_matrix,
+                                                  kernel_size=(kernel_size_1, kernel_size_2))
     variance = filter_mean(np.var(radon_matrix_tuned, axis=0), mean_filter_kernel_size)
     propagation_angle = np.argmax(variance)
     sinogram_max_var = radon_matrix[:, propagation_angle]
@@ -592,23 +509,27 @@ def compute_celerity(sinogram, wave_length, spatial_resolution, time_resolution,
     return celerity, argmax + m1
 
 
-def temporal_reconstruction(angle, angles, distances, celerity, correlation_matrix, time_interpolation_resolution):
+def temporal_reconstruction(angle, angles, distances, celerity,
+                            correlation_matrix, time_interpolation_resolution):
     D = np.cos(np.radians(angle - angles.T.flatten())) * distances.flatten()
     time = D / celerity
     time_unique, index_unique = np.unique(time, return_index=True)
     index_unique_sorted = np.argsort(time_unique)
     time_unique_sorted = time_unique[index_unique_sorted]
-    timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted), time_interpolation_resolution)
+    timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted),
+                        time_interpolation_resolution)
     corr_unique_sorted = correlation_matrix.T.flatten()[index_unique[index_unique_sorted]]
     interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
     SS = interpolation(timevec)
     return SS
 
 
-def temporal_reconstruction_tuning(SS, time_interpolation_resolution, low_frequency_ratio, high_frequency_ratio):
+def temporal_reconstruction_tuning(SS, time_interpolation_resolution,
+                                   low_frequency_ratio, high_frequency_ratio):
     low_frequency = low_frequency_ratio * time_interpolation_resolution
     high_frequency = high_frequency_ratio * time_interpolation_resolution
-    sos_filter = scipy.signal.butter(1, (2 * low_frequency, 2 * high_frequency), btype='bandpass', output='sos')
+    sos_filter = scipy.signal.butter(1, (2 * low_frequency, 2 * high_frequency),
+                                     btype='bandpass', output='sos')
     SS_filtered = scipy.signal.sosfiltfilt(sos_filter, SS)
     return SS_filtered
 
