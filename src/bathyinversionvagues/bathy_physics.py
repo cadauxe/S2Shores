@@ -11,8 +11,7 @@ from typing import Tuple
 import numpy as np
 
 
-def funLinearC_k(nu: float, celerity: float,
-                 precision: float = 0.0005, gravity: float = 9.81) -> float:
+def funLinearC_k(nu: float, celerity: float, precision: float, gravity: float) -> float:
     # FIXME: What happens if celerity=0? infinite loop ?
     k = 2 * np.pi * nu
     w = celerity * k
