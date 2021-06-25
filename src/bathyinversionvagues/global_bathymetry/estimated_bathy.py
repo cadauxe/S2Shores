@@ -104,7 +104,6 @@ class EstimatedBathy:
         :param acq_time: the time at which the bathymetry samples are estimated
         """
         # data is stored as a 2D array of python objects, here a dictionary containing bathy fields.
-        # TODO: change dict object as a set of bathy samples
         self.estimated_bathy = np.empty((y_samples.shape[0], x_samples.shape[0]), dtype=np.object_)
 
         timestamp = datetime(int(acq_time[:4]), int(acq_time[4:6]), int(acq_time[6:8]),
@@ -168,7 +167,7 @@ class EstimatedBathy:
 
         for y_index in range(nb_samples_y):
             for x_index in range(nb_samples_x):
-                self._fill_array(sample_property, layer_data, y_index, x_index, nb_keep)
+                self._fill_array(sample_property, layer_data, y_index, x_index)
 
         rounded_layer = np.round(layer_data, layer_definition['precision'])
         # Add a dimension at the end for time singleton
@@ -176,10 +175,14 @@ class EstimatedBathy:
         return DataArray(array, coords=self._get_coords(dims, nb_keep),
                          dims=dims, attrs=layer_definition['attrs'])
 
-    # TODO: remove nb_keep and use layer_data.shape
+    # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
-                    y_index: int, x_index: int, nb_keep: int) -> None:
+                    y_index: int, x_index: int) -> None:
         waves_fields_estimations, distance = self.estimated_bathy[y_index, x_index]
+        if layer_data.ndim == 2:
+            nb_keep = 0
+        else:
+            nb_keep = layer_data.shape[2]
         if sample_property == 'distoshore':
             bathy_property = np.array(distance)
         else:
@@ -192,13 +195,10 @@ class EstimatedBathy:
             except AttributeError:
                 bathy_property = np.array([np.nan])
 
-        if bathy_property.ndim == 1:
-            layer_data[y_index, x_index, :] = bathy_property
-        elif bathy_property.ndim == 0:
+        if nb_keep == 0:
             layer_data[y_index, x_index] = bathy_property
         else:
-            msg = f'Cannot output array with {bathy_property.ndim} dimensions'
-            raise IndexError(msg)
+            layer_data[y_index, x_index, :] = bathy_property
 
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         dict_coords: Mapping[Hashable, Any] = {}
