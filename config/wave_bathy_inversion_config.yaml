@@ -2,6 +2,7 @@
 WAVE_EST_METHOD: "SPATIAL_DFT" # parmi SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
 DEPTH_EST_METHOD: "LINEAR" # parmi LINEAR
 NKEEP: 3 # number of main waves directions to keep
+LAYERS_TYPE: "DEBUG" # parmi NOMINAL ou DEBUG. Permet de selectionner les couches du produit netCDF
 
 #expert
 G: 9.81 # g acceleration - m/s2
@@ -11,6 +12,8 @@ DX: 10 # satellite image resolution - meters
 MIN_D: 2 #minimal depth - meters
 MIN_T: 5 # minimal wave period - seconds
 MAX_T: 25 #maximal wave period - seconds
+MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
+MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
 
 #global estimator
 DXP: 500.0 # output grid resolution - meters - S2 : 500
@@ -32,38 +35,43 @@ ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spec
 #depth estimation methods
 #depth_common:
 D_PRECISION: 0.0005 # regression stop criteria - meters
-D_INIT: 1000 # regression - initial value - meters
 
-preprocessing:
-  passband:
-    low_period: 5
-    high_period: 25
+PREPROCESSING:
+  PASSBAND:
+    LOW_PERIOD: 5
+    HIGH_PERIOD: 25
 
-temporal_method:
-  resolution:
-    spatial: 0.5
-    temporal: 8
-    time_interpolation: 0.5
-  temporal_lag: 1
-  percentage_points: 5
-  tuning:
-    ratio_size_correlation: 1
-    median_filter_kernel_ratio_sinogram: 0.25
-    mean_filter_kernel_size_sinogram: 5
-    low_frequency_ratio_temporal_reconstruction: 0.04
-    high_frequency_ratio_temporal_reconstruction: 0.2
-    min_peaks_distance_period: 5
+TEMPORAL_METHOD:
+  DEBUG_MODE: 0
+  DEBUG_PATH: ""
+  PASS_BAND_FILTER: 1
+  RESOLUTION:
+    SPATIAL: 0.5
+    TEMPORAL: 8
+    TIME_INTERPOLATION: 0.5
+  TEMPORAL_LAG: 1
+  PERCENTAGE_POINTS: 5
+  TUNING:
+    RATIO_SIZE_CORRELATION: 1
+    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25
+    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5
+    LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.04
+    HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2
+    MIN_PEAKS_DISTANCE_PERIOD: 5
 
-spatial_method:
-  resolution:
-    spatial: 0.5
-    temporal: 8
-    time_interpolation: 0.5
-  temporal_lag: 1
-  tuning:
-    ratio_size_correlation: 1
-    median_filter_kernel_ratio_sinogram: 0.25
-    mean_filter_kernel_size_sinogram: 5
-    low_frequency_ratio_temporal_reconstruction: 0.04
-    high_frequency_ratio_temporal_reconstruction: 0.2
-    min_peaks_distance_period: 5
+SPATIAL_METHOD:
+  DEBUG_MODE: 0
+  DEBUG_PATH: ""
+  PASS_BAND_FILTER: 1
+  RESOLUTION:
+    SPATIAL: 0.5
+    TEMPORAL: 8
+    TIME_INTERPOLATION: 0.5
+  TEMPORAL_LAG: 1
+  TUNING:
+    RATIO_SIZE_CORRELATION: 1
+    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25
+    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5
+    LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.04
+    HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2
+    MIN_PEAKS_DISTANCE_PERIOD: 5
