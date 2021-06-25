@@ -13,7 +13,7 @@ from ..image.image_geometry_types import PointType
 
 
 class DisToShoreProvider(ABC):
-    """ A distotshore provider is a service which is able to provide the distance to shore of a
+    """ A distoshore provider is a service which is able to provide the distance to shore of a
     point specified by its coordinates in some SRS.
     """
 
