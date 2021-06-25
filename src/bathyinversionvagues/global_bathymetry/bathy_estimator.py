@@ -13,6 +13,7 @@ from munch import Munch
 
 from ..bathy_physics import phi_limits
 from ..data_providers.dis_to_shore_provider import DefaultDisToShoreProvider, DisToShoreProvider
+from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_image import OrthoImage
 from ..image.sampled_ortho_image import SampledOrthoImage
@@ -39,6 +40,7 @@ class BathyEstimator(ABC):
         self.waveparams = wave_params
 
         self._distoshore_provider: DisToShoreProvider = DefaultDisToShoreProvider()
+        self._gravity_provider: GravityProvider = ConstantGravityProvider()
 
         # Create subtiles onto which bathymetry estimation will be done
         self.subtiles = SampledOrthoImage.build_subtiles(image, nb_subtiles_max,
@@ -46,24 +48,6 @@ class BathyEstimator(ABC):
                                                          self.measure_extent)
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
-
-    def set_debug_samples(self, samples: List[PointType]) -> None:
-        """ Sets the list of sample points to debug
-
-        :param samples: a list of (X,Y) tuples defining the points to debug
-        """
-        self._debug_samples = samples
-
-    def set_debug(self, sample: PointType) -> None:
-        self._debug_sample = sample in self._debug_samples
-        if self._debug_sample:
-            print(f'Debugging point: X:{sample[0]} / Y:{sample[1]}')
-
-    @property
-    def debug_sample(self) -> bool:
-        """ :returns: the current value of the debugging flag
-        """
-        return self._debug_sample
 
     @property
     @abstractproperty
@@ -96,25 +80,31 @@ class BathyEstimator(ABC):
         return (self.waveparams.WINDOW / 2., self.waveparams.WINDOW / 2.,
                 self.waveparams.WINDOW / 2., self.waveparams.WINDOW / 2.)
 
-    def get_phi_limits(self,
-                       wavenumbers: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+    # TODO: move get_phi_limits and get_kfft in spatial_dft_bathy_estimator
+    def get_phi_limits(self, gravity: float,
+                       wavenumbers: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """  :returns: the minimum and maximum phase shifts for swallow and deep water at different
         wavenumbers
+
+        :param gravity: the acceleration of the gravity to use (may vary locally)
+        :param wavenumbers: the wavenumbers for which limits on phase are requested
+        :returns: the requested sampling of the sinogram FFT
         """
-        if wavenumbers is None:
-            wavenumbers = self.get_kfft()
         phi_min, phi_deep = phi_limits(wavenumbers, self.waveparams.DT,
-                                       self.waveparams.MIN_D, self.waveparams.G)
+                                       self.waveparams.MIN_D, gravity)
 
         return phi_deep, phi_min
 
-    def get_kfft(self) -> np.ndarray:
+    def get_kfft(self, gravity: float) -> np.ndarray:
         """  :returns: the requested sampling of the sinogram FFT
+
+        :param gravity: the acceleration of the gravity to use (may vary locally)
+        :returns: the requested sampling of the sinogram FFT
         """
         # frequencies based on wave characteristics:
         k_forced = 1 / ((np.arange(self.waveparams.MIN_T,
                                    self.waveparams.MAX_T,
-                                   self.waveparams.STEP_T) ** 2) * self.waveparams.G / (2. * np.pi))
+                                   self.waveparams.STEP_T) ** 2) * gravity / (2. * np.pi))
         kfft = k_forced.reshape((k_forced.size, 1))
 
         return kfft
@@ -147,12 +137,34 @@ class BathyEstimator(ABC):
 
         return dataset
 
+# ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
+
+    def set_debug_samples(self, samples: List[PointType]) -> None:
+        """ Sets the list of sample points to debug
+
+        :param samples: a list of (X,Y) tuples defining the points to debug
+        """
+        self._debug_samples = samples
+
+    def set_debug(self, sample: PointType) -> None:
+        self._debug_sample = sample in self._debug_samples
+        if self._debug_sample:
+            print(f'Debugging point: X:{sample[0]} / Y:{sample[1]}')
+
+    @property
+    def debug_sample(self) -> bool:
+        """ :returns: the current value of the debugging flag
+        """
+        return self._debug_sample
+
     def print_estimations_debug(self, waves_fields_estimations: WavesFieldsEstimations,
                                 step: str) -> None:
         if self.debug_sample:
             print(f'estimations at step: {step}')
             for waves_field in waves_fields_estimations:
                 print(waves_field)
+
+# ++++++++++++++++++++++++++++ External data providers +++++++++++++++++++++++++++++
 
     def set_distoshore_provider(self, distoshore_provider: DisToShoreProvider) -> None:
         """ Sets the DisToShoreProvider to use with this estimator
@@ -163,3 +175,13 @@ class BathyEstimator(ABC):
 
     def get_distoshore(self, point: PointType) -> float:
         return self._distoshore_provider.get_distance(point)
+
+    def set_gravity_provider(self, gravity_provider: GravityProvider) -> None:
+        """ Sets the GravityProvider to use with this estimator
+
+        :param gravity_provider: the GravityProvider to use
+        """
+        self._gravity_provider = gravity_provider
+
+    def get_gravity(self, point: PointType, altitude: float=0.) -> float:
+        return self._gravity_provider.get_gravity(point, altitude)

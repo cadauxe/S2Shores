@@ -62,8 +62,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def find_directions(self) -> None:
 
         # TODO: this processing sequence is related to bathymetry. Move elsewhere.
-        phi_max, phi_min = self.global_estimator.get_phi_limits(
-            self.radon_transforms[0].spectrum_wave_numbers)
+        kfft = self.radon_transforms[0].spectrum_wave_numbers
+        phi_max, phi_min = self.global_estimator.get_phi_limits(self.gravity, kfft)
 
         # TODO: modify directions finding such that only one radon transform is computed (50% gain)
         self.radon_transforms[0].compute_sinograms_dfts()
@@ -125,8 +125,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def find_spectral_peaks(self) -> None:
                 # Detailed analysis of the signal for positive phase shifts
 
-        kfft = self.global_estimator.get_kfft()
-        phi_max, phi_min = self.global_estimator.get_phi_limits()
+        kfft = self.global_estimator.get_kfft(self.gravity)
+        phi_max, phi_min = self.global_estimator.get_phi_limits(self.gravity, kfft)
         self._metrics['kfft'] = kfft
 
         self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)

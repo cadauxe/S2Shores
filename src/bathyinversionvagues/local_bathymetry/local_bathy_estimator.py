@@ -15,6 +15,8 @@ from typing import Dict, Any, List, Optional  # @NoMove
 
 import numpy as np
 
+from bathyinversionvagues.image.image_geometry_types import PointType
+
 from ..image_processing.waves_image import WavesImage
 from .waves_field_estimation import WavesFieldEstimation
 
@@ -35,9 +37,19 @@ class LocalBathyEstimator(ABC):
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
+        self._position = (0., 0.)
+        self._gravity = 0.
         self._waves_fields_estimations: WavesFieldsEstimations = []
 
         self._metrics: Dict[str, Any] = {}
+
+    def set_position(self, point: PointType) -> None:
+        self._position = point
+        self._gravity = self.global_estimator.get_gravity(self._position, 0.)
+
+    @property
+    def gravity(self) -> float:
+        return self._gravity
 
     @abstractmethod
     def run(self) -> None:
@@ -54,7 +66,7 @@ class LocalBathyEstimator(ABC):
         # DeltaTimeProvider when written. The same for gravity
         waves_field_estimation = WavesFieldEstimation(self.local_estimator_params.DT,
                                                       self.local_estimator_params.D_PRECISION,
-                                                      self.local_estimator_params.G,
+                                                      self.gravity,
                                                       self.local_estimator_params.DEPTH_EST_METHOD)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength

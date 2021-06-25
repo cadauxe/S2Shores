@@ -5,8 +5,9 @@
 :created: 05/05/2021
 """
 import time
-from typing import Dict, List, TYPE_CHECKING
 import warnings
+
+from typing import Dict, List, TYPE_CHECKING
 
 import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
@@ -135,8 +136,10 @@ class OrthoBathyEstimator:
                 print(window_image.pixels)
 
         # Local bathymetry computation
+        # TODO: define the class to use only once for global estimator (no change between samples)
         local_bathy_estimator = local_bathy_estimator_factory(images_sequence,
                                                               self.parent_estimator)
+        local_bathy_estimator.set_position((x_sample, y_sample))
 
         try:
             local_bathy_estimator.run()
