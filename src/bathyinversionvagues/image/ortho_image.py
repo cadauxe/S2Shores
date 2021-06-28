@@ -96,8 +96,8 @@ class OrthoImage(ABC):
             for y_coord in y_samples:
                 line_start, line_stop, col_start, col_stop = self.window_pixels((x_coord, y_coord),
                                                                                 local_margins)
-                if (line_start >= 0 and line_stop <= self._nb_lines and
-                        col_start >= 0 and col_stop <= self._nb_columns):
+                if (line_start >= 0 and line_stop < self._nb_lines and
+                        col_start >= 0 and col_stop < self._nb_columns):
                     acceptable_samples_x.append(x_coord)
                     break
 
@@ -106,8 +106,8 @@ class OrthoImage(ABC):
             for x_coord in acceptable_samples_x:
                 line_start, line_stop, col_start, col_stop = self.window_pixels((x_coord, y_coord),
                                                                                 local_margins)
-                if (line_start >= 0 and line_stop <= self._nb_lines and
-                        col_start >= 0 and col_stop <= self._nb_columns):
+                if (line_start >= 0 and line_stop < self._nb_lines and
+                        col_start >= 0 and col_stop < self._nb_columns):
                     acceptable_samples_y.append(y_coord)
                     break
 
