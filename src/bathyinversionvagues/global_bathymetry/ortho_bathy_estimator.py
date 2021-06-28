@@ -110,7 +110,8 @@ class OrthoBathyEstimator:
 
         return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE, nb_keep)
 
-    def compute_local_bathy(self, sub_tile_images, x_sample, y_sample) -> WavesFieldsEstimations:
+    def compute_local_bathy(self, sub_tile_images: List[np.ndarray],
+                            x_sample: float, y_sample: float) -> WavesFieldsEstimations:
 
         window = self.sampled_ortho.window_extent((x_sample, y_sample))
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
@@ -149,9 +150,7 @@ class OrthoBathyEstimator:
         # FIXME: decide what to do with metrics
         metrics = local_bathy_estimator.metrics
 
-        waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
-
-        return waves_fields_estimations
+        return local_bathy_estimator.waves_fields_estimations
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this estimator

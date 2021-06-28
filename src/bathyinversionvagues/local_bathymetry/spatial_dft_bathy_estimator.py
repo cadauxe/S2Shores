@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Optional, List  # @NoMove
+from typing import Optional, List, TYPE_CHECKING  # @NoMove
 
 from scipy.signal import find_peaks
 
@@ -22,15 +22,19 @@ from ..waves_fields_display import (display_curve, display_4curves,
 
 from .local_bathy_estimator import LocalBathyEstimator
 
+if TYPE_CHECKING:
+    from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
+
 
 class SpatialDFTBathyEstimator(LocalBathyEstimator):
+    """ A local bathymetry estimator estimating bathymetry from the DFT of the sinograms in
+    radon transforms.
+    """
     # TODO: change detrend by passing a pre_processing function, with optional parameters
-    def __init__(self, images_sequence: List[WavesImage], global_estimator,
-                 selected_directions: Optional[np.ndarray] = None) -> None:
-        """ Constructor
 
-        :param selected_directions: the set of directions onto which the sinogram must be computed
-        """
+    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 selected_directions: Optional[np.ndarray] = None) -> None:
+
         super().__init__(images_sequence, global_estimator, selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []

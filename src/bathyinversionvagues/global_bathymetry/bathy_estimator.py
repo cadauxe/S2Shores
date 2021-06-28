@@ -5,7 +5,7 @@
 :created: 17/05/2021
 """
 from abc import ABC, abstractproperty
-from typing import Tuple, Optional, List  # @NoMove
+from typing import Tuple, List  # @NoMove
 
 import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
