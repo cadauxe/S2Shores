@@ -13,6 +13,7 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
+from ..bathy_physics import wavenumber_offshore
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..image_processing.waves_image import WavesImage
 from ..image_processing.waves_radon import WavesRadon
@@ -129,7 +130,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def find_spectral_peaks(self) -> None:
                 # Detailed analysis of the signal for positive phase shifts
 
-        kfft = self.global_estimator.get_kfft(self.gravity)
+        kfft = self.get_kfft()
         phi_max, phi_min = self.global_estimator.get_phi_limits(self.gravity, kfft)
         self._metrics['kfft'] = kfft
 
@@ -227,3 +228,16 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # Minimal propagation speed; this depends on the Satellite; Venus or Sentinel 2
         result[np.abs(phase_shift) < phi_min] = 0
         return result
+
+    def get_kfft(self) -> np.ndarray:
+        """  :returns: the requested sampling of the sinogram FFT
+
+        :returns: the requested sampling of the sinogram FFT
+        """
+        # frequencies based on wave characteristics:
+        period_samples = np.arange(self.local_estimator_params.MIN_T,
+                                   self.local_estimator_params.MAX_T,
+                                   self.local_estimator_params.STEP_T)
+        k_forced = wavenumber_offshore(period_samples, self.gravity)
+
+        return k_forced.reshape((k_forced.size, 1))

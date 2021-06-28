@@ -9,7 +9,7 @@
 """
 import numpy as np
 
-from ..bathy_physics import get_period_offshore, funLinearC_k
+from ..bathy_physics import period_offshore, funLinearC_k
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
@@ -65,7 +65,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def period_offshore(self) -> float:
         """ :returns: The offshore period (s) """
-        return get_period_offshore(self.wavenumber, self._gravity)
+        return period_offshore(self.wavenumber, self._gravity)
 
     def __str__(self) -> str:
         result = WavesFieldSampleDynamics.__str__(self)

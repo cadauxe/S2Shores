@@ -95,20 +95,6 @@ class BathyEstimator(ABC):
 
         return phi_deep, phi_min
 
-    def get_kfft(self, gravity: float) -> np.ndarray:
-        """  :returns: the requested sampling of the sinogram FFT
-
-        :param gravity: the acceleration of the gravity to use (may vary locally)
-        :returns: the requested sampling of the sinogram FFT
-        """
-        # frequencies based on wave characteristics:
-        k_forced = 1 / ((np.arange(self.waveparams.MIN_T,
-                                   self.waveparams.MAX_T,
-                                   self.waveparams.STEP_T) ** 2) * gravity / (2. * np.pi))
-        kfft = k_forced.reshape((k_forced.size, 1))
-
-        return kfft
-
     @property
     def nb_subtiles(self) -> int:
         """ :returns: the number of subtiles

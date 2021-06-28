@@ -38,10 +38,26 @@ def phi_limits(wave_numbers: np.ndarray, delta_t: float,
     phi_min = delta_phi * min_celerity * squeezed_wave_numbers
 
     # deep water limits:
-    phi_max = delta_phi / get_period_offshore(squeezed_wave_numbers, gravity)
+    phi_max = delta_phi / period_offshore(squeezed_wave_numbers, gravity)
 
     return phi_min, phi_max
 
 
-def get_period_offshore(wave_numbers: np.ndarray, gravity: float) -> np.ndarray:
-    return np.sqrt(2. * np.pi / (gravity * wave_numbers))
+def period_offshore(wave_number: np.ndarray, gravity: float) -> np.ndarray:
+    """ Computes the period from the wavenumber under the offshore hypothesis
+
+    :param wave_number: wavenumber of the waves (1/m)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: the period according to the linear dispersive relation (s)
+    """
+    return np.sqrt(2. * np.pi / (gravity * wave_number))
+
+
+def wavenumber_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
+    """ Computes the wavenumber from the period under the offshore hypothesis
+
+    :param period: period of the waves (s)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: the wavenumber according to the linear dispersive relation (1/m)
+    """
+    return 2. * np.pi / (gravity * (period)**2)
