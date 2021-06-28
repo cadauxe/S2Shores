@@ -7,13 +7,14 @@
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Optional, List, TYPE_CHECKING  # @NoMove
+from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
 
 from scipy.signal import find_peaks
 
 import numpy as np
 
-from ..bathy_physics import wavenumber_offshore
+from ..bathy_physics import wavenumber_offshore, phi_limits
+
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..image_processing.waves_image import WavesImage
 from ..image_processing.waves_radon import WavesRadon
@@ -66,9 +67,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
     def find_directions(self) -> None:
 
-        # TODO: this processing sequence is related to bathymetry. Move elsewhere.
+        # TODO: this processing sequence is related to bathymetry. Move elsewhere?
         kfft = self.radon_transforms[0].spectrum_wave_numbers
-        phi_max, phi_min = self.global_estimator.get_phi_limits(self.gravity, kfft)
+        phi_min, phi_max = self.get_phi_limits(kfft)
 
         # TODO: modify directions finding such that only one radon transform is computed (50% gain)
         self.radon_transforms[0].compute_sinograms_dfts()
@@ -131,7 +132,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 # Detailed analysis of the signal for positive phase shifts
 
         kfft = self.get_kfft()
-        phi_max, phi_min = self.global_estimator.get_phi_limits(self.gravity, kfft)
+        phi_min, phi_max = self.get_phi_limits(kfft)
         self._metrics['kfft'] = kfft
 
         self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)
@@ -231,8 +232,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
     def get_kfft(self) -> np.ndarray:
         """  :returns: the requested sampling of the sinogram FFT
-
-        :returns: the requested sampling of the sinogram FFT
         """
         # frequencies based on wave characteristics:
         period_samples = np.arange(self.local_estimator_params.MIN_T,
@@ -241,3 +240,16 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         k_forced = wavenumber_offshore(period_samples, self.gravity)
 
         return k_forced.reshape((k_forced.size, 1))
+
+    def get_phi_limits(self, wavenumbers: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """  Get the delta phase limits form deep and swallow waters
+
+        :param wavenumbers: the wavenumbers for which limits on phase are requested
+        :returns: the minimum and maximum phase shifts for swallow and deep water at different
+                  wavenumbers
+        """
+        # FIXME: Delta_time DT is not a constant. Use DeltaTimeProvider
+        return phi_limits(wavenumbers,
+                          self.local_estimator_params.DT,
+                          self.local_estimator_params.MIN_D,
+                          self.gravity)

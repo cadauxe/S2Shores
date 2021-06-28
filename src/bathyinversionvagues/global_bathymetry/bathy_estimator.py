@@ -5,13 +5,11 @@
 :created: 17/05/2021
 """
 from abc import ABC, abstractproperty
-from typing import Tuple, List  # @NoMove
+from typing import List  # @NoMove
 
-import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
 from munch import Munch
 
-from ..bathy_physics import phi_limits
 from ..data_providers.dis_to_shore_provider import DefaultDisToShoreProvider, DisToShoreProvider
 from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
@@ -79,21 +77,6 @@ class BathyEstimator(ABC):
         """
         return (self.waveparams.WINDOW / 2., self.waveparams.WINDOW / 2.,
                 self.waveparams.WINDOW / 2., self.waveparams.WINDOW / 2.)
-
-    # TODO: move get_phi_limits and get_kfft in spatial_dft_bathy_estimator
-    def get_phi_limits(self, gravity: float,
-                       wavenumbers: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """  :returns: the minimum and maximum phase shifts for swallow and deep water at different
-        wavenumbers
-
-        :param gravity: the acceleration of the gravity to use (may vary locally)
-        :param wavenumbers: the wavenumbers for which limits on phase are requested
-        :returns: the requested sampling of the sinogram FFT
-        """
-        phi_min, phi_deep = phi_limits(wavenumbers, self.waveparams.DT,
-                                       self.waveparams.MIN_D, gravity)
-
-        return phi_deep, phi_min
 
     @property
     def nb_subtiles(self) -> int:
@@ -169,5 +152,5 @@ class BathyEstimator(ABC):
         """
         self._gravity_provider = gravity_provider
 
-    def get_gravity(self, point: PointType, altitude: float=0.) -> float:
+    def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
         return self._gravity_provider.get_gravity(point, altitude)
