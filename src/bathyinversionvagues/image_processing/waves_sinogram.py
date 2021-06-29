@@ -16,14 +16,19 @@ import numpy as np
 from .shoresutils import get_unity_roots, DFT_fr
 
 
-class WavesSinogram():
+class WavesSinogram:
+    """ Class handling a sinogram (the component of a Radon transform in some direction)
+    """
     # TODO: introduce direction inside the sinogram itself ?
     # FIXME: is it a sampling frequency or a sampling period ?
+
     def __init__(self, sinogram: np.ndarray, sampling_frequency: float) -> None:
         """ Constructor
 
         :param sinogram: a 1D array containing the sinogram values
+        :param sampling_frequency: the sampling frequency of the sinogram (m-1)
         """
+        # TODO: remove sampling frequency as it is not strictly needed
         self.sinogram = sinogram
         self.nb_samples = sinogram.shape[0]
         self.sampling_frequency = sampling_frequency
@@ -57,8 +62,12 @@ class WavesSinogram():
 
     @property
     def energy(self) -> float:
+        """ :returns: the energy of the sinogram
+        """
         return np.sum(self.sinogram * self.sinogram)
 
     @property
     def mean_power(self) -> float:
-        return np.sum(self.sinogram * self.sinogram) / len(self.sinogram)
+        """ :returns: the mean power of the sinogram
+        """
+        return self.energy / len(self.sinogram)

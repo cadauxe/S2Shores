@@ -66,6 +66,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self._metrics['radon_image2'] = self.radon_transforms[1]
 
     def find_directions(self) -> None:
+        """ Find an initial set of directions from the cross correlation spectrum of the radon
+        transforms of the 2 images.
+        """
 
         # TODO: this processing sequence is related to bathymetry. Move elsewhere?
         kfft = self.radon_transforms[0].spectrum_wave_numbers
@@ -74,10 +77,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # TODO: modify directions finding such that only one radon transform is computed (50% gain)
         self.radon_transforms[0].compute_sinograms_dfts()
         self.radon_transforms[1].compute_sinograms_dfts()
-        _, _, totalSpecMax_ref = self.normalized_cross_correl_spectrum(phi_min, phi_max)
-        self.optimized_curve = totalSpecMax_ref
+        _, _, total_spectrum_normalized = self.normalized_cross_correl_spectrum(phi_min, phi_max)
+        self.optimized_curve = total_spectrum_normalized
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
-        self.peaks_dir = find_peaks(totalSpecMax_ref,
+        self.peaks_dir = find_peaks(total_spectrum_normalized,
                                     prominence=self.local_estimator_params.PROMINENCE_MAX_PEAK)
         if len(self.peaks_dir[0]) == 0:  # pylint: disable=len-as-condition
             raise WavesEstimationError('Unable to find any directional peak')
@@ -86,6 +89,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             print(self.peaks_dir)
 
     def find_directions_bis(self) -> None:
+        """ Find an initial set of directions from the the radon transform of a single image.
+        Exploratory test.
+        """
 
         sinograms_powers_normalized_list: List[np.ndarray] = []
         for radon_transform in self.radon_transforms:
@@ -111,14 +117,17 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                         sinograms_powers_normalized[1][::5])
 
     def prepare_refinement(self) -> None:
+        """ Prepare the directions along which direction and wavenumber finding will be done.
+        """
         refined_directions: List[np.ndarray] = []
         peaks_dir_indices = self.peaks_dir[0]
         if peaks_dir_indices.size > 0:
-            for ii in range(0, peaks_dir_indices.size):
+            for peak_index in range(0, peaks_dir_indices.size):
                 angles_half_range = self.local_estimator_params.ANGLE_AROUND_PEAK_DIR
-                tmp = np.arange(np.max([peaks_dir_indices[ii] - angles_half_range, 0]),
-                                np.min([peaks_dir_indices[ii] + angles_half_range + 1, 180]))
-                if ii == 0:
+                tmp = np.arange(np.max([peaks_dir_indices[peak_index] - angles_half_range, 0]),
+                                np.min([peaks_dir_indices[peak_index] + angles_half_range + 1, 180])
+                                )
+                if peak_index == 0:
                     refined_directions = tmp
                 else:
                     refined_directions = np.append(refined_directions, tmp)
@@ -129,7 +138,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.directions[:] = self.radon_transforms[0].directions[directions_indices]
 
     def find_spectral_peaks(self) -> None:
-                # Detailed analysis of the signal for positive phase shifts
+        """ Find refined directions from the resampled cross correlation spectrum of the radon
+        transforms of the 2 images and identify wavenumbers of the peaks along these directions.
+        """
+        # Detailed analysis of the signal for positive phase shifts
 
         kfft = self.get_kfft()
         phi_min, phi_max = self.get_phi_limits(kfft)
@@ -137,16 +149,16 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)
         self.radon_transforms[1].compute_sinograms_dfts(self.directions, kfft)
-        phase_shift, totSpec, totalSpecMax_ref = self.normalized_cross_correl_spectrum(phi_min,
-                                                                                       phi_max)
-        peaksFreq = find_peaks(totalSpecMax_ref,
-                               prominence=self.local_estimator_params.PROMINENCE_MULTIPLE_PEAKS)
-        peaksFreq = peaksFreq[0]
-        peaksK = np.argmax(totSpec[:, peaksFreq], axis=0)
-        self._metrics['totSpec'] = np.abs(totSpec) / np.mean(totSpec)
+        phase_shift, total_spectrum, total_spectrum_normalized = \
+            self.normalized_cross_correl_spectrum(phi_min, phi_max)
+        peaks_freq = find_peaks(total_spectrum_normalized,
+                                prominence=self.local_estimator_params.PROMINENCE_MULTIPLE_PEAKS)
+        peaks_freq = peaks_freq[0]
+        peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
+        self._metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
 
-        for ii, peak_freq_index in enumerate(peaksFreq):
-            peak_wavenumber_index = peaksK[ii]
+        for index, peak_freq_index in enumerate(peaks_freq):
+            peak_wavenumber_index = peaks_wavenumbers_ind[index]
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
             estimated_direction = \
                 self.radon_transforms[0].directions[self.directions[peak_freq_index]]
@@ -158,11 +170,22 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             waves_field_estimation.delta_phase = estimated_phase_shift
             waves_field_estimation.delta_phase_ratio = abs(waves_field_estimation.delta_phase) / \
                 phi_max[peak_wavenumber_index]
-            waves_field_estimation.energy_max = totalSpecMax_ref[peak_freq_index]
+            waves_field_estimation.energy_max = total_spectrum_normalized[peak_freq_index]
             self.store_estimation(waves_field_estimation)
         self.print_estimations_debug('after direction refinement')
 
-    def normalized_cross_correl_spectrum(self, phi_min, phi_max):
+    def normalized_cross_correl_spectrum(self, phi_min: np.ndarray, phi_max: np.ndarray
+                                         ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """ Computes the cross correlation spectrum of the radon transforms of the images, possibly
+        restricted to a limited set of directions, and derive the function used to locate maxima.
+
+        :param phi_min: minimum acceptable values of delta phi for each wavenumber to explore
+        :param phi_max: maximum acceptable values of delta phi for each wavenumber to explore
+        :returns: A tuple of 3 numpy arrays with:
+                  - the phase shifts, thresholded by phi_min and phi_max
+                  - the total spectrum
+                  - the normalized spectrum
+        """
 
         if self.directions is None:
             nb_directions = self.radon_transforms[0].nb_directions
@@ -183,9 +206,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         combined_amplitude = (amplitude_sino1 + amplitude_sino2)
 
         # Find maximum total energy per direction theta and normalize by the greater one
-        totSpec = np.abs(combined_amplitude * phase_shift_thresholded)
-        maxHeta = np.max(totSpec, axis=0)
-        totalSpecMax_ref = maxHeta / np.max(maxHeta)
+        total_spectrum = np.abs(combined_amplitude * phase_shift_thresholded)
+        max_heta = np.max(total_spectrum, axis=0)
+        total_spectrum_normalized = max_heta / np.max(max_heta)
         # Pick the maxima
 
         if self.global_estimator.debug_sample:
@@ -204,18 +227,26 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 print(index, phase_shift_thresholded[1][index])
 
             dump_numpy_variable(combined_amplitude, 'combined_amplitude')
-            dump_numpy_variable(totalSpecMax_ref, 'totalSpecMax_ref')
+            dump_numpy_variable(total_spectrum_normalized, 'total_spectrum_normalized')
 
-            display_curve(totalSpecMax_ref, 'Total Spec Max ref')
+            display_curve(total_spectrum_normalized, 'total_spectrum_normalized')
             display_estimation(
                 combined_amplitude, amplitude_sino1,
                 phase_shift,
-                phase_shift_thresholded, totSpec,
-                totalSpecMax_ref)
+                phase_shift_thresholded, total_spectrum,
+                total_spectrum_normalized)
 
-        return phase_shift_thresholded, totSpec, totalSpecMax_ref
+        return phase_shift_thresholded, total_spectrum, total_spectrum_normalized
 
-    def process_phase(self, phase_shift, phi_min, phi_max):
+    def process_phase(self, phase_shift: np.ndarray, phi_min: np.ndarray, phi_max: np.ndarray
+                      ) -> np.ndarray:
+        """ Thresholding of the phase shifts, possibly with phase unwraping (not implemented)
+
+        :param phase_shift: the phase shifts coming from the cross correlation spectrum
+        :param phi_min: minimum acceptable values of delta phi for each wavenumber
+        :param phi_max: maximum acceptable values of delta phi for each wavenumber
+        :returns: the thresholded phase shifts
+        """
 
         if not self.local_estimator_params.UNWRAP_PHASE_SHIFT:
             # currently deactivated but we want this functionality:

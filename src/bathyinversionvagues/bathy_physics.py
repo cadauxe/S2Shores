@@ -11,16 +11,14 @@ from typing import Tuple
 import numpy as np
 
 
-def funLinearC_k(nu: float, celerity: float, precision: float, gravity: float) -> float:
+def funLinearC_k(wavenumber: float, celerity: float, precision: float, gravity: float) -> float:
     # FIXME: What happens if celerity=0? infinite loop ?
-    k = 2 * np.pi * nu
+    k = 2 * np.pi * wavenumber
     w = celerity * k
     estimated_depth = celerity ** 2 / gravity
 
-    nb_iter = 0
     previous_depth = np.Infinity
-    while (abs(previous_depth - estimated_depth) > precision):
-        nb_iter += 1
+    while abs(previous_depth - estimated_depth) > precision:
         previous_depth = estimated_depth
         dispe = w ** 2 - (gravity * k * np.tanh(k * previous_depth))
         fdispe = -gravity * (k ** 2) / (np.cosh(k * previous_depth) ** 2)

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-module -- Class encapsulating operations on the radon transform of an image for waves processing
-
+""" Class encapsulating operations on the radon transform of an image for waves processing
 
 :author: Alain Giros
 :organization: CNES
@@ -27,6 +25,13 @@ from .waves_sinogram import WavesSinogram
 
 @lru_cache()
 def sinogram_weights(nb_samples: int) -> np.ndarray:
+    """ Computes a cosine weighting function to account for less energy at the extremities of a
+    sinogram.
+
+    :param nb_samples: the number of samples in the sinogram (its length)
+    :return: half period of cosine with extremities modified to be non-zero
+
+    """
     weights = np.cos(np.linspace(-np.pi / 2., (np.pi / 2.), nb_samples))
     weights[0] = weights[1]
     weights[-1] = weights[-2]
@@ -35,6 +40,9 @@ def sinogram_weights(nb_samples: int) -> np.ndarray:
 
 # TODO: finalize directions indices removal
 class WavesRadon:
+    """ Class handling the Radon transform of some image.
+    """
+
     def __init__(self, image: WavesImage, directions_step: float = 1.,
                  weighted: bool = False) -> None:
         """ Constructor
@@ -45,6 +53,8 @@ class WavesRadon:
                                 is used as the origin, and any direction angle is transformed to the
                                 nearest quantized angle for indexing that direction in the radon
                                 transform.
+        :param weighted: a flag specifying if the radon transform must be weighted by a 1/cos(d)
+                         weighting function
         """
         self.pixels = image.pixels
         self.sampling_frequency = image.sampling_frequency
@@ -59,7 +69,8 @@ class WavesRadon:
 
     @property
     def directions(self) -> np.ndarray:
-        """ :return: the directions over which the radon transform has been / must be computed """
+        """ :return: the directions over which the radon transform has been / must be computed
+        :raises AttributeError: if the radon transform has not been computed yet """
         if self._radon_transform is None:
             raise AttributeError('No radon transform computed yet')
         return self._radon_transform.directions
@@ -71,9 +82,7 @@ class WavesRadon:
 
     @property
     def radon_transform(self) -> Optional[DirectionalArray]:
-        """
-        :returns: the radon transform of the image for the currently defined set of directions
-        :raises AttributeError: if the directions have not been specified yet
+        """ :returns: the radon transform of the image for the currently defined set of directions
         """
         return self._radon_transform
 
@@ -83,7 +92,7 @@ class WavesRadon:
         """
         return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
 
-    def compute(self, selected_directions: Optional[np.ndarray]= None) -> None:
+    def compute(self, selected_directions: Optional[np.ndarray] = None) -> None:
         """ Compute the radon transform of the image for the currently defined set of directions
 
         :raises AttributeError: if the directions have not been specified yet
@@ -106,14 +115,26 @@ class WavesRadon:
 
     @property
     def sinograms(self) -> Dict[float, WavesSinogram]:
+        """ the sinograms of the Radon transform as a dictionary indexed by the directions
+
+        :returns: the sinograms of the Radon transform as a dictionary indexed by the directions
+        :raises NoRadonTransformError: when the Radon transform has not been computed yet
+        """
         if not self._sinograms.keys():
             if self._radon_transform is None:
                 raise NoRadonTransformError()
             self._sinograms = self.get_sinograms_as_dict()
         return self._sinograms
 
-    def get_sinograms_as_dict(self,
-                              directions: Optional[np.ndarray] = None) -> Dict[float, WavesSinogram]:
+    def get_sinograms_as_dict(self, directions: Optional[np.ndarray] = None
+                              ) -> Dict[float, WavesSinogram]:
+        """ returns the sinograms of the Radon transform as a dictionary indexed by the directions
+
+        :param directions: the set of directions which must be provided in the output dictionary.
+                           When unspecified, all the directions of the Radon transform are returned.
+        :returns: the sinograms of the Radon transform as a dictionary indexed by the directions
+        :raises NoRadonTransformError: when the Radon transform has not been computed yet
+        """
         directions = self.directions if directions is None else directions
         sinograms_dict: Dict[float, WavesSinogram] = {}
         if self.radon_transform is not None:
@@ -122,6 +143,12 @@ class WavesRadon:
         return sinograms_dict
 
     def get_sinogram(self, direction: float) -> WavesSinogram:
+        """ returns a new sinogram taken from the Radon transform at some direction
+
+        :param direction: the direction of the requested sinogram.
+        :returns: the sinogram of the Radon transform along the requested direction
+        :raises NoRadonTransformError: when the Radon transform has not been computed yet
+        """
         if self._radon_transform is None:
             raise NoRadonTransformError()
         return WavesSinogram(self._radon_transform.values_for(direction), self.sampling_frequency)
@@ -131,6 +158,9 @@ class WavesRadon:
                                kfft: Optional[np.ndarray] = None) -> None:
         """ Computes the fft of the radon transform along the projection directions
 
+        :param directions: the set of directions for which the sinograms DFT must be computed
+        :param kfft: the set of wavenumbers to use for sampling the DFT. If None, standard DFT
+                     sampling is done.
         """
         # If no selected directions, DFT will be computed on all directions
         directions = self.directions if directions is None else directions
@@ -158,9 +188,8 @@ class WavesRadon:
         :param signal_2d: a 2D signal
         :param column_sampling_frequency: the sampling frequency along the signal columns
         :param kfft: a table of unevenly spaced frequencies at which the DFT must be computed
-        :param column_indices: the column indices on which the DFT is required
 
-        :returns: a 2D array with the DFTs of the selected input columns are stored as contiguous
+        :returns: a 2D array with the DFTs of the selected input columns, stored as contiguous
                   columns
         """
         nb_columns = signal_2d.shape[1]
@@ -171,7 +200,14 @@ class WavesRadon:
             signal_dft_1d[:, i] = DFT_fr(signal_2d[:, i], unity_roots)
         return signal_dft_1d
 
-    def get_sinograms_dfts(self, directions: Optional[np.ndarray]=None) -> np.ndarray:
+    def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
+        """ Retrieve the current DFT of the sinograms in some directions. If DFTs does not exist
+        they are computed using standard frequencies.
+
+        :param directions: the directions of the requested sinograms.
+                           Defaults to all the Radon transform directions if unspecified.
+        :return: the sinograms DFTs for the specified directions or for all directions
+        """
         directions = self.directions if directions is None else directions
         fft_sino_length = self.sinograms[directions[0]].dft.shape[0]
         result = np.empty((fft_sino_length, len(directions)), dtype=np.complex128)
@@ -180,7 +216,13 @@ class WavesRadon:
             result[:, result_index] = sinogram.dft
         return result
 
-    def get_sinograms_mean_power(self, directions: Optional[np.ndarray]=None) -> np.ndarray:
+    def get_sinograms_mean_power(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
+        """ Retrieve the mean power of the sinograms in some directions.
+
+        :param directions: the directions of the requested sinograms.
+                           Defaults to all the Radon transform directions if unspecified.
+        :return: the sinograms mean powers for the specified directions or for all directions
+        """
         directions = self.directions if directions is None else directions
         sinograms_powers = np.empty(len(directions), dtype=np.float64)
         for result_index, sinogram_index in enumerate(directions):
