@@ -4,32 +4,20 @@
 :author: GIROS Alain
 :created: 25/06/2021
 """
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import math
 
-from typing import Optional
 
 from ..image.image_geometry_types import PointType
 
+from .localized_data_provider import LocalizedDataProvider
 
-class GravityProvider(ABC):
+
+class GravityProvider(LocalizedDataProvider):
     """ A GravityProvider provider is a service able to provide the gravity at different places
     and altitudes on earth. The points where gravity is requested are specified by coordinates
     in some SRS.
     """
-
-    def __init__(self) -> None:
-        self._epsg_code: Optional[int] = None
-
-    @property
-    def epsg_code(self) -> Optional[int]:
-        """ :returns: the epsg code of the SRS currently set for this provider
-        """
-        return self._epsg_code
-
-    @epsg_code.setter
-    def epsg_code(self, value: int) -> None:
-        self._epsg_code = value
 
     @abstractmethod
     def get_gravity(self, point: PointType, altitude: float) -> float:
@@ -63,7 +51,6 @@ class LatitudeVaryingGravityProvider(GravityProvider):
     g_mean = (g_poles - g_equator) / 2.
 
     def get_gravity(self, point: PointType, altitude: float) -> float:
-        # FIXME: define SRS transform in base class
-        latitude, _, _ = self.transform_point(point, altitude, target_epsg=4326)
+        _, latitude, _ = self.transform_point(point, altitude)
         gravity = self.g_45 - self.g_mean * math.cos(latitude * math.pi / 90)
         return gravity

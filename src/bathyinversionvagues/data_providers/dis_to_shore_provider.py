@@ -4,31 +4,19 @@
 :author: GIROS Alain
 :created: 23/06/2021
 """
-from abc import ABC, abstractmethod
-from typing import Optional
+from abc import abstractmethod
 
 import numpy as np
 
 from ..image.image_geometry_types import PointType
 
+from .localized_data_provider import LocalizedDataProvider
 
-class DisToShoreProvider(ABC):
+
+class DisToShoreProvider(LocalizedDataProvider):
     """ A distoshore provider is a service which is able to provide the distance to shore of a
     point specified by its coordinates in some SRS.
     """
-
-    def __init__(self) -> None:
-        self._epsg_code: Optional[int] = None
-
-    @property
-    def epsg_code(self) -> Optional[int]:
-        """ :returns: the epsg code of the SRS currently set for this provider
-        """
-        return self._epsg_code
-
-    @epsg_code.setter
-    def epsg_code(self, value: int) -> None:
-        self._epsg_code = value
 
     @abstractmethod
     def get_distance(self, point: PointType) -> float:

@@ -39,6 +39,7 @@ class BathyEstimator(ABC):
 
         self._distoshore_provider: DisToShoreProvider = DefaultDisToShoreProvider()
         self._gravity_provider: GravityProvider = ConstantGravityProvider()
+        self._gravity_provider.epsg_code = self.image.epsg_code
 
         # Create subtiles onto which bathymetry estimation will be done
         self.subtiles = SampledOrthoImage.build_subtiles(image, nb_subtiles_max,
@@ -153,4 +154,11 @@ class BathyEstimator(ABC):
         self._gravity_provider = gravity_provider
 
     def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
+        """ Returns the gravity at some point expressed by its X, Y and H coordinates in some SRS,
+        using the gravity provider associated to this bathymetry estimator.
+
+        :param point: a tuple containing the X and Y coordinates in the SRS set for the provider
+        :param altitude: the altitude of the point in the SRS set for this provider
+        :returns: the acceleration due to gravity at this point (m/s2).
+        """
         return self._gravity_provider.get_gravity(point, altitude)
