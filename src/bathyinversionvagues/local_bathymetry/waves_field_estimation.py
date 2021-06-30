@@ -21,8 +21,8 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
     estimation based on physical bathymetry.
     """
 
-    def __init__(self, delta_time: float, depth_precision: float, gravity: float,
-                 depth_estimation_method: str) -> None:
+    def __init__(self, delta_time: float, gravity: float,
+                 depth_estimation_method: str, depth_precision: float) -> None:
         """ Constructor
 
         :param delta_time: the time difference between the 2 images used for the estimation

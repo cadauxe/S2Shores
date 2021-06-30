@@ -91,9 +91,9 @@ class LocalBathyEstimator(ABC):
         # FIXME: DT is not the right value to take into account. Use
         # DeltaTimeProvider when written.
         waves_field_estimation = WavesFieldEstimation(self.local_estimator_params.DT,
-                                                      self.local_estimator_params.D_PRECISION,
                                                       self.gravity,
-                                                      self.local_estimator_params.DEPTH_EST_METHOD)
+                                                      self.local_estimator_params.DEPTH_EST_METHOD,
+                                                      self.local_estimator_params.D_PRECISION)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 
