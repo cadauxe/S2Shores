@@ -26,12 +26,12 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
         """ Constructor
 
         :param delta_time: the time difference between the 2 images used for the estimation
-        :param depth_precision: precision (in meters) to be used for depth estimation
         :param gravity: the acceleration of gravity to use (m.s-2)
         :param depth_estimation_method: the name of the depth estimation method to use
+        :param depth_precision: precision (in meters) to be used for depth estimation
         :raises NotImplementedError: when the depth estimation method is unsupported
         """
-        super().__init__(depth_precision, gravity, depth_estimation_method)
+        super().__init__(gravity, depth_estimation_method, depth_precision)
 
         self._delta_time = delta_time
         self._delta_phase = np.nan
