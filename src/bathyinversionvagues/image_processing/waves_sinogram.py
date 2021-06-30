@@ -20,18 +20,14 @@ class WavesSinogram:
     """ Class handling a sinogram (the component of a Radon transform in some direction)
     """
     # TODO: introduce direction inside the sinogram itself ?
-    # FIXME: is it a sampling frequency or a sampling period ?
 
-    def __init__(self, sinogram: np.ndarray, sampling_frequency: float) -> None:
+    def __init__(self, sinogram: np.ndarray) -> None:
         """ Constructor
 
         :param sinogram: a 1D array containing the sinogram values
-        :param sampling_frequency: the sampling frequency of the sinogram (m-1)
         """
-        # TODO: remove sampling frequency as it is not strictly needed
         self.sinogram = sinogram
         self.nb_samples = sinogram.shape[0]
-        self.sampling_frequency = sampling_frequency
         self._dft = None
 
     @property
@@ -47,16 +43,17 @@ class WavesSinogram:
     def dft(self, dft_values: np.ndarray) -> None:
         self._dft = dft_values
 
-    def compute_dft(self, kfft: Optional[np.ndarray] = None) -> np.ndarray:
+    def compute_dft(self, frequencies: Optional[np.ndarray] = None) -> np.ndarray:
         """ Computes the DFT of the sinogram
 
+        :param frequencies: a set of unevenly spaced frequencies at which the DFT must be computed
         :returns: the DFT of the sinogram
         """
         if kfft is None:
             nb_positive_coeffs = int(np.ceil(self.nb_samples / 2))
             result = np.fft.fft(self.sinogram)[0:nb_positive_coeffs]
         else:
-            unity_roots = get_unity_roots(self.nb_samples, kfft, self.sampling_frequency)
+            unity_roots = get_unity_roots(self.nb_samples, frequencies)
             result = DFT_fr(self.sinogram, unity_roots)
         return result
 

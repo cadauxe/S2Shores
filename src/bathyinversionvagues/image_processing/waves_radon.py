@@ -22,6 +22,8 @@ from .shoresutils import DFT_fr, get_unity_roots
 from .waves_image import WavesImage
 from .waves_sinogram import WavesSinogram
 
+SinogramsSetType = Dict[float, WavesSinogram]
+
 
 @lru_cache()
 def sinogram_weights(nb_samples: int) -> np.ndarray:
@@ -62,7 +64,7 @@ class WavesRadon:
 
         self.directions_step = directions_step
 
-        self._sinograms: Dict[float, WavesSinogram] = {}
+        self._sinograms: SinogramsSetType = {}
         self._radon_transform: Optional[DirectionalArray] = None
 
         self._weights = sinogram_weights(self.nb_samples) if weighted else None
@@ -114,7 +116,7 @@ class WavesRadon:
 # +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
 
     @property
-    def sinograms(self) -> Dict[float, WavesSinogram]:
+    def sinograms(self) -> SinogramsSetType:
         """ the sinograms of the Radon transform as a dictionary indexed by the directions
 
         :returns: the sinograms of the Radon transform as a dictionary indexed by the directions
@@ -126,8 +128,7 @@ class WavesRadon:
             self._sinograms = self.get_sinograms_as_dict()
         return self._sinograms
 
-    def get_sinograms_as_dict(self, directions: Optional[np.ndarray] = None
-                              ) -> Dict[float, WavesSinogram]:
+    def get_sinograms_as_dict(self, directions: Optional[np.ndarray] = None) -> SinogramsSetType:
         """ returns the sinograms of the Radon transform as a dictionary indexed by the directions
 
         :param directions: the set of directions which must be provided in the output dictionary.
@@ -136,7 +137,7 @@ class WavesRadon:
         :raises NoRadonTransformError: when the Radon transform has not been computed yet
         """
         directions = self.directions if directions is None else directions
-        sinograms_dict: Dict[float, WavesSinogram] = {}
+        sinograms_dict: SinogramsSetType = {}
         if self.radon_transform is not None:
             for direction in self.directions:
                 sinograms_dict[direction] = self.get_sinogram(direction)
@@ -151,7 +152,7 @@ class WavesRadon:
         """
         if self._radon_transform is None:
             raise NoRadonTransformError()
-        return WavesSinogram(self._radon_transform.values_for(direction), self.sampling_frequency)
+        return WavesSinogram(self._radon_transform.values_for(direction))
 
     def compute_sinograms_dfts(self,
                                directions: Optional[np.ndarray] = None,
@@ -173,7 +174,8 @@ class WavesRadon:
             radon_dft_1d = np.fft.fft(radon_excerpt, axis=0)
             result = radon_dft_1d[0:nb_positive_coeffs, :]
         else:
-            result = self._dft_interpolated(radon_excerpt, self.sampling_frequency, kfft)
+            frequencies = kfft / self.sampling_frequency
+            result = self._dft_interpolated(radon_excerpt, frequencies)
         # Store individual 1D DFTs in sinograms
         for sino_index in range(result.shape[1]):
             sinogram = self.sinograms[directions[sino_index]]
@@ -181,21 +183,18 @@ class WavesRadon:
 
     # Make a function close to DFT_fr
     @staticmethod
-    def _dft_interpolated(signal_2d: np.ndarray, column_sampling_frequency: float,
-                          kfft: np.ndarray) -> np.ndarray:
+    def _dft_interpolated(signal_2d: np.ndarray, frequencies: np.ndarray) -> np.ndarray:
         """ Computes the 1D dft of a 2D signal along the columns using specific sampling frequencies
 
         :param signal_2d: a 2D signal
-        :param column_sampling_frequency: the sampling frequency along the signal columns
-        :param kfft: a table of unevenly spaced frequencies at which the DFT must be computed
-
+        :param frequencies: a set of unevenly spaced frequencies at which the DFT must be computed
         :returns: a 2D array with the DFTs of the selected input columns, stored as contiguous
                   columns
         """
         nb_columns = signal_2d.shape[1]
-        signal_dft_1d = np.empty((kfft.size, nb_columns), dtype=np.complex128)
+        signal_dft_1d = np.empty((frequencies.size, nb_columns), dtype=np.complex128)
 
-        unity_roots = get_unity_roots(signal_2d.shape[0], kfft, column_sampling_frequency)
+        unity_roots = get_unity_roots(signal_2d.shape[0], frequencies)
         for i in range(nb_columns):
             signal_dft_1d[:, i] = DFT_fr(signal_2d[:, i], unity_roots)
         return signal_dft_1d

@@ -53,19 +53,18 @@ def funDetrend_2d(Z):
     return Z_f
 
 
-def get_unity_roots(number_of_roots, fr, fs):
+def get_unity_roots(number_of_roots: int, fr: np.ndarray) -> np.ndarray:
     """
-    Compute the fs-th complex roots of the unity
-    :param int number_of_roots: Number of unity roots to compute, starting from 0
-    :param np.ndarray fr: 1D array of frequencies where roots are needed
-    :param float fs: sampling frequency
-    :returns: the number_of_roots fs-th complex roots of the unity corresponding to fr frequencies
+    Compute complex roots of the unity for some frequencies
+    :param number_of_roots: Number of unity roots to compute, starting from 0
+    :param fr: 1D array of normalized frequencies where roots are needed
+    :returns: number_of_roots complex roots of the unity corresponding to fr frequencies
     """
     n = np.arange(number_of_roots)
-    return np.exp(-2j * np.pi * fr * n / fs)
+    return np.exp(-2j * np.pi * fr * n)
 
 
-def DFT_fr(x, unity_roots):
+def DFT_fr(x: np.ndarray, unity_roots: np.ndarray):
     """ Compute the discrete Fourier Transform of a 1D array
 
     :param np.ndarray x: 1D array containing the signal
