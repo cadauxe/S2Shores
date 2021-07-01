@@ -200,6 +200,7 @@ def fft_filtering(simg, spatial_resolution, T_max, T_min, gravity):
     ky = np.fft.fftshift(np.fft.fftfreq(m, spatial_resolution))
     kx = np.repeat(np.reshape(kx, (n, 1)), m, axis=1)
     ky = np.repeat(np.reshape(ky, (1, m)), n, axis=0)
+    # TODO: rely on wavenumber_offshore() function (later on remove Tmax and Tmin arguments)
     threshold_min = 2. * np.pi / (gravity * T_max ** 2)
     threshold_max = 2. * np.pi / (gravity * T_min ** 2)
     simg_filtered = np.zeros(simg.shape)
