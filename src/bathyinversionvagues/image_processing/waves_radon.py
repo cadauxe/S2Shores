@@ -14,7 +14,6 @@ from typing import Optional, Dict  # @NoMove
 
 import numpy as np  # @NoMove
 
-
 from ..generic_utils.directional_array import (DirectionalArray, linear_directions,
                                                DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
 from ..generic_utils.symmetric_radon import symmetric_radon
@@ -83,7 +82,7 @@ class WavesRadon:
         """
         return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
 
-    def compute(self, selected_directions: Optional[np.ndarray]= None) -> None:
+    def compute(self, selected_directions: Optional[np.ndarray] = None) -> None:
         """ Compute the radon transform of the image for the currently defined set of directions
 
         :raises AttributeError: if the directions have not been specified yet
@@ -171,7 +170,7 @@ class WavesRadon:
             signal_dft_1d[:, i] = DFT_fr(signal_2d[:, i], unity_roots)
         return signal_dft_1d
 
-    def get_sinograms_dfts(self, directions: Optional[np.ndarray]=None) -> np.ndarray:
+    def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
         directions = self.directions if directions is None else directions
         fft_sino_length = self.sinograms[directions[0]].dft.shape[0]
         result = np.empty((fft_sino_length, len(directions)), dtype=np.complex128)
@@ -180,10 +179,18 @@ class WavesRadon:
             result[:, result_index] = sinogram.dft
         return result
 
-    def get_sinograms_mean_power(self, directions: Optional[np.ndarray]=None) -> np.ndarray:
+    def get_sinograms_mean_power(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
         directions = self.directions if directions is None else directions
         sinograms_powers = np.empty(len(directions), dtype=np.float64)
         for result_index, sinogram_index in enumerate(directions):
             sinogram = self.sinograms[sinogram_index]
             sinograms_powers[result_index] = sinogram.mean_power
         return sinograms_powers
+
+    def get_sinogram_variance(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
+        directions = self.directions if directions is None else directions
+        sinograms_variances = np.empty(len(directions), dtype=np.float64)
+        for result_index, sinogram_index in enumerate(directions):
+            sinogram = self.sinograms[sinogram_index]
+            sinograms_variances[result_index] = sinogram.variance
+        return sinograms_variances

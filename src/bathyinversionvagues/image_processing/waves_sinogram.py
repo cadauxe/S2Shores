@@ -62,3 +62,7 @@ class WavesSinogram():
     @property
     def mean_power(self) -> float:
         return np.sum(self.sinogram * self.sinogram) / len(self.sinogram)
+
+    @property
+    def variance(self) -> float:
+        return np.var(self.sinogram)

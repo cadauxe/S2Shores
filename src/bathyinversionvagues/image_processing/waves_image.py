@@ -31,12 +31,11 @@ class WavesImage():
         :param detrend: True (default) if an optional detrend must be applied on the image.
         """
         self.resolution = resolution
-
         self.pixels = pixels
 
         # Detrending
         if detrend:
-            self.pixels = funDetrend_2d(self.pixels)
+            self.detrend()
 
         # Background filtering
         if smoothing is not None:
@@ -71,3 +70,6 @@ class WavesImage():
         """ :returns: The inscribed disk"""
         # FIXME: Ratio of the disk area on the chip area should be closer to PI/4 (0.02 difference)
         return circular_mask(self.pixels.shape[0], self.pixels.shape[1], self.pixels.dtype)
+
+    def detrend(self):
+        self.pixels = funDetrend_2d(self.pixels)
