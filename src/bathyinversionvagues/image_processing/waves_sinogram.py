@@ -49,7 +49,7 @@ class WavesSinogram:
         :param frequencies: a set of unevenly spaced frequencies at which the DFT must be computed
         :returns: the DFT of the sinogram
         """
-        if kfft is None:
+        if frequencies is None:
             nb_positive_coeffs = int(np.ceil(self.nb_samples / 2))
             result = np.fft.fft(self.sinogram)[0:nb_positive_coeffs]
         else:
