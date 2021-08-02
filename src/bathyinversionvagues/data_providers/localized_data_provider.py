@@ -31,8 +31,8 @@ class LocalizedDataProvider(ABC):
         self.client_srs.ImportFromEPSG(self._client_epsg_code)
 
         # Default SRS transformation does nothing
-        self.client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
-                                                                         self.provider_srs)
+        self._client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
+                                                                          self.provider_srs)
 
     @property
     def epsg_code(self) -> int:
@@ -44,8 +44,8 @@ class LocalizedDataProvider(ABC):
     def epsg_code(self, value: int) -> None:
         self._client_epsg_code = value
         self.client_srs.ImportFromEPSG(value)
-        self.client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
-                                                                         self.provider_srs)
+        self._client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
+                                                                          self.provider_srs)
 
     def set_provider_epsg_code(self, value: int) -> None:
         """ Set the EPSG code of the SRS used by the provider to retrieve its own data
@@ -53,8 +53,8 @@ class LocalizedDataProvider(ABC):
         :param value: EPSG code
         """
         self.provider_srs.ImportFromEPSG(value)
-        self.client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
-                                                                         self.provider_srs)
+        self._client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
+                                                                          self.provider_srs)
 
     def transform_point(self, point: PointType, altitude: float) -> Tuple[float, float, float]:
         """ Transform a point in 3D from the client SRS to the provider SRS
@@ -66,4 +66,4 @@ class LocalizedDataProvider(ABC):
                   geographical SRS or (X, Y, height) for cartographic SRS.
 
         """
-        return self.client_to_provider_transform.TransformPoint(*point, altitude)
+        return self._client_to_provider_transform.TransformPoint(*point, altitude)
