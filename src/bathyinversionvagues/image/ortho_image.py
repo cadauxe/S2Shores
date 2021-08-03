@@ -49,6 +49,12 @@ class OrthoImage(ABC):
 
     @property
     @abstractproperty
+    def satellite(self) -> str:
+        """ :returns: the satellite identifier
+        """
+
+    @property
+    @abstractproperty
     def acquisition_time(self) -> str:
         """ :returns: the acquisition time of the image
         """
