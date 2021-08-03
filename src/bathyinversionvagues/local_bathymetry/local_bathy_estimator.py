@@ -44,6 +44,7 @@ class LocalBathyEstimator(ABC):
         """
         # TODO: Check that the images have the same resolution, satellite (and same size ?)
         self.global_estimator = global_estimator
+        self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.waveparams
 
         self.images_sequence = images_sequence
@@ -53,21 +54,32 @@ class LocalBathyEstimator(ABC):
         self._gravity = 0.
         self._waves_fields_estimations: WavesFieldsEstimations = []
 
+        self._delta_times = 0.
+
         self._metrics: Dict[str, Any] = {}
 
     def set_position(self, point: PointType) -> None:
-        """ Specify the cartographic position where this local bathy estimator is working.
+        """ Specify the cartographic position where this local bathy estimator is working and
+        updates the localized data (gravity, delta time) accordingly
 
         :param point: a tuple (X, Y) of cartographic coordinates
         """
         self._position = point
         self._gravity = self.global_estimator.get_gravity(self._position, 0.)
+        self._delta_time = self.global_estimator.get_delta_time(self._position)
 
     @property
     def gravity(self) -> float:
         """ :returns: the acceleration of the gravity at the working position of the estimator
         """
         return self._gravity
+
+    # FIXME: At the moment only a pair of images is handled (list is limited to a singleton)
+    @property
+    def delta_time(self) -> float:
+        """ :returns: the time differences between 2 consecutive frames in the image sequence
+        """
+        return self._delta_time
 
     @abstractmethod
     def run(self) -> None:
@@ -88,9 +100,7 @@ class LocalBathyEstimator(ABC):
         :param wavelength: the wavelength of the waves field
         :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
         """
-        # FIXME: DT is not the right value to take into account. Use
-        # DeltaTimeProvider when written.
-        waves_field_estimation = WavesFieldEstimation(self.local_estimator_params.DT,
+        waves_field_estimation = WavesFieldEstimation(self.delta_time,
                                                       self.gravity,
                                                       self.local_estimator_params.DEPTH_EST_METHOD,
                                                       self.local_estimator_params.D_PRECISION)

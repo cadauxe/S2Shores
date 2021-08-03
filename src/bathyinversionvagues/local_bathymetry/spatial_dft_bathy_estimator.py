@@ -84,7 +84,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                     prominence=self.local_estimator_params.PROMINENCE_MAX_PEAK)
         if len(self.peaks_dir[0]) == 0:  # pylint: disable=len-as-condition
             raise WavesEstimationError('Unable to find any directional peak')
-        if self.global_estimator.debug_sample:
+        if self.debug_sample:
             print('initial directions')
             print(self.peaks_dir)
 
@@ -211,7 +211,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         total_spectrum_normalized = max_heta / np.max(max_heta)
         # Pick the maxima
 
-        if self.global_estimator.debug_sample:
+        if self.debug_sample:
             dump_numpy_variable(self.radon_transforms[0].pixels, 'Radon transform 1 input pixels')
             dump_numpy_variable(
                 self.radon_transforms[0].radon_transform.get_as_array(),
@@ -279,8 +279,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         :returns: the minimum and maximum phase shifts for swallow and deep water at different
                   wavenumbers
         """
-        # FIXME: Delta_time DT is not a constant. Use DeltaTimeProvider
         return phi_limits(wavenumbers,
-                          self.local_estimator_params.DT,
+                          self.delta_time,
                           self.local_estimator_params.MIN_D,
                           self.gravity)

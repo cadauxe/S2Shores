@@ -5,17 +5,20 @@
 :created: 17/05/2021
 """
 from abc import ABC, abstractproperty
-from typing import List  # @NoMove
+from typing import List, Optional  # @NoMove
 
 from xarray import Dataset  # @NoMove
 from munch import Munch
 
+from ..data_providers.delta_time_provider import DeltaTimeProvider, ConstantDeltaTimeProvider
 from ..data_providers.dis_to_shore_provider import DefaultDisToShoreProvider, DisToShoreProvider
 from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_image import OrthoImage
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimations
+from ..waves_exceptions import NoDeltaTimeProviderError
+
 from .ortho_bathy_estimator import OrthoBathyEstimator
 
 
@@ -37,9 +40,13 @@ class BathyEstimator(ABC):
         self.image = image
         self.waveparams = wave_params
 
-        self._distoshore_provider: DisToShoreProvider = DefaultDisToShoreProvider()
-        self._gravity_provider: GravityProvider = ConstantGravityProvider()
-        self._gravity_provider.epsg_code = self.image.epsg_code
+        self._distoshore_provider: DisToShoreProvider
+        self.set_distoshore_provider(DefaultDisToShoreProvider())
+
+        self._gravity_provider: GravityProvider
+        self.set_gravity_provider(ConstantGravityProvider())
+
+        self._delta_time_provider: Optional[DeltaTimeProvider] = None
 
         # Create subtiles onto which bathymetry estimation will be done
         self.subtiles = SampledOrthoImage.build_subtiles(image, nb_subtiles_max,
@@ -142,6 +149,7 @@ class BathyEstimator(ABC):
         :param distoshore_provider: the DisToShoreProvider to use
         """
         self._distoshore_provider = distoshore_provider
+        self._distoshore_provider.epsg_code = self.image.epsg_code
 
     def get_distoshore(self, point: PointType) -> float:
         return self._distoshore_provider.get_distance(point)
@@ -152,6 +160,7 @@ class BathyEstimator(ABC):
         :param gravity_provider: the GravityProvider to use
         """
         self._gravity_provider = gravity_provider
+        self._gravity_provider.epsg_code = self.image.epsg_code
 
     def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
         """ Returns the gravity at some point expressed by its X, Y and H coordinates in some SRS,
@@ -162,3 +171,23 @@ class BathyEstimator(ABC):
         :returns: the acceleration due to gravity at this point (m/s2).
         """
         return self._gravity_provider.get_gravity(point, altitude)
+
+    def set_delta_time_provider(self, delta_time_provider: DeltaTimeProvider) -> None:
+        """ Sets the DeltaTimeProvider to use with this estimator
+
+        :param delta_time_provider: the DeltaTimeProvider to use
+        """
+        self._delta_time_provider = delta_time_provider
+        self._delta_time_provider.epsg_code = self.image.epsg_code
+
+    def get_delta_time(self, point: PointType) -> float:
+        """ Returns the delta time at some point expressed by its X, Y and H coordinates in
+        some SRS, using the delta time provider associated to this bathymetry estimator.
+
+        :param point: a tuple containing the X and Y coordinates in the SRS set for the provider
+        :returns: the delta times to .
+        :raises NoDeltaTimeProviderError: when no DeltaTimeProvider has been set for this estimator.
+        """
+        if self._delta_time_provider is None:
+            raise NoDeltaTimeProviderError()
+        return self._delta_time_provider.get_delta_time(point)
