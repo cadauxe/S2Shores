@@ -14,7 +14,7 @@ from .localized_data_provider import LocalizedDataProvider
 
 
 class GravityProvider(LocalizedDataProvider):
-    """ A GravityProvider provider is a service able to provide the gravity at different places
+    """ A GravityProvider is a service able to provide the gravity at different places
     and altitudes on earth. The points where gravity is requested are specified by coordinates
     in some SRS.
     """

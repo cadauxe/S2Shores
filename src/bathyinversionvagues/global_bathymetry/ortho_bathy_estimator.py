@@ -97,6 +97,7 @@ class OrthoBathyEstimator:
                 self.parent_estimator.print_estimations_debug(filtered_out_waves_fields,
                                                               'after estimations sorting')
 
+                # TODO: do this filtering in build_dataset()
                 # Keep only a limited number of waves fields and bathy estimations
                 while len(filtered_out_waves_fields) > nb_keep:
                     filtered_out_waves_fields.pop()

@@ -5,7 +5,7 @@
 :created: 23/06/2021
 """
 from abc import ABC
-from typing import Optional, Tuple  # @NoMove
+from typing import Tuple  # @NoMove
 
 from osgeo import osr
 
