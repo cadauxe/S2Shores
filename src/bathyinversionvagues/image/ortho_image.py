@@ -68,7 +68,10 @@ class OrthoImage(ABC):
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this ortho image
         """
-        infos = {'epsg': 'EPSG:' + str(self.epsg_code)}
+        infos = {
+            'sat': self.satellite,  #
+            'AcquisitionTime': self.acquisition_time,  #
+            'epsg': 'EPSG:' + str(self.epsg_code)}
         return infos
 
     # TODO: define steps default values based on resolution
