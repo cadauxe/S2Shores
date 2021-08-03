@@ -68,3 +68,7 @@ class WavesSinogram:
         """ :returns: the mean power of the sinogram
         """
         return self.energy / len(self.sinogram)
+
+    @property
+    def variance(self) -> float:
+        return np.var(self.sinogram)

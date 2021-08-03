@@ -12,7 +12,6 @@ from typing import Optional, Dict  # @NoMove
 
 import numpy as np  # @NoMove
 
-
 from ..generic_utils.directional_array import (DirectionalArray, linear_directions,
                                                DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
 from ..generic_utils.symmetric_radon import symmetric_radon
@@ -228,3 +227,11 @@ class WavesRadon:
             sinogram = self.sinograms[sinogram_index]
             sinograms_powers[result_index] = sinogram.mean_power
         return sinograms_powers
+
+    def get_sinogram_variance(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
+        directions = self.directions if directions is None else directions
+        sinograms_variances = np.empty(len(directions), dtype=np.float64)
+        for result_index, sinogram_index in enumerate(directions):
+            sinogram = self.sinograms[sinogram_index]
+            sinograms_variances[result_index] = sinogram.variance
+        return sinograms_variances
