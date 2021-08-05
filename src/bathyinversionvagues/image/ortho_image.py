@@ -6,8 +6,10 @@
 """
 from abc import ABC, abstractproperty, abstractmethod
 from typing import Dict  # @NoMove
+from pathlib import Path
 
 import numpy as np  # @NoMove
+from osgeo import gdal
 
 from .ortho_layout import OrthoLayout
 
@@ -44,14 +46,37 @@ class OrthoImage(ABC, OrthoLayout):
         return infos
 
     @abstractmethod
+    def get_image_file_path(self, band_id: str) -> Path:
+        """ Provides the full path to the file containing a given band of this orthoimage
+
+        :param band_id: the identifier of the spectral band (e.g. 'B02')
+        :returns: the path to the file containing the spectral band
+        """
+
+    @abstractmethod
+    def get_band_index_in_file(self, band_id: str) -> int:
+        """ Provides the index in the image file of a given band of this orthoimage
+
+        :param band_id: the identifier of the spectral band (e.g. 'B02')
+        :returns: the index of the band in the file where it is contained
+        """
+
     def read_pixels(self, band_id: str, line_start: int, line_stop: int,
                     col_start: int, col_stop: int) -> np.ndarray:
         """ Read a rectangle of pixels from a specific band of this image.
 
-        :param band_id: the identifier of the spectral band
+        :param band_id: the identifier of the  band to read
         :param line_start: the image line where the rectangle begins
         :param line_stop: the image line where the rectangle stops
         :param col_start: the image column where the rectangle begins
         :param col_stop: the image column where the rectangle stops
         :returns: the rectangle of pixels as an array
         """
+        image_dataset = gdal.Open(str(self.get_image_file_path(band_id)))
+        image = image_dataset.GetRasterBand(self.get_band_index_in_file(band_id))
+        nb_cols = col_stop - col_start + 1
+        nb_lines = line_stop - line_start + 1
+        pixels = image.ReadAsArray(col_start, line_start, nb_cols, nb_lines)
+        # release dataset
+        image_dataset = None
+        return pixels
