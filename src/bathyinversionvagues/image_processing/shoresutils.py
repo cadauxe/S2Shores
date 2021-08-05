@@ -13,8 +13,10 @@ from functools import lru_cache
 from scipy.signal import convolve2d
 from scipy.signal import detrend
 from scipy.signal import fftconvolve
+from scipy.interpolate import interp1d
 
 import numpy as np
+import scipy
 
 
 def funDetrend_2d(Z):

@@ -1,90 +1,113 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 3 10:12:00 2021
-
 Class performing bathymetry computation using temporal correlation method
 
 @author: erwinbergsma
          gregoirethoumyre
          degoulromain
 """
-import numpy as np
 
-from ..image_processing.shoresutils import (fft_filtering, compute_sinogram,
-                                            compute_celerity, correlation_tuning,
-                                            sinogram_tuning, compute_wave_length, compute_period,
-                                            temporal_reconstruction,
-                                            temporal_reconstruction_tuning,
-                                            create_sequence_time_series_temporal,
-                                            cartesian_projection, compute_temporal_correlation,
-                                            )
 
-from ..image_processing.waves_image import WavesImage
-from .local_bathy_estimator import LocalBathyEstimator
-from ..image_processing.correlation_image import CorrelationImage
-from ..image_processing.correlation_radon import CorrelationRadon
-from ..image_processing.correlation_sinogram import CorrelationSinogram
 from typing import Optional, List
+from munch import Munch
 
-import matplotlib.pyplot as plt
+import numpy as np
+import pandas
+
+from ..image_processing.correlation_image import CorrelationImage
+from ..image_processing.correlation_image import WavesImage
+from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
+from ..image_processing.shoresutils import cross_correlation
 
 
-class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
+class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
     def __init__(self, images_sequence: List[WavesImage], global_estimator,
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        """ Constructor
-
-        :param selected_directions: the set of directions onto which the sinogram must be computed
+        """
+        :param images_sequence: sequence of image used to compute bathymetry
+        :param global_estimator: global estimator
+        :param selected_directions: selected_directions: the set of directions onto which the
+        sinogram must be computed
         """
         super().__init__(images_sequence, global_estimator, selected_directions)
+        self._time_series = None
+        self._positions_x = None
+        self._positions_y = None
+        self.create_sequence_time_series()
 
-        self.correlation_cartesian_matrix: CorrelationImage = None
-        self.radon_transform: CorrelationRadon = None
-
-
-    def run(self) -> None:
-        """ Run the local bathy estimator using the temporal correlation method
-
+    def create_sequence_time_series(self):
         """
-        config = self.local_estimator_params
-        params = config.TEMPORAL_METHOD
+        This function computes an np.array of time series.
+        To do this random points are selected within the sequence of image and a temporal serie
+        is included in the np.array for each selected point
+        """
+        if self._parameters.PERCENTAGE_POINTS < 0 or self._parameters.PERCENTAGE_POINTS > 100:
+            raise ValueError("Percentage must be between 0 and 100")
+        merge_array = np.dstack([image.pixels for image in self.images_sequence])
+        shape_x, shape_y = self.images_sequence[0].pixels.shape
+        time_series = np.reshape(merge_array, (shape_x * shape_y, -1))
+        nb_random_points = round(shape_x * shape_y * self._parameters.PERCENTAGE_POINTS / 100)
+        random_indexes = np.random.randint(0, shape_x * shape_y, size=nb_random_points)
+        positions_y, positions_x = np.meshgrid(np.linspace(1, shape_x, shape_x), np.linspace(1, shape_y, shape_y))
+        self._positions_x = np.reshape(positions_x.flatten()[random_indexes], (1, -1))
+        self._positions_y = np.reshape(positions_y.flatten()[random_indexes], (1, -1))
+        self._time_series = time_series[random_indexes, :]
 
-        # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
-        Im = np.dstack([image.pixels for image in self.images_sequence])
+    def get_correlation_matrix(self) -> np.ndarray:
+        """
+        Compute temporal correlation matrix
+        """
+        return cross_correlation(self._time_series[:, self._parameters.TEMPORAL_LAG:],
+                                 self._time_series[:,
+                                 :-self._parameters.TEMPORAL_LAG])
 
-        # TODO : Refractoring with classes
-        ##############################################################################################################
-        stime_series, xx, yy = create_sequence_time_series_temporal(Im=Im,
-                                                                    percentage_points=params.PERCENTAGE_POINTS)
-        corr = compute_temporal_correlation(sequence_thumbnail=stime_series,
-                                            number_frame_shift=params.TEMPORAL_LAG)
-        corr_car, distances, angles = cartesian_projection(corr_matrix=corr, xx=xx, yy=yy,
-                                                           spatial_resolution=params.RESOLUTION.SPATIAL)
-        ##############################################################################################################
-        self.correlation_cartesian_matrix = CorrelationImage(pixels=corr_car, resolution=params.RESOLUTION.SPATIAL,
-                                                             tuning_ratio_size=params.TUNING.RATIO_SIZE_CORRELATION)
-        self.radon_transform = CorrelationRadon(image=self.correlation_cartesian_matrix,
-                                                spatial_resolution=params.RESOLUTION.SPATIAL,
-                                                time_resolution=params.RESOLUTION.TEMPORAL,
-                                                temporal_lag=params.TEMPORAL_LAG,
-                                                mean_filter_kernel_size=params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
-        self.radon_transform.compute()
-        sinograw_max_var, direction_propagation = self.radon_transform.get_sinogram_maximum_variance()
-        ##############################################################################################################
-        SS = temporal_reconstruction(angle=direction_propagation, angles=np.degrees(angles), distances=distances,
-                                     celerity=sinograw_max_var.celerity,
-                                     correlation_matrix=corr,
-                                     time_interpolation_resolution=params.RESOLUTION.TIME_INTERPOLATION)
-        SS_filtered = temporal_reconstruction_tuning(SS,
-                                                     time_interpolation_resolution=params.RESOLUTION.TIME_INTERPOLATION,
-                                                     low_frequency_ratio=params.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION,
-                                                     high_frequency_ratio=params.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION)
-        T, peaks_max = compute_period(SS_filtered=SS_filtered,
-                                      min_peaks_distance=params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
+    def get_correlation_image(self) -> CorrelationImage:
+        """
+        This function computes the correlation image by projecting the the correlation matrix on an
+        array where axis are distances and center is the point where distance is 0.
+        If several points have same coordinates, the mean of correlation is taken for this position
+        """
 
-        ##############################################################################################################
-        waves_field_estimation = self.create_waves_field_estimation(direction_propagation, sinograw_max_var.wave_length)
-        waves_field_estimation.period = T
-        waves_field_estimation.celerity = sinograw_max_var.celerity
+        indices_x = np.round(self.distances * np.cos(np.radians(self.angles)))
+        indices_x = np.array(indices_x - np.min(indices_x), dtype=int).T
 
-        self.store_estimation(waves_field_estimation)
+        indices_y = np.round(self.distances * np.sin(np.radians(self.angles)))
+        indices_y = np.array(indices_y - np.min(indices_y), dtype=int).T
+
+        xr_s = pandas.Series(indices_x.flatten())
+        yr_s = pandas.Series(indices_y.flatten())
+        values_s = pandas.Series(self.correlation_matrix.flatten())
+
+        # if two correlation values have same xr and yr mean of these values is taken
+        dataframe = pandas.DataFrame({'xr': xr_s, 'yr': yr_s, 'values': values_s})
+        dataframe_grouped = dataframe.groupby(by=['xr', 'yr']).mean().reset_index()
+        values = np.array(dataframe_grouped['values'])
+        indices_x = np.array(dataframe_grouped['xr'])
+        indices_y = np.array(dataframe_grouped['yr'])
+
+        projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
+            (np.max(indices_x) + 1, np.max(indices_y) + 1))
+        projected_matrix[indices_x, indices_y] = values
+        return CorrelationImage(projected_matrix, self._parameters.RESOLUTION.SPATIAL,
+                                self._parameters.TUNING.RATIO_SIZE_CORRELATION)
+
+    @property
+    def _parameters(self) -> Munch:
+        """
+        :return: munchified parameters
+        """
+        return self.local_estimator_params.TEMPORAL_METHOD
+
+    @property
+    def positions_x(self) -> np.ndarray:
+        """
+        :return: ndarray of x positions
+        """
+        return self._positions_x
+
+    @property
+    def positions_y(self) -> np.ndarray:
+        """
+        :return: ndarray of y positions
+        """
+        return self._positions_y
