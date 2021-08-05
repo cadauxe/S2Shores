@@ -23,7 +23,8 @@ from .waves_field_estimation import WavesFieldEstimation
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
-
+# TODO: create a true class encapsulating the estimations and providing room for scalar infos
+# (distoshore, gravity, ect.) as well as logics for handling dimensions.
 WavesFieldsEstimations = List[WavesFieldEstimation]
 
 
