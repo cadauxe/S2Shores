@@ -10,7 +10,7 @@ from typing import List, Optional  # @NoMove
 from xarray import Dataset  # @NoMove
 from munch import Munch
 
-from ..data_providers.delta_time_provider import DeltaTimeProvider, ConstantDeltaTimeProvider
+from ..data_providers.delta_time_provider import DeltaTimeProvider
 from ..data_providers.dis_to_shore_provider import DefaultDisToShoreProvider, DisToShoreProvider
 from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
@@ -45,6 +45,7 @@ class BathyEstimator(ABC):
 
         self._gravity_provider: GravityProvider
         self.set_gravity_provider(ConstantGravityProvider())
+        # self.set_gravity_provider(LatitudeVaryingGravityProvider())
 
         self._delta_time_provider: Optional[DeltaTimeProvider] = None
 
@@ -190,4 +191,5 @@ class BathyEstimator(ABC):
         """
         if self._delta_time_provider is None:
             raise NoDeltaTimeProviderError()
-        return self._delta_time_provider.get_delta_time(point)
+        return self._delta_time_provider.get_delta_time(self.bands_identifiers[0],
+                                                        self.bands_identifiers[1], point)
