@@ -82,6 +82,12 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'precision': 8,
                    'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
                              'name': 'Energy'}},
+    '_gravity': {'layer_type': ['DEBUG'],
+                 'layer_name': 'Gravity',
+                 'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
+                 'precision': 8,
+                 'attrs': {'Dimension': 'Acceleration [m/s2]',
+                           'name': 'Gravity'}},
 }
 # FIXME: Missing:
 #                {'T_off': periods_offshore,
