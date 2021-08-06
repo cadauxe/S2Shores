@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
 # TODO: create a true class encapsulating the estimations and providing room for scalar infos
-# (distoshore, gravity, ect.) as well as logics for handling dimensions.
+# (distoshore, gravity, delta_time.) as well as logics for handling dimensions.
 WavesFieldsEstimations = List[WavesFieldEstimation]
 
 
@@ -55,7 +55,7 @@ class LocalBathyEstimator(ABC):
         self._gravity = 0.
         self._waves_fields_estimations: WavesFieldsEstimations = []
 
-        self._delta_times = 0.
+        self._delta_time = 0.
 
         self._metrics: Dict[str, Any] = {}
 
