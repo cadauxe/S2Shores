@@ -88,6 +88,12 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                  'precision': 8,
                  'attrs': {'Dimension': 'Acceleration [m/s2]',
                            'name': 'Gravity'}},
+    '_delta_time': {'layer_type': ['DEBUG'],
+                    'layer_name': 'Delta Acquisition Time',
+                    'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
+                    'precision': 8,
+                    'attrs': {'Dimension': 'Duration (s)',
+                              'name': 'DeltaTime'}},
 }
 # FIXME: Missing:
 #                {'T_off': periods_offshore,
