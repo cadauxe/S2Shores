@@ -7,7 +7,6 @@ Class performing bathymetry computation using temporal correlation method
          degoulromain
 """
 
-
 from typing import Optional, List
 from munch import Munch
 
@@ -58,8 +57,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         Compute temporal correlation matrix
         """
         return cross_correlation(self._time_series[:, self._parameters.TEMPORAL_LAG:],
-                                 self._time_series[:,
-                                 :-self._parameters.TEMPORAL_LAG])
+                                 self._time_series[:,:-self._parameters.TEMPORAL_LAG])
 
     def get_correlation_image(self) -> CorrelationImage:
         """

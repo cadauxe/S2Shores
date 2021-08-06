@@ -27,14 +27,16 @@ from ..image_processing.correlation_sinogram import CorrelationSinogram
 class CorrelationBathyEstimator(LocalBathyEstimator):
     """
     Class offering a framework for bathymetry computation based on correlation
-    :param images_sequence: sequence of image used to compute bathymetry
-    :param global_estimator: global estimator
-    :param selected_directions: selected_directions: the set of directions onto which the
-    sinogram must be computed
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator,
                  selected_directions: Optional[np.ndarray] = None) -> None:
+        """ constructor
+        :param images_sequence: sequence of image used to compute bathymetry
+        :param global_estimator: global estimator
+        :param selected_directions: selected_directions: the set of directions onto which the
+        sinogram must be computed
+        """
 
         super().__init__(images_sequence, global_estimator, selected_directions)
         self._correlation_matrix: np.ndarray = None
@@ -46,26 +48,22 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
-
-        self.create_radon_transform()
-        self.radon_transform.compute()
-        sinogram_max_var, direction_propagation = self.radon_transform.get_sinogram_maximum_variance()
-        wave_length = self.compute_wave_length(sinogram_max_var)
-        celerity = self.compute_celerity(sinogram_max_var, wave_length)
-        temporal_signal = self.temporal_reconstruction(direction_propagation, celerity)
-        temporal_signal_filtered = self.temporal_reconstruction_tuning(temporal_signal)
-        period = self.compute_period(temporal_signal_filtered)
-        waves_field_estimation = self.create_waves_field_estimation(direction_propagation,
-                                                                    wave_length)
-        waves_field_estimation.period = period
-        waves_field_estimation.celerity = celerity
-
-        print(celerity)
-        print(direction_propagation)
-        print(wave_length)
-        print(period)
-
-        self.store_estimation(waves_field_estimation)
+        try:
+            self.create_radon_transform()
+            self.radon_transform.compute()
+            sinogram_max_var, direction_propagation = self.radon_transform.get_sinogram_maximum_variance()
+            wave_length = self.compute_wave_length(sinogram_max_var)
+            celerity = self.compute_celerity(sinogram_max_var, wave_length)
+            temporal_signal = self.temporal_reconstruction(direction_propagation, celerity)
+            temporal_signal_filtered = self.temporal_reconstruction_tuning(temporal_signal)
+            period = self.compute_period(temporal_signal_filtered)
+            waves_field_estimation = self.create_waves_field_estimation(direction_propagation,
+                                                                        wave_length)
+            waves_field_estimation.period = period
+            waves_field_estimation.celerity = celerity
+            self.store_estimation(waves_field_estimation)
+        except Exception as excp:
+            print(f'Bathymetry computation failed: {str(excp)}')
 
     @property
     @abstractmethod

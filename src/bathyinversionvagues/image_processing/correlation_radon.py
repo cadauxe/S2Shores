@@ -46,12 +46,15 @@ class CorrelationRadon(WavesRadon):
         directions = self.directions if directions is None else directions
         maximum_variance = None
         sinogram_maximum_variance = None
+        index_maximum_variance_direction = None
         for result_index, sinogram_index in enumerate(directions):
             sinogram = self.sinograms[sinogram_index]
-            if not maximum_variance:
+            if maximum_variance is None:
                 maximum_variance = sinogram.variance
                 sinogram_maximum_variance = sinogram
+                index_maximum_variance_direction = result_index
             elif maximum_variance < sinogram.variance:
                 maximum_variance = sinogram.variance
                 sinogram_maximum_variance = sinogram
-        return (sinogram_maximum_variance, directions[result_index])
+                index_maximum_variance_direction = result_index
+        return (sinogram_maximum_variance, directions[index_maximum_variance_direction])

@@ -1,68 +1,76 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 3 10:12:00 2021
-
-Module containing all wave parameters estimation methods
+Class performing bathymetry computation using spatial correlation method
 
 @author: erwinbergsma
          gregoirethoumyre
          degoulromain
 """
+
+from typing import Optional, List
+from munch import Munch
+
 import numpy as np
 
-from ..image_processing.shoresutils import fft_filtering
+from ..image_processing.correlation_image import CorrelationImage
+from ..image_processing.correlation_image import WavesImage
+from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
+from ..image_processing.shoresutils import normxcorr2
 
-from .local_bathy_estimator import LocalBathyEstimator
 
-
-class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
-    def run(self) -> None:
-        """ Run the local bathy estimator using the spatial correlation method
-
+class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
+    def __init__(self, images_sequence: List[WavesImage], global_estimator,
+                 selected_directions: Optional[np.ndarray] = None) -> None:
         """
-        config = self.local_estimator_params
-        params = config.SPATIAL_METHOD
-        # FIXME: temporary adaptor before getting rid of stacked np.ndarrays.
-        Im = np.dstack([image.pixels for image in self.images_sequence])
+        :param images_sequence: sequence of image used to compute bathymetry
+        :param global_estimator: global estimator
+        :param selected_directions: selected_directions: the set of directions onto which the
+        sinogram must be computed
+        """
+        super().__init__(images_sequence, global_estimator, selected_directions)
+        self._shape_x, self._shape_y = self.images_sequence[0].pixels.shape
+        self._number_frames = len(self.images_sequence)
+        self._positions_x = np.reshape(np.arange(self._shape_x), (1, -1))
+        self._positions_y = np.reshape(np.arange(self._shape_y), (1, -1))
 
-        try:
-            if params.PASS_BAND_FILTER:
-                Im, flag = fft_filtering(Im, params.RESOLUTION.SPATIAL,
-                                         config.PREPROCESSING.PASSBAND.HIGH_PERIOD,
-                                         config.PREPROCESSING.PASSBAND.LOW_PERIOD, 9.81)
-            simg_filtered, xx, yy = create_sequence_time_series_spatial(Im=Im)
-            angles, distances = compute_angles_distances(M=simg_filtered)
-            corr = compute_spatial_correlation(sequence_thumbnail=simg_filtered,
-                                               number_frame_shift=params.TEMPORAL_LAG)
-            corr_tuned = correlation_tuning(correlation_matrix=corr,
-                                            ratio=params.TUNING.RATIO_SIZE_CORRELATION)
-            (sinogram_max_var, angle, variance, radon_matrix) = compute_sinogram(
-                correlation_matrix=corr_tuned,
-                median_filter_kernel_ratio=params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM,
-                mean_filter_kernel_size=params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
-            sinogram_tuned = sinogram_tuning(sinogram=sinogram_max_var,
-                                             mean_filter_kernel_size=params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
-            wave_length, zeros = compute_wave_length(sinogram=sinogram_tuned)
-            celerity, argmax = compute_celerity(sinogram=sinogram_tuned, wave_length=wave_length,
-                                                spatial_resolution=params.RESOLUTION.SPATIAL,
-                                                time_resolution=params.RESOLUTION.TEMPORAL,
-                                                temporal_lag=params.TEMPORAL_LAG)
-            SS = temporal_reconstruction(angle=angle, angles=np.degrees(angles),
-                                         distances=distances, celerity=celerity,
-                                         correlation_matrix=corr,
-                                         time_interpolation_resolution=params.RESOLUTION.TIME_INTERPOLATION)
-            SS_filtered = temporal_reconstruction_tuning(SS,
-                                                         time_interpolation_resolution=params.RESOLUTION.TIME_INTERPOLATION,
-                                                         low_frequency_ratio=params.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION,
-                                                         high_frequency_ratio=params.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION)
-            T, peaks_max = compute_period(SS_filtered=SS_filtered,
-                                          min_peaks_distance=params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
+    @property
+    def _parameters(self) -> Munch:
+        """
+        :return: munchified parameters
+        """
+        return self.local_estimator_params.SPATIAL_METHOD
 
-            waves_field_estimation = self.create_waves_field_estimation(angle, wave_length)
-            waves_field_estimation.period = T
-            waves_field_estimation.celerity = celerity
+    @property
+    def positions_x(self) -> np.ndarray:
+        """
+        :return: ndarray of x positions
+        """
+        return self._positions_x
 
-            self.store_estimation(waves_field_estimation)
+    @property
+    def positions_y(self) -> np.ndarray:
+        """
+        :return: ndarray of y positions
+        """
+        return self._positions_y
 
-        except Exception as excp:
-            print(f'Bathymetry computation failed: {str(excp)}')
+    def get_correlation_matrix(self) -> np.ndarray:
+        """
+        :return: correlation matrix
+        """
+        merge_array = np.dstack([image.pixels for image in self.images_sequence])
+        full_corr = normxcorr2(merge_array[:, :, 0].T,
+                               merge_array[:, :, self._parameters.TEMPORAL_LAG].T)
+        for index in np.arange(self._parameters.TEMPORAL_LAG, self._number_frames -
+                self._parameters.TEMPORAL_LAG, self._parameters.TEMPORAL_LAG):
+            corr = normxcorr2(merge_array[:, :, index].T,
+                              merge_array[:, :, index + self._parameters.TEMPORAL_LAG].T)
+            full_corr = full_corr + corr
+        return full_corr
+
+    def get_correlation_image(self) -> CorrelationImage:
+        """
+        :return: correlation image
+        """
+        return CorrelationImage(self.correlation_matrix, self._parameters.RESOLUTION.SPATIAL,
+                                self._parameters.TUNING.RATIO_SIZE_CORRELATION)
