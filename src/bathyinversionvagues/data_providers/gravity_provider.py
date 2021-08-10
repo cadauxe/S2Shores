@@ -46,11 +46,11 @@ class LatitudeVaryingGravityProvider(GravityProvider):
     """
 
     g_poles = 9.832
-    g_45 = 9.806
     g_equator = 9.780
-    g_mean = (g_poles - g_equator) / 2.
+    g_45 = (g_poles + g_equator) / 2.
+    delta_g = (g_poles - g_equator) / 2.
 
     def get_gravity(self, point: PointType, altitude: float) -> float:
         _, latitude, _ = self.transform_point(point, altitude)
-        gravity = self.g_45 - self.g_mean * math.cos(latitude * math.pi / 90)
+        gravity = self.g_45 - self.delta_g * math.cos(latitude * math.pi / 90)
         return gravity
