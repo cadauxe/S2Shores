@@ -66,10 +66,7 @@ class OrthoBathyEstimator:
             for j, y_sample in enumerate(self.sampled_ortho.y_samples):
                 self.parent_estimator.set_debug((x_sample, y_sample))
 
-                # FIXME: following line needed to deal with upside down distoshore files
-                corrected_yp = self.sampled_ortho.image.upper_left_y + \
-                    self.sampled_ortho.image.lower_right_y - y_sample
-                distance = self.parent_estimator.get_distoshore((x_sample, corrected_yp))
+                distance = self.parent_estimator.get_distoshore((x_sample, y_sample))
                 # do not compute on land
                 # FIXME: distance to shore test should take into account windows sizes
                 if distance > 0:
