@@ -4,7 +4,7 @@
 :author: GIROS Alain
 :created: 25/06/2021
 """
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 import math
 
 
@@ -13,7 +13,7 @@ from ..image.image_geometry_types import PointType
 from .localized_data_provider import LocalizedDataProvider
 
 
-class GravityProvider(LocalizedDataProvider):
+class GravityProvider(ABC, LocalizedDataProvider):
     """ A GravityProvider is a service able to provide the gravity at different places
     and altitudes on earth. The points where gravity is requested are specified by coordinates
     in some SRS.

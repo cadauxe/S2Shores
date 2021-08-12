@@ -4,7 +4,7 @@
 :author: GIROS Alain
 :created: 23/06/2021
 """
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from pathlib import Path
 
 import xarray as xr  # @NoMove
@@ -15,7 +15,7 @@ from ..image.image_geometry_types import PointType
 from .localized_data_provider import LocalizedDataProvider
 
 
-class DisToShoreProvider(LocalizedDataProvider):
+class DisToShoreProvider(ABC, LocalizedDataProvider):
     """ A distoshore provider is a service which is able to provide the distance to shore of a
     point specified by its coordinates in some SRS.
     """

@@ -4,7 +4,7 @@
 :author: GIROS Alain
 :created: 02/08/2021
 """
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 import datetime
 
 from typing import Optional, Dict, Any, List
@@ -13,7 +13,7 @@ from ..image.image_geometry_types import PointType
 from .localized_data_provider import LocalizedDataProvider
 
 
-class DeltaTimeProvider(LocalizedDataProvider):
+class DeltaTimeProvider(ABC, LocalizedDataProvider):
     """ A DeltaTimeProvider is a service able to provide the delta time at some position
     between two frames. The points where delta time is requested are specified by their coordinates
     in the image SRS.
