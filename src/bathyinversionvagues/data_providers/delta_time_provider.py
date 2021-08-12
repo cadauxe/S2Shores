@@ -20,14 +20,14 @@ class DeltaTimeProvider(LocalizedDataProvider):
     """
 
     @abstractmethod
-    def get_delta_time(self, ref_frame_id: Any, sec_frame_id: Any,
+    def get_delta_time(self, first_frame_id: Any, second_frame_id: Any,
                        point: Optional[PointType] = None) -> float:
         """ Provides the delta time at some point expressed by its X and Y coordinates in some SRS,
         between 2 frames specified by their ids. The frame id definition is left undefined and
         must be specified by subclasses.
 
-        :param ref_frame_id: the id of the reference frame from which the duration will be counted
-        :param sec_frame_id: the id of the secondary frame to which the duration will be counted
+        :param first_frame_id: the id of the frame from which the duration will be counted
+        :param second_frame_id: the id of the frame to which the duration will be counted
         :param point: a tuple containing the X and Y coordinates in the SRS set for this provider
         :returns: the delta time between frames at this point (s).
         """
@@ -53,10 +53,10 @@ class ConstantDeltaTimeProvider(DeltaTimeProvider):
         super().__init__()
         self._frames_times = frames_times
 
-    def get_delta_time(self, ref_frame_id: Any, sec_frame_id: Any,
+    def get_delta_time(self, first_frame_id: Any, second_frame_id: Any,
                        point: Optional[PointType] = None) -> float:
         _ = point
-        delta_time = self._frames_times[sec_frame_id] - self._frames_times[ref_frame_id]
+        delta_time = self._frames_times[second_frame_id] - self._frames_times[first_frame_id]
         return delta_time.total_seconds()
 
     @property
