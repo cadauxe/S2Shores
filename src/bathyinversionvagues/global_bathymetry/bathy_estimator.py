@@ -150,7 +150,7 @@ class BathyEstimator(ABC):
         :param distoshore_provider: the DisToShoreProvider to use
         """
         self._distoshore_provider = distoshore_provider
-        self._distoshore_provider.epsg_code = self.image.epsg_code
+        self._distoshore_provider.client_epsg_code = self.image.epsg_code
 
     def get_distoshore(self, point: PointType) -> float:
         return self._distoshore_provider.get_distance(point)
@@ -161,7 +161,7 @@ class BathyEstimator(ABC):
         :param gravity_provider: the GravityProvider to use
         """
         self._gravity_provider = gravity_provider
-        self._gravity_provider.epsg_code = self.image.epsg_code
+        self._gravity_provider.client_epsg_code = self.image.epsg_code
 
     def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
         """ Returns the gravity at some point expressed by its X, Y and H coordinates in some SRS,
@@ -179,7 +179,7 @@ class BathyEstimator(ABC):
         :param delta_time_provider: the DeltaTimeProvider to use
         """
         self._delta_time_provider = delta_time_provider
-        self._delta_time_provider.epsg_code = self.image.epsg_code
+        self._delta_time_provider.client_epsg_code = self.image.epsg_code
 
     def get_delta_time(self, point: PointType) -> float:
         """ Returns the delta time at some point expressed by its X, Y and H coordinates in

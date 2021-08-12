@@ -34,13 +34,13 @@ class LocalizedDataProvider:
                                                                           self.provider_srs)
 
     @property
-    def epsg_code(self) -> int:
+    def client_epsg_code(self) -> int:
         """ :returns: the epsg code of the SRS which will be used in subsequent client requests
         """
         return self._client_epsg_code
 
-    @epsg_code.setter
-    def epsg_code(self, value: int) -> None:
+    @client_epsg_code.setter
+    def client_epsg_code(self, value: int) -> None:
         self._client_epsg_code = value
         self.client_srs.ImportFromEPSG(value)
         self._client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
