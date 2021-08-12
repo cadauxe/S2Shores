@@ -7,7 +7,7 @@
 from abc import abstractmethod, ABC
 import datetime
 
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any, List
 
 from ..image.image_geometry_types import PointType
 from .localized_data_provider import LocalizedDataProvider
@@ -20,8 +20,7 @@ class DeltaTimeProvider(ABC, LocalizedDataProvider):
     """
 
     @abstractmethod
-    def get_delta_time(self, first_frame_id: Any, second_frame_id: Any,
-                       point: Optional[PointType] = None) -> float:
+    def get_delta_time(self, first_frame_id: Any, second_frame_id: Any, point: PointType) -> float:
         """ Provides the delta time at some point expressed by its X and Y coordinates in some SRS,
         between 2 frames specified by their ids. The frame id definition is left undefined and
         must be specified by subclasses.
@@ -53,8 +52,7 @@ class ConstantDeltaTimeProvider(DeltaTimeProvider):
         super().__init__()
         self._frames_times = frames_times
 
-    def get_delta_time(self, first_frame_id: Any, second_frame_id: Any,
-                       point: Optional[PointType] = None) -> float:
+    def get_delta_time(self, first_frame_id: Any, second_frame_id: Any, point: PointType) -> float:
         _ = point
         delta_time = self._frames_times[second_frame_id] - self._frames_times[first_frame_id]
         return delta_time.total_seconds()
