@@ -30,7 +30,7 @@ class DisToShoreProvider(LocalizedDataProvider):
         """
 
 
-class DefaultDisToShoreProvider(DisToShoreProvider):
+class InfinityDisToShoreProvider(DisToShoreProvider):
     """ A DistToShoreProvider which provides infinity distance to any request, ensuring that any
     point is always considered on water.
     """
