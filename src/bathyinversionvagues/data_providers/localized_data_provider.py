@@ -21,17 +21,17 @@ class LocalizedDataProvider:
     def __init__(self) -> None:
 
         # Default provider SRS is set to EPSG:4326
-        self.provider_srs = osr.SpatialReference()
-        self.provider_srs.ImportFromEPSG(4326)
+        self._provider_srs = osr.SpatialReference()
+        self._provider_srs.ImportFromEPSG(4326)
 
         # Default client SRS is set to EPSG:4326 as well
         self._client_epsg_code = 4326
-        self.client_srs = osr.SpatialReference()
-        self.client_srs.ImportFromEPSG(self._client_epsg_code)
+        self._client_srs = osr.SpatialReference()
+        self._client_srs.ImportFromEPSG(self._client_epsg_code)
 
         # Default SRS transformation does nothing
-        self._client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
-                                                                          self.provider_srs)
+        self._client_to_provider_transform = osr.CoordinateTransformation(self._client_srs,
+                                                                          self._provider_srs)
 
     @property
     def client_epsg_code(self) -> int:
@@ -42,18 +42,18 @@ class LocalizedDataProvider:
     @client_epsg_code.setter
     def client_epsg_code(self, value: int) -> None:
         self._client_epsg_code = value
-        self.client_srs.ImportFromEPSG(value)
-        self._client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
-                                                                          self.provider_srs)
+        self._client_srs.ImportFromEPSG(value)
+        self._client_to_provider_transform = osr.CoordinateTransformation(self._client_srs,
+                                                                          self._provider_srs)
 
     def set_provider_epsg_code(self, value: int) -> None:
         """ Set the EPSG code of the SRS used by the provider to retrieve its own data
 
         :param value: EPSG code
         """
-        self.provider_srs.ImportFromEPSG(value)
-        self._client_to_provider_transform = osr.CoordinateTransformation(self.client_srs,
-                                                                          self.provider_srs)
+        self._provider_srs.ImportFromEPSG(value)
+        self._client_to_provider_transform = osr.CoordinateTransformation(self._client_srs,
+                                                                          self._provider_srs)
 
     def transform_point(self, point: PointType, altitude: float) -> Tuple[float, float, float]:
         """ Transform a point in 3D from the client SRS to the provider SRS
