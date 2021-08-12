@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-""" Definition of the LocalizedDataProvider abstract class
+""" Definition of the LocalizedDataProvider base class
 
 :author: GIROS Alain
 :created: 23/06/2021
 """
-from abc import ABC
 from typing import Tuple  # @NoMove
 
 from osgeo import osr
@@ -12,7 +11,7 @@ from osgeo import osr
 from ..image.image_geometry_types import PointType
 
 
-class LocalizedDataProvider(ABC):
+class LocalizedDataProvider:
     """ Base class for providers which deliver data depending on some location on Earth.
     It offers the ability to store the SRS which is used by the client of the provider for
     specifying a given point on Earth as well as the methods for transforming these coordinates
