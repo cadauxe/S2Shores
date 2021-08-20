@@ -8,20 +8,18 @@ method
          degoulromain
 """
 from abc import abstractmethod
-from typing import Optional, List
+from typing import Optional, List  # @NoMove
+
 from munch import Munch
 from scipy.interpolate import interp1d
-from scipy.signal import butter
-from scipy.signal import sosfiltfilt
-from scipy.signal import find_peaks
+from scipy.signal import butter, find_peaks, sosfiltfilt
 
 import numpy as np
 
-from .local_bathy_estimator import LocalBathyEstimator
-from ..image_processing.waves_image import WavesImage
 from ..image_processing.correlation_image import CorrelationImage
 from ..image_processing.correlation_radon import CorrelationRadon
-from ..image_processing.correlation_sinogram import CorrelationSinogram
+from ..image_processing.waves_image import WavesImage
+from .local_bathy_estimator import LocalBathyEstimator
 
 
 class CorrelationBathyEstimator(LocalBathyEstimator):
@@ -51,9 +49,16 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         try:
             self.create_radon_transform()
             self.radon_transform.compute()
-            sinogram_max_var, direction_propagation = self.radon_transform.get_sinogram_maximum_variance()
-            wave_length = self.compute_wave_length(sinogram_max_var)
-            celerity = self.compute_celerity(sinogram_max_var, wave_length)
+            sinogram_max_var, direction_propagation = \
+                self.radon_transform.get_sinogram_maximum_variance()
+            # TODO: Find a better way to tune sinogram, may be spline interpolation
+            tuned_sinogram_max_var = sinogram_max_var.filter_mean(
+                self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
+
+            # TODO: gather following 2 calls in a single method returning a consistent wave_length
+            # celerity pair
+            wave_length = self.compute_wave_length(tuned_sinogram_max_var)
+            celerity = self.compute_celerity(tuned_sinogram_max_var, wave_length)
             temporal_signal = self.temporal_reconstruction(direction_propagation, celerity)
             temporal_signal_filtered = self.temporal_reconstruction_tuning(temporal_signal)
             period = self.compute_period(temporal_signal_filtered)
@@ -71,6 +76,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         :return: munchified parameters
         """
+        # FIXME: Why not using parameters from global bathy estimatror (this is
+        # the general principle)
 
     @property
     @abstractmethod
@@ -163,31 +170,36 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_transform = CorrelationRadon(self.correlation_image,
                                                 self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
 
-    def compute_wave_length(self, sinogram: CorrelationSinogram):
+    def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """
         Wave length computation
         :param sinogram: sinogram on which wave length is computed
         :return: wave length in meter
         """
-        sign = np.sign(sinogram.tuned_sinogram)
+        # TODO: move following 4 lines in a generic signal processing function
+        sign = np.sign(sinogram)
         diff = np.diff(sign)
         zeros = np.where(diff != 0)[0]
-        wave_length = 2 * np.mean(np.diff(zeros)) * self._parameters.RESOLUTION.SPATIAL
+        difference = 2 * np.mean(np.diff(zeros))
+
+        wave_length = difference * self._parameters.RESOLUTION.SPATIAL
         return wave_length
 
-    def compute_celerity(self, sinogram: CorrelationSinogram, wave_length: float) -> float:
+    def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
         """
         Celerity computation
         :param sinogram: sinogram on which celerity is computed
         :param wave_length: wave length of the sinogram
         :return: celerity in meter/second
         """
-        size_sinogram = len(sinogram.tuned_sinogram)
+        # TODO: move following 5 lines in a generic signal processing function
+        size_sinogram = len(sinogram)
         left_limit = max(int(size_sinogram / 2 - wave_length / 2), 0)
         right_limit = min(int(size_sinogram / 2 + wave_length / 2), size_sinogram)
-        argmax = np.argmax(sinogram.tuned_sinogram[left_limit:right_limit])
-        rhomx = self._parameters.RESOLUTION.SPATIAL * np.abs(
-            argmax + left_limit - size_sinogram / 2)
+        argmax = np.argmax(sinogram[left_limit:right_limit])
+        difference_max = np.abs(argmax + left_limit - size_sinogram / 2)
+
+        rhomx = self._parameters.RESOLUTION.SPATIAL * difference_max
         duration = self._parameters.RESOLUTION.TEMPORAL * self._parameters.TEMPORAL_LAG
         celerity = np.abs(rhomx / duration)
         return celerity
@@ -218,8 +230,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param temporal_signal: temporal signal
         :return: tuned temporal signal
         """
-        low_frequency = self._parameters.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * self._parameters.RESOLUTION.TIME_INTERPOLATION
-        high_frequency = self._parameters.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * self._parameters.RESOLUTION.TIME_INTERPOLATION
+        low_frequency = self._parameters.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
+            self._parameters.RESOLUTION.TIME_INTERPOLATION
+        high_frequency = self._parameters.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
+            self._parameters.RESOLUTION.TIME_INTERPOLATION
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
         temporal_signal_filtered = sosfiltfilt(sos_filter, temporal_signal)
