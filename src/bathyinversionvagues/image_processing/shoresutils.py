@@ -240,23 +240,24 @@ def cross_correlation(A, B):
     return np.dot(A_mA, B_mB.T) / np.sqrt(np.dot(ssA[:, None], ssB[None]))
 
 
-def filter_mean(signal, size_window):
-    """
-    Run average filter on a signal
+def filter_mean(signal: np.ndarray, size_window: int) -> np.ndarray:
+    """ Run average filter on a signal
+
     :param signal: np.array in one dimension
-    :param size_window: size of the average window
-    :return:
+    :param size_window: size of the averaging window
+    :return: the mean filtered signal
+    :reaises ValueError: when the signal is smaller than twice the window size
     """
     if len(signal) < 2 * size_window:
         raise ValueError("time serie is too small compared to the window")
-    else:
-        padded_time_serie = np.concatenate((np.full(size_window, np.mean(signal[:size_window])),
-                                            signal,
-                                            np.full(size_window,
-                                                    np.mean(signal[-(size_window + 1):]))),
-                                           axis=0)
-        return np.convolve(padded_time_serie, np.ones(2 * size_window + 1) / (2 * size_window + 1),
-                           'valid')
+
+    padded_signal = np.concatenate((np.full(size_window, np.mean(signal[:size_window])),
+                                    signal,
+                                    np.full(size_window,
+                                            np.mean(signal[-(size_window + 1):]))),
+                                   axis=0)
+    return np.convolve(padded_signal, np.ones(2 * size_window + 1) / (2 * size_window + 1),
+                       'valid')
 
 
 def normxcorr2(template, image, mode="full"):
@@ -284,8 +285,8 @@ def normxcorr2(template, image, mode="full"):
     """
     # If this happens, it is probably a mistake
     if np.ndim(template) > np.ndim(image) or \
-                    len([i for i in range(np.ndim(template)) if
-                         template.shape[i] > image.shape[i]]) > 0:
+        len([i for i in range(np.ndim(template)) if
+             template.shape[i] > image.shape[i]]) > 0:
         print("normxcorr2: TEMPLATE larger than IMG. Arguments may be swapped.")
 
     template = template - np.mean(template)
@@ -297,7 +298,7 @@ def normxcorr2(template, image, mode="full"):
     out = fftconvolve(image, ar.conj(), mode=mode)
 
     image = fftconvolve(np.square(image), a1, mode=mode) - \
-            np.square(fftconvolve(image, a1, mode=mode)) / (np.prod(template.shape))
+        np.square(fftconvolve(image, a1, mode=mode)) / (np.prod(template.shape))
 
     # Remove small machine precision errors after subtraction
     image[np.where(image < 0)] = 0

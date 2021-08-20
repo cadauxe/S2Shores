@@ -7,7 +7,6 @@ correlation matrix
 import numpy as np
 
 from .waves_sinogram import WavesSinogram
-from .shoresutils import filter_mean
 
 
 class CorrelationSinogram(WavesSinogram):
@@ -26,12 +25,7 @@ class CorrelationSinogram(WavesSinogram):
     @property
     def tuned_sinogram(self) -> np.array:
         if self._tuned_sinogram is None:
-            self._tuned_sinogram = self.compute_tuned_sinogram()
+            # FIXME : tuned_sinogram should not use a parameter
+            # Find a better way than median filter to tune sinogram, may be spline interpolation
+            self._tuned_sinogram = self.filter_mean(self._mean_filter_kernel_size)
         return self._tuned_sinogram
-
-    def compute_tuned_sinogram(self):
-        # FIXME : tuned_sinogram should not use a parameter
-        # Find a better way than median filter to tune sinogram, may be spline interpolation
-        array = np.ndarray.flatten(self.sinogram)
-        sinogram_max_var_tuned = filter_mean(array, self._mean_filter_kernel_size)
-        return sinogram_max_var_tuned
