@@ -7,7 +7,7 @@ method
          gregoirethoumyre
          degoulromain
 """
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 from typing import Optional, List  # @NoMove
 
 from munch import Munch
@@ -72,8 +72,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def _parameters(self) -> Munch:
         """
         :return: munchified parameters
@@ -81,15 +80,13 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         # FIXME: Why not using parameters from global bathy estimatror (this is
         # the general principle)
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def positions_x(self) -> np.ndarray:
         """
         :return: ndarray of x positions
         """
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def positions_y(self) -> np.ndarray:
         """
         :return: ndarray of y positions
