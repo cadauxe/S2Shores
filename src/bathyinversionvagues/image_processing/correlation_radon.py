@@ -25,14 +25,6 @@ class CorrelationRadon(WavesRadon):
     def __init__(self, image: CorrelationImage, directions_step: float = 1.,
                  weighted: bool = False) -> None:
         super().__init__(image, directions_step, weighted)
-        self._sinogram_maximum_variance = None
-
-    @property
-    def sinogram_maximum_variance(self) -> WavesSinogram:
-        if self._sinogram_maximum_variance is None:
-            # TODO: return variable to be corrected
-            self._sinogram_maximum_variance = self.get_sinogram_maximum_variance()
-        return self._sinogram_maximum_variance
 
     def get_sinogram_maximum_variance(self,
                                       directions: Optional[np.ndarray] = None) -> (
