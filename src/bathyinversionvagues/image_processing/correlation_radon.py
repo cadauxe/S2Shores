@@ -27,12 +27,6 @@ class CorrelationRadon(WavesRadon):
         super().__init__(image, directions_step, weighted)
         self._sinogram_maximum_variance = None
 
-    def get_sinogram(self, direction: float) -> WavesSinogram:
-        if self._radon_transform is None:
-            raise NoRadonTransformError()
-        return WavesSinogram(self._radon_transform.values_for(direction),
-                             self.sampling_frequency)
-
     @property
     def sinogram_maximum_variance(self) -> WavesSinogram:
         if self._sinogram_maximum_variance is None:
