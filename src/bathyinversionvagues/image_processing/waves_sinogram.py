@@ -13,13 +13,15 @@ from typing import Optional  # @NoMove
 
 import numpy as np
 
-from .shoresutils import get_unity_roots, DFT_fr
+from .shoresutils import get_unity_roots, DFT_fr, filter_mean
 
 
+# TODO: make this class derive from a "1D_signal" class which would implement signal processing ?
+# This class would gather several functions from shoreutils.
+# TODO: introduce direction inside the sinogram itself ?
 class WavesSinogram:
     """ Class handling a sinogram (the component of a Radon transform in some direction)
     """
-    # TODO: introduce direction inside the sinogram itself ?
 
     def __init__(self, sinogram: np.ndarray) -> None:
         """ Constructor
@@ -56,6 +58,10 @@ class WavesSinogram:
             unity_roots = get_unity_roots(self.nb_samples, frequencies)
             result = DFT_fr(self.sinogram, unity_roots)
         return result
+
+    def filter_mean(self, kernel_size: int) -> np.ndarray:
+        array = np.ndarray.flatten(self.sinogram)
+        return filter_mean(array, kernel_size)
 
     @property
     def energy(self) -> float:

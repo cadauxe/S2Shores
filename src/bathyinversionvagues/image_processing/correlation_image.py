@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+module -- Class encapsulating a correlation matrix onto which waves estimation will be made
+"""
 
 from typing import Optional, Tuple
-
 import numpy as np
 
 from .waves_image import WavesImage
