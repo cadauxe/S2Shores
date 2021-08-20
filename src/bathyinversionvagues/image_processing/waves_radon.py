@@ -10,7 +10,7 @@ module -- Class encapsulating operations on the radon transform of an image for 
 :created: 4 mars 2021
 """
 from functools import lru_cache
-from typing import Optional, Dict  # @NoMove
+from typing import Optional, Dict, Tuple  # @NoMove
 
 import numpy as np  # @NoMove
 
@@ -187,7 +187,7 @@ class WavesRadon:
             sinograms_powers[result_index] = sinogram.mean_power
         return sinograms_powers
 
-    def get_sinogram_variance(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
+    def get_sinograms_variances(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
         directions = self.directions if directions is None else directions
         sinograms_variances = np.empty(len(directions), dtype=np.float64)
         for result_index, sinogram_index in enumerate(directions):
@@ -195,21 +195,25 @@ class WavesRadon:
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 
-    def get_sinogram_maximum_variance(self,
-                                      directions: Optional[np.ndarray] = None) -> (
-            WavesSinogram, float):
+    def get_sinogram_maximum_variance(self, directions: Optional[np.ndarray] = None) \
+            -> Tuple[Optional[WavesSinogram], float]:
+        """ Find the sinogram with maximum variance among the set of sinograms on some directions,
+        and returns it together with the direction value.
+
+        :param directions: a set of directions to look for maximum variance sinogram. If None, all
+                           the directions in the radon transform are considered.
+        :returns: the sinogram of maximum variance together with the corresponding direction.
+        """
+        # TODO: use get_sinograms_variances() for better consistency
         directions = self.directions if directions is None else directions
         maximum_variance = None
-        sinogram_maximum_variance = None
-        index_maximum_variance_direction = None
+        sinogram_maximum_variance: Optional[WavesSinogram] = None
+        index_max_variance_direction = None
         for result_index, sinogram_index in enumerate(directions):
             sinogram = self.sinograms[sinogram_index]
-            if maximum_variance is None:
-                maximum_variance = sinogram.variance
+            sinogram_variance = sinogram.variance
+            if maximum_variance is None or maximum_variance < sinogram_variance:
+                maximum_variance = sinogram_variance
                 sinogram_maximum_variance = sinogram
-                index_maximum_variance_direction = result_index
-            elif maximum_variance < sinogram.variance:
-                maximum_variance = sinogram.variance
-                sinogram_maximum_variance = sinogram
-                index_maximum_variance_direction = result_index
-        return (sinogram_maximum_variance, directions[index_maximum_variance_direction])
+                index_max_variance_direction = result_index
+        return sinogram_maximum_variance, directions[index_max_variance_direction]
