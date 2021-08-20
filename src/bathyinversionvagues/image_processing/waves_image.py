@@ -33,6 +33,11 @@ class WavesImage():
         self.resolution = resolution
         self.pixels = pixels
 
+        # pre-processing at creation time
+        self._preprocess(detrend, smoothing)
+
+    def _preprocess(self, detrend: bool = True,
+                    smoothing: Optional[Tuple[int, int]] = None) -> None:
         # Detrending
         if detrend:
             self.detrend()
