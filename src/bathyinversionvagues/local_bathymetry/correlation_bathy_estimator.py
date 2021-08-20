@@ -47,7 +47,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """ Run the local bathy estimator using correlation method
         """
         try:
-            self.create_radon_transform()
+            self.radon_transform = WavesRadon(self.correlation_image)
             # It is very important that circle=True has been chosen to compute radon matrix since
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
@@ -160,13 +160,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         if self._distances is None:
             self._distances = self.get_distances()
         return self._distances
-
-    def create_radon_transform(self) -> None:
-        """
-        Creation of the radon transform. Note that correlation_image must have resolution of 1 meter
-        :return:
-        """
-        self.radon_transform = WavesRadon(self.correlation_image)
 
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """
