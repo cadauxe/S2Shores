@@ -17,8 +17,8 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..image_processing.correlation_image import CorrelationImage
-from ..image_processing.correlation_radon import CorrelationRadon
 from ..image_processing.waves_image import WavesImage
+from ..image_processing.waves_radon import WavesRadon
 from .local_bathy_estimator import LocalBathyEstimator
 
 
@@ -39,7 +39,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         super().__init__(images_sequence, global_estimator, selected_directions)
         self._correlation_matrix: np.ndarray = None
         self._correlation_image: CorrelationImage = None
-        self.radon_transform: CorrelationRadon = None
+        self.radon_transform: Optional[WavesRadon] = None
         self._angles: np.ndarray = None
         self._distances: np.ndarray = None
 
@@ -169,7 +169,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         Creation of the radon transform. Note that correlation_image must have resolution of 1 meter
         :return:
         """
-        self.radon_transform = CorrelationRadon(self.correlation_image)
+        self.radon_transform = WavesRadon(self.correlation_image)
 
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """
