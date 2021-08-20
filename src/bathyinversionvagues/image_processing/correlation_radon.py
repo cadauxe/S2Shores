@@ -4,13 +4,14 @@ module -- Class encapsulating operations on the radon transform of a correlation
 """
 
 from typing import Optional
+
 import numpy as np
 
-from .waves_radon import WavesRadon
-from .waves_radon import WavesSinogram
-from .correlation_sinogram import CorrelationSinogram
-from .correlation_image import CorrelationImage
 from ..waves_exceptions import NoRadonTransformError
+
+from .correlation_image import CorrelationImage
+from .waves_radon import WavesRadon
+from .waves_sinogram import WavesSinogram
 
 
 class CorrelationRadon(WavesRadon):
@@ -21,28 +22,27 @@ class CorrelationRadon(WavesRadon):
     values in meters from the axis of the sinogram
     """
 
-    def __init__(self, image: CorrelationImage, mean_filter_kernel_size,
-                 directions_step: float = 1., weighted: bool = False):
+    def __init__(self, image: CorrelationImage, directions_step: float = 1.,
+                 weighted: bool = False) -> None:
         super().__init__(image, directions_step, weighted)
-        self._mean_filter_kernel_size = mean_filter_kernel_size
         self._sinogram_maximum_variance = None
 
-    def get_sinogram(self, direction: float) -> CorrelationSinogram:
+    def get_sinogram(self, direction: float) -> WavesSinogram:
         if self._radon_transform is None:
             raise NoRadonTransformError()
-        return CorrelationSinogram(self._radon_transform.values_for(direction),
-                                   self.sampling_frequency,
-                                   self._mean_filter_kernel_size)
+        return WavesSinogram(self._radon_transform.values_for(direction),
+                             self.sampling_frequency)
 
     @property
     def sinogram_maximum_variance(self) -> WavesSinogram:
         if self._sinogram_maximum_variance is None:
+            # TODO: return variable to be corrected
             self._sinogram_maximum_variance = self.get_sinogram_maximum_variance()
         return self._sinogram_maximum_variance
 
     def get_sinogram_maximum_variance(self,
                                       directions: Optional[np.ndarray] = None) -> (
-    WavesSinogram, float):
+            WavesSinogram, float):
         directions = self.directions if directions is None else directions
         maximum_variance = None
         sinogram_maximum_variance = None

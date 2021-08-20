@@ -48,6 +48,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         try:
             self.create_radon_transform()
+            # It is very important that circle=True has been chosen to compute radon matrix since
+            # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
             sinogram_max_var, direction_propagation = \
                 self.radon_transform.get_sinogram_maximum_variance()
@@ -167,8 +169,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         Creation of the radon transform. Note that correlation_image must have resolution of 1 meter
         :return:
         """
-        self.radon_transform = CorrelationRadon(self.correlation_image,
-                                                self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
+        self.radon_transform = CorrelationRadon(self.correlation_image)
 
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """
