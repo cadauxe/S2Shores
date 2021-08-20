@@ -194,3 +194,22 @@ class WavesRadon:
             sinogram = self.sinograms[sinogram_index]
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
+
+    def get_sinogram_maximum_variance(self,
+                                      directions: Optional[np.ndarray] = None) -> (
+            WavesSinogram, float):
+        directions = self.directions if directions is None else directions
+        maximum_variance = None
+        sinogram_maximum_variance = None
+        index_maximum_variance_direction = None
+        for result_index, sinogram_index in enumerate(directions):
+            sinogram = self.sinograms[sinogram_index]
+            if maximum_variance is None:
+                maximum_variance = sinogram.variance
+                sinogram_maximum_variance = sinogram
+                index_maximum_variance_direction = result_index
+            elif maximum_variance < sinogram.variance:
+                maximum_variance = sinogram.variance
+                sinogram_maximum_variance = sinogram
+                index_maximum_variance_direction = result_index
+        return (sinogram_maximum_variance, directions[index_maximum_variance_direction])
