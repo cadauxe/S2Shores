@@ -15,8 +15,10 @@ import numpy as np
 
 from ..bathy_physics import wavenumber_offshore, phi_limits
 
+
 from ..generic_utils.numpy_utils import dump_numpy_variable
-from ..image_processing.waves_image import WavesImage
+from ..image_processing.shoresutils import funDetrend_2d, desmooth
+from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
 from ..waves_fields_display import (display_curve, display_4curves,
@@ -40,22 +42,46 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         super().__init__(images_sequence, global_estimator, selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []
-        for image in images_sequence:
-            radon_transform = WavesRadon(image)
-            radon_transform.compute(selected_directions)
-            self.radon_transforms.append(radon_transform)
 
         self.peaks_dir = None
         self.directions = None
+
+    @property
+    def preprocessing_filters(self) -> ImageProcessingFilters:
+        preprocessing_filters: ImageProcessingFilters = []
+        # TODO: parameterize detrend
+        detrend = True
+        if detrend:
+            preprocessing_filters.append((funDetrend_2d, []))
+
+        if self.global_estimator.smoothing_requested:
+            # FIXME: pixels necessary for smoothing are not taken into account, thus
+            # zeros are introduced at the borders of the window.
+            preprocessing_filters.append((desmooth,
+                                          [self.global_estimator.smoothing_lines_size,
+                                           self.global_estimator.smoothing_columns_size]))
+            # Remove tendency possibly introduced by smoothing, specially on the shore line
+            preprocessing_filters.append((funDetrend_2d, []))
+        return preprocessing_filters
+
+    def compute_radon_transforms(self) -> None:
+
+        for image in self.images_sequence:
+            radon_transform = WavesRadon(image)
+            radon_transform.compute(self.selected_directions)
+            self.radon_transforms.append(radon_transform)
 
     def run(self) -> None:
         """    Radon, FFT, find directional peaks, then do detailed DFT analysis to find
         detailed phase shifts per linear wave number (k *2pi)
 
         """
-        self.find_directions()
+        self.preprocess_images()
 
-#            waves_fields_estimator.find_directions_bis()
+        self.compute_radon_transforms()
+
+        self.find_directions()
+        # self.find_directions_bis()
 
         self.prepare_refinement()
 

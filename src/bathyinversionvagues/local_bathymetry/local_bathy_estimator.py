@@ -8,7 +8,7 @@ time intervals.
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from abc import abstractmethod, ABC
+from abc import abstractmethod, ABC, abstractproperty
 from copy import deepcopy
 
 from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
@@ -16,7 +16,7 @@ from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
 import numpy as np
 
 from ..image.image_geometry_types import PointType
-from ..image_processing.waves_image import WavesImage
+from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from .waves_field_estimation import WavesFieldEstimation
 
 
@@ -68,6 +68,19 @@ class LocalBathyEstimator(ABC):
         self._position = point
         self._gravity = self.global_estimator.get_gravity(self._position, 0.)
         self._delta_time = self.global_estimator.get_delta_time(self._position)
+
+    @abstractproperty
+    def preprocessing_filters(self) -> ImageProcessingFilters:
+        """ :returns: A list of functions together with their parameters to be applied
+        sequentially to all the images of the sequence before subsequent bathymetry estimation.
+        """
+
+    def preprocess_images(self) -> None:
+        """ Process the images before doing the bathymetry estimation with a sequence of
+        image processing filters.
+        """
+        for image in self.images_sequence:
+            image.apply_filters(self.preprocessing_filters)
 
     @property
     def gravity(self) -> float:
