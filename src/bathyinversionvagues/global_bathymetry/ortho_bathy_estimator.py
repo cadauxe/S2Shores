@@ -115,18 +115,13 @@ class OrthoBathyEstimator:
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
         # FIXME: At least resolution should come from GeoTransform
         resolution = self.parent_estimator.waveparams.DX  # in meter
-        # Create the sequence of WavesImages (to be used by ALL estimators)
-        if self.parent_estimator.smoothing_requested:
-            smoothing = (self.parent_estimator.smoothing_lines_size,
-                         self.parent_estimator.smoothing_columns_size)
-        else:
-            smoothing = None
 
+        # Create the sequence of WavesImages (to be used by ALL estimators)
         images_sequence: List[WavesImage] = []
         for index, band_id in enumerate(self.parent_estimator.bands_identifiers):
             window_image = WavesImage(sub_tile_images[index][window[0]:window[1] + 1,
                                                              window[2]:window[3] + 1],
-                                      resolution, smoothing=smoothing)
+                                      resolution)
             images_sequence.append(window_image)
             if self.parent_estimator.debug_sample:
                 print(f'Subtile shape {sub_tile_images[index].shape}')
