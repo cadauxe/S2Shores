@@ -157,6 +157,12 @@ def funSmoothc(mI, Nr, Nc):
     return out[Nr:-Nr, Nc:-Nc]
 
 
+def desmooth(pixels, nx, ny):
+    smoothed_pixels = funSmooth2(pixels, nx, ny)
+    desmoothed_pixels = pixels - smoothed_pixels
+    return desmoothed_pixels
+
+
 def funSmooth2(M, nx, ny):
     '''
     Parameters
