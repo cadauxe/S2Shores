@@ -17,7 +17,7 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..image_processing.correlation_image import CorrelationImage
-from ..image_processing.waves_image import WavesImage
+from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from .local_bathy_estimator import LocalBathyEstimator
 
@@ -107,6 +107,17 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         :return: correlation image
         """
+
+    @property
+    def preprocessing_filters(self) -> ImageProcessingFilters:
+        """ :returns: A list of functions together with their parameters to be applied
+        sequentially to all the images of the sequence before subsequent bathymetry estimation.
+        """
+        preprocessing_filters: ImageProcessingFilters = []
+        preprocessing_filters.append((funDetrend_2d, []))
+        preprocessing_filters.append((clipping, [self._parameters.TUNING.RATIO_SIZE_CORRELATION]))
+
+        return preprocessing_filters
 
     def get_angles(self) -> np.ndarray:
         """
