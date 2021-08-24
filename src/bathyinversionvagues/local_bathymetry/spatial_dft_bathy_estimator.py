@@ -14,10 +14,8 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_physics import wavenumber_offshore, phi_limits
-
-
+from ..generic_utils.image_filters import funDetrend_2d, desmooth
 from ..generic_utils.numpy_utils import dump_numpy_variable
-from ..image_processing.shoresutils import funDetrend_2d, desmooth
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
@@ -25,6 +23,7 @@ from ..waves_fields_display import (display_curve, display_4curves,
                                     display_3curves, display_estimation)
 
 from .local_bathy_estimator import LocalBathyEstimator
+
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport

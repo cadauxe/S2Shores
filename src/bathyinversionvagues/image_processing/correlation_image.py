@@ -4,7 +4,7 @@ module -- Class encapsulating a correlation matrix onto which waves estimation w
 """
 import numpy as np
 
-from .shoresutils import funDetrend_2d, filter_1
+from ..generic_utils.image_filters import funDetrend_2d, filter_1
 from .waves_image import WavesImage, ImageProcessingFilters
 
 
