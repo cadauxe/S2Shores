@@ -40,20 +40,6 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         """
         return self.local_estimator_params.SPATIAL_METHOD
 
-    @property
-    def positions_x(self) -> np.ndarray:
-        """
-        :return: ndarray of x positions
-        """
-        return self._positions_x
-
-    @property
-    def positions_y(self) -> np.ndarray:
-        """
-        :return: ndarray of y positions
-        """
-        return self._positions_y
-
     def get_correlation_matrix(self) -> np.ndarray:
         """
         :return: correlation matrix

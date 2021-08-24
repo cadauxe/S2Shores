@@ -30,8 +30,6 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         """
         super().__init__(images_sequence, global_estimator, selected_directions)
         self._time_series = None
-        self._positions_x = None
-        self._positions_y = None
         self.create_sequence_time_series()
 
     def create_sequence_time_series(self):
@@ -95,17 +93,3 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         :return: munchified parameters
         """
         return self.local_estimator_params.TEMPORAL_METHOD
-
-    @property
-    def positions_x(self) -> np.ndarray:
-        """
-        :return: ndarray of x positions
-        """
-        return self._positions_x
-
-    @property
-    def positions_y(self) -> np.ndarray:
-        """
-        :return: ndarray of y positions
-        """
-        return self._positions_y

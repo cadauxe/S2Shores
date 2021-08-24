@@ -42,6 +42,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_transform: Optional[WavesRadon] = None
         self._angles: np.ndarray = None
         self._distances: np.ndarray = None
+        self._positions_x = None
+        self._positions_y = None
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -80,17 +82,19 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         # FIXME: Why not using parameters from global bathy estimatror (this is
         # the general principle)
 
-    @abstractproperty
+    @property
     def positions_x(self) -> np.ndarray:
         """
         :return: ndarray of x positions
         """
+        return self._positions_x
 
-    @abstractproperty
+    @property
     def positions_y(self) -> np.ndarray:
         """
         :return: ndarray of y positions
         """
+        return self._positions_y
 
     @abstractmethod
     def get_correlation_matrix(self) -> np.ndarray:
