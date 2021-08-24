@@ -8,7 +8,6 @@ LAYERS_TYPE: "DEBUG" # parmi NOMINAL ou DEBUG. Permet de selectionner les couche
 G: 9.81 # g acceleration - m/s2
 #wave estimation methods
 #wave_common: 
-DX: 10 # satellite image resolution - meters
 MIN_D: 2 #minimal depth - meters
 MIN_T: 5 # minimal wave period - seconds
 MAX_T: 25 #maximal wave period - seconds

@@ -36,6 +36,12 @@ class OrthoImage(ABC, OrthoLayout):
         """ :returns: the acquisition time of the image
         """
 
+    @property
+    def spatial_resolution(self) -> float:
+        """ :returns: the spatial resolution of the image (m)
+        """
+        return self._geo_transform.resolution
+
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this ortho image
         """
