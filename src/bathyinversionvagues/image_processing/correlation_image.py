@@ -2,24 +2,17 @@
 """
 module -- Class encapsulating a correlation matrix onto which waves estimation will be made
 """
-
-from typing import Optional, Tuple
 import numpy as np
 
-from .waves_image import WavesImage
-from .shoresutils import funDetrend_2d
+from .shoresutils import funDetrend_2d, filter_1
+from .waves_image import WavesImage, ImageProcessingFilters
 
 
 class CorrelationImage(WavesImage):
-    def __init__(self, pixels: np.ndarray, resolution: float, tuning_ratio_size: float,
-                 detrend: bool = True, smoothing: Optional[Tuple[int, int]] = None) -> None:
-        self.tuning_ratio_size = tuning_ratio_size
-        super().__init__(pixels, resolution, detrend, smoothing)
+    def __init__(self, pixels: np.ndarray, resolution: float, tuning_ratio_size: float) -> None:
+        super().__init__(pixels, resolution)
 
-    def detrend(self):
-        self.pixels = funDetrend_2d(self.pixels)
-        s1, s2 = np.shape(self.pixels)
-        self.pixels = self.pixels[int(s1 / 2 - self.tuning_ratio_size * s1 / 2):int(
-            s1 / 2 + self.tuning_ratio_size * s1 / 2),
-                      int(s2 / 2 - self.tuning_ratio_size * s2 / 2):int(
-                          s2 / 2 + self.tuning_ratio_size * s2 / 2)]
+        preprocessing_filters: ImageProcessingFilters = []
+        preprocessing_filters.append((funDetrend_2d, []))
+        preprocessing_filters.append((filter_1, [tuning_ratio_size]))
+        self.apply_filters(preprocessing_filters)
