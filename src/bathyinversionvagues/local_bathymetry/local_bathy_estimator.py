@@ -8,7 +8,7 @@ time intervals.
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from abc import abstractmethod, ABC, abstractproperty
+from abc import abstractmethod, ABC
 from copy import deepcopy
 
 from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
@@ -69,7 +69,8 @@ class LocalBathyEstimator(ABC):
         self._gravity = self.global_estimator.get_gravity(self._position, 0.)
         self._delta_time = self.global_estimator.get_delta_time(self._position)
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def preprocessing_filters(self) -> ImageProcessingFilters:
         """ :returns: A list of functions together with their parameters to be applied
         sequentially to all the images of the sequence before subsequent bathymetry estimation.

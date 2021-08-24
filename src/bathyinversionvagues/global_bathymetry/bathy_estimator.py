@@ -4,7 +4,7 @@
 :author: GIROS Alain
 :created: 17/05/2021
 """
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod
 from typing import List, Optional  # @NoMove
 
 from xarray import Dataset  # @NoMove
@@ -57,7 +57,7 @@ class BathyEstimator(ABC):
         self._debug_sample = False
 
     @property
-    @abstractproperty
+    @abstractmethod
     def bands_identifiers(self) -> List[str]:
         """ :returns: the spectral band identifiers in the product to use for bathymetry estimation
         """
