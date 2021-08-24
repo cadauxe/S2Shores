@@ -11,11 +11,10 @@ from scipy.signal import convolve2d
 import numpy as np
 
 
-# FIXME: find the right name of this filter
-def filter_1(image_array: np.ndarray, window_size: int) -> np.ndarray:
+def clipping(image_array: np.ndarray, ratio_size: float) -> np.ndarray:
     s1, s2 = np.shape(image_array)
-    return image_array[int(s1 / 2 - window_size * s1 / 2):int(s1 / 2 + window_size * s1 / 2),
-                       int(s2 / 2 - window_size * s2 / 2):int(s2 / 2 + window_size * s2 / 2)]
+    return image_array[int(s1 / 2 - ratio_size * s1 / 2):int(s1 / 2 + ratio_size * s1 / 2),
+                       int(s2 / 2 - ratio_size * s2 / 2):int(s2 / 2 + ratio_size * s2 / 2)]
 
 
 def funDetrend_2d(Z):

@@ -4,7 +4,7 @@ module -- Class encapsulating a correlation matrix onto which waves estimation w
 """
 import numpy as np
 
-from ..generic_utils.image_filters import funDetrend_2d, filter_1
+from ..generic_utils.image_filters import funDetrend_2d, clipping
 from .waves_image import WavesImage, ImageProcessingFilters
 
 
@@ -14,5 +14,5 @@ class CorrelationImage(WavesImage):
 
         preprocessing_filters: ImageProcessingFilters = []
         preprocessing_filters.append((funDetrend_2d, []))
-        preprocessing_filters.append((filter_1, [tuning_ratio_size]))
+        preprocessing_filters.append((clipping, [tuning_ratio_size]))
         self.apply_filters(preprocessing_filters)
