@@ -4,7 +4,7 @@
 :author: GIROS Alain
 :created: 17/05/2021
 """
-from abc import ABC, abstractproperty, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Dict  # @NoMove
 from pathlib import Path
 
@@ -19,19 +19,19 @@ class OrthoImage(ABC, OrthoLayout):
     """
 
     @property
-    @abstractproperty
+    @abstractmethod
     def short_name(self) -> str:
         """ :returns: the short image name
         """
 
     @property
-    @abstractproperty
+    @abstractmethod
     def satellite(self) -> str:
         """ :returns: the satellite identifier
         """
 
     @property
-    @abstractproperty
+    @abstractmethod
     def acquisition_time(self) -> str:
         """ :returns: the acquisition time of the image
         """

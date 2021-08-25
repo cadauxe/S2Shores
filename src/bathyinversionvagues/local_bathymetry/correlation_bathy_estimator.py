@@ -7,7 +7,7 @@ method
          gregoirethoumyre
          degoulromain
 """
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod
 from typing import Optional, List  # @NoMove
 
 from munch import Munch
@@ -78,7 +78,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def _parameters(self) -> Munch:
         """
         :return: munchified parameters
