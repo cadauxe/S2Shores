@@ -16,9 +16,10 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 
 import numpy as np
 
-from ..image_processing.correlation_image import CorrelationImage
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
+from ..generic_utils.image_filters import funDetrend_2d, clipping
+from ..generic_utils.signal_utils import find_period, find_dephasing
 from .local_bathy_estimator import LocalBathyEstimator
 
 
@@ -38,21 +39,24 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
         super().__init__(images_sequence, global_estimator, selected_directions)
         self._correlation_matrix: np.ndarray = None
-        self._correlation_image: CorrelationImage = None
+        self._correlation_image: WavesImage = None
         self.radon_transform: Optional[WavesRadon] = None
         self._angles: np.ndarray = None
         self._distances: np.ndarray = None
         self._positions_x = None
         self._positions_y = None
+        self.correlation_image_filters: ImageProcessingFilters = [(funDetrend_2d, []),(clipping,[self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
         try:
+            self.correlation_image.apply_filters(self.correlation_image_filters)
             self.radon_transform = WavesRadon(self.correlation_image)
             # It is very important that circle=True has been chosen to compute radon matrix since
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
+
             sinogram_max_var, direction_propagation = \
                 self.radon_transform.get_sinogram_maximum_variance()
             # TODO: Find a better way to tune sinogram, may be spline interpolation
@@ -103,7 +107,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
 
     @abstractmethod
-    def get_correlation_image(self) -> CorrelationImage:
+    def get_correlation_image(self) -> WavesImage:
         """
         :return: correlation image
         """
@@ -137,7 +141,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             (self.positions_y - self.positions_y.T)))
 
     @property
-    def correlation_image(self) -> CorrelationImage:
+    def correlation_image(self) -> WavesImage:
         """
         :return: correlation image used to perform radon transformation
         """
@@ -179,13 +183,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param sinogram: sinogram on which wave length is computed
         :return: wave length in meter
         """
-        # TODO: move following 4 lines in a generic signal processing function
-        sign = np.sign(sinogram)
-        diff = np.diff(sign)
-        zeros = np.where(diff != 0)[0]
-        difference = 2 * np.mean(np.diff(zeros))
-
-        wave_length = difference * self._parameters.RESOLUTION.SPATIAL
+        wave_length = find_period(sinogram) * self._parameters.RESOLUTION.SPATIAL
         return wave_length
 
     def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
@@ -195,14 +193,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param wave_length: wave length of the sinogram
         :return: celerity in meter/second
         """
-        # TODO: move following 5 lines in a generic signal processing function
-        size_sinogram = len(sinogram)
-        left_limit = max(int(size_sinogram / 2 - wave_length / 2), 0)
-        right_limit = min(int(size_sinogram / 2 + wave_length / 2), size_sinogram)
-        argmax = np.argmax(sinogram[left_limit:right_limit])
-        difference_max = np.abs(argmax + left_limit - size_sinogram / 2)
-
-        rhomx = self._parameters.RESOLUTION.SPATIAL * difference_max
+        rhomx = self._parameters.RESOLUTION.SPATIAL * find_dephasing(sinogram,wave_length)
         duration = self._parameters.RESOLUTION.TEMPORAL * self._parameters.TEMPORAL_LAG
         celerity = np.abs(rhomx / duration)
         return celerity
