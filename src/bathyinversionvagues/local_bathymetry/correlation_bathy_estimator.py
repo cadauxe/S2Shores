@@ -8,7 +8,7 @@ method
          degoulromain
 """
 from abc import abstractmethod
-from typing import Optional, List  # @NoMove
+from typing import Optional, List, TYPE_CHECKING  # @NoMove
 
 from munch import Munch
 from scipy.interpolate import interp1d
@@ -22,13 +22,16 @@ from ..generic_utils.image_filters import funDetrend_2d, clipping
 from ..generic_utils.signal_utils import find_period, find_dephasing
 from .local_bathy_estimator import LocalBathyEstimator
 
+if TYPE_CHECKING:
+    from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
+
 
 class CorrelationBathyEstimator(LocalBathyEstimator):
     """
     Class offering a framework for bathymetry computation based on correlation
     """
 
-    def __init__(self, images_sequence: List[WavesImage], global_estimator,
+    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ constructor
         :param images_sequence: sequence of image used to compute bathymetry
@@ -36,7 +39,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param selected_directions: selected_directions: the set of directions onto which the
         sinogram must be computed
         """
-
         super().__init__(images_sequence, global_estimator, selected_directions)
         self._correlation_matrix: np.ndarray = None
         self._correlation_image: WavesImage = None
@@ -195,7 +197,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :return: celerity in meter/second
         """
         rhomx = self._parameters.RESOLUTION.SPATIAL * find_dephasing(sinogram,wave_length)
-        duration = self._parameters.RESOLUTION.TEMPORAL * self._parameters.TEMPORAL_LAG
+        duration = self.global_estimator.get_delta_time(None) * self._parameters.TEMPORAL_LAG
         celerity = np.abs(rhomx / duration)
         return celerity
 
