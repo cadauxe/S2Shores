@@ -5,7 +5,6 @@ NKEEP: 3 # number of main waves directions to keep
 LAYERS_TYPE: "DEBUG" # parmi NOMINAL ou DEBUG. Permet de selectionner les couches du produit netCDF
 
 #expert
-G: 9.81 # g acceleration - m/s2
 #wave estimation methods
 #wave_common: 
 MIN_D: 2 #minimal depth - meters
