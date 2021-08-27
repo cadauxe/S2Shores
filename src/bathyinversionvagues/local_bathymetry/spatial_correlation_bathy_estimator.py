@@ -12,8 +12,7 @@ from munch import Munch
 
 import numpy as np
 
-from ..image_processing.correlation_image import CorrelationImage
-from ..image_processing.correlation_image import WavesImage
+from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..image_processing.shoresutils import normxcorr2
 
@@ -53,10 +52,3 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
                               merge_array[:, :, index + self._parameters.TEMPORAL_LAG].T)
             full_corr = full_corr + corr
         return full_corr
-
-    def get_correlation_image(self) -> CorrelationImage:
-        """
-        :return: correlation image
-        """
-        return CorrelationImage(self.correlation_matrix, self._parameters.RESOLUTION.SPATIAL,
-                                self._parameters.TUNING.RATIO_SIZE_CORRELATION)

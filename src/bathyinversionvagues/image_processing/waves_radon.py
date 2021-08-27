@@ -8,7 +8,7 @@
 :created: 4 mars 2021
 """
 from functools import lru_cache
-from typing import Optional, Dict, Tuple  # @NoMove
+from typing import Optional, Dict, Tuple, List, Callable, Any  # @NoMove
 
 import numpy as np  # @NoMove
 
@@ -22,7 +22,7 @@ from .waves_image import WavesImage
 from .waves_sinogram import WavesSinogram
 
 SinogramsSetType = Dict[float, WavesSinogram]
-
+SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
 @lru_cache()
 def sinogram_weights(nb_samples: int) -> np.ndarray:
@@ -111,6 +111,18 @@ class WavesRadon:
                 self._radon_transform.array[:, direction] = (
                     self._radon_transform.array[:, direction] / self._weights)
 
+    def apply_filter(self, processing_filters: SignalProcessingFilters) -> None:
+        """ Apply filters on the image pixels in place
+
+        :param processing_filters: A list of functions together with their parameters to apply
+                                   sequentially to the image pixels.
+        """
+        if self._radon_transform is not None:
+            for direction in self.directions:
+                sinogram = self.get_sinogram(direction)
+                for processing_filter, filter_parameters in processing_filters:
+                    sinogram.sinogram = np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T
+                self._radon_transform.set_at_index(direction,sinogram.sinogram)
 
 # +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
 

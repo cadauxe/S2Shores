@@ -13,8 +13,7 @@ from munch import Munch
 import numpy as np
 import pandas
 
-from ..image_processing.correlation_image import CorrelationImage
-from ..image_processing.correlation_image import WavesImage
+from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..image_processing.shoresutils import cross_correlation
 
@@ -45,7 +44,8 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         time_series = np.reshape(merge_array, (shape_x * shape_y, -1))
         nb_random_points = round(shape_x * shape_y * self._parameters.PERCENTAGE_POINTS / 100)
         random_indexes = np.random.randint(0, shape_x * shape_y, size=nb_random_points)
-        positions_y, positions_x = np.meshgrid(np.linspace(1, shape_x, shape_x), np.linspace(1, shape_y, shape_y))
+        positions_y, positions_x = np.meshgrid(np.linspace(1, shape_x, shape_x),
+                                               np.linspace(1, shape_y, shape_y))
         self._positions_x = np.reshape(positions_x.flatten()[random_indexes], (1, -1))
         self._positions_y = np.reshape(positions_y.flatten()[random_indexes], (1, -1))
         self._time_series = time_series[random_indexes, :]
@@ -55,9 +55,9 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         Compute temporal correlation matrix
         """
         return cross_correlation(self._time_series[:, self._parameters.TEMPORAL_LAG:],
-                                 self._time_series[:,:-self._parameters.TEMPORAL_LAG])
+                                 self._time_series[:, :-self._parameters.TEMPORAL_LAG])
 
-    def get_correlation_image(self) -> CorrelationImage:
+    def get_correlation_image(self) -> WavesImage:
         """
         This function computes the correlation image by projecting the the correlation matrix on an
         array where axis are distances and center is the point where distance is 0.
@@ -84,8 +84,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
             (np.max(indices_x) + 1, np.max(indices_y) + 1))
         projected_matrix[indices_x, indices_y] = values
-        return CorrelationImage(projected_matrix, self._parameters.RESOLUTION.SPATIAL,
-                                self._parameters.TUNING.RATIO_SIZE_CORRELATION)
+        return WavesImage(projected_matrix, self._parameters.RESOLUTION.SPATIAL)
 
     @property
     def _parameters(self) -> Munch:

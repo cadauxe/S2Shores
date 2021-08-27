@@ -20,6 +20,7 @@ from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..generic_utils.image_filters import funDetrend_2d, clipping
 from ..generic_utils.signal_utils import find_period, find_dephasing
+from ..generic_utils.signal_filters import filter_mean, remove_median
 from .local_bathy_estimator import LocalBathyEstimator
 
 if TYPE_CHECKING:
@@ -40,6 +41,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         sinogram must be computed
         """
         super().__init__(images_sequence, global_estimator, selected_directions)
+
         self._correlation_matrix: np.ndarray = None
         self._correlation_image: WavesImage = None
         self.radon_transform: Optional[WavesRadon] = None
@@ -47,7 +49,11 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._distances: np.ndarray = None
         self._positions_x = None
         self._positions_y = None
-        self.correlation_image_filters: ImageProcessingFilters = [(funDetrend_2d, []),(clipping,[self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
+        self.correlation_image_filters: ImageProcessingFilters = [(funDetrend_2d, []), (
+            clipping, [self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
+        self.radon_image_filters: ImageProcessingFilters = [
+            (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
+            (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -58,9 +64,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             # It is very important that circle=True has been chosen to compute radon matrix since
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
-
+            self.radon_transform.apply_filter(self.radon_image_filters)
             sinogram_max_var, direction_propagation = \
                 self.radon_transform.get_sinogram_maximum_variance()
+
             # TODO: Find a better way to tune sinogram, may be spline interpolation
             tuned_sinogram_max_var = sinogram_max_var.filter_mean(
                 self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
@@ -109,11 +116,11 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :return: correlation matrix
         """
 
-    @abstractmethod
     def get_correlation_image(self) -> WavesImage:
         """
         :return: correlation image
         """
+        return WavesImage(self.correlation_matrix, self._parameters.RESOLUTION.SPATIAL)
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -196,7 +203,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param wave_length: wave length of the sinogram
         :return: celerity in meter/second
         """
-        rhomx = self._parameters.RESOLUTION.SPATIAL * find_dephasing(sinogram,wave_length)
+        rhomx = self._parameters.RESOLUTION.SPATIAL * find_dephasing(sinogram, wave_length)
         duration = self.global_estimator.get_delta_time(None) * self._parameters.TEMPORAL_LAG
         celerity = np.abs(rhomx / duration)
         return celerity
@@ -228,9 +235,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :return: tuned temporal signal
         """
         low_frequency = self._parameters.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self._parameters.RESOLUTION.TIME_INTERPOLATION
+                        self._parameters.RESOLUTION.TIME_INTERPOLATION
         high_frequency = self._parameters.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self._parameters.RESOLUTION.TIME_INTERPOLATION
+                         self._parameters.RESOLUTION.TIME_INTERPOLATION
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
         temporal_signal_filtered = sosfiltfilt(sos_filter, temporal_signal)

@@ -141,6 +141,10 @@ class DirectionalArray:
     def values_at_index(self, direction_index: int) -> np.ndarray:
         return self.array[:, direction_index]
 
+    def set_at_index(self,direction: float, array: np.ndarray):
+        direction_index = self._find_index(direction)
+        self.array[:,direction_index]=array
+
     def _find_index(self, direction: float) -> int:
         quantized_direction = self._quantize_direction(direction)
         direction_indexes = np.where(self.directions == quantized_direction[0])
