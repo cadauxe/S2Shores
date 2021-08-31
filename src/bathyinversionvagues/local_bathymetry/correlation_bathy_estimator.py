@@ -17,7 +17,7 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
 from ..generic_utils.image_filters import funDetrend_2d, clipping
 from ..generic_utils.signal_utils import find_period, find_dephasing
 from ..generic_utils.signal_filters import filter_mean, remove_median
@@ -52,8 +52,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self.correlation_image_filters: ImageProcessingFilters = [(funDetrend_2d, []), (
             clipping, [self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
         self.radon_image_filters: ImageProcessingFilters = [
-            (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
-            (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
+        (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
+        (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -65,17 +65,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
             self.radon_transform.apply_filter(self.radon_image_filters)
-            sinogram_max_var, direction_propagation = \
-                self.radon_transform.get_sinogram_maximum_variance()
-
-            # TODO: Find a better way to tune sinogram, may be spline interpolation
-            tuned_sinogram_max_var = sinogram_max_var.filter_mean(
-                self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
-
-            # TODO: gather following 2 calls in a single method returning a consistent wave_length
-            # celerity pair
-            wave_length = self.compute_wave_length(tuned_sinogram_max_var)
-            celerity = self.compute_celerity(tuned_sinogram_max_var, wave_length)
+            sinogram_max_var, direction_propagation = self.radon_transform.get_sinogram_maximum_variance()
+            wave_length = self.compute_wave_length(sinogram_max_var.sinogram.flatten())
+            celerity = self.compute_celerity(sinogram_max_var.sinogram.flatten(), wave_length)
             temporal_signal = self.temporal_reconstruction(direction_propagation, celerity)
             temporal_signal_filtered = self.temporal_reconstruction_tuning(temporal_signal)
             period = self.compute_period(temporal_signal_filtered)
@@ -224,7 +216,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         time_unique_sorted = time_unique[index_unique_sorted]
         timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted),
                             self._parameters.RESOLUTION.TIME_INTERPOLATION)
-        corr_unique_sorted = self.correlation_matrix.T.flatten()[index_unique[index_unique_sorted]]
+        corr_unique_sorted = self.correlation_matrix.T.flatten()[
+            index_unique[index_unique_sorted]]
         interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
         return interpolation(timevec)
 

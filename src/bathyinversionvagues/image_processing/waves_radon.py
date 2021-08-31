@@ -19,10 +19,10 @@ from ..waves_exceptions import NoRadonTransformError
 
 from .shoresutils import DFT_fr, get_unity_roots
 from .waves_image import WavesImage
-from .waves_sinogram import WavesSinogram
+from .waves_sinogram import WavesSinogram, SignalProcessingFilters
 
 SinogramsSetType = Dict[float, WavesSinogram]
-SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
+
 
 @lru_cache()
 def sinogram_weights(nb_samples: int) -> np.ndarray:
@@ -248,7 +248,7 @@ class WavesRadon:
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 
-    def get_sinogram_maximum_variance(self, directions: Optional[np.ndarray] = None) \
+    def get_sinogram_maximum_variance(self, preprocessing_filters: Optional[SignalProcessingFilters] = [],directions: Optional[np.ndarray] = None,) \
             -> Tuple[Optional[WavesSinogram], float]:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,
         and returns it together with the direction value.
@@ -264,7 +264,11 @@ class WavesRadon:
         index_max_variance_direction = None
         for result_index, sinogram_index in enumerate(directions):
             sinogram = self.sinograms[sinogram_index]
-            sinogram_variance = sinogram.variance
+            for processing_filter, filter_parameters in preprocessing_filters:
+                sinogram_tuned = WavesSinogram(np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T)
+            if not preprocessing_filters:
+                sinogram_tuned = sinogram
+            sinogram_variance = sinogram_tuned.variance
             if maximum_variance is None or maximum_variance < sinogram_variance:
                 maximum_variance = sinogram_variance
                 sinogram_maximum_variance = sinogram
