@@ -59,7 +59,7 @@ class NetCDFDisToShoreProvider(DisToShoreProvider):
         :param distoshore_epsg_code: the EPSG code of the SRS used in the NetCDF file.
         """
         super().__init__()
-        self.set_provider_epsg_code(distoshore_epsg_code)
+        self.provider_epsg_code = distoshore_epsg_code
         self._distoshore_xarray = xr.open_dataset(distoshore_file_path)
 
     def get_distance(self, point: PointType) -> float:

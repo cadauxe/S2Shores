@@ -26,7 +26,7 @@ class LocalizedDataProvider:
         # Default client SRS is set to EPSG:4326 as well
         self._client_epsg_code = 4326
 
-        # Default SRS transformation does nothing
+        # Thus default coordinates transformation does nothing
         self._client_to_provider_transform: Optional[osr.CoordinateTransformation] = None
 
     @property
@@ -40,11 +40,14 @@ class LocalizedDataProvider:
         self._client_epsg_code = value
         self._client_to_provider_transform = None
 
-    def set_provider_epsg_code(self, value: int) -> None:
-        """ Set the EPSG code of the SRS used by the provider to retrieve its own data
-
-        :param value: EPSG code
+    @property
+    def provider_epsg_code(self) -> int:
+        """ :returns: the epsg code of the SRS used by the provider to retrieve its info
         """
+        return self._provider_epsg_code
+
+    @provider_epsg_code.setter
+    def provider_epsg_code(self, value: int) -> None:
         self._provider_epsg_code = value
         self._client_to_provider_transform = None
 
@@ -56,13 +59,15 @@ class LocalizedDataProvider:
         :returns: 3D coordinates in the provider SRS corresponding to the point. Meaning of
                   these coordinates depends on the provider SRS: (longitude, latitude, height) for
                   geographical SRS or (X, Y, height) for cartographic SRS.
-
+        :warning: this method must not be called outside a worker when this class is used in a
+                  dask context. This is because a osr.CoordinateTransformation object cannot be
+                  serialized using pickle because it is a SwigPyObject object.
         """
         if self._client_to_provider_transform is None:
             client_srs = osr.SpatialReference()
             client_srs.ImportFromEPSG(self.client_epsg_code)
             provider_srs = osr.SpatialReference()
-            provider_srs.ImportFromEPSG(self._provider_epsg_code)
+            provider_srs.ImportFromEPSG(self.provider_epsg_code)
             self._client_to_provider_transform = osr.CoordinateTransformation(client_srs,
                                                                               provider_srs)
         return self._client_to_provider_transform.TransformPoint(*point, altitude)
