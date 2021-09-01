@@ -17,8 +17,8 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
-from ..generic_utils.image_filters import funDetrend_2d, clipping
+from ..image_processing.waves_radon import WavesRadon
+from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_utils import find_period, find_dephasing
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from .local_bathy_estimator import LocalBathyEstimator
@@ -42,15 +42,16 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         super().__init__(images_sequence, global_estimator, selected_directions)
 
-        self._correlation_matrix: np.ndarray = None
-        self._correlation_image: WavesImage = None
+        self._correlation_matrix: Optional[np.ndarray] = None
+        self._correlation_image: Optional[WavesImage] = None
         self.radon_transform: Optional[WavesRadon] = None
-        self._angles: np.ndarray = None
-        self._distances: np.ndarray = None
-        self._positions_x = None
-        self._positions_y = None
-        self.correlation_image_filters: ImageProcessingFilters = [(funDetrend_2d, []), (
+        self._angles: Optional[np.ndarray] = None
+        self._distances: Optional[np.ndarray] = None
+        self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
             clipping, [self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
+        self.radon_image_filters: ImageProcessingFilters = [
+            (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
+            (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
         self.radon_image_filters: SignalProcessingFilters = [
             (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
             (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
@@ -89,18 +90,18 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         # the general principle)
 
     @property
+    @abstractmethod
     def positions_x(self) -> np.ndarray:
         """
         :return: ndarray of x positions
         """
-        return self._positions_x
 
     @property
+    @abstractmethod
     def positions_y(self) -> np.ndarray:
         """
         :return: ndarray of y positions
         """
-        return self._positions_y
 
     @abstractmethod
     def get_correlation_matrix(self) -> np.ndarray:
@@ -200,7 +201,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         celerity = np.abs(rhomx / duration)
         return celerity
 
-    def temporal_reconstruction(self, direction_propagation, celerity):
+    def temporal_reconstruction(self, direction_propagation: float, celerity: float) -> np.ndarray:
         """
         Temporal reconstruction of the correlation signal following propagation direction
         :param direction_propagation: propagation angles in degrees
@@ -221,7 +222,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
         return interpolation(timevec)
 
-    def temporal_reconstruction_tuning(self, temporal_signal):
+    def temporal_reconstruction_tuning(self, temporal_signal: np.ndarray) -> np.ndarray:
         """
         Tuning of temporal signal
         :param temporal_signal: temporal signal
@@ -236,7 +237,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         temporal_signal_filtered = sosfiltfilt(sos_filter, temporal_signal)
         return temporal_signal_filtered
 
-    def compute_period(self, temporal_signal_filtered):
+    def compute_period(self, temporal_signal_filtered: np.ndarray) -> float:
         """
         Period computation
         :param temporal_signal_filtered: temporal signal filtered
@@ -244,5 +245,5 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         peaks_max, _ = find_peaks(temporal_signal_filtered,
                                   distance=self._parameters.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
-        period = np.mean(np.diff(peaks_max))
+        period = float(np.mean(np.diff(peaks_max)))
         return period
