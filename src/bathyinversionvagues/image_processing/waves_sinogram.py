@@ -67,7 +67,7 @@ class WavesSinogram:
     def energy(self) -> float:
         """ :returns: the energy of the sinogram
         """
-        return np.sum(self.sinogram * self.sinogram)
+        return float(np.sum(self.sinogram * self.sinogram))
 
     @property
     def mean_power(self) -> float:
@@ -77,4 +77,4 @@ class WavesSinogram:
 
     @property
     def variance(self) -> float:
-        return np.var(self.sinogram)
+        return float(np.var(self.sinogram))

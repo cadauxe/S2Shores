@@ -7,7 +7,7 @@ Class performing bathymetry computation using spatial correlation method
          degoulromain
 """
 
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from munch import Munch
 
 import numpy as np
@@ -16,9 +16,11 @@ from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..image_processing.shoresutils import normxcorr2
 
+if TYPE_CHECKING:
+    from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
 class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
-    def __init__(self, images_sequence: List[WavesImage], global_estimator,
+    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """
         :param images_sequence: sequence of image used to compute bathymetry
@@ -39,6 +41,20 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         """
         return self.local_estimator_params.SPATIAL_METHOD
 
+    @property
+    def positions_x(self) -> np.ndarray:
+        """
+        :return: ndarray of x positions
+        """
+        return self._positions_x
+
+    @property
+    def positions_y(self) -> np.ndarray:
+        """
+        :return: ndarray of x positions
+        """
+        return self._positions_y
+
     def get_correlation_matrix(self) -> np.ndarray:
         """
         :return: correlation matrix
@@ -47,7 +63,8 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         full_corr = normxcorr2(merge_array[:, :, 0].T,
                                merge_array[:, :, self._parameters.TEMPORAL_LAG].T)
         for index in np.arange(self._parameters.TEMPORAL_LAG, self._number_frames -
-                self._parameters.TEMPORAL_LAG, self._parameters.TEMPORAL_LAG):
+                                                              self._parameters.TEMPORAL_LAG,
+                               self._parameters.TEMPORAL_LAG):
             corr = normxcorr2(merge_array[:, :, index].T,
                               merge_array[:, :, index + self._parameters.TEMPORAL_LAG].T)
             full_corr = full_corr + corr

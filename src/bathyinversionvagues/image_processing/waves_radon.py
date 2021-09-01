@@ -8,7 +8,7 @@
 :created: 4 mars 2021
 """
 from functools import lru_cache
-from typing import Optional, Dict, Tuple, List, Callable, Any  # @NoMove
+from typing import Optional, Dict, Tuple  # @NoMove
 
 import numpy as np  # @NoMove
 
@@ -109,7 +109,7 @@ class WavesRadon:
         if self._weights is not None and self._radon_transform is not None:
             for direction in range(self.nb_directions):
                 self._radon_transform.array[:, direction] = (
-                    self._radon_transform.array[:, direction] / self._weights)
+                        self._radon_transform.array[:, direction] / self._weights)
 
     def apply_filter(self, processing_filters: SignalProcessingFilters) -> None:
         """ Apply filters on the image pixels in place
@@ -122,9 +122,9 @@ class WavesRadon:
                 sinogram = self.get_sinogram(direction)
                 for processing_filter, filter_parameters in processing_filters:
                     sinogram.sinogram = np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T
-                self._radon_transform.set_at_index(direction,sinogram.sinogram)
+                self._radon_transform.set_at_index(direction, sinogram.sinogram)
 
-# +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
+    # +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
 
     @property
     def sinograms(self) -> SinogramsSetType:
@@ -150,7 +150,7 @@ class WavesRadon:
         directions = self.directions if directions is None else directions
         sinograms_dict: SinogramsSetType = {}
         if self.radon_transform is not None:
-            for direction in self.directions:
+            for direction in directions:
                 sinograms_dict[direction] = self.get_sinogram(direction)
         return sinograms_dict
 
@@ -248,11 +248,13 @@ class WavesRadon:
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 
-    def get_sinogram_maximum_variance(self, preprocessing_filters: Optional[SignalProcessingFilters] = [],directions: Optional[np.ndarray] = None,) \
-            -> Tuple[Optional[WavesSinogram], float]:
+    def get_sinogram_maximum_variance(self, preprocessing_filters: Optional[SignalProcessingFilters] = None,
+                                      directions: Optional[np.ndarray] = None) \
+            -> Tuple[WavesSinogram, float]:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,
         and returns it together with the direction value.
-
+        :param preprocessing_filters: a set a filter to apply on sinograms before computing maximum variance. Sinograms
+                           are left unmodified
         :param directions: a set of directions to look for maximum variance sinogram. If None, all
                            the directions in the radon transform are considered.
         :returns: the sinogram of maximum variance together with the corresponding direction.
@@ -265,7 +267,8 @@ class WavesRadon:
         for result_index, sinogram_index in enumerate(directions):
             sinogram = self.sinograms[sinogram_index]
             for processing_filter, filter_parameters in preprocessing_filters:
-                sinogram_tuned = WavesSinogram(np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T)
+                sinogram_tuned = WavesSinogram(
+                    np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T)
             if not preprocessing_filters:
                 sinogram_tuned = sinogram
             sinogram_variance = sinogram_tuned.variance
