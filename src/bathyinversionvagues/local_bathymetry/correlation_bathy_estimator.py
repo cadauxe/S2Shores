@@ -17,7 +17,7 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_utils import find_period, find_dephasing
 from ..generic_utils.signal_filters import filter_mean, remove_median
@@ -49,9 +49,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._distances: Optional[np.ndarray] = None
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
             clipping, [self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
-        self.radon_image_filters: ImageProcessingFilters = [
-            (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
-            (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
         self.radon_image_filters: SignalProcessingFilters = [
             (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
             (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]

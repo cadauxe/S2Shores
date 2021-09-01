@@ -14,7 +14,7 @@ import numpy as np
 
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
-from ..image_processing.shoresutils import normxcorr2
+from ..generic_utils.image_utils import normxcorr2
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport

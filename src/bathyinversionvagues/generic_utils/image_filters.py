@@ -12,6 +12,12 @@ import numpy as np
 
 
 def clipping(image_array: np.ndarray, ratio_size: float) -> np.ndarray:
+    """
+    Performs clipping of the edges
+    :param image_array: entry image
+    :param ratio_size: ratio of the image to keep (1 is the full image)
+    :returns: clipped image
+    """
     s1, s2 = np.shape(image_array)
     return image_array[int(s1 / 2 - ratio_size * s1 / 2):int(s1 / 2 + ratio_size * s1 / 2),
            int(s2 / 2 - ratio_size * s2 / 2):int(s2 / 2 + ratio_size * s2 / 2)]
@@ -20,7 +26,8 @@ def clipping(image_array: np.ndarray, ratio_size: float) -> np.ndarray:
 def detrend(image_array: np.ndarray) -> np.ndarray:
     """
     Performs detrending on a matrix
-    :return: detrended image
+    :param image_array: entry image
+    :returns: clipped image
     """
     shape1 = image_array.shape[1]
     shape2 = image_array.shape[0]

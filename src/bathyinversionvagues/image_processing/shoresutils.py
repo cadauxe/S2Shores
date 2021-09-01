@@ -10,7 +10,6 @@ Module containing all functions common to waves and bathy estimation methods
 
 """
 from scipy.signal import detrend
-from scipy.signal import fftconvolve
 
 import numpy as np
 
@@ -36,61 +35,6 @@ def DFT_fr(x: np.ndarray, unity_roots: np.ndarray):
     return np.dot(unity_roots, x)
 
 
-def fft_filtering(simg, spatial_resolution, T_max, T_min, gravity):
-    """
-    Compute the fft filtering of a subtile
-    :param simg:(np.array) the given sequence of images to filter
-    :param spatial_resolution: (int) sampling resolution (default 10 meters on Sentinel 2)
-    :param T_max:(int) Max wave periode
-    :param T_min:(int) Min wave periode
-    :return: simg_filtered:
-    """
-    flag = 0
-    n, m, c = simg.shape
-    kx = np.fft.fftshift(np.fft.fftfreq(n, spatial_resolution))
-    ky = np.fft.fftshift(np.fft.fftfreq(m, spatial_resolution))
-    kx = np.repeat(np.reshape(kx, (n, 1)), m, axis=1)
-    ky = np.repeat(np.reshape(ky, (1, m)), n, axis=0)
-    # TODO: rely on wavenumber_offshore() function (later on remove Tmax and Tmin arguments)
-    threshold_min = 2. * np.pi / (gravity * T_max ** 2)
-    threshold_max = 2. * np.pi / (gravity * T_min ** 2)
-    simg_filtered = np.zeros(simg.shape)
-    kr = np.sqrt(kx ** 2 + ky ** 2)
-    kr[kr < threshold_min] = 0
-    kr[kr > threshold_max] = 0
-    boolKr = (kr > 0)
-    for channel in range(c):
-        r = simg[:, :, channel]
-        r = detrend(detrend(r, axis=1), axis=0)
-        fftr = np.fft.fft2(r)
-        energy_r = np.fft.fftshift(fftr)
-        energy_r *= boolKr
-        max_energy = np.max(np.abs(energy_r))
-        if max_energy > 3 or max_energy < 0.01:
-            flag = 1
-            simg_filtered[:, :, channel] = np.real(np.fft.ifft2(np.fft.ifftshift(energy_r)))
-    return simg_filtered, flag
-
-
-def cross_correlation(A, B):
-    """
-    Compute the correlation of each line of A with each line of B
-    This function is faster than using np.corrcoef which computes correlation beetween A&A,A&B,B&A,B&B
-    :param A (np.array) : matrix A
-    :param B (np.array) : matrix B
-    :return: sub_tile (np.array) : cross correlation matrix
-    """
-    # Rowwise mean of input arrays & subtract from input arrays themeselves
-    A_mA = A - A.mean(1)[:, None]
-    B_mB = B - B.mean(1)[:, None]
-
-    # Sum of squares across rows
-    ssA = (A_mA ** 2).sum(1)
-    ssB = (B_mB ** 2).sum(1)
-
-    # Finally get corr coeff
-    return np.dot(A_mA, B_mB.T) / np.sqrt(np.dot(ssA[:, None], ssB[None]))
-
 
 def filter_mean(signal: np.ndarray, size_window: int) -> np.ndarray:
     """ Run average filter on a signal
@@ -112,53 +56,4 @@ def filter_mean(signal: np.ndarray, size_window: int) -> np.ndarray:
                        'valid')
 
 
-def normxcorr2(template, image, mode="full"):
-    ########################################################################################
-    # Author: Ujash Joshi, University of Toronto, 2017                                     #
-    # Based on Octave implementation by: Benjamin Eltzner, 2014 <b.eltzner@gmx.de>         #
-    # Octave/Matlab normxcorr2 implementation in python 3.5                                #
-    # Details:                                                                             #
-    # Normalized cross-correlation. Similiar results upto 3 significant digits.            #
-    # https://github.com/Sabrewarrior/normxcorr2-python/master/norxcorr2.py                #
-    # http://lordsabre.blogspot.ca/2017/09/matlab-normxcorr2-implemented-in-python.html    #
-    ########################################################################################
-    """
-    Input arrays should be floating point numbers.
-    :param template: N-D array, of template or filter you are using for cross-correlation.
-    Must be less or equal dimensions to image.
-    Length of each dimension must be less than length of image.
-    :param image: N-D array
-    :param mode: Options, "full", "valid", "same"
-    full (Default): The output of fftconvolve is the full discrete linear convolution of the inputs.
-    Output size will be image size + 1/2 template size in each dimension.
-    valid: The output consists only of those elements that do not rely on the zero-padding.
-    same: The output is the same size as image, centered with respect to the �full� output.
-    :return: N-D array of same dimensions as image. Size depends on mode parameter.
-    """
-    # If this happens, it is probably a mistake
-    if np.ndim(template) > np.ndim(image) or \
-        len([i for i in range(np.ndim(template)) if
-             template.shape[i] > image.shape[i]]) > 0:
-        print("normxcorr2: TEMPLATE larger than IMG. Arguments may be swapped.")
 
-    template = template - np.mean(template)
-    image = image - np.mean(image)
-
-    a1 = np.ones(template.shape)
-    # Faster to flip up down and left right then use fftconvolve instead of scipy's correlate
-    ar = np.flipud(np.fliplr(template))
-    out = fftconvolve(image, ar.conj(), mode=mode)
-
-    image = fftconvolve(np.square(image), a1, mode=mode) - \
-        np.square(fftconvolve(image, a1, mode=mode)) / (np.prod(template.shape))
-
-    # Remove small machine precision errors after subtraction
-    image[np.where(image < 0)] = 0
-
-    template = np.sum(np.square(template))
-    out = out / np.sqrt(image * template)
-
-    # Remove any divisions by 0 or very close to 0
-    out[np.where(np.logical_not(np.isfinite(out)))] = 0
-
-    return out

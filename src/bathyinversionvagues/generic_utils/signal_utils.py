@@ -10,7 +10,7 @@ import numpy as np
 
 def find_period(signal: np.ndarray) -> float:
     """
-    This fonction computes period of the signal by comuting the zeros of the signal
+    This function computes period of the signal by computing the zeros of the signal
     The signal is supposed to be periodic and centered around zero
     :param signal: signal on which period is computed
     :return: period
@@ -18,7 +18,7 @@ def find_period(signal: np.ndarray) -> float:
     sign = np.sign(signal)
     diff = np.diff(sign)
     zeros = np.where(diff != 0)[0]
-    period = 2 * np.mean(np.diff(zeros))
+    period = 2 * float(np.mean(np.diff(zeros)))
     return period
 
 

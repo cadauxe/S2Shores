@@ -205,7 +205,7 @@ def _process_angles_subsets(angles: np.ndarray, largest: np.ndarray, smallest: n
 def _normalize_angle(angle: Union[Real, np.ndarray]) -> Union[Real, np.ndarray]:
     """ Normalize angle(s) expressed in degrees to the interval [-180°, 180°[
 
-    :param angle: the real valuied angle(s) expressed in degrees
+    :param angle: the real valued angle(s) expressed in degrees
     :returns: multiple(s) of quantization_step such that:
               quantized_value - quantization_step/2 < value <= quantized_value + quantization_step/2
     """

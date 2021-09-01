@@ -48,9 +48,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
         preprocessing_filters: ImageProcessingFilters = []
-        detrend = True
-        if detrend:
-            preprocessing_filters.append((detrend, []))
+        preprocessing_filters.append((detrend, []))
 
         if self.global_estimator.smoothing_requested:
             # FIXME: pixels necessary for smoothing are not taken into account, thus
