@@ -14,7 +14,7 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_physics import wavenumber_offshore, phi_limits
-from ..generic_utils.image_filters import funDetrend_2d, desmooth
+from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
@@ -48,10 +48,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
         preprocessing_filters: ImageProcessingFilters = []
-        # TODO: parameterize detrend
-        detrend = True
-        if detrend:
-            preprocessing_filters.append((funDetrend_2d, []))
+        preprocessing_filters.append((detrend, []))
 
         if self.global_estimator.smoothing_requested:
             # FIXME: pixels necessary for smoothing are not taken into account, thus
@@ -60,7 +57,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                           [self.global_estimator.smoothing_lines_size,
                                            self.global_estimator.smoothing_columns_size]))
             # Remove tendency possibly introduced by smoothing, specially on the shore line
-            preprocessing_filters.append((funDetrend_2d, []))
+            preprocessing_filters.append((detrend, []))
         return preprocessing_filters
 
     def compute_radon_transforms(self) -> None:

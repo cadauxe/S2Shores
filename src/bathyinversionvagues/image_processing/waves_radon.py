@@ -19,7 +19,7 @@ from ..waves_exceptions import NoRadonTransformError
 
 from .shoresutils import DFT_fr, get_unity_roots
 from .waves_image import WavesImage
-from .waves_sinogram import WavesSinogram
+from .waves_sinogram import WavesSinogram, SignalProcessingFilters
 
 SinogramsSetType = Dict[float, WavesSinogram]
 
@@ -109,10 +109,22 @@ class WavesRadon:
         if self._weights is not None and self._radon_transform is not None:
             for direction in range(self.nb_directions):
                 self._radon_transform.array[:, direction] = (
-                    self._radon_transform.array[:, direction] / self._weights)
+                        self._radon_transform.array[:, direction] / self._weights)
 
+    def apply_filter(self, processing_filters: SignalProcessingFilters) -> None:
+        """ Apply filters on the image pixels in place
 
-# +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
+        :param processing_filters: A list of functions together with their parameters to apply
+                                   sequentially to the image pixels.
+        """
+        if self._radon_transform is not None:
+            for direction in self.directions:
+                sinogram = self.get_sinogram(direction)
+                for processing_filter, filter_parameters in processing_filters:
+                    sinogram.sinogram = np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T
+                self._radon_transform.set_at_index(direction, sinogram.sinogram)
+
+    # +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
 
     @property
     def sinograms(self) -> SinogramsSetType:
@@ -138,7 +150,7 @@ class WavesRadon:
         directions = self.directions if directions is None else directions
         sinograms_dict: SinogramsSetType = {}
         if self.radon_transform is not None:
-            for direction in self.directions:
+            for direction in directions:
                 sinograms_dict[direction] = self.get_sinogram(direction)
         return sinograms_dict
 
@@ -236,11 +248,13 @@ class WavesRadon:
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 
-    def get_sinogram_maximum_variance(self, directions: Optional[np.ndarray] = None) \
-            -> Tuple[Optional[WavesSinogram], float]:
+    def get_sinogram_maximum_variance(self, preprocessing_filters: Optional[SignalProcessingFilters] = None,
+                                      directions: Optional[np.ndarray] = None) \
+            -> Tuple[WavesSinogram, float]:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,
         and returns it together with the direction value.
-
+        :param preprocessing_filters: a set a filter to apply on sinograms before computing maximum variance. Sinograms
+                           are left unmodified
         :param directions: a set of directions to look for maximum variance sinogram. If None, all
                            the directions in the radon transform are considered.
         :returns: the sinogram of maximum variance together with the corresponding direction.
@@ -252,7 +266,13 @@ class WavesRadon:
         index_max_variance_direction = None
         for result_index, sinogram_index in enumerate(directions):
             sinogram = self.sinograms[sinogram_index]
-            sinogram_variance = sinogram.variance
+            if preprocessing_filters:
+                for processing_filter, filter_parameters in preprocessing_filters:
+                    sinogram_tuned = WavesSinogram(
+                        np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T)
+            else:
+                sinogram_tuned = sinogram
+            sinogram_variance = sinogram_tuned.variance
             if maximum_variance is None or maximum_variance < sinogram_variance:
                 maximum_variance = sinogram_variance
                 sinogram_maximum_variance = sinogram

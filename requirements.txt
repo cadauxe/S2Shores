@@ -18,3 +18,11 @@
 numpy
 scipy
 scikit-image
+
+xarray
+munch
+pandas
+matplotlib
+Sphinx
+setuptools
+GDAL

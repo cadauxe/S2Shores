@@ -9,11 +9,11 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional  # @NoMove
-
+from typing import Optional, List, Tuple, Callable, Any  # @NoMove
 import numpy as np
-
 from .shoresutils import get_unity_roots, DFT_fr, filter_mean
+
+SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
 
 # TODO: make this class derive from a "1D_signal" class which would implement signal processing ?
@@ -67,7 +67,7 @@ class WavesSinogram:
     def energy(self) -> float:
         """ :returns: the energy of the sinogram
         """
-        return np.sum(self.sinogram * self.sinogram)
+        return float(np.sum(self.sinogram * self.sinogram))
 
     @property
     def mean_power(self) -> float:
@@ -77,4 +77,4 @@ class WavesSinogram:
 
     @property
     def variance(self) -> float:
-        return np.var(self.sinogram)
+        return float(np.var(self.sinogram))

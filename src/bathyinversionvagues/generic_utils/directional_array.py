@@ -13,7 +13,6 @@ from numbers import Integral
 
 import numpy as np
 
-
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 0.
 DEFAULT_DIRECTIONS_STEP = 1.
@@ -102,7 +101,7 @@ class DirectionalArray:
         return self._directions
 
     @property
-    def nb_directions(self) -> None:
+    def nb_directions(self) -> int:
         """ :return: the number of directions defined for this DimensionalArray"""
         return self.directions.size
 
@@ -140,6 +139,10 @@ class DirectionalArray:
 
     def values_at_index(self, direction_index: int) -> np.ndarray:
         return self.array[:, direction_index]
+
+    def set_at_index(self, direction: float, array: np.ndarray) -> None:
+        direction_index = self._find_index(direction)
+        self.array[:, direction_index] = array
 
     def _find_index(self, direction: float) -> int:
         quantized_direction = self._quantize_direction(direction)

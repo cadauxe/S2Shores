@@ -8,7 +8,7 @@ method
          degoulromain
 """
 from abc import abstractmethod
-from typing import Optional, List  # @NoMove
+from typing import Optional, List, TYPE_CHECKING  # @NoMove
 
 from munch import Munch
 from scipy.interpolate import interp1d
@@ -16,10 +16,15 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 
 import numpy as np
 
-from ..image_processing.correlation_image import CorrelationImage
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
+from ..generic_utils.image_filters import detrend, clipping
+from ..generic_utils.signal_utils import find_period, find_dephasing
+from ..generic_utils.signal_filters import filter_mean, remove_median
 from .local_bathy_estimator import LocalBathyEstimator
+
+if TYPE_CHECKING:
+    from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
 
 class CorrelationBathyEstimator(LocalBathyEstimator):
@@ -27,7 +32,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     Class offering a framework for bathymetry computation based on correlation
     """
 
-    def __init__(self, images_sequence: List[WavesImage], global_estimator,
+    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ constructor
         :param images_sequence: sequence of image used to compute bathymetry
@@ -35,34 +40,32 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param selected_directions: selected_directions: the set of directions onto which the
         sinogram must be computed
         """
-
         super().__init__(images_sequence, global_estimator, selected_directions)
-        self._correlation_matrix: np.ndarray = None
-        self._correlation_image: CorrelationImage = None
+
+        self._correlation_matrix: Optional[np.ndarray] = None
+        self._correlation_image: Optional[WavesImage] = None
         self.radon_transform: Optional[WavesRadon] = None
-        self._angles: np.ndarray = None
-        self._distances: np.ndarray = None
-        self._positions_x = None
-        self._positions_y = None
+        self._angles: Optional[np.ndarray] = None
+        self._distances: Optional[np.ndarray] = None
+        self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
+            clipping, [self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
+        self.radon_image_filters: SignalProcessingFilters = [
+            (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
+            (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
         try:
+            self.correlation_image.apply_filters(self.correlation_image_filters)
             self.radon_transform = WavesRadon(self.correlation_image)
             # It is very important that circle=True has been chosen to compute radon matrix since
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
-            sinogram_max_var, direction_propagation = \
-                self.radon_transform.get_sinogram_maximum_variance()
-            # TODO: Find a better way to tune sinogram, may be spline interpolation
-            tuned_sinogram_max_var = sinogram_max_var.filter_mean(
-                self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM)
-
-            # TODO: gather following 2 calls in a single method returning a consistent wave_length
-            # celerity pair
-            wave_length = self.compute_wave_length(tuned_sinogram_max_var)
-            celerity = self.compute_celerity(tuned_sinogram_max_var, wave_length)
+            self.radon_transform.apply_filter(self.radon_image_filters)
+            sinogram_max_var, direction_propagation = self.radon_transform.get_sinogram_maximum_variance()
+            wave_length = self.compute_wave_length(sinogram_max_var.sinogram.flatten())
+            celerity = self.compute_celerity(sinogram_max_var.sinogram.flatten(), wave_length)
             temporal_signal = self.temporal_reconstruction(direction_propagation, celerity)
             temporal_signal_filtered = self.temporal_reconstruction_tuning(temporal_signal)
             period = self.compute_period(temporal_signal_filtered)
@@ -84,18 +87,18 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         # the general principle)
 
     @property
+    @abstractmethod
     def positions_x(self) -> np.ndarray:
         """
         :return: ndarray of x positions
         """
-        return self._positions_x
 
     @property
+    @abstractmethod
     def positions_y(self) -> np.ndarray:
         """
         :return: ndarray of y positions
         """
-        return self._positions_y
 
     @abstractmethod
     def get_correlation_matrix(self) -> np.ndarray:
@@ -103,11 +106,11 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :return: correlation matrix
         """
 
-    @abstractmethod
-    def get_correlation_image(self) -> CorrelationImage:
+    def get_correlation_image(self) -> WavesImage:
         """
         :return: correlation image
         """
+        return WavesImage(self.correlation_matrix, self._parameters.RESOLUTION.SPATIAL)
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -138,7 +141,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             (self.positions_y - self.positions_y.T)))
 
     @property
-    def correlation_image(self) -> CorrelationImage:
+    def correlation_image(self) -> WavesImage:
         """
         :return: correlation image used to perform radon transformation
         """
@@ -180,13 +183,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param sinogram: sinogram on which wave length is computed
         :return: wave length in meter
         """
-        # TODO: move following 4 lines in a generic signal processing function
-        sign = np.sign(sinogram)
-        diff = np.diff(sign)
-        zeros = np.where(diff != 0)[0]
-        difference = 2 * np.mean(np.diff(zeros))
-
-        wave_length = difference * self._parameters.RESOLUTION.SPATIAL
+        wave_length = find_period(sinogram) * self._parameters.RESOLUTION.SPATIAL
         return wave_length
 
     def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
@@ -196,19 +193,12 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param wave_length: wave length of the sinogram
         :return: celerity in meter/second
         """
-        # TODO: move following 5 lines in a generic signal processing function
-        size_sinogram = len(sinogram)
-        left_limit = max(int(size_sinogram / 2 - wave_length / 2), 0)
-        right_limit = min(int(size_sinogram / 2 + wave_length / 2), size_sinogram)
-        argmax = np.argmax(sinogram[left_limit:right_limit])
-        difference_max = np.abs(argmax + left_limit - size_sinogram / 2)
-
-        rhomx = self._parameters.RESOLUTION.SPATIAL * difference_max
-        duration = self._parameters.RESOLUTION.TEMPORAL * self._parameters.TEMPORAL_LAG
+        rhomx = self._parameters.RESOLUTION.SPATIAL * find_dephasing(sinogram, wave_length)
+        duration = self.global_estimator.get_delta_time(None) * self._parameters.TEMPORAL_LAG
         celerity = np.abs(rhomx / duration)
         return celerity
 
-    def temporal_reconstruction(self, direction_propagation, celerity):
+    def temporal_reconstruction(self, direction_propagation: float, celerity: float) -> np.ndarray:
         """
         Temporal reconstruction of the correlation signal following propagation direction
         :param direction_propagation: propagation angles in degrees
@@ -224,26 +214,27 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         time_unique_sorted = time_unique[index_unique_sorted]
         timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted),
                             self._parameters.RESOLUTION.TIME_INTERPOLATION)
-        corr_unique_sorted = self.correlation_matrix.T.flatten()[index_unique[index_unique_sorted]]
+        corr_unique_sorted = self.correlation_matrix.T.flatten()[
+            index_unique[index_unique_sorted]]
         interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
         return interpolation(timevec)
 
-    def temporal_reconstruction_tuning(self, temporal_signal):
+    def temporal_reconstruction_tuning(self, temporal_signal: np.ndarray) -> np.ndarray:
         """
         Tuning of temporal signal
         :param temporal_signal: temporal signal
         :return: tuned temporal signal
         """
         low_frequency = self._parameters.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self._parameters.RESOLUTION.TIME_INTERPOLATION
+                        self._parameters.RESOLUTION.TIME_INTERPOLATION
         high_frequency = self._parameters.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self._parameters.RESOLUTION.TIME_INTERPOLATION
+                         self._parameters.RESOLUTION.TIME_INTERPOLATION
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
         temporal_signal_filtered = sosfiltfilt(sos_filter, temporal_signal)
         return temporal_signal_filtered
 
-    def compute_period(self, temporal_signal_filtered):
+    def compute_period(self, temporal_signal_filtered: np.ndarray) -> float:
         """
         Period computation
         :param temporal_signal_filtered: temporal signal filtered
@@ -251,5 +242,5 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         peaks_max, _ = find_peaks(temporal_signal_filtered,
                                   distance=self._parameters.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
-        period = np.mean(np.diff(peaks_max))
+        period = float(np.mean(np.diff(peaks_max)))
         return period

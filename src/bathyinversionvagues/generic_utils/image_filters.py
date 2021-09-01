@@ -12,44 +12,43 @@ import numpy as np
 
 
 def clipping(image_array: np.ndarray, ratio_size: float) -> np.ndarray:
+    """
+    Performs clipping of the edges
+    :param image_array: entry image
+    :param ratio_size: ratio of the image to keep (1 is the full image)
+    :returns: clipped image
+    """
     s1, s2 = np.shape(image_array)
     return image_array[int(s1 / 2 - ratio_size * s1 / 2):int(s1 / 2 + ratio_size * s1 / 2),
-                       int(s2 / 2 - ratio_size * s2 / 2):int(s2 / 2 + ratio_size * s2 / 2)]
+           int(s2 / 2 - ratio_size * s2 / 2):int(s2 / 2 + ratio_size * s2 / 2)]
 
 
-def funDetrend_2d(Z):
+def detrend(image_array: np.ndarray) -> np.ndarray:
     """
     Performs detrending on a matrix
-    :param Z:
-    :return:
+    :param image_array: entry image
+    :returns: detrended image
     """
-    M = Z.shape[1]
-    N = Z.shape[0]
+    shape1 = image_array.shape[1]
+    shape2 = image_array.shape[0]
 
-    XX, YY = np.meshgrid(range(0, M), range(0, N))
-    Xcolv = XX.flatten()
-    Ycolv = YY.flatten()
-    Zcolv = Z.flatten()
+    xx, yy = np.meshgrid(range(0, shape1), range(0, shape2))
+    xcolv = xx.flatten()
+    ycolv = yy.flatten()
+    zcolv = image_array.flatten()
 
-    Mp = np.zeros((len(Ycolv), 3))
-    Const = np.ones(len(Xcolv))
-    Mp[:, 0] = Xcolv
-    Mp[:, 1] = Ycolv
-    Mp[:, 2] = Const
+    mp = np.zeros((len(ycolv), 3))
+    const = np.ones(len(xcolv))
+    mp[:, 0] = xcolv
+    mp[:, 1] = ycolv
+    mp[:, 2] = const
 
-    inv_Mp = np.linalg.pinv(Mp)
-
-    Coef = np.dot(inv_Mp, Zcolv)
-    Coef = np.asarray(Coef)
-
-    XCoeff = Coef[0]
-    YCoeff = Coef[1]
-    CCoeff = Coef[2]
-
-    Z_p = XCoeff * XX + YCoeff * YY + CCoeff
-    Z_f = Z - Z_p
-
-    return Z_f
+    inv_mp = np.linalg.pinv(mp)
+    coef = np.dot(inv_mp, zcolv)
+    coef = np.asarray(coef)
+    z_p = coef[0] * xx + coef[1] * yy + coef[2]
+    z_f = image_array - z_p
+    return z_f
 
 
 @lru_cache()
