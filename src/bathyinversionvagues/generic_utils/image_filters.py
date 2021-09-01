@@ -27,7 +27,7 @@ def detrend(image_array: np.ndarray) -> np.ndarray:
     """
     Performs detrending on a matrix
     :param image_array: entry image
-    :returns: clipped image
+    :returns: detrended image
     """
     shape1 = image_array.shape[1]
     shape2 = image_array.shape[0]
