@@ -51,9 +51,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._positions_y = None
         self.correlation_image_filters: ImageProcessingFilters = [(funDetrend_2d, []), (
             clipping, [self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
-        self.radon_image_filters: ImageProcessingFilters = [
-        (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
-        (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
+        self.radon_image_filters: SignalProcessingFilters = [
+            (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
+            (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
