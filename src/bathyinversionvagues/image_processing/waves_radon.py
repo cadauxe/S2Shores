@@ -266,10 +266,11 @@ class WavesRadon:
         index_max_variance_direction = None
         for result_index, sinogram_index in enumerate(directions):
             sinogram = self.sinograms[sinogram_index]
-            for processing_filter, filter_parameters in preprocessing_filters:
-                sinogram_tuned = WavesSinogram(
-                    np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T)
-            if not preprocessing_filters:
+            if preprocessing_filters:
+                for processing_filter, filter_parameters in preprocessing_filters:
+                    sinogram_tuned = WavesSinogram(
+                        np.array([processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T)
+            else:
                 sinogram_tuned = sinogram
             sinogram_variance = sinogram_tuned.variance
             if maximum_variance is None or maximum_variance < sinogram_variance:
