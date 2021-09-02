@@ -51,7 +51,6 @@ class LocalBathyEstimator(ABC):
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
-        self._position = (0., 0.)
         self._gravity = 0.
         self._waves_fields_estimations: WavesFieldsEstimations = []
 

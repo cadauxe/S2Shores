@@ -41,7 +41,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         sinogram must be computed
         """
         super().__init__(images_sequence, global_estimator, selected_directions)
-
         self._correlation_matrix: Optional[np.ndarray] = None
         self._correlation_image: Optional[WavesImage] = None
         self.radon_transform: Optional[WavesRadon] = None
@@ -194,7 +193,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :return: celerity in meter/second
         """
         rhomx = self._parameters.RESOLUTION.SPATIAL * find_dephasing(sinogram, wave_length)
-        duration = self.global_estimator.get_delta_time(None) * self._parameters.TEMPORAL_LAG
+        duration = self.global_estimator.get_delta_time(self._position) * self._parameters.TEMPORAL_LAG
         celerity = np.abs(rhomx / duration)
         return celerity
 
