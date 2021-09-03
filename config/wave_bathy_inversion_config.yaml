@@ -23,7 +23,6 @@ SM_LENGTH: 10 # smooth filter size - pixels - S2 : 10
 STEP_T: 0.05 # step for period sampling - seconds - 
 
 #spatial_dft:
-DT: 1.005 # mean temporal delay between two images - seconds 
 PROMINENCE_MAX_PEAK: 0.3 # find_peaks function tuning - search for the maximal peaks
 PROMINENCE_MULTIPLE_PEAKS: 0.1 # find_peaks function tuning - search for the kkeep max peaks
 UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period (S2 : False)

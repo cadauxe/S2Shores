@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Exceptions used in bathymetry estimation
+""" Exceptions used in bathymetry estimation
 
 :author: GIROS Alain
 :organization: CNES
@@ -32,4 +31,9 @@ class WavesEstimationError(WavesException):
 
 class NoRadonTransformError(WavesException):
     """ Exception raised when trying to access a non existent Radon transform
+    """
+
+
+class NoDeltaTimeProviderError(WavesException):
+    """ Exception raised when using bathymetry estimator without specifying a DeltaTimeProvider
     """

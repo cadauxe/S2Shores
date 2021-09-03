@@ -5,8 +5,9 @@
 :created: 05/05/2021
 """
 import time
-from typing import Dict, List, TYPE_CHECKING
 import warnings
+
+from typing import Dict, List, TYPE_CHECKING
 
 import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
@@ -65,10 +66,7 @@ class OrthoBathyEstimator:
             for j, y_sample in enumerate(self.sampled_ortho.y_samples):
                 self.parent_estimator.set_debug((x_sample, y_sample))
 
-                # FIXME: following line needed to deal with upside down distoshore files
-                corrected_yp = self.sampled_ortho.image.upper_left_y + \
-                    self.sampled_ortho.image.lower_right_y - y_sample
-                distance = self.parent_estimator.get_distoshore((x_sample, corrected_yp))
+                distance = self.parent_estimator.get_distoshore((x_sample, y_sample))
                 # do not compute on land
                 # FIXME: distance to shore test should take into account windows sizes
                 if distance > 0:
@@ -96,6 +94,7 @@ class OrthoBathyEstimator:
                 self.parent_estimator.print_estimations_debug(filtered_out_waves_fields,
                                                               'after estimations sorting')
 
+                # TODO: do this filtering in build_dataset()
                 # Keep only a limited number of waves fields and bathy estimations
                 while len(filtered_out_waves_fields) > nb_keep:
                     filtered_out_waves_fields.pop()
@@ -109,7 +108,8 @@ class OrthoBathyEstimator:
 
         return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE, nb_keep)
 
-    def compute_local_bathy(self, sub_tile_images, x_sample, y_sample) -> WavesFieldsEstimations:
+    def compute_local_bathy(self, sub_tile_images: List[np.ndarray],
+                            x_sample: float, y_sample: float) -> WavesFieldsEstimations:
 
         window = self.sampled_ortho.window_extent((x_sample, y_sample))
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
@@ -135,8 +135,10 @@ class OrthoBathyEstimator:
                 print(window_image.pixels)
 
         # Local bathymetry computation
+        # TODO: define the class to use only once for global estimator (no change between samples)
         local_bathy_estimator = local_bathy_estimator_factory(images_sequence,
                                                               self.parent_estimator)
+        local_bathy_estimator.set_position((x_sample, y_sample))
 
         try:
             local_bathy_estimator.run()
@@ -146,9 +148,7 @@ class OrthoBathyEstimator:
         # FIXME: decide what to do with metrics
         metrics = local_bathy_estimator.metrics
 
-        waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
-
-        return waves_fields_estimations
+        return local_bathy_estimator.waves_fields_estimations
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this estimator

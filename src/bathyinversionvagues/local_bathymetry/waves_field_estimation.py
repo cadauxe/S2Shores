@@ -21,17 +21,17 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
     estimation based on physical bathymetry.
     """
 
-    def __init__(self, delta_time: float, depth_precision: float, gravity: float,
-                 depth_estimation_method: str) -> None:
+    def __init__(self, delta_time: float, gravity: float,
+                 depth_estimation_method: str, depth_precision: float) -> None:
         """ Constructor
 
         :param delta_time: the time difference between the 2 images used for the estimation
-        :param depth_precision: precision (in meters) to be used for depth estimation
         :param gravity: the acceleration of gravity to use (m.s-2)
         :param depth_estimation_method: the name of the depth estimation method to use
+        :param depth_precision: precision (in meters) to be used for depth estimation
         :raises NotImplementedError: when the depth estimation method is unsupported
         """
-        super().__init__(depth_precision, gravity, depth_estimation_method)
+        super().__init__(gravity, depth_estimation_method, depth_precision)
 
         self._delta_time = delta_time
         self._delta_phase = np.nan

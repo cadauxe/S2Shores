@@ -23,7 +23,7 @@ from .shoresutils import funDetrend_2d, funSmooth2
 # TODO: add the possibility to apply several preprocessing filters
 class WavesImage():
     def __init__(self, pixels: np.ndarray, resolution: float,
-                 detrend: bool=True, smoothing: Optional[Tuple[int, int]] = None) -> None:
+                 detrend: bool = True, smoothing: Optional[Tuple[int, int]] = None) -> None:
         """ Constructor
 
         :param pixels: a 2D array containing an image over water
@@ -31,12 +31,11 @@ class WavesImage():
         :param detrend: True (default) if an optional detrend must be applied on the image.
         """
         self.resolution = resolution
-
         self.pixels = pixels
 
         # Detrending
         if detrend:
-            self.pixels = funDetrend_2d(self.pixels)
+            self.detrend()
 
         # Background filtering
         if smoothing is not None:
@@ -47,8 +46,8 @@ class WavesImage():
             # Remove tendency possibly introduced by smoothing, specially on the shore line
             self.pixels = funDetrend_2d(self.pixels)
 
-        # Disk masking
-        # self.pixels = self.pixels * self.circle_image
+            # Disk masking
+            # self.pixels = self.pixels * self.circle_image
 
     @property
     def sampling_frequency(self) -> float:
@@ -71,3 +70,6 @@ class WavesImage():
         """ :returns: The inscribed disk"""
         # FIXME: Ratio of the disk area on the chip area should be closer to PI/4 (0.02 difference)
         return circular_mask(self.pixels.shape[0], self.pixels.shape[1], self.pixels.dtype)
+
+    def detrend(self):
+        self.pixels = funDetrend_2d(self.pixels)
