@@ -8,14 +8,17 @@ Class performing bathymetry computation using temporal correlation method
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from munch import Munch
 
 import numpy as np
 import pandas
+from munch import Munch
 
-from ..image_processing.waves_image import WavesImage
+from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image_processing.waves_radon import SignalProcessingFilters
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..generic_utils.image_utils import cross_correlation
+from ..generic_utils.image_filters import detrend, clipping
+from ..generic_utils.signal_filters import filter_mean, remove_median
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -33,6 +36,13 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         super().__init__(images_sequence, global_estimator, selected_directions)
         self.create_sequence_time_series()
 
+    @property
+    def _parameters(self) -> Munch:
+        """
+        :return: munchified parameters
+        """
+        return self.local_estimator_params.TEMPORAL_METHOD
+
     def create_sequence_time_series(self) -> None:
         """
         This function computes an np.array of time series.
@@ -48,8 +58,10 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         random_indexes = np.random.randint(0, shape_x * shape_y, size=nb_random_points)
         positions_y, positions_x = np.meshgrid(np.linspace(1, shape_x, shape_x),
                                                np.linspace(1, shape_y, shape_y))
-        self._positions_x = np.reshape(positions_x.flatten()[random_indexes], (1, -1))
-        self._positions_y = np.reshape(positions_y.flatten()[random_indexes], (1, -1))
+
+        sampling_positions_x = np.reshape(positions_x.flatten()[random_indexes], (1, -1))
+        sampling_positions_y = np.reshape(positions_y.flatten()[random_indexes], (1, -1))
+        self._sampling_positions = (sampling_positions_x,sampling_positions_y)
         self._time_series = time_series[random_indexes, :]
 
     def get_correlation_matrix(self) -> np.ndarray:
@@ -89,22 +101,8 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         return WavesImage(projected_matrix, self._parameters.RESOLUTION.SPATIAL)
 
     @property
-    def _parameters(self) -> Munch:
+    def sampling_positions(self) -> np.ndarray:
         """
-        :return: munchified parameters
+        :return: tuple of sampling positions
         """
-        return self.local_estimator_params.TEMPORAL_METHOD
-
-    @property
-    def positions_x(self) -> np.ndarray:
-        """
-        :return: ndarray of x positions
-        """
-        return self._positions_x
-
-    @property
-    def positions_y(self) -> np.ndarray:
-        """
-        :return: ndarray of x positions
-        """
-        return self._positions_y
+        return self._sampling_positions

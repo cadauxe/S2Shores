@@ -10,17 +10,16 @@ method
 from abc import abstractmethod
 from typing import Optional, List, TYPE_CHECKING  # @NoMove
 
-from munch import Munch
 from scipy.interpolate import interp1d
 from scipy.signal import butter, find_peaks, sosfiltfilt
-
 import numpy as np
+from munch import Munch
 
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
-from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_utils import find_period, find_dephasing
 from ..generic_utils.signal_filters import filter_mean, remove_median
+from ..generic_utils.image_filters import detrend, clipping
 from .local_bathy_estimator import LocalBathyEstimator
 
 if TYPE_CHECKING:
@@ -87,16 +86,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     @abstractmethod
-    def positions_x(self) -> np.ndarray:
+    def sampling_positions(self) -> np.ndarray:
         """
         :return: ndarray of x positions
-        """
-
-    @property
-    @abstractmethod
-    def positions_y(self) -> np.ndarray:
-        """
-        :return: ndarray of y positions
         """
 
     @abstractmethod
@@ -124,10 +116,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         Angles are in degrees
         :return: the angles between all points selected to compute correlation
         """
-        xrawipool_ik_dist = np.tile(self.positions_x, (len(self.positions_x), 1)) - np.tile(
-            self.positions_x.T, (1, len(self.positions_x)))
-        yrawipool_ik_dist = np.tile(self.positions_y, (len(self.positions_y), 1)) - np.tile(
-            self.positions_y.T, (1, len(self.positions_y)))
+        xrawipool_ik_dist = np.tile(self.sampling_positions[0], (len(self.sampling_positions[0]), 1)) - np.tile(
+            self.sampling_positions[0].T, (1, len(self.sampling_positions[0])))
+        yrawipool_ik_dist = np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - np.tile(
+            self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
         return np.arctan2(xrawipool_ik_dist, yrawipool_ik_dist).T * 180 / np.pi
 
     def get_distances(self) -> np.ndarray:
@@ -136,8 +128,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         Be aware these distances are not in meter and have to be multiplied by spatial resolution
         :return: the distances between all points selected to compute correlation
         """
-        return np.sqrt(np.square((self.positions_x - self.positions_x.T)) + np.square(
-            (self.positions_y - self.positions_y.T)))
+        return np.sqrt(np.square((self.sampling_positions[0] - self.sampling_positions[0].T)) + np.square(
+            (self.sampling_positions[1] - self.sampling_positions[1].T)))
 
     @property
     def correlation_image(self) -> WavesImage:
@@ -193,7 +185,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :return: celerity in meter/second
         """
         rhomx = self._parameters.RESOLUTION.SPATIAL * find_dephasing(sinogram, wave_length)
-        duration = self.global_estimator.get_delta_time(self._position) * self._parameters.TEMPORAL_LAG
+        duration = self.global_estimator.get_delta_time(
+            self._position) * self._parameters.TEMPORAL_LAG
         celerity = np.abs(rhomx / duration)
         return celerity
 

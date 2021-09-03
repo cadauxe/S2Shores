@@ -72,6 +72,8 @@ class OrthoImage(ABC, OrthoLayout):
         :param col_stop: the image column where the rectangle stops
         :returns: the rectangle of pixels as an array
         """
+        print('band_id')
+        print(band_id)
         image_dataset = gdal.Open(str(self.get_image_file_path(band_id)))
         image = image_dataset.GetRasterBand(self.get_band_index_in_file(band_id))
         nb_cols = col_stop - col_start + 1

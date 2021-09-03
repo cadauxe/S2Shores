@@ -11,7 +11,8 @@
 """
 from typing import Optional, List, Tuple, Callable, Any  # @NoMove
 import numpy as np
-from .shoresutils import get_unity_roots, DFT_fr, filter_mean
+from ..generic_utils.signal_utils import get_unity_roots, DFT_fr
+from ..generic_utils.signal_filters import filter_mean
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
@@ -55,7 +56,7 @@ class WavesSinogram:
             nb_positive_coeffs = int(np.ceil(self.nb_samples / 2))
             result = np.fft.fft(self.sinogram)[0:nb_positive_coeffs]
         else:
-            unity_roots = get_unity_roots(self.nb_samples, frequencies)
+            unity_roots = get_unity_roots(frequencies, self.nb_samples)
             result = DFT_fr(self.sinogram, unity_roots)
         return result
 

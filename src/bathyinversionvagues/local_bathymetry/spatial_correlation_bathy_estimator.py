@@ -8,13 +8,16 @@ Class performing bathymetry computation using spatial correlation method
 """
 
 from typing import Optional, List, TYPE_CHECKING
-from munch import Munch
 
 import numpy as np
+from munch import Munch
 
-from ..image_processing.waves_image import WavesImage
+from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image_processing.waves_radon import SignalProcessingFilters
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..generic_utils.image_utils import normxcorr2
+from ..generic_utils.image_filters import detrend, clipping
+from ..generic_utils.signal_filters import filter_mean, remove_median
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -31,29 +34,23 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         super().__init__(images_sequence, global_estimator, selected_directions)
         self._shape_x, self._shape_y = self.images_sequence[0].pixels.shape
         self._number_frames = len(self.images_sequence)
-        self._positions_x = np.reshape(np.arange(self._shape_x), (1, -1))
-        self._positions_y = np.reshape(np.arange(self._shape_y), (1, -1))
+        sampling_positions_x = np.reshape(np.arange(self._shape_x), (1, -1))
+        sampling_positions_y = np.reshape(np.arange(self._shape_y), (1, -1))
+        self._sampling_positions = (sampling_positions_x,sampling_positions_y)
 
     @property
     def _parameters(self) -> Munch:
         """
         :return: munchified parameters
         """
-        return self.local_estimator_params.SPATIAL_METHOD
+        return self.local_estimator_params.TEMPORAL_METHOD
 
     @property
-    def positions_x(self) -> np.ndarray:
+    def sampling_positions(self) -> np.ndarray:
         """
-        :return: ndarray of x positions
+        :return: tuple of sampling positions
         """
-        return self._positions_x
-
-    @property
-    def positions_y(self) -> np.ndarray:
-        """
-        :return: ndarray of x positions
-        """
-        return self._positions_y
+        return self._sampling_positions
 
     def get_correlation_matrix(self) -> np.ndarray:
         """
