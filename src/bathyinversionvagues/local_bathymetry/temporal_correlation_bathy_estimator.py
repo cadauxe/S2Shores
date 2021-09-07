@@ -13,12 +13,11 @@ import numpy as np
 import pandas
 from munch import Munch
 
-from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import SignalProcessingFilters
+from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
+from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
 from ..generic_utils.image_utils import cross_correlation
-from ..generic_utils.image_filters import detrend, clipping
-from ..generic_utils.signal_filters import filter_mean, remove_median
+from ..result_display.debug_display import temporal_method_debug
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -106,3 +105,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         :return: tuple of sampling positions
         """
         return self._sampling_positions
+
+class TemporalCorrelationBathyEstimatorDebug(TemporalCorrelationBathyEstimator,LocalBathyEstimatorDebug):
+    def draw_results(self):
+        temporal_method_debug(self)

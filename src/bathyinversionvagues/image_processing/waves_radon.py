@@ -155,6 +155,26 @@ class WavesRadon:
                 sinograms_dict[direction] = self.get_sinogram(direction)
         return sinograms_dict
 
+    def get_sinograms_as_array(self, directions: Optional[np.ndarray] = None) -> SinogramsSetType:
+        """ returns the sinograms of the Radon transform as a np.ndarray of shape (len(sinogram),len(direction))
+
+        :param directions: the set of directions which must be provided in the output dictionary.
+                           When unspecified, all the directions of the Radon transform are returned.
+        :returns: np.ndarray with sinogram on each line
+        :raises NoRadonTransformError: when the Radon transform has not been computed yet
+        """
+        directions = self.directions if directions is None else directions
+        sinograms_array = None
+        if self.radon_transform is not None:
+            for index,direction in enumerate(directions):
+                sinogram = self.get_sinogram(direction)
+                if sinograms_array is None:
+                    sinograms_array = np.empty((len(sinogram.sinogram),len(directions)))
+                print(sinogram.sinogram.flatten().shape)
+                print(sinograms_array.shape)
+                sinograms_array[:,index]=sinogram.sinogram.flatten()
+        return sinograms_array
+
     def get_sinogram(self, direction: float) -> WavesSinogram:
         """ returns a new sinogram taken from the Radon transform at some direction
 
@@ -265,7 +285,7 @@ class WavesRadon:
 
     def get_sinogram_maximum_variance(self, processing_filters: SignalProcessingFilters = None,
                                       directions: Optional[np.ndarray] = None) \
-            -> Tuple[WavesSinogram, float]:
+            -> Tuple[WavesSinogram, float, np.ndarray]:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,
         and returns it together with the direction value.
         :param preprocessing_filters: a set a filter to apply on sinograms before computing maximum variance. Sinograms
@@ -277,4 +297,4 @@ class WavesRadon:
         directions = self.directions if directions is None else directions
         variances = self.get_sinograms_variances(processing_filters,directions)
         index_max_variance = np.argmax(variances)
-        return self.sinograms[directions[index_max_variance]], directions[index_max_variance]
+        return self.sinograms[directions[index_max_variance]], directions[index_max_variance], variances

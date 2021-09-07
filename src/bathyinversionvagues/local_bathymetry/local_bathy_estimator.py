@@ -151,3 +151,17 @@ class LocalBathyEstimator(ABC):
         :param step: A string to be printed as header of the debugging info.
         """
         self.global_estimator.print_estimations_debug(self._waves_fields_estimations, step)
+
+class LocalBathyEstimatorDebug(LocalBathyEstimator):
+
+    def run(self) -> None:
+        super().run(self)
+        if self.debug_sample:
+            self.draw_results()
+
+    @abstractmethod
+    def draw_results(self) -> None:
+        """
+        Save a diagram to help comprehension about result on current point
+        :return:
+        """
