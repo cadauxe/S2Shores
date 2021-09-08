@@ -106,6 +106,6 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         """
         return self._sampling_positions
 
-class TemporalCorrelationBathyEstimatorDebug(TemporalCorrelationBathyEstimator,LocalBathyEstimatorDebug):
+class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,TemporalCorrelationBathyEstimator):
     def draw_results(self):
         temporal_method_debug(self)

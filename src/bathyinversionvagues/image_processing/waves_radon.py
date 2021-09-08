@@ -170,8 +170,6 @@ class WavesRadon:
                 sinogram = self.get_sinogram(direction)
                 if sinograms_array is None:
                     sinograms_array = np.empty((len(sinogram.sinogram),len(directions)))
-                print(sinogram.sinogram.flatten().shape)
-                print(sinograms_array.shape)
                 sinograms_array[:,index]=sinogram.sinogram.flatten()
         return sinograms_array
 

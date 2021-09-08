@@ -155,7 +155,7 @@ class LocalBathyEstimator(ABC):
 class LocalBathyEstimatorDebug(LocalBathyEstimator):
 
     def run(self) -> None:
-        super().run(self)
+        super().run()
         if self.debug_sample:
             self.draw_results()
 

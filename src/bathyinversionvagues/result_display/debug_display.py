@@ -29,7 +29,7 @@ def temporal_method_debug(temporal_estimator : 'TemporalCorrelationBathyEstimato
     ax2 = fig.add_subplot(gs[0, 1])
     plt.imshow(temporal_estimator._correlation_matrix)
     (l1, l2) = np.shape(temporal_estimator._correlation_matrix)
-    index = np.argmax(temporal_estimator.variance)
+    index = np.argmax(temporal_estimator._variance)
     ax2.arrow(l1 // 2, l2 // 2,
               np.cos(np.deg2rad(temporal_estimator.direction_propagation)) * (l1 // 4),
               -np.sin(np.deg2rad(temporal_estimator.direction_propagation)) * (l1 // 4))
@@ -40,7 +40,7 @@ def temporal_method_debug(temporal_estimator : 'TemporalCorrelationBathyEstimato
     ax3.imshow(temporal_estimator.radon_transform.get_sinograms_as_array(), interpolation='nearest',
                aspect='auto', origin='lower')
     (l1, l2) = np.shape(temporal_estimator.radon_transform.get_sinograms_as_array())
-    plt.plot(l1 * temporal_estimator.variance / np.max(temporal_estimator.variance), 'r')
+    plt.plot(l1 * temporal_estimator._variance / np.max(temporal_estimator._variance), 'r')
     ax3.arrow(index, 0, 0, l1)
     plt.annotate('%d °' % temporal_estimator.direction_propagation, (index + 5, 10), color='orange')
     plt.title('Radon matrix')
@@ -52,22 +52,22 @@ def temporal_method_debug(temporal_estimator : 'TemporalCorrelationBathyEstimato
     right_limit = min(int(length_signal / 2 + temporal_estimator.wave_length / 2), length_signal)
     signal_period = temporal_estimator.sinogram_max_var.sinogram.flatten()[left_limit:right_limit]
     x = np.linspace(-length_signal // 2, length_signal // 2, length_signal)
-    y = temporal_estimator.sinogram_max_var.sinogram.flatten()
+    y = temporal_estimator._sinogram_max_var.sinogram.flatten()
     ax4.plot(x, y)
-    ax4.plot(x[temporal_estimator.wave_length_zeros], y[temporal_estimator.wave_length_zeros], 'ro')
-    ax4.annotate('L=%d m' % temporal_estimator.wave_length, (0, np.min(temporal_estimator.sinogram_max_var.sinogram.flatten())),
+    ax4.plot(x[temporal_estimator._wave_length_zeros], y[temporal_estimator._wave_length_zeros], 'ro')
+    ax4.annotate('L=%d m' % temporal_estimator.wave_length, (0, np.min(temporal_estimator._sinogram_max_var.sinogram.flatten())),
                  color='r')
     ax4.arrow(
         x[int(length_signal / 2 + temporal_estimator.wave_length / (2 * temporal_estimator._parameters.RESOLUTION.SPATIAL))],
-        np.min(temporal_estimator.sinogram_max_var.sinogram.flatten()), 0,
-        np.abs(np.min(temporal_estimator.sinogram_max_var.sinogram.flatten())) + np.max(
-            temporal_estimator.sinogram_max_var.sinogram.flatten()), linestyle='dashed',
+        np.min(temporal_estimator._sinogram_max_var.sinogram.flatten()), 0,
+        np.abs(np.min(temporal_estimator._sinogram_max_var.sinogram.flatten())) + np.max(
+            temporal_estimator._sinogram_max_var.sinogram.flatten()), linestyle='dashed',
         color='g')
     ax4.arrow(
         x[int(length_signal / 2 - temporal_estimator.wave_length / (2 * temporal_estimator._parameters.RESOLUTION.SPATIAL))],
-        np.min(temporal_estimator.sinogram_max_var.sinogram.flatten()), 0,
-        np.abs(np.min(temporal_estimator.sinogram_max_var.sinogram.flatten())) + np.max(
-            temporal_estimator.sinogram_max_var.sinogram.flatten()), linestyle='dashed',
+        np.min(temporal_estimator._sinogram_max_var.sinogram.flatten()), 0,
+        np.abs(np.min(temporal_estimator._sinogram_max_var.sinogram.flatten())) + np.max(
+            temporal_estimator._sinogram_max_var.sinogram.flatten()), linestyle='dashed',
         color='g')
     argmax = np.argmax(temporal_estimator._signal_period)
     ax4.plot(x[argmax + left_limit], signal_period[argmax], 'go')
@@ -79,10 +79,9 @@ def temporal_method_debug(temporal_estimator : 'TemporalCorrelationBathyEstimato
 
     # Fifth  diagram : Temporal reconstruction
     ax5 = fig.add_subplot(gs[3, :2])
-    ax5.plot(temporal_estimator.temporal_signal)
-    ax5.plot(temporal_estimator._temporal_arg_peaks_max, temporal_estimator.temporal_signal[temporal_estimator._temporal_arg_peaks_max], 'ro')
-    ax5.annotate('T={:.2f} s'.format(temporal_estimator.period), (0, np.min(temporal_estimator.temporal_signal)), color='r')
+    ax5.plot(temporal_estimator._temporal_signal)
+    ax5.plot(temporal_estimator._temporal_arg_peaks_max, temporal_estimator._temporal_signal[temporal_estimator._temporal_arg_peaks_max], 'ro')
+    ax5.annotate('T={:.2f} s'.format(temporal_estimator.period), (0, np.min(temporal_estimator._temporal_signal)), color='r')
     plt.title('Temporal reconstruction')
-    plt.show()
     fig.savefig(os.path.join(temporal_estimator._parameters.DEBUG_PATH,
                              f'Infos_point_{temporal_estimator._position[0]}_{temporal_estimator._position[1]}.png'), dpi=300)

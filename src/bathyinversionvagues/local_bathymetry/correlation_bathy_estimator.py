@@ -78,7 +78,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
             self.radon_transform.apply_filter(self.radon_image_filters)
-            self._sinogram_max_var, self._direction_propagation, self.variance = self.radon_transform.get_sinogram_maximum_variance()
+            self._sinogram_max_var, self._direction_propagation, self._variance = self.radon_transform.get_sinogram_maximum_variance()
             self.compute_wave_length()
             self.compute_celerity()
             self.temporal_reconstruction()
@@ -264,7 +264,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                          self._parameters.RESOLUTION.TIME_INTERPOLATION
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
-        self._temporal_signal = sosfiltfilt(sos_filter, self.temporal_signal)
+        self._temporal_signal = sosfiltfilt(sos_filter, self._temporal_signal)
 
     def compute_period(self) -> None:
         """
