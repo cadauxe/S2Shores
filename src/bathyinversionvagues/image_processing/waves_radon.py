@@ -156,7 +156,8 @@ class WavesRadon:
         return sinograms_dict
 
     def get_sinograms_as_array(self, directions: Optional[np.ndarray] = None) -> SinogramsSetType:
-        """ returns the sinograms of the Radon transform as a np.ndarray of shape (len(sinogram),len(direction))
+        """ returns the sinograms of the Radon transform as a np.ndarray of shape (len(sinogram),
+        len(direction))
 
         :param directions: the set of directions which must be provided in the output dictionary.
                            When unspecified, all the directions of the Radon transform are returned.
@@ -166,11 +167,11 @@ class WavesRadon:
         directions = self.directions if directions is None else directions
         sinograms_array = None
         if self.radon_transform is not None:
-            for index,direction in enumerate(directions):
+            for index, direction in enumerate(directions):
                 sinogram = self.get_sinogram(direction)
                 if sinograms_array is None:
-                    sinograms_array = np.empty((len(sinogram.sinogram),len(directions)))
-                sinograms_array[:,index]=sinogram.sinogram.flatten()
+                    sinograms_array = np.empty((len(sinogram.sinogram), len(directions)))
+                sinograms_array[:, index] = sinogram.sinogram.flatten()
         return sinograms_array
 
     def get_sinogram(self, direction: float) -> WavesSinogram:
@@ -224,7 +225,7 @@ class WavesRadon:
         nb_columns = signal_2d.shape[1]
         signal_dft_1d = np.empty((frequencies.size, nb_columns), dtype=np.complex128)
 
-        unity_roots = get_unity_roots(frequencies,signal_2d.shape[0])
+        unity_roots = get_unity_roots(frequencies, signal_2d.shape[0])
         for i in range(nb_columns):
             signal_dft_1d[:, i] = DFT_fr(signal_2d[:, i], unity_roots)
         return signal_dft_1d
@@ -286,13 +287,14 @@ class WavesRadon:
             -> Tuple[WavesSinogram, float, np.ndarray]:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,
         and returns it together with the direction value.
-        :param preprocessing_filters: a set a filter to apply on sinograms before computing maximum variance. Sinograms
-                           are left unmodified
+        :param preprocessing_filters: a set a filter to apply on sinograms before computing maximum
+        variance. Sinograms are left unmodified
         :param directions: a set of directions to look for maximum variance sinogram. If None, all
                            the directions in the radon transform are considered.
         :returns: the sinogram of maximum variance together with the corresponding direction.
         """
         directions = self.directions if directions is None else directions
-        variances = self.get_sinograms_variances(processing_filters,directions)
+        variances = self.get_sinograms_variances(processing_filters, directions)
         index_max_variance = np.argmax(variances)
-        return self.sinograms[directions[index_max_variance]], directions[index_max_variance], variances
+        return self.sinograms[directions[index_max_variance]], directions[
+            index_max_variance], variances
