@@ -33,12 +33,13 @@ LOCAL_BATHY_ESTIMATION_CLS_DEBUG = {'TEMPORAL_CORRELATION': TemporalCorrelationB
 
 def local_bathy_estimator_factory(images_sequence: List[WavesImage],
                                   estimator: 'BathyEstimator') -> LocalBathyEstimator:
-    """ builds an instance of a local bathymetry estimator class using the estimator estimator code
+    """ Build an instance of a local bathymetry estimator from its code, with potential debug
+    capabilities.
 
     :returns: an instance of a local bathymetry estimator suitable for running estimation
     """
-    local_bathy_estimator_cls = get_local_bathy_estimator_cls(
-        estimator.waveparams.WAVE_EST_METHOD, estimator.waveparams.DEBUG_MODE)
+    local_bathy_estimator_cls = get_local_bathy_estimator_cls(estimator.local_estimator_code,
+                                                              estimator.debug_sample)
     return local_bathy_estimator_cls(images_sequence, estimator)
 
 

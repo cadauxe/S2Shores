@@ -63,6 +63,12 @@ class BathyEstimator(ABC):
         """
 
     @property
+    def local_estimator_code(self) -> str:
+        """ :returns: the code of the local estimator to use with this global estimator
+        """
+        return self.waveparams.WAVE_EST_METHOD
+
+    @property
     def smoothing_requested(self) -> bool:
         """ :returns: True if both smoothing columns and lines parameters are non zero
         """
