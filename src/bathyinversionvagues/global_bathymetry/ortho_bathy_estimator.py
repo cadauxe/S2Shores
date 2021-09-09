@@ -72,8 +72,8 @@ class OrthoBathyEstimator:
                 if distance > 0:
                     in_water_points += 1
                     # computes the bathymetry at the specified position
-                    waves_fields_estimations = self.compute_local_bathy(
-                        sub_tile_images, x_sample, y_sample)
+                    waves_fields_estimations = self.compute_local_bathy(sub_tile_images,
+                                                                        x_sample, y_sample)
                 else:
                     waves_fields_estimations = []
 
@@ -113,8 +113,7 @@ class OrthoBathyEstimator:
 
         window = self.sampled_ortho.window_extent((x_sample, y_sample))
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
-        # FIXME: At least resolution should come from GeoTransform
-        resolution = self.parent_estimator.waveparams.DX  # in meter
+        resolution = self.sampled_ortho.image.spatial_resolution
 
         # Create the sequence of WavesImages (to be used by ALL estimators)
         images_sequence: List[WavesImage] = []
