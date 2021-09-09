@@ -11,8 +11,10 @@
 """
 from typing import Optional, List, Tuple, Callable, Any  # @NoMove
 import numpy as np
-from ..generic_utils.signal_utils import get_unity_roots, DFT_fr
+
 from ..generic_utils.signal_filters import filter_mean
+from ..generic_utils.signal_utils import get_unity_roots, DFT_fr
+
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
@@ -61,6 +63,11 @@ class WavesSinogram:
         return result
 
     def filter_mean(self, kernel_size: int) -> np.ndarray:
+        """ Apply a mean filter on the sinogram
+
+        :param kernel_size: the number of samples to consider in the filtering window
+        :returns: the mean filtered sinogram
+        """
         array = np.ndarray.flatten(self.sinogram)
         return filter_mean(array, kernel_size)
 
@@ -78,4 +85,6 @@ class WavesSinogram:
 
     @property
     def variance(self) -> float:
+        """ :returns: the variance of the sinogram
+        """
         return float(np.var(self.sinogram))

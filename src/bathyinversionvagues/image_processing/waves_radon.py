@@ -8,18 +8,18 @@
 :created: 4 mars 2021
 """
 from functools import lru_cache
+
+from ..generic_utils.directional_array import (DirectionalArray, linear_directions,
+                                               DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
+from ..generic_utils.signal_utils import DFT_fr, get_unity_roots
+from ..generic_utils.symmetric_radon import symmetric_radon
+from ..waves_exceptions import NoRadonTransformError
+from .waves_image import WavesImage
+from .waves_sinogram import WavesSinogram, SignalProcessingFilters
 from typing import Optional, Dict, Tuple  # @NoMove
 
 import numpy as np  # @NoMove
 
-from ..generic_utils.directional_array import (DirectionalArray, linear_directions,
-                                               DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
-from ..generic_utils.symmetric_radon import symmetric_radon
-from ..waves_exceptions import NoRadonTransformError
-
-from ..generic_utils.signal_utils import DFT_fr, get_unity_roots
-from .waves_image import WavesImage
-from .waves_sinogram import WavesSinogram, SignalProcessingFilters
 
 SinogramsSetType = Dict[float, WavesSinogram]
 
@@ -260,7 +260,8 @@ class WavesRadon:
             sinograms_powers[result_index] = sinogram.mean_power
         return sinograms_powers
 
-    def get_sinograms_variances(self, processing_filters: SignalProcessingFilters = None,
+    def get_sinograms_variances(self,
+                                processing_filters: Optional[SignalProcessingFilters] = None,
                                 directions: Optional[np.ndarray] = None) -> np.ndarray:
         """
         Return array of variance of each sinogram
@@ -282,7 +283,8 @@ class WavesRadon:
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 
-    def get_sinogram_maximum_variance(self, processing_filters: SignalProcessingFilters = None,
+    def get_sinogram_maximum_variance(self,
+                                      processing_filters: Optional[SignalProcessingFilters] = None,
                                       directions: Optional[np.ndarray] = None) \
             -> Tuple[WavesSinogram, float, np.ndarray]:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,

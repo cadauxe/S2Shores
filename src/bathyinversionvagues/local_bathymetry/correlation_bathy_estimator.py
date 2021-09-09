@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
-"""
-Abstract Class offering a common template for temporal correlation method and spatial correlation
-method
+""" Abstract Class offering a common template for temporal correlation method and spatial
+correlation method
 
-@author: erwinbergsma
-         gregoirethoumyre
-         degoulromain
+:author: Degoul Romain
+:organization: CNES
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
+:created: 18/06/2021
 """
-import numpy as np
 from abc import abstractmethod
+from typing import Optional, List, TYPE_CHECKING  # @NoMove
+
 from munch import Munch
 from scipy.interpolate import interp1d
 from scipy.signal import butter, find_peaks, sosfiltfilt
-from typing import Optional, List, TYPE_CHECKING  # @NoMove
 
-from .local_bathy_estimator import LocalBathyEstimator
+import numpy as np
+
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period, find_dephasing
@@ -22,13 +24,15 @@ from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
 from ..image_processing.waves_sinogram import WavesSinogram
 
+from .local_bathy_estimator import LocalBathyEstimator
+
+
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
 
 class CorrelationBathyEstimator(LocalBathyEstimator):
-    """
-    Class offering a framework for bathymetry computation based on correlation
+    """ Class offering a framework for bathymetry computation based on correlation
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
@@ -78,7 +82,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
             self.radon_transform.apply_filter(self.radon_image_filters)
-            self._sinogram_max_var, self._direction_propagation, self._variance = self.radon_transform.get_sinogram_maximum_variance()
+            self._sinogram_max_var, self._direction_propagation, self._variance = \
+                self.radon_transform.get_sinogram_maximum_variance()
             self.compute_wave_length()
             self.compute_celerity()
             self.temporal_reconstruction()
@@ -95,8 +100,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     @property
     @abstractmethod
     def _parameters(self) -> Munch:
-        """
-        :return: munchified parameters
+        """ :return: munchified parameters
         """
         # FIXME: Why not using parameters from global bathy estimatror (this is
         # the general principle)
@@ -104,19 +108,16 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     @property
     @abstractmethod
     def sampling_positions(self) -> np.ndarray:
-        """
-        :return: ndarray of x positions
+        """ :return: ndarray of x positions
         """
 
     @abstractmethod
     def get_correlation_matrix(self) -> np.ndarray:
-        """
-        :return: correlation matrix
+        """ :return: correlation matrix
         """
 
     def get_correlation_image(self) -> WavesImage:
-        """
-        :return: correlation image
+        """ :return: correlation image
         """
         return WavesImage(self.correlation_matrix, self._parameters.RESOLUTION.SPATIAL)
 
@@ -153,32 +154,31 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         return self._wave_length
 
     def get_angles(self) -> np.ndarray:
+        """ Get the angles between all points selected to compute correlation
+
+        :return: Angles (in degrees)
         """
-        Angles are in degrees
-        :return: the angles between all points selected to compute correlation
-        """
-        xrawipool_ik_dist = np.tile(self.sampling_positions[0],
-                                    (len(self.sampling_positions[0]), 1)) - np.tile(
-            self.sampling_positions[0].T, (1, len(self.sampling_positions[0])))
-        yrawipool_ik_dist = np.tile(self.sampling_positions[1],
-                                    (len(self.sampling_positions[1]), 1)) - np.tile(
-            self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
+        xrawipool_ik_dist = \
+            np.tile(self.sampling_positions[0], (len(self.sampling_positions[0]), 1)) - \
+            np.tile(self.sampling_positions[0].T, (1, len(self.sampling_positions[0])))
+        yrawipool_ik_dist = \
+            np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - \
+            np.tile(self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
         return np.arctan2(xrawipool_ik_dist, yrawipool_ik_dist).T * 180 / np.pi
 
     def get_distances(self) -> np.ndarray:
-        """
-        Distances between positions x and positions y
+        """ Distances between positions x and positions y
         Be aware these distances are not in meter and have to be multiplied by spatial resolution
+
         :return: the distances between all points selected to compute correlation
         """
         return np.sqrt(
-            np.square((self.sampling_positions[0] - self.sampling_positions[0].T)) + np.square(
-                (self.sampling_positions[1] - self.sampling_positions[1].T)))
+            np.square((self.sampling_positions[0] - self.sampling_positions[0].T)) +
+            np.square((self.sampling_positions[1] - self.sampling_positions[1].T)))
 
     @property
     def correlation_image(self) -> WavesImage:
-        """
-        :return: correlation image used to perform radon transformation
+        """ :return: correlation image used to perform radon transformation
         """
         if self._correlation_image is None:
             self._correlation_image = self.get_correlation_image()
@@ -192,8 +192,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def correlation_matrix(self) -> np.ndarray:
-        """
-        Be aware this matrix is projected before radon transformation in temporal correlation case
+        """ Be aware this matrix is projected before radon transformation in temporal correlation
+        case
+
         :return: correlation matrix used for temporal reconstruction
         """
         if self._correlation_matrix is None:
@@ -202,8 +203,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def angles(self) -> np.ndarray:
-        """
-        :return: angles in radian
+        """ :return: angles in radian
         """
         if self._angles is None:
             self._angles = self.get_angles()
@@ -211,23 +211,20 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def distances(self) -> np.ndarray:
-        """
-        :return: distances
+        """ :return: distances
         """
         if self._distances is None:
             self._distances = self.get_distances()
         return self._distances
 
     def compute_wave_length(self) -> None:
-        """
-        Wave length computation (in meter)
+        """ Wave length computation (in meter)
         """
         period, self._wave_length_zeros = find_period(self.sinogram_max_var.sinogram.flatten())
         self._wave_length = period * self._parameters.RESOLUTION.SPATIAL
 
     def compute_celerity(self) -> None:
-        """
-        Celerity computation (in meter/second)
+        """ Celerity computation (in meter/second)
         """
         self._dephasing, self._signal_period = find_dephasing(self.sinogram_max_var.sinogram,
                                                               self.wave_length)
@@ -237,12 +234,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._celerity = np.abs(rhomx / self._duration)
 
     def temporal_reconstruction(self) -> None:
+        """ Temporal reconstruction of the correlation signal following propagation direction
         """
-        Temporal reconstruction of the correlation signal following propagation direction
-        """
-        distances = np.cos(
-            np.radians(
-                self.direction_propagation - self.angles.T.flatten())) * self.distances.flatten() * self._parameters.RESOLUTION.SPATIAL
+        distances = np.cos(np.radians(self.direction_propagation - self.angles.T.flatten())) * \
+            self.distances.flatten() * self._parameters.RESOLUTION.SPATIAL
         time = distances / self.celerity
         time_unique, index_unique = np.unique(time, return_index=True)
         index_unique_sorted = np.argsort(time_unique)
@@ -255,21 +250,19 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._temporal_signal = interpolation(timevec)
 
     def temporal_reconstruction_tuning(self) -> None:
-        """
-        Tuning of temporal signal
+        """ Tuning of temporal signal
         """
         low_frequency = self._parameters.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-                        self._parameters.RESOLUTION.TIME_INTERPOLATION
+            self._parameters.RESOLUTION.TIME_INTERPOLATION
         high_frequency = self._parameters.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-                         self._parameters.RESOLUTION.TIME_INTERPOLATION
+            self._parameters.RESOLUTION.TIME_INTERPOLATION
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
         self._temporal_signal = sosfiltfilt(sos_filter, self._temporal_signal)
 
     def compute_period(self) -> None:
+        """Period computation (in second)
         """
-        Period computation (in second)
-        """
-        self._temporal_arg_peaks_max, _ = find_peaks(self._temporal_signal,
-                                                     distance=self._parameters.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
+        self._temporal_arg_peaks_max, _ = find_peaks(
+            self._temporal_signal, distance=self._parameters.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
         self._period = float(np.mean(np.diff(self._temporal_arg_peaks_max)))

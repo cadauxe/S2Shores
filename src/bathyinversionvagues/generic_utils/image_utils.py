@@ -5,17 +5,19 @@
 :author: Romain Degoul
 """
 
-import numpy as np
 from scipy.signal import fftconvolve
+
+import numpy as np
 
 
 def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
-    """
-    Compute the correlation of each line of image1 with each line of image2
-    This function is faster than using np.corrcoef which computes correlation between A&A,A&B,B&A,B&B
+    """ Compute the correlation of each line of image1 with each line of image2
+    This function is faster than using np.corrcoef which computes correlation between
+    A&A,A&B,B&A,B&B
+
     :param image1 : matrix image1
     :param image2 : matrix image2
-    :return : cross correlation matrix
+    :return: cross correlation matrix
     """
     # Rowwise mean of input arrays & subtract from input arrays themselves
     image1_c = image1 - image1.mean(1)[:, None]
@@ -29,13 +31,13 @@ def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
     return np.dot(image1_c, image2_c.T) / np.sqrt(np.dot(ss1[:, None], ss2[None]))
 
 
-def normxcorr2(template: np.ndarray, image: np.ndarray, mode: str = "full") -> np.ndarray:
-    """
-        Compute the correlation of a template with an image
-        :param template : matrix template
-        :param image : matrix image
-        :param mode : options among "full", "valid", "same"
-        :return : correlation matrix
+def normxcorr2(template: np.ndarray, image: np.ndarray, mode: str = 'full') -> np.ndarray:
+    """ Compute the correlation of a template with an image
+
+    :param template : matrix template
+    :param image : matrix image
+    :param mode : options among "full", "valid", "same"
+    :return: correlation matrix
     """
     ########################################################################################
     # Author: Ujash Joshi, University of Toronto, 2017                                     #
@@ -50,7 +52,7 @@ def normxcorr2(template: np.ndarray, image: np.ndarray, mode: str = "full") -> n
     if np.ndim(template) > np.ndim(image) or \
             len([i for i in range(np.ndim(template)) if
                  template.shape[i] > image.shape[i]]) > 0:
-        print("normxcorr2: TEMPLATE larger than IMG. Arguments may be swapped.")
+        print('normxcorr2: TEMPLATE larger than IMG. Arguments may be swapped.')
 
     template = template - np.mean(template)
     image = image - np.mean(image)
@@ -60,8 +62,8 @@ def normxcorr2(template: np.ndarray, image: np.ndarray, mode: str = "full") -> n
     ar = np.flipud(np.fliplr(template))
     out = fftconvolve(image, ar.conj(), mode=mode)
 
-    image = fftconvolve(np.square(image), a1, mode=mode) - np.square(fftconvolve(image, a1, mode=mode)) / (
-        np.prod(template.shape))
+    image = fftconvolve(np.square(image), a1, mode=mode) - \
+        np.square(fftconvolve(image, a1, mode=mode)) / (np.prod(template.shape))
 
     # Remove small machine precision errors after subtraction
     image[np.where(image < 0)] = 0

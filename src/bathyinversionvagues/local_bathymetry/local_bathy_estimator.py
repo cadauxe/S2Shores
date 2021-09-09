@@ -51,7 +51,7 @@ class LocalBathyEstimator(ABC):
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
-        self._position = (0.,0.)
+        self._position = (0., 0.)
         self._gravity = 0.
         self._waves_fields_estimations: WavesFieldsEstimations = []
 
@@ -152,6 +152,7 @@ class LocalBathyEstimator(ABC):
         """
         self.global_estimator.print_estimations_debug(self._waves_fields_estimations, step)
 
+
 class LocalBathyEstimatorDebug(LocalBathyEstimator):
 
     def run(self) -> None:
@@ -161,7 +162,5 @@ class LocalBathyEstimatorDebug(LocalBathyEstimator):
 
     @abstractmethod
     def draw_results(self) -> None:
-        """
-        Save a diagram to help comprehension about result on current point
-        :return:
+        """ Save a diagram to help comprehension about result on current point
         """

@@ -20,7 +20,7 @@ def clipping(image_array: np.ndarray, ratio_size: float) -> np.ndarray:
     """
     s1, s2 = np.shape(image_array)
     return image_array[int(s1 / 2 - ratio_size * s1 / 2):int(s1 / 2 + ratio_size * s1 / 2),
-           int(s2 / 2 - ratio_size * s2 / 2):int(s2 / 2 + ratio_size * s2 / 2)]
+                       int(s2 / 2 - ratio_size * s2 / 2):int(s2 / 2 + ratio_size * s2 / 2)]
 
 
 def detrend(image_array: np.ndarray) -> np.ndarray:

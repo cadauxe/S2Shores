@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
-"""
-Class performing bathymetry computation using temporal correlation method
+""" Class performing bathymetry computation using temporal correlation method
 
-@author: erwinbergsma
-         gregoirethoumyre
-         degoulromain
+:author: Degoul Romain
+:organization: CNES
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
+:created: 18/06/2021
 """
+from typing import Optional, List, TYPE_CHECKING  # @NoMove
 
-from typing import Optional, List, TYPE_CHECKING
+from munch import Munch
+import pandas
 
 import numpy as np
-import pandas
-from munch import Munch
 
+from ..generic_utils.image_utils import cross_correlation
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
-from ..generic_utils.image_utils import cross_correlation
 from ..result_display.debug_display import temporal_method_debug
+
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -26,7 +28,8 @@ if TYPE_CHECKING:
 class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        """
+        """ Constructor
+
         :param images_sequence: sequence of image used to compute bathymetry
         :param global_estimator: global estimator
         :param selected_directions: selected_directions: the set of directions onto which the
@@ -37,19 +40,17 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
 
     @property
     def _parameters(self) -> Munch:
-        """
-        :return: munchified parameters
+        """ :return: munchified parameters
         """
         return self.local_estimator_params.TEMPORAL_METHOD
 
     def create_sequence_time_series(self) -> None:
-        """
-        This function computes an np.array of time series.
+        """ This function computes an np.array of time series.
         To do this random points are selected within the sequence of image and a temporal serie
         is included in the np.array for each selected point
         """
         if self._parameters.PERCENTAGE_POINTS < 0 or self._parameters.PERCENTAGE_POINTS > 100:
-            raise ValueError("Percentage must be between 0 and 100")
+            raise ValueError('Percentage must be between 0 and 100')
         merge_array = np.dstack([image.pixels for image in self.images_sequence])
         shape_x, shape_y = self.images_sequence[0].pixels.shape
         time_series = np.reshape(merge_array, (shape_x * shape_y, -1))
@@ -60,20 +61,18 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
 
         sampling_positions_x = np.reshape(positions_x.flatten()[random_indexes], (1, -1))
         sampling_positions_y = np.reshape(positions_y.flatten()[random_indexes], (1, -1))
-        self._sampling_positions = (sampling_positions_x,sampling_positions_y)
+        self._sampling_positions = (sampling_positions_x, sampling_positions_y)
         self._time_series = time_series[random_indexes, :]
 
     def get_correlation_matrix(self) -> np.ndarray:
-        """
-        Compute temporal correlation matrix
+        """Compute temporal correlation matrix
         """
         return cross_correlation(self._time_series[:, self._parameters.TEMPORAL_LAG:],
                                  self._time_series[:, :-self._parameters.TEMPORAL_LAG])
 
     def get_correlation_image(self) -> WavesImage:
-        """
-        This function computes the correlation image by projecting the the correlation matrix on an
-        array where axis are distances and center is the point where distance is 0.
+        """ This function computes the correlation image by projecting the the correlation matrix
+        on an array where axis are distances and center is the point where distance is 0.
         If several points have same coordinates, the mean of correlation is taken for this position
         """
 
@@ -101,11 +100,13 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
 
     @property
     def sampling_positions(self) -> np.ndarray:
-        """
-        :return: tuple of sampling positions
+        """ :return: tuple of sampling positions
         """
         return self._sampling_positions
 
-class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,TemporalCorrelationBathyEstimator):
-    def draw_results(self):
+
+class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
+                                             TemporalCorrelationBathyEstimator):
+
+    def draw_results(self) -> None:
         temporal_method_debug(self)
