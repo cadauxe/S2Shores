@@ -21,7 +21,7 @@ class DisToShoreProvider(ABC, LocalizedDataProvider):
     """
 
     @abstractmethod
-    def get_distance(self, point: PointType) -> float:
+    def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance to shore of a point in kilometers.
 
         :param point: a tuple containing the X and Y coordinates in the SRS set for this provider
@@ -35,7 +35,7 @@ class InfinityDisToShoreProvider(DisToShoreProvider):
     point is always considered on water.
     """
 
-    def get_distance(self, point: PointType) -> float:
+    def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance to shore of a point in kilometers.
 
         :param point: a tuple containing the X and Y coordinates in the SRS set for this provider
@@ -62,7 +62,7 @@ class NetCDFDisToShoreProvider(DisToShoreProvider):
         self.provider_epsg_code = distoshore_epsg_code
         self._distoshore_xarray = xr.open_dataset(distoshore_file_path)
 
-    def get_distance(self, point: PointType) -> float:
+    def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance to shore of a point in kilometers.
 
         :param point: a tuple containing the X and Y coordinates in the SRS of the client

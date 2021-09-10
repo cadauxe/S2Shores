@@ -159,7 +159,7 @@ class BathyEstimator(ABC):
         self._distoshore_provider.client_epsg_code = self.image.epsg_code
 
     def get_distoshore(self, point: PointType) -> float:
-        return self._distoshore_provider.get_distance(point)
+        return self._distoshore_provider.get_distoshore(point)
 
     def set_gravity_provider(self, gravity_provider: GravityProvider) -> None:
         """ Sets the GravityProvider to use with this estimator
