@@ -11,8 +11,6 @@ import numpy as np
 
 from .waves_field_sample_bathymetry import WavesFieldSampleBathymetry
 
-KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
-
 
 class WavesFieldEstimation(WavesFieldSampleBathymetry):
     """ This class encapsulates the information estimating a waves field sample.
