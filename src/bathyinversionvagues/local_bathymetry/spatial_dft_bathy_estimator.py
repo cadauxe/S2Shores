@@ -23,6 +23,7 @@ from ..waves_fields_display import (display_curve, display_4curves,
                                     display_3curves, display_estimation)
 
 from .local_bathy_estimator import LocalBathyEstimator
+from .spatial_dft_waves_field_estimation import SpatialDFTWavesFieldEstimation
 
 
 if TYPE_CHECKING:
@@ -33,7 +34,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     """ A local bathymetry estimator estimating bathymetry from the DFT of the sinograms in
     radon transforms.
     """
-    # TODO: change detrend by passing a pre_processing function, with optional parameters
+
+    waves_field_estimation_cls = SpatialDFTWavesFieldEstimation
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:

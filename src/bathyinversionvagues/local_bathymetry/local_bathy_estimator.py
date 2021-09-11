@@ -11,7 +11,7 @@ time intervals.
 from abc import abstractmethod, ABC
 from copy import deepcopy
 
-from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
+from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
@@ -31,6 +31,12 @@ WavesFieldsEstimations = List[WavesFieldEstimation]
 class LocalBathyEstimator(ABC):
     """ Abstract base class of all local bathymetry estimators.
     """
+
+    @property
+    @classmethod
+    @abstractmethod
+    def waves_field_estimation_cls(cls) -> Type[WavesFieldEstimation]:
+        raise NotImplementedError()
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
@@ -115,10 +121,10 @@ class LocalBathyEstimator(ABC):
         :param wavelength: the wavelength of the waves field
         :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
         """
-        waves_field_estimation = WavesFieldEstimation(self.delta_time,
-                                                      self.gravity,
-                                                      self.local_estimator_params.DEPTH_EST_METHOD,
-                                                      self.local_estimator_params.D_PRECISION)
+        waves_field_estimation = self.waves_field_estimation_cls(self.delta_time,
+                                                                 self.gravity,
+                                                                 self.local_estimator_params.DEPTH_EST_METHOD,
+                                                                 self.local_estimator_params.D_PRECISION)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 

@@ -24,6 +24,7 @@ from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
 from ..image_processing.waves_sinogram import WavesSinogram
 
+from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
 
 
@@ -34,6 +35,8 @@ if TYPE_CHECKING:
 class CorrelationBathyEstimator(LocalBathyEstimator):
     """ Class offering a framework for bathymetry computation based on correlation
     """
+
+    waves_field_estimation_cls = CorrelationWavesFieldEstimation
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
