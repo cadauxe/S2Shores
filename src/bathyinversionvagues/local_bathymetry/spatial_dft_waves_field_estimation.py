@@ -19,19 +19,17 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
     It defines the estimation attributes specific to this estimator.
     """
 
-    def __init__(self, delta_time: float, gravity: float,
+    def __init__(self, gravity: float,
                  depth_estimation_method: str, depth_precision: float) -> None:
         """ Constructor
 
-        :param delta_time: the time difference between the 2 images used for the estimation
         :param gravity: the acceleration of gravity to use (m.s-2)
         :param depth_estimation_method: the name of the depth estimation method to use
         :param depth_precision: precision (in meters) to be used for depth estimation
-        :raises NotImplementedError: when the depth estimation method is unsupported
         """
         super().__init__(gravity, depth_estimation_method, depth_precision)
 
-        self._delta_time = delta_time
+        self._delta_time = np.nan
         self._delta_phase = np.nan
         self._delta_phase_ratio = np.nan
         self._energy_max = np.nan
@@ -60,6 +58,15 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
             self.period = abs(self._delta_time * (2 * np.pi / self._delta_phase))
 
     @property
+    def delta_time(self) -> float:
+        """ :returns: the time difference between the 2 images used for this estimation """
+        return self._delta_time
+
+    @delta_time.setter
+    def delta_time(self, value: float) -> None:
+        self._delta_time = value
+
+    @property
     def delta_phase_ratio(self) -> float:
         """ :returns: the ratio of the phase difference compared to ???? """
         return self._delta_phase_ratio
@@ -84,6 +91,7 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)
+        result += f'\ndelta time: {self.delta_time:5.2f} (s)'
         result += f'\ndelta phase: {self.delta_phase:5.2f} (rd)'
         result += f'  delta phase ratio: {self.delta_phase_ratio:5.2f} '
         result += f'\nenergy_max: {self.energy_max:5.2f} (???)'

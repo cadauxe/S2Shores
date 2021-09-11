@@ -36,8 +36,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     """ Class offering a framework for bathymetry computation based on correlation
     """
 
-    waves_field_estimation_cls = CorrelationWavesFieldEstimation
-
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ constructor
@@ -74,6 +72,24 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._duration: Optional[float] = None
         self._temporal_arg_peaks_max: Optional[np.ndarray] = None
         self._wave_length_zeros: Optional[np.ndarray] = None
+
+    def create_waves_field_estimation(self, direction: float, wavelength: float
+                                      ) -> CorrelationWavesFieldEstimation:
+        """ Creates the WavesFieldEstimation instance where the local estimator will store its
+        estimations.
+
+        :param direction: the propagation direction of the waves field (degrees measured clockwise
+                          from the North).
+        :param wavelength: the wavelength of the waves field
+        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
+        """
+        waves_field_estimation = CorrelationWavesFieldEstimation(self.gravity,
+                                                                 self.local_estimator_params.DEPTH_EST_METHOD,
+                                                                 self.local_estimator_params.D_PRECISION)
+        waves_field_estimation.direction = direction
+        waves_field_estimation.wavelength = wavelength
+
+        return waves_field_estimation
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method

@@ -35,8 +35,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     radon transforms.
     """
 
-    waves_field_estimation_cls = SpatialDFTWavesFieldEstimation
-
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
@@ -46,6 +44,24 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.peaks_dir = None
         self.directions = None
+
+    def create_waves_field_estimation(self, direction: float, wavelength: float
+                                      ) -> SpatialDFTWavesFieldEstimation:
+        """ Creates the WavesFieldEstimation instance where the local estimator will store its
+        estimations.
+
+        :param direction: the propagation direction of the waves field (degrees measured clockwise
+                          from the North).
+        :param wavelength: the wavelength of the waves field
+        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
+        """
+        waves_field_estimation = SpatialDFTWavesFieldEstimation(self.gravity,
+                                                                self.local_estimator_params.DEPTH_EST_METHOD,
+                                                                self.local_estimator_params.D_PRECISION)
+        waves_field_estimation.direction = direction
+        waves_field_estimation.wavelength = wavelength
+
+        return waves_field_estimation
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -191,6 +207,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             waves_field_estimation = self.create_waves_field_estimation(estimated_direction,
                                                                         wavelength)
 
+            waves_field_estimation.delta_time = self.delta_time
             waves_field_estimation.delta_phase = estimated_phase_shift
             waves_field_estimation.delta_phase_ratio = abs(waves_field_estimation.delta_phase) / \
                 phi_max[peak_wavenumber_index]

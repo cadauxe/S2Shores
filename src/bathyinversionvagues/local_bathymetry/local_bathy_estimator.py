@@ -32,12 +32,6 @@ class LocalBathyEstimator(ABC):
     """ Abstract base class of all local bathymetry estimators.
     """
 
-    @property
-    @classmethod
-    @abstractmethod
-    def waves_field_estimation_cls(cls) -> Type[WavesFieldEstimation]:
-        raise NotImplementedError()
-
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
@@ -111,6 +105,7 @@ class LocalBathyEstimator(ABC):
         its metrics in _metrics attribute.
         """
 
+    @abstractmethod
     def create_waves_field_estimation(self, direction: float, wavelength: float
                                       ) -> WavesFieldEstimation:
         """ Creates the WavesFieldEstimation instance where the local estimator will store its
@@ -121,14 +116,6 @@ class LocalBathyEstimator(ABC):
         :param wavelength: the wavelength of the waves field
         :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
         """
-        waves_field_estimation = self.waves_field_estimation_cls(self.delta_time,
-                                                                 self.gravity,
-                                                                 self.local_estimator_params.DEPTH_EST_METHOD,
-                                                                 self.local_estimator_params.D_PRECISION)
-        waves_field_estimation.direction = direction
-        waves_field_estimation.wavelength = wavelength
-
-        return waves_field_estimation
 
     def store_estimation(self, waves_field_estimation: WavesFieldEstimation) -> None:
         """ Store a single estimation into the estimations list
