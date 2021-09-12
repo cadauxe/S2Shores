@@ -11,7 +11,7 @@ time intervals.
 from abc import abstractmethod, ABC
 from copy import deepcopy
 
-from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
+from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 # TODO: create a true class encapsulating the estimations and providing room for scalar infos
 # (distoshore, gravity, delta_time.) as well as logics for handling dimensions.
-WavesFieldsEstimations = List[WavesFieldEstimation]
+WavesFieldsEstimationsList = List[WavesFieldEstimation]
 
 
 class LocalBathyEstimator(ABC):
@@ -53,7 +53,7 @@ class LocalBathyEstimator(ABC):
 
         self._position = (0., 0.)
         self._gravity = 0.
-        self._waves_fields_estimations: WavesFieldsEstimations = []
+        self._waves_fields_estimations: WavesFieldsEstimationsList = []
 
         self._delta_time = 0.
 
@@ -125,7 +125,7 @@ class LocalBathyEstimator(ABC):
         self._waves_fields_estimations.append(waves_field_estimation)
 
     @property
-    def waves_fields_estimations(self) -> WavesFieldsEstimations:
+    def waves_fields_estimations(self) -> WavesFieldsEstimationsList:
         """ :returns: a copy of the estimations recorded by this estimator.
                       Used for freeing references to memory expensive data (images, transform, ...)
         """

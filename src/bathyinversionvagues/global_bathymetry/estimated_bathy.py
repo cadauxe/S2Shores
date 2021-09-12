@@ -12,7 +12,7 @@ import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
 import xarray as xr  # @NoMove
 
-from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimations
+from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimationsList
 
 
 ALL_LAYERS_TYPES = ['NOMINAL', 'DEBUG']
@@ -125,7 +125,7 @@ class EstimatedBathy:
         self.y_samples = y_samples
 
     def store_sample(self, x_index: int, y_index: int,
-                     bathy_info: Tuple[WavesFieldsEstimations, float]) -> None:
+                     bathy_info: Tuple[WavesFieldsEstimationsList, float]) -> None:
         """ Store a bathymetry sample
 
         :param x_index: index of the sample along the X axis

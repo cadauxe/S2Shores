@@ -16,7 +16,7 @@ from ..data_providers.gravity_provider import ConstantGravityProvider, GravityPr
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_image import OrthoImage
 from ..image.sampled_ortho_image import SampledOrthoImage
-from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimations
+from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimationsList
 from ..waves_exceptions import NoDeltaTimeProviderError
 
 from .ortho_bathy_estimator import OrthoBathyEstimator
@@ -141,7 +141,7 @@ class BathyEstimator(ABC):
         """
         return self._debug_sample
 
-    def print_estimations_debug(self, waves_fields_estimations: WavesFieldsEstimations,
+    def print_estimations_debug(self, waves_fields_estimations: WavesFieldsEstimationsList,
                                 step: str) -> None:
         if self.debug_sample:
             print(f'estimations at step: {step}')
