@@ -15,7 +15,7 @@ from xarray import Dataset  # @NoMove
 
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
-from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimations
+from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..waves_exceptions import WavesException
 
@@ -72,8 +72,9 @@ class OrthoBathyEstimator:
                 if distance > 0:
                     in_water_points += 1
                     # computes the bathymetry at the specified position
-                    waves_fields_estimations = self.compute_local_bathy(sub_tile_images,
-                                                                        x_sample, y_sample)
+                    local_bathy_estimator = self._compute_local_bathy(sub_tile_images,
+                                                                      x_sample, y_sample)
+                    waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
                 else:
                     waves_fields_estimations = []
 
@@ -108,8 +109,8 @@ class OrthoBathyEstimator:
 
         return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE, nb_keep)
 
-    def compute_local_bathy(self, sub_tile_images: List[np.ndarray],
-                            x_sample: float, y_sample: float) -> WavesFieldsEstimations:
+    def _compute_local_bathy(self, sub_tile_images: List[np.ndarray],
+                             x_sample: float, y_sample: float) -> LocalBathyEstimator:
 
         window = self.sampled_ortho.window_extent((x_sample, y_sample))
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
@@ -139,10 +140,7 @@ class OrthoBathyEstimator:
         except WavesException as excp:
             warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
 
-        # FIXME: decide what to do with metrics
-        metrics = local_bathy_estimator.metrics
-
-        return local_bathy_estimator.waves_fields_estimations
+        return local_bathy_estimator
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this estimator
