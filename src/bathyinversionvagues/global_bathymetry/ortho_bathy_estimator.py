@@ -8,17 +8,19 @@ import time
 from typing import Dict, List, TYPE_CHECKING
 import warnings
 
+import numpy as np  # @NoMove
+from xarray import Dataset  # @NoMove
+
+
+from ..data_providers.delta_time_provider import NoDeltaTimeValueError
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
 from ..waves_exceptions import WavesException
+
 from .estimated_bathy import EstimatedBathy
-
-
-import numpy as np  # @NoMove
-from xarray import Dataset  # @NoMove
 
 
 if TYPE_CHECKING:
@@ -76,11 +78,15 @@ class OrthoBathyEstimator:
                 if distance > 0:
                     in_water_points += 1
                     # computes the bathymetry at the specified position
-                    local_bathy_estimator = self._compute_local_bathy(sub_tile_images,
-                                                                      x_sample, y_sample)
-                    local_bathy_estimator.validate_waves_fields()
-                    local_bathy_estimator.sort_waves_fields()
-                    waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
+                    try:
+                        local_bathy_estimator = self._compute_local_bathy(sub_tile_images,
+                                                                          x_sample, y_sample)
+                        local_bathy_estimator.validate_waves_fields()
+                        local_bathy_estimator.sort_waves_fields()
+                        waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
+                    except NoDeltaTimeValueError:
+                        bathy_estimations.delta_time_available = False
+                        waves_fields_estimations = []
                 else:
                     waves_fields_estimations = []
                 print(len(waves_fields_estimations))
