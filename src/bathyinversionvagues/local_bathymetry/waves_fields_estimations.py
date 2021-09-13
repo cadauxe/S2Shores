@@ -37,7 +37,7 @@ class WavesFieldsEstimations(list):
 
     @property
     def distance_to_shore(self) -> float:
-        """ :returns: The distance from this point to the nearest shore (km)"""
+        """ :returns: The distance from this estimation location to the nearest shore (km)"""
         return self._distance_to_shore
 
     @distance_to_shore.setter
@@ -45,8 +45,18 @@ class WavesFieldsEstimations(list):
         self._distance_to_shore = value
 
     @property
+    def gravity(self) -> float:
+        """ :returns: the acceleration of the gravity at this estimation location (m/s2)
+        """
+        return self._gravity
+
+    @gravity.setter
+    def gravity(self, value: float) -> None:
+        self._gravity = value
+
+    @property
     def data_available(self) -> bool:
-        """ :returns: True if data was available for doing the estimations """
+        """ :returns: True if data was available for doing the estimations, False otherwise """
         return self._data_available
 
     @data_available.setter
@@ -55,7 +65,7 @@ class WavesFieldsEstimations(list):
 
     @property
     def success(self) -> bool:
-        """ :returns: True if estimations were run successfully """
+        """ :returns: True if estimations were run successfully, False otherwise """
         return self._success
 
     @success.setter

@@ -5,13 +5,8 @@
 :created: 05/05/2021
 """
 import time
-import warnings
-
 from typing import Dict, List, TYPE_CHECKING
-
-import numpy as np  # @NoMove
-from xarray import Dataset  # @NoMove
-
+import warnings
 
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
@@ -19,8 +14,11 @@ from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
 from ..waves_exceptions import WavesException
-
 from .estimated_bathy import EstimatedBathy
+
+
+import numpy as np  # @NoMove
+from xarray import Dataset  # @NoMove
 
 
 if TYPE_CHECKING:
@@ -68,6 +66,11 @@ class OrthoBathyEstimator:
                 self.parent_estimator.set_debug((x_sample, y_sample))
 
                 distance = self.parent_estimator.get_distoshore((x_sample, y_sample))
+                gravity = self.parent_estimator.get_gravity((x_sample, y_sample), 0.)
+
+                bathy_estimations = WavesFieldsEstimations()
+                bathy_estimations.distance_to_shore = distance
+                bathy_estimations.gravity = gravity
                 # do not compute on land
                 # FIXME: distance to shore test should take into account windows sizes
                 if distance > 0:
@@ -102,8 +105,6 @@ class OrthoBathyEstimator:
 
                 # Store bathymetry sample
                 # TODO: retrieve right object directly from estimator
-                bathy_estimations = WavesFieldsEstimations()
-                bathy_estimations.distance_to_shore = distance
                 for wave_field in filtered_out_waves_fields:
                     bathy_estimations.append(wave_field)
                 self.parent_estimator.print_estimations_debug(bathy_estimations,
@@ -139,6 +140,7 @@ class OrthoBathyEstimator:
 
         # Local bathymetry computation
         # TODO: define the class to use only once for global estimator (no change between samples)
+        # FIXME: global inforamtion on this point should be passed to the factory (gravity, ...)
         local_bathy_estimator = local_bathy_estimator_factory(images_sequence,
                                                               self.parent_estimator)
         # FIXME: this is not clean

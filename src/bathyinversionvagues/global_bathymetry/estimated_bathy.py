@@ -20,6 +20,8 @@ ALL_LAYERS_TYPES = ['NOMINAL', 'DEBUG']
 DIMS_Y_X_NKEEP_TIME = ['y', 'x', 'kKeep', 'time']
 DIMS_Y_X_TIME = ['y', 'x', 'time']
 
+
+# TODO: introduce dtype (int for status) and initial value (np.nan or other)
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
 BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
     'sample_status': {'layer_type': ALL_LAYERS_TYPES,
@@ -88,12 +90,12 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'precision': 8,
                    'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
                              'name': 'Energy'}},
-    '_gravity': {'layer_type': ['DEBUG'],
-                 'layer_name': 'Gravity',
-                 'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
-                 'precision': 8,
-                 'attrs': {'Dimension': 'Acceleration [m/s2]',
-                           'name': 'Gravity'}},
+    'gravity': {'layer_type': ['DEBUG'],
+                'layer_name': 'Gravity',
+                'dimensions': DIMS_Y_X_TIME,
+                'precision': 8,
+                'attrs': {'Dimension': 'Acceleration [m/s2]',
+                          'name': 'Gravity'}},
     '_delta_time': {'layer_type': ['DEBUG'],
                     'layer_name': 'Delta Acquisition Time',
                     'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
@@ -202,6 +204,8 @@ class EstimatedBathy:
         else:
             nb_keep = layer_data.shape[2]
 
+        # TODO: move this logics inside WavesFieldsEstimations class :
+        # get_property(sample_property, nb_keep)
         if hasattr(waves_fields_estimations, sample_property):
             # retrieve property from the estimations header
             bathy_property = np.array(getattr(waves_fields_estimations, sample_property))
