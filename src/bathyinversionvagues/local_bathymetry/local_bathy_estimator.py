@@ -107,6 +107,25 @@ class LocalBathyEstimator(ABC):
         """
 
     @abstractmethod
+    def sort_waves_fields(self) -> None:
+        """  Sorts the waves fields on whatever criteria.
+        """
+
+    def validate_waves_fields(self) -> None:
+        """  Remove non physical waves fields
+        """
+        # Filter non physical waves fields and bathy estimations
+        filtered_out_waves_fields = [
+            field for field in self.waves_fields_estimations if
+            field.period >= self.local_estimator_params.MIN_T and
+            field.period <= self.local_estimator_params.MAX_T]
+        filtered_out_waves_fields = [
+            field for field in filtered_out_waves_fields if
+            field.linearity >= self.local_estimator_params.MIN_WAVES_LINEARITY and
+            field.linearity <= self.local_estimator_params.MAX_WAVES_LINEARITY]
+        self.waves_fields_estimations = filtered_out_waves_fields
+
+    @abstractmethod
     def create_waves_field_estimation(self, direction: float, wavelength: float
                                       ) -> WavesFieldEstimation:
         """ Creates the WavesFieldEstimation instance where the local estimator will store its

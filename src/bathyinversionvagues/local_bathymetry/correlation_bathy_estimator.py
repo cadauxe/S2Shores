@@ -116,6 +116,11 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
+    def sort_waves_fields(self) -> None:
+        """ Sort the waves fields estimations based on their energy max.
+        """
+        # FIXME: (ROMAIN) decide if some specific sorting is needed
+
     @property
     @abstractmethod
     def _parameters(self) -> Munch:

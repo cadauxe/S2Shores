@@ -105,6 +105,11 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self._metrics['radon_image1'] = self.radon_transforms[0]
         self._metrics['radon_image2'] = self.radon_transforms[1]
 
+    def sort_waves_fields(self) -> None:
+        """ Sort the waves fields estimations based on their energy max.
+        """
+        self.waves_fields_estimations.sort(key=lambda x: x.energy_max, reverse=True)
+
     def find_directions(self) -> None:
         """ Find an initial set of directions from the cross correlation spectrum of the radon
         transforms of the 2 images.

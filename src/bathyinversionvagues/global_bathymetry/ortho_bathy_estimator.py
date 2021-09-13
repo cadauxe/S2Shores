@@ -78,34 +78,21 @@ class OrthoBathyEstimator:
                     # computes the bathymetry at the specified position
                     local_bathy_estimator = self._compute_local_bathy(sub_tile_images,
                                                                       x_sample, y_sample)
+                    local_bathy_estimator.validate_waves_fields()
+                    local_bathy_estimator.sort_waves_fields()
                     waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
                 else:
                     waves_fields_estimations = []
-
-                # FIXME: does this processing depends on the local estimator ?
-                # Filter non physical waves fields and bathy estimations
-                filtered_out_waves_fields = [
-                    field for field in waves_fields_estimations if
-                    field.period >= self.parent_estimator.waveparams.MIN_T and
-                    field.period <= self.parent_estimator.waveparams.MAX_T]
-                filtered_out_waves_fields = [
-                    field for field in filtered_out_waves_fields if
-                    field.linearity >= self.parent_estimator.waveparams.MIN_WAVES_LINEARITY and
-                    field.linearity <= self.parent_estimator.waveparams.MAX_WAVES_LINEARITY]
-                # TODO: too high number of fields would provide a hint on poor quality measure
-                print(len(filtered_out_waves_fields))
-
-                # sort the waves fields by energy_max level
-                filtered_out_waves_fields.sort(key=lambda x: x.energy_max, reverse=True)
+                print(len(waves_fields_estimations))
 
                 # TODO: do this filtering in build_dataset()
                 # Keep only a limited number of waves fields and bathy estimations
-                while len(filtered_out_waves_fields) > nb_keep:
-                    filtered_out_waves_fields.pop()
+                while len(waves_fields_estimations) > nb_keep:
+                    waves_fields_estimations.pop()
 
                 # Store bathymetry sample
                 # TODO: retrieve right object directly from estimator
-                for wave_field in filtered_out_waves_fields:
+                for wave_field in waves_fields_estimations:
                     bathy_estimations.append(wave_field)
                 self.parent_estimator.print_estimations_debug(bathy_estimations,
                                                               'after estimations sorting')
