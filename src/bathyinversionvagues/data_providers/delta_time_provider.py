@@ -6,11 +6,22 @@
 """
 from abc import abstractmethod, ABC
 import datetime
-
 from typing import Dict, Any, List
 
 from ..image.image_geometry_types import PointType
+from ..waves_exceptions import WavesException
+
 from .localized_data_provider import LocalizedDataProvider
+
+
+class NoDeltaTimeValueError(WavesException):
+    """ Exception raised when a DeltaTimeProvider cannot provide a delta time at some point
+    """
+
+
+class NoDeltaTimeProviderError(WavesException):
+    """ Exception raised when using bathymetry estimator without specifying a DeltaTimeProvider
+    """
 
 
 class DeltaTimeProvider(ABC, LocalizedDataProvider):

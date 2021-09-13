@@ -10,14 +10,13 @@ from typing import List, Optional  # @NoMove
 from xarray import Dataset  # @NoMove
 from munch import Munch
 
-from ..data_providers.delta_time_provider import DeltaTimeProvider
+from ..data_providers.delta_time_provider import (DeltaTimeProvider, NoDeltaTimeProviderError)
 from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
 from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_image import OrthoImage
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
-from ..waves_exceptions import NoDeltaTimeProviderError
 
 from .ortho_bathy_estimator import OrthoBathyEstimator
 
