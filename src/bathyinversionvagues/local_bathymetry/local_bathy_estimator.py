@@ -18,6 +18,7 @@ import numpy as np
 from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from .waves_field_estimation import WavesFieldEstimation
+# from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -122,6 +123,8 @@ class LocalBathyEstimator(ABC):
 
         :param waves_field_estimation: a new estimation to store for this local bathy estimator
         """
+        if self._waves_fields_estimations is None:
+            raise ValueError('No waves_fields_estimations defined attribute yet')
         self._waves_fields_estimations.append(waves_field_estimation)
 
     @property
@@ -129,7 +132,13 @@ class LocalBathyEstimator(ABC):
         """ :returns: a copy of the estimations recorded by this estimator.
                       Used for freeing references to memory expensive data (images, transform, ...)
         """
+        if self._waves_fields_estimations is None:
+            raise ValueError('No waves_fields_estimations defined attribute yet')
         return deepcopy(self._waves_fields_estimations)
+
+    @waves_fields_estimations.setter
+    def waves_fields_estimations(self, estimations: WavesFieldsEstimationsList) -> None:
+        self._waves_fields_estimations = estimations
 
     @property
     def metrics(self) -> Dict[str, Any]:
@@ -143,7 +152,7 @@ class LocalBathyEstimator(ABC):
 
         :param step: A string to be printed as header of the debugging info.
         """
-        self.global_estimator.print_estimations_debug(self._waves_fields_estimations, step)
+        self.global_estimator.print_estimations_debug(self.waves_fields_estimations, step)
 
 
 class LocalBathyEstimatorDebug(LocalBathyEstimator):

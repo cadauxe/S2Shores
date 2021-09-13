@@ -6,13 +6,13 @@
 """
 from datetime import datetime
 
-from typing import Mapping, Hashable, Any, Dict, Tuple, List
+from typing import Mapping, Hashable, Any, Dict, List
 
 import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
 import xarray as xr  # @NoMove
 
-from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimationsList
+from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
 
 
 ALL_LAYERS_TYPES = ['NOMINAL', 'DEBUG']
@@ -124,16 +124,16 @@ class EstimatedBathy:
         self.x_samples = x_samples
         self.y_samples = y_samples
 
-    def store_sample(self, x_index: int, y_index: int,
-                     bathy_info: Tuple[WavesFieldsEstimationsList, float]) -> None:
-        """ Store a bathymetry sample
+    def store_estimations(self, x_index: int, y_index: int,
+                          bathy_estimations: WavesFieldsEstimations) -> None:
+        """ Store a set of bathymetry estimations at some location
 
         :param x_index: index of the sample along the X axis
         :param y_index: index of the sample along the Y axis
-        :param bathy_info: a tuple with the estimated sample values and the distance to shore
+        :param bathy_estimations: the whole set of bathy estimations data at one point.
         """
         # TODO: use the x and y coordinates instead of an index, for better modularity
-        self.estimated_bathy[y_index, x_index] = bathy_info
+        self.estimated_bathy[y_index, x_index] = bathy_estimations
 
     def build_dataset(self, layers_type: str, nb_keep: int) -> Dataset:
         """ Build an xarray DataSet containing the estimated bathymetry.
@@ -190,13 +190,13 @@ class EstimatedBathy:
     # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
                     y_index: int, x_index: int) -> None:
-        waves_fields_estimations, distance = self.estimated_bathy[y_index, x_index]
+        waves_fields_estimations = self.estimated_bathy[y_index, x_index]
         if layer_data.ndim == 2:
             nb_keep = 0
         else:
             nb_keep = layer_data.shape[2]
         if sample_property == 'distoshore':
-            bathy_property = np.array(distance)
+            bathy_property = np.array(waves_fields_estimations.distance_to_shore)
         else:
             bathy_property = np.full(nb_keep, np.nan)
             try:

@@ -17,6 +17,7 @@ from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
+from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
 from ..waves_exceptions import WavesException
 
 from .estimated_bathy import EstimatedBathy
@@ -78,6 +79,7 @@ class OrthoBathyEstimator:
                 else:
                     waves_fields_estimations = []
 
+                # FIXME: does this processing depends on the local estimator ?
                 # Filter non physical waves fields and bathy estimations
                 filtered_out_waves_fields = [
                     field for field in waves_fields_estimations if
@@ -92,8 +94,6 @@ class OrthoBathyEstimator:
 
                 # sort the waves fields by energy_max level
                 filtered_out_waves_fields.sort(key=lambda x: x.energy_max, reverse=True)
-                self.parent_estimator.print_estimations_debug(filtered_out_waves_fields,
-                                                              'after estimations sorting')
 
                 # TODO: do this filtering in build_dataset()
                 # Keep only a limited number of waves fields and bathy estimations
@@ -101,7 +101,15 @@ class OrthoBathyEstimator:
                     filtered_out_waves_fields.pop()
 
                 # Store bathymetry sample
-                estimated_bathy.store_sample(i, j, (filtered_out_waves_fields, distance))
+                # TODO: retrieve right object directly from estimator
+                bathy_estimations = WavesFieldsEstimations()
+                bathy_estimations.distance_to_shore = distance
+                for wave_field in filtered_out_waves_fields:
+                    bathy_estimations.append(wave_field)
+                self.parent_estimator.print_estimations_debug(bathy_estimations,
+                                                              'after estimations sorting')
+
+                estimated_bathy.store_estimations(i, j, bathy_estimations)
 
         total_points = self.sampled_ortho.nb_samples
         comput_time = time.time() - start
@@ -133,6 +141,8 @@ class OrthoBathyEstimator:
         # TODO: define the class to use only once for global estimator (no change between samples)
         local_bathy_estimator = local_bathy_estimator_factory(images_sequence,
                                                               self.parent_estimator)
+        # FIXME: this is not clean
+        # local_bathy_estimator.waves_fields_estimations = self.bathy_estimations
         local_bathy_estimator.set_position((x_sample, y_sample))
 
         try:
