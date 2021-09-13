@@ -22,6 +22,12 @@ DIMS_Y_X_TIME = ['y', 'x', 'time']
 
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
 BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
+    'sample_status': {'layer_type': ALL_LAYERS_TYPES,
+                      'layer_name': 'Status',
+                      'dimensions': DIMS_Y_X_TIME,
+                      'precision': 8,
+                      'attrs': {'Dimension': 'Flags',
+                                'name': 'Bathymetry estimation status'}},
     'depth': {'layer_type': ALL_LAYERS_TYPES,
               'layer_name': 'depth',
               'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -58,12 +64,12 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'precision': 8,
                    'attrs': {'Dimension': 'Per Meter [m-1]',
                              'name': 'wavenumber'}},
-    'distoshore': {'layer_type': ALL_LAYERS_TYPES,
-                   'layer_name': 'distoshore',
-                   'dimensions': DIMS_Y_X_TIME,
-                   'precision': 8,
-                   'attrs': {'Dimension': 'Kilometers [km]',
-                             'name': 'Distance_to_shore'}},
+    'distance_to_shore': {'layer_type': ALL_LAYERS_TYPES,
+                          'layer_name': 'distoshore',
+                          'dimensions': DIMS_Y_X_TIME,
+                          'precision': 8,
+                          'attrs': {'Dimension': 'Kilometers [km]',
+                                    'name': 'Distance_to_shore'}},
     'delta_celerity': {'layer_type': ALL_LAYERS_TYPES,
                        'layer_name': 'deltaC',
                        'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -195,9 +201,12 @@ class EstimatedBathy:
             nb_keep = 0
         else:
             nb_keep = layer_data.shape[2]
-        if sample_property == 'distoshore':
-            bathy_property = np.array(waves_fields_estimations.distance_to_shore)
+
+        if hasattr(waves_fields_estimations, sample_property):
+            # retrieve property from the estimations header
+            bathy_property = np.array(getattr(waves_fields_estimations, sample_property))
         else:
+            # retrieve property in the list of estimations
             bathy_property = np.full(nb_keep, np.nan)
             try:
                 for index, waves_field_estimations in enumerate(waves_fields_estimations):

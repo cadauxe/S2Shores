@@ -7,13 +7,23 @@
 :license: see LICENSE file
 :created: 11 sep 2021
 """
+from enum import IntEnum
+
 import numpy as np
 
 
+class SampleStatus(IntEnum):
+    SUCCESS = 0
+    FAIL = 1
+    ON_GROUND = 2
+    NO_DATA = 3
+
 # TODO: add logics for handling dimensions?
+
+
 class WavesFieldsEstimations(list):
-    """ This class gathers information relevant to some location, whatever the bathymetry estimators,
-    as well as a list of bathymetry estimations made at this location.
+    """ This class gathers information relevant to some location, whatever the bathymetry
+    estimators, as well as a list of bathymetry estimations made at this location.
     """
 
     def __init__(self) -> None:
@@ -23,6 +33,7 @@ class WavesFieldsEstimations(list):
         self._gravity = np.nan
         self._data_available = True
         self._location = None
+        self._success = True
 
     @property
     def distance_to_shore(self) -> float:
@@ -32,3 +43,34 @@ class WavesFieldsEstimations(list):
     @distance_to_shore.setter
     def distance_to_shore(self, value: float) -> None:
         self._distance_to_shore = value
+
+    @property
+    def data_available(self) -> bool:
+        """ :returns: True if data was available for doing the estimations """
+        return self._data_available
+
+    @data_available.setter
+    def data_available(self, value: bool) -> None:
+        self._data_available = value
+
+    @property
+    def success(self) -> bool:
+        """ :returns: True if estimations were run successfully """
+        return self._success
+
+    @success.setter
+    def success(self, value: bool) -> None:
+        self._success = value
+
+    @property
+    def sample_status(self) -> int:
+        """ :returns: a synthetic value giving the final estimation status
+        """
+        status = SampleStatus.SUCCESS
+        if self.distance_to_shore == 0.:
+            status = SampleStatus.ON_GROUND
+        elif not self.data_available:
+            status = SampleStatus.NO_DATA
+        elif not self.success:
+            status = SampleStatus.FAIL
+        return status.value
