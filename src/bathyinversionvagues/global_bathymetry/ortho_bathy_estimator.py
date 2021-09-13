@@ -13,6 +13,7 @@ from xarray import Dataset  # @NoMove
 
 
 from ..data_providers.delta_time_provider import NoDeltaTimeValueError
+from ..image.image_geometry_types import PointType
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimator
@@ -65,14 +66,13 @@ class OrthoBathyEstimator:
         in_water_points = 0
         for i, x_sample in enumerate(self.sampled_ortho.x_samples):
             for j, y_sample in enumerate(self.sampled_ortho.y_samples):
-                self.parent_estimator.set_debug((x_sample, y_sample))
+                estimation_point = (x_sample, y_sample)
+                self.parent_estimator.set_debug(estimation_point)
 
-                distance = self.parent_estimator.get_distoshore((x_sample, y_sample))
-                gravity = self.parent_estimator.get_gravity((x_sample, y_sample), 0.)
+                distance = self.parent_estimator.get_distoshore(estimation_point)
+                gravity = self.parent_estimator.get_gravity(estimation_point, 0.)
 
-                bathy_estimations = WavesFieldsEstimations()
-                bathy_estimations.distance_to_shore = distance
-                bathy_estimations.gravity = gravity
+                bathy_estimations = WavesFieldsEstimations(estimation_point, gravity, distance)
                 # do not compute on land
                 # FIXME: distance to shore test should take into account windows sizes
                 if distance > 0:
@@ -80,7 +80,7 @@ class OrthoBathyEstimator:
                     # computes the bathymetry at the specified position
                     try:
                         local_bathy_estimator = self._compute_local_bathy(sub_tile_images,
-                                                                          x_sample, y_sample)
+                                                                          (x_sample, y_sample))
                         local_bathy_estimator.validate_waves_fields()
                         local_bathy_estimator.sort_waves_fields()
                         waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
@@ -112,9 +112,9 @@ class OrthoBathyEstimator:
         return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE, nb_keep)
 
     def _compute_local_bathy(self, sub_tile_images: List[np.ndarray],
-                             x_sample: float, y_sample: float) -> LocalBathyEstimator:
+                             estimation_point: PointType) -> LocalBathyEstimator:
 
-        window = self.sampled_ortho.window_extent((x_sample, y_sample))
+        window = self.sampled_ortho.window_extent(estimation_point)
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
         resolution = self.sampled_ortho.image.spatial_resolution
 
@@ -138,7 +138,7 @@ class OrthoBathyEstimator:
                                                               self.parent_estimator)
         # FIXME: this is not clean
         # local_bathy_estimator.waves_fields_estimations = self.bathy_estimations
-        local_bathy_estimator.set_position((x_sample, y_sample))
+        local_bathy_estimator.set_position(estimation_point)
 
         try:
             local_bathy_estimator.run()

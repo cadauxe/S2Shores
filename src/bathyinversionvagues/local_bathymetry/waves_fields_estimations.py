@@ -11,6 +11,8 @@ from enum import IntEnum
 
 import numpy as np
 
+from ..image.image_geometry_types import PointType
+
 
 class SampleStatus(IntEnum):
     SUCCESS = 0
@@ -27,33 +29,31 @@ class WavesFieldsEstimations(list):
     estimators, as well as a list of bathymetry estimations made at this location.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, location: PointType, gravity: float, distance_to_shore: float) -> None:
         super().__init__()
 
-        self._distance_to_shore = np.nan
-        self._gravity = np.nan
+        self._distance_to_shore = distance_to_shore
+        self._gravity = gravity
+        self._location = location
+
         self._data_available = True
         self._delta_time_available = True
-        self._location = None
+
+    @property
+    def location(self) -> PointType:
+        """ :returns: The (X, Y) coordinates of this estimation location"""
+        return self._location
 
     @property
     def distance_to_shore(self) -> float:
         """ :returns: The distance from this estimation location to the nearest shore (km)"""
         return self._distance_to_shore
 
-    @distance_to_shore.setter
-    def distance_to_shore(self, value: float) -> None:
-        self._distance_to_shore = value
-
     @property
     def gravity(self) -> float:
         """ :returns: the acceleration of the gravity at this estimation location (m/s2)
         """
         return self._gravity
-
-    @gravity.setter
-    def gravity(self, value: float) -> None:
-        self._gravity = value
 
     @property
     def data_available(self) -> bool:
