@@ -7,8 +7,6 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import Optional, Tuple
-
 import numpy as np
 
 

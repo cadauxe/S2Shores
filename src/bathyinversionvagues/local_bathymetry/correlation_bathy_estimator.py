@@ -78,8 +78,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     def create_waves_field_estimation(self, direction: float, wavelength: float
                                       ) -> CorrelationWavesFieldEstimation:
-        """ Creates the WavesFieldEstimation instance where the local estimator will store its
-        estimations.
+        """ Creates the CorrelationWavesFieldEstimation instance where the local estimator will
+        store its estimations.
 
         :param direction: the propagation direction of the waves field (degrees measured clockwise
                           from the North).

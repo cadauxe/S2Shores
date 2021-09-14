@@ -50,8 +50,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
     def create_waves_field_estimation(self, direction: float, wavelength: float
                                       ) -> SpatialDFTWavesFieldEstimation:
-        """ Creates the WavesFieldEstimation instance where the local estimator will store its
-        estimations.
+        """ Creates the SpatialDFTWavesFieldEstimation instance where the local estimator will
+        store its estimations.
 
         :param direction: the propagation direction of the waves field (degrees measured clockwise
                           from the North).
