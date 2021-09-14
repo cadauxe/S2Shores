@@ -38,6 +38,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
 
         super().__init__()
 
+        # FIXME: make those attributes abstract ?
         self._gravity = gravity
         self._depth_precision = depth_precision
         self._depth_estimation_method = depth_estimation_method

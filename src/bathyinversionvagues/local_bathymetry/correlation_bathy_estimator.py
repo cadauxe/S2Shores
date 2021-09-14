@@ -86,9 +86,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param wavelength: the wavelength of the waves field
         :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
         """
-        waves_field_estimation = CorrelationWavesFieldEstimation(self.gravity,
-                                                                 self.local_estimator_params.DEPTH_EST_METHOD,
-                                                                 self.local_estimator_params.D_PRECISION)
+        waves_field_estimation = CorrelationWavesFieldEstimation(
+            self.gravity,
+            self.local_estimator_params.DEPTH_EST_METHOD,
+            self.local_estimator_params.D_PRECISION)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 
