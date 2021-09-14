@@ -92,3 +92,16 @@ class WavesFieldsEstimations(list):
         elif not self.success:
             status = SampleStatus.FAIL
         return status.value
+
+    def __str__(self) -> str:
+        result = f'+++++++++ Set of estimations made at: {self.location} \n'
+        result += f'  distance to shore: {self.distance_to_shore}   gravity: {self.gravity}\n'
+        result += f'  availability: '
+        result += f' (data: {self.data_available}, delta time: {self.delta_time_available})\n'
+        result += f'  STATUS: {self.sample_status}'
+        result += f' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME)\n'
+        result += f'{len(self)} estimations available:\n'
+        for index, estimation in enumerate(self):
+            result += f'---- estimation {index} ---- type: {type(estimation).__name__}\n'
+            result += str(estimation) + '\n'
+        return result

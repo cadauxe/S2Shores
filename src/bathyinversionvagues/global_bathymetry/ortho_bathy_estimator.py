@@ -87,6 +87,7 @@ class OrthoBathyEstimator:
                         local_bathy_estimator.run()
                         local_bathy_estimator.validate_waves_fields()
                         local_bathy_estimator.sort_waves_fields()
+                        local_bathy_estimator.print_estimations_debug('after estimations sorting')
                     except NoDeltaTimeValueError:
                         bathy_estimations.delta_time_available = False
                         bathy_estimations.clear()
@@ -101,8 +102,6 @@ class OrthoBathyEstimator:
                     bathy_estimations.pop()
 
                 # Store bathymetry sample
-                self.parent_estimator.print_estimations_debug(bathy_estimations,
-                                                              'after estimations sorting')
 
                 estimated_bathy.store_estimations(i, j, bathy_estimations)
 

@@ -140,13 +140,6 @@ class BathyEstimator(ABC):
         """
         return self._debug_sample
 
-    def print_estimations_debug(self, waves_fields_estimations: WavesFieldsEstimations,
-                                step: str) -> None:
-        if self.debug_sample:
-            print(f'estimations at step: {step}')
-            for waves_field in waves_fields_estimations:
-                print(waves_field)
-
 # ++++++++++++++++++++++++++++ External data providers +++++++++++++++++++++++++++++
 
     def set_distoshore_provider(self, distoshore_provider: DisToShoreProvider) -> None:
