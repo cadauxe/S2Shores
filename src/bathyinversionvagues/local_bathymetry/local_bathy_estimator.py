@@ -103,14 +103,15 @@ class LocalBathyEstimator(ABC):
         # Filter non physical waves fields and bathy estimations
         # We iterate over a copy of the list in order to keep waves_fields_etimations unaffected
         # on its specific attributes
-        for index, estimation in enumerate(list(self.waves_fields_estimations)):
+        # for index, estimation in enumerate(list(self.waves_fields_estimations)):
+        for estimation in list(self.waves_fields_estimations):
             if (estimation.period < self.local_estimator_params.MIN_T or
                     estimation.period > self.local_estimator_params.MAX_T):
-                self.waves_fields_estimations.pop(index)
-        for index, estimation in enumerate(list(self.waves_fields_estimations)):
+                self.waves_fields_estimations.remove(estimation)
+        for estimation in list(self.waves_fields_estimations):
             if (estimation.linearity < self.local_estimator_params.MIN_WAVES_LINEARITY or
                     estimation.linearity > self.local_estimator_params.MAX_WAVES_LINEARITY):
-                self.waves_fields_estimations.pop(index)
+                self.waves_fields_estimations.remove(estimation)
 
     @abstractmethod
     def create_waves_field_estimation(self, direction: float, wavelength: float
@@ -133,11 +134,9 @@ class LocalBathyEstimator(ABC):
 
     @property
     def waves_fields_estimations(self) -> WavesFieldsEstimations:
-        """ :returns: a copy of the estimations recorded by this estimator.
-                      Used for freeing references to memory expensive data (images, transform, ...)
+        """ :returns: the estimations recorded by this estimator.
         """
-        # TODO: verify that this deepcopy is necessary or not
-        return deepcopy(self._waves_fields_estimations)
+        return self._waves_fields_estimations
 
     @property
     def metrics(self) -> Dict[str, Any]:
@@ -151,7 +150,9 @@ class LocalBathyEstimator(ABC):
 
         :param step: A string to be printed as header of the debugging info.
         """
-        self.global_estimator.print_estimations_debug(self.waves_fields_estimations, step)
+        if self.debug_sample:
+            print(f'estimations at step: {step}')
+            print(self.waves_fields_estimations)
 
 
 class LocalBathyEstimatorDebug(LocalBathyEstimator):
