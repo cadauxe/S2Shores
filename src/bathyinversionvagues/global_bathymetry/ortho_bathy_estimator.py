@@ -16,7 +16,6 @@ from ..data_providers.delta_time_provider import NoDeltaTimeValueError
 from ..image.image_geometry_types import PointType
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
-from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
 from ..waves_exceptions import WavesException
@@ -79,27 +78,29 @@ class OrthoBathyEstimator:
                     in_water_points += 1
                     # computes the bathymetry at the specified position
                     try:
-                        local_bathy_estimator = self._compute_local_bathy(sub_tile_images,
-                                                                          (x_sample, y_sample))
+                        images_sequence = self._create_images_sequence(sub_tile_images,
+                                                                       estimation_point)
+                        # TODO: use selected_directions argument
+                        local_bathy_estimator = local_bathy_estimator_factory(images_sequence,
+                                                                              self.parent_estimator,
+                                                                              bathy_estimations)
+                        local_bathy_estimator.run()
                         local_bathy_estimator.validate_waves_fields()
                         local_bathy_estimator.sort_waves_fields()
-                        waves_fields_estimations = local_bathy_estimator.waves_fields_estimations
                     except NoDeltaTimeValueError:
                         bathy_estimations.delta_time_available = False
-                        waves_fields_estimations = []
-                else:
-                    waves_fields_estimations = []
-                print(len(waves_fields_estimations))
+                        bathy_estimations.clear()
+                    except WavesException as excp:
+                        warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
+                        bathy_estimations.clear()
+                print(len(bathy_estimations))
 
                 # TODO: do this filtering in build_dataset()
                 # Keep only a limited number of waves fields and bathy estimations
-                while len(waves_fields_estimations) > nb_keep:
-                    waves_fields_estimations.pop()
+                while len(bathy_estimations) > nb_keep:
+                    bathy_estimations.pop()
 
                 # Store bathymetry sample
-                # TODO: retrieve right object directly from estimator
-                for wave_field in waves_fields_estimations:
-                    bathy_estimations.append(wave_field)
                 self.parent_estimator.print_estimations_debug(bathy_estimations,
                                                               'after estimations sorting')
 
@@ -111,8 +112,8 @@ class OrthoBathyEstimator:
 
         return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE, nb_keep)
 
-    def _compute_local_bathy(self, sub_tile_images: List[np.ndarray],
-                             estimation_point: PointType) -> LocalBathyEstimator:
+    def _create_images_sequence(self, sub_tile_images: List[np.ndarray],
+                                estimation_point: PointType) -> List[WavesImage]:
 
         window = self.sampled_ortho.window_extent(estimation_point)
         # TODO: Link WavesImage to OrthoImage and use resolution from it?
@@ -130,22 +131,7 @@ class OrthoBathyEstimator:
                 print(f'Window in ortho image coordinate: {window}')
                 print(f'--{band_id} imagette {window_image.pixels.shape}:')
                 print(window_image.pixels)
-
-        # Local bathymetry computation
-        # TODO: define the class to use only once for global estimator (no change between samples)
-        # FIXME: global inforamtion on this point should be passed to the factory (gravity, ...)
-        local_bathy_estimator = local_bathy_estimator_factory(images_sequence,
-                                                              self.parent_estimator)
-        # FIXME: this is not clean
-        # local_bathy_estimator.waves_fields_estimations = self.bathy_estimations
-        local_bathy_estimator.set_position(estimation_point)
-
-        try:
-            local_bathy_estimator.run()
-        except WavesException as excp:
-            warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
-
-        return local_bathy_estimator
+        return images_sequence
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this estimator

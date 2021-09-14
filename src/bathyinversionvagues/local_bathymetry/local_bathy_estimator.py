@@ -15,18 +15,13 @@ from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
-from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from .waves_field_estimation import WavesFieldEstimation
-# from .waves_fields_estimations import WavesFieldsEstimations
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
-
-# TODO: create a true class encapsulating the estimations and providing room for scalar infos
-# (distoshore, gravity, delta_time.) as well as logics for handling dimensions.
-WavesFieldsEstimationsList = List[WavesFieldEstimation]
 
 
 class LocalBathyEstimator(ABC):
@@ -34,6 +29,7 @@ class LocalBathyEstimator(ABC):
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
@@ -52,23 +48,13 @@ class LocalBathyEstimator(ABC):
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
-        self._position = (0., 0.)
-        self._gravity = 0.
-        self._waves_fields_estimations: WavesFieldsEstimationsList = []
+        self._waves_fields_estimations = waves_fields_estimations
+        self._position = self._waves_fields_estimations.location
 
-        self._delta_time = 0.
+        self._delta_time = self.global_estimator.get_delta_time(
+            self._waves_fields_estimations.location)
 
         self._metrics: Dict[str, Any] = {}
-
-    def set_position(self, point: PointType) -> None:
-        """ Specify the cartographic position where this local bathy estimator is working and
-        updates the localized data (gravity, delta time) accordingly
-
-        :param point: a tuple (X, Y) of cartographic coordinates
-        """
-        self._position = point
-        self._gravity = self.global_estimator.get_gravity(self._position, 0.)
-        self._delta_time = self.global_estimator.get_delta_time(self._position)
 
     @property
     @abstractmethod
@@ -88,7 +74,7 @@ class LocalBathyEstimator(ABC):
     def gravity(self) -> float:
         """ :returns: the acceleration of the gravity at the working position of the estimator
         """
-        return self._gravity
+        return self._waves_fields_estimations.gravity
 
     # FIXME: At the moment only a pair of images is handled (list is limited to a singleton)
     @property
@@ -115,15 +101,16 @@ class LocalBathyEstimator(ABC):
         """  Remove non physical waves fields
         """
         # Filter non physical waves fields and bathy estimations
-        filtered_out_waves_fields = [
-            field for field in self.waves_fields_estimations if
-            field.period >= self.local_estimator_params.MIN_T and
-            field.period <= self.local_estimator_params.MAX_T]
-        filtered_out_waves_fields = [
-            field for field in filtered_out_waves_fields if
-            field.linearity >= self.local_estimator_params.MIN_WAVES_LINEARITY and
-            field.linearity <= self.local_estimator_params.MAX_WAVES_LINEARITY]
-        self.waves_fields_estimations = filtered_out_waves_fields
+        # We iterate over a copy of the list in order to keep waves_fields_etimations unaffected
+        # on its specific attributes
+        for index, estimation in enumerate(list(self.waves_fields_estimations)):
+            if (estimation.period < self.local_estimator_params.MIN_T or
+                    estimation.period > self.local_estimator_params.MAX_T):
+                self.waves_fields_estimations.pop(index)
+        for index, estimation in enumerate(list(self.waves_fields_estimations)):
+            if (estimation.linearity < self.local_estimator_params.MIN_WAVES_LINEARITY or
+                    estimation.linearity > self.local_estimator_params.MAX_WAVES_LINEARITY):
+                self.waves_fields_estimations.pop(index)
 
     @abstractmethod
     def create_waves_field_estimation(self, direction: float, wavelength: float
@@ -142,22 +129,15 @@ class LocalBathyEstimator(ABC):
 
         :param waves_field_estimation: a new estimation to store for this local bathy estimator
         """
-        if self._waves_fields_estimations is None:
-            raise ValueError('No waves_fields_estimations defined attribute yet')
         self._waves_fields_estimations.append(waves_field_estimation)
 
     @property
-    def waves_fields_estimations(self) -> WavesFieldsEstimationsList:
+    def waves_fields_estimations(self) -> WavesFieldsEstimations:
         """ :returns: a copy of the estimations recorded by this estimator.
                       Used for freeing references to memory expensive data (images, transform, ...)
         """
-        if self._waves_fields_estimations is None:
-            raise ValueError('No waves_fields_estimations defined attribute yet')
+        # TODO: verify that this deepcopy is necessary or not
         return deepcopy(self._waves_fields_estimations)
-
-    @waves_fields_estimations.setter
-    def waves_fields_estimations(self, estimations: WavesFieldsEstimationsList) -> None:
-        self._waves_fields_estimations = estimations
 
     @property
     def metrics(self) -> Dict[str, Any]:

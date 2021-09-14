@@ -26,6 +26,7 @@ from ..image_processing.waves_sinogram import WavesSinogram
 
 from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -37,6 +38,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ constructor
         :param images_sequence: sequence of image used to compute bathymetry
@@ -44,7 +46,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :param selected_directions: selected_directions: the set of directions onto which the
         sinogram must be computed
         """
-        super().__init__(images_sequence, global_estimator, selected_directions)
+        super().__init__(images_sequence, global_estimator, waves_fields_estimations,
+                         selected_directions)
         # Physical attributes
         self._direction_propagation: Optional[float] = None
         self._wave_length: Optional[float] = None

@@ -24,6 +24,7 @@ from ..waves_fields_display import (display_curve, display_4curves,
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_waves_field_estimation import SpatialDFTWavesFieldEstimation
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -36,9 +37,11 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
-        super().__init__(images_sequence, global_estimator, selected_directions)
+        super().__init__(images_sequence, global_estimator, waves_fields_estimations,
+                         selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []
 
