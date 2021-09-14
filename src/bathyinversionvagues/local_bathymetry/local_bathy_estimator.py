@@ -160,9 +160,9 @@ class LocalBathyEstimatorDebug(LocalBathyEstimator):
     def run(self) -> None:
         super().run()
         if self.debug_sample:
-            self.draw_results()
+            self.explore_results()
 
     @abstractmethod
-    def draw_results(self) -> None:
-        """ Save a diagram to help comprehension about result on current point
+    def explore_results(self) -> None:
+        """ Method called when estimator has run to allow results exploration for debugging purposes
         """

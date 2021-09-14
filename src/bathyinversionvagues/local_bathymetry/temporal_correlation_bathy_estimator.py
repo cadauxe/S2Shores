@@ -108,5 +108,5 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
 class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                              TemporalCorrelationBathyEstimator):
 
-    def draw_results(self) -> None:
+    def explore_results(self) -> None:
         temporal_method_debug(self)
