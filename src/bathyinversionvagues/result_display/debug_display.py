@@ -27,7 +27,9 @@ def temporal_method_debug(temporal_estimator : 'TemporalCorrelationBathyEstimato
 
     # Second diagram : correlation matrix
     ax2 = fig.add_subplot(gs[0, 1])
-    plt.imshow(temporal_estimator._correlation_matrix)
+    imin = np.min(temporal_estimator._correlation_matrix)
+    imax = np.max(temporal_estimator._correlation_matrix)
+    plt.imshow(temporal_estimator._correlation_matrix,norm=Normalize(vmin=imin, vmax=imax))
     (l1, l2) = np.shape(temporal_estimator._correlation_matrix)
     index = np.argmax(temporal_estimator._variance)
     ax2.arrow(l1 // 2, l2 // 2,

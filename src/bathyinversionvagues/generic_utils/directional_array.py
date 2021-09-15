@@ -140,7 +140,7 @@ class DirectionalArray:
     def values_at_index(self, direction_index: int) -> np.ndarray:
         return self.array[:, direction_index]
 
-    def set_at_index(self, direction: float, array: np.ndarray) -> None:
+    def set_at_direction(self, direction: float, array: np.ndarray) -> None:
         direction_index = self._find_index(direction)
         self.array[:, direction_index] = array
 
