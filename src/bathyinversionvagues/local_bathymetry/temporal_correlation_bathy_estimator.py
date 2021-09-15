@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-from typing import Optional, List, TYPE_CHECKING  # @NoMove
+from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
 
 from munch import Munch
 import pandas
@@ -26,6 +26,9 @@ if TYPE_CHECKING:
 
 
 class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
+    """ Class performing temporal correlation to compute bathymetry
+    """
+
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
@@ -99,7 +102,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         return WavesImage(projected_matrix, self._parameters.RESOLUTION.SPATIAL)
 
     @property
-    def sampling_positions(self) -> np.ndarray:
+    def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
         """ :return: tuple of sampling positions
         """
         return self._sampling_positions
@@ -107,6 +110,8 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
 
 class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                              TemporalCorrelationBathyEstimator):
+    """ Class performing debugging for temporal correlation method
+    """
 
     def draw_results(self) -> None:
         temporal_method_debug(self)

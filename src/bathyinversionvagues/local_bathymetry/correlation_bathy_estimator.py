@@ -9,7 +9,7 @@ correlation method
 :created: 18/06/2021
 """
 from abc import abstractmethod
-from typing import Optional, List, TYPE_CHECKING  # @NoMove
+from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
 
 from munch import Munch
 from scipy.interpolate import interp1d
@@ -44,11 +44,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         sinogram must be computed
         """
         super().__init__(images_sequence, global_estimator, selected_directions)
-        # Physical attributes
-        self._direction_propagation: Optional[float] = None
-        self._wave_length: Optional[float] = None
-        self._period: Optional[float] = None
-        self._celerity: Optional[float] = None
         # Processing attributes
         self._correlation_matrix: Optional[np.ndarray] = None
         self._correlation_image: Optional[WavesImage] = None
@@ -82,18 +77,20 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
             self.radon_transform.apply_filter(self.radon_image_filters)
-            self._sinogram_max_var, self._direction_propagation, self._variance = \
+            self._sinogram_max_var, direction_propagation, self._variance = \
                 self.radon_transform.get_sinogram_maximum_variance()
-            self.compute_wave_length()
-            self.compute_celerity()
-            self.temporal_reconstruction()
+            wave_length = self.compute_wave_length()
+            celerity = self.compute_celerity(wave_length)
+            self.temporal_reconstruction(celerity, direction_propagation)
             self.temporal_reconstruction_tuning()
-            self.compute_period()
-            waves_field_estimation = self.create_waves_field_estimation(self.direction_propagation,
-                                                                        self.wave_length)
-            waves_field_estimation.period = self.period
-            waves_field_estimation.celerity = self.celerity
+            period = self.compute_period()
+            waves_field_estimation = self.create_waves_field_estimation(direction_propagation,
+                                                                        wave_length)
+            waves_field_estimation.period = period
+            waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
+            print('celerity')
+            print(celerity)
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
@@ -107,8 +104,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     @abstractmethod
-    def sampling_positions(self) -> np.ndarray:
-        """ :return: ndarray of x positions
+    def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
+        """ :return: tuple (x,y) of nd.array positions
         """
 
     @abstractmethod
@@ -129,33 +126,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         preprocessing_filters: ImageProcessingFilters = []
         return preprocessing_filters
 
-    @property
-    def direction_propagation(self) -> float:
-        if self._direction_propagation is None:
-            raise AttributeError('No direction propagation computed yet')
-        return self._direction_propagation
-
-    @property
-    def celerity(self) -> float:
-        if self._celerity is None:
-            raise AttributeError('No celerity computed yet')
-        return self._celerity
-
-    @property
-    def period(self) -> float:
-        if self._period is None:
-            raise AttributeError('No period computed yet')
-        return self._period
-
-    @property
-    def wave_length(self) -> float:
-        if self._wave_length is None:
-            raise AttributeError('No wave length computed yet')
-        return self._wave_length
-
     def get_angles(self) -> np.ndarray:
         """ Get the angles between all points selected to compute correlation
-
         :return: Angles (in degrees)
         """
         xrawipool_ik_dist = \
@@ -186,6 +158,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def sinogram_max_var(self) -> WavesSinogram:
+        """ Maximum variance sinogram computation
+        :return Sinogram having maximum variance
+        :raises AttributeError: when the sinogram is not computed yet
+        """
         if self._sinogram_max_var is None:
             raise AttributeError('No sinogram computed yet')
         return self._sinogram_max_var
@@ -217,28 +193,30 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self._distances = self.get_distances()
         return self._distances
 
-    def compute_wave_length(self) -> None:
+    def compute_wave_length(self) -> float:
         """ Wave length computation (in meter)
         """
         period, self._wave_length_zeros = find_period(self.sinogram_max_var.sinogram.flatten())
-        self._wave_length = period * self._parameters.RESOLUTION.SPATIAL
+        wave_length = period * self._parameters.RESOLUTION.SPATIAL
+        return wave_length
 
-    def compute_celerity(self) -> None:
+    def compute_celerity(self, wave_length: float) -> float:
         """ Celerity computation (in meter/second)
         """
         self._dephasing, self._signal_period = find_dephasing(self.sinogram_max_var.sinogram,
-                                                              self.wave_length)
+                                                              wave_length)
         rhomx = self._parameters.RESOLUTION.SPATIAL * self._dephasing
         self._duration = self.global_estimator.get_delta_time(
             self._position)
-        self._celerity = np.abs(rhomx / self._duration)
+        celerity = np.abs(rhomx / self._duration)
+        return celerity
 
-    def temporal_reconstruction(self) -> None:
+    def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> None:
         """ Temporal reconstruction of the correlation signal following propagation direction
         """
-        distances = np.cos(np.radians(self.direction_propagation - self.angles.T.flatten())) * \
+        distances = np.cos(np.radians(direction_propagation - self.angles.T.flatten())) * \
             self.distances.flatten() * self._parameters.RESOLUTION.SPATIAL
-        time = distances / self.celerity
+        time = distances / celerity
         time_unique, index_unique = np.unique(time, return_index=True)
         index_unique_sorted = np.argsort(time_unique)
         time_unique_sorted = time_unique[index_unique_sorted]
@@ -260,9 +238,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                             btype='bandpass', output='sos')
         self._temporal_signal = sosfiltfilt(sos_filter, self._temporal_signal)
 
-    def compute_period(self) -> None:
+    def compute_period(self) -> float:
         """Period computation (in second)
         """
         self._temporal_arg_peaks_max, _ = find_peaks(
             self._temporal_signal, distance=self._parameters.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
-        self._period = float(np.mean(np.diff(self._temporal_arg_peaks_max)))
+        period = float(np.mean(np.diff(self._temporal_arg_peaks_max)))
+        return period
