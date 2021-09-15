@@ -39,12 +39,6 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         self._sampling_positions = (sampling_positions_x, sampling_positions_y)
 
     @property
-    def _parameters(self) -> Munch:
-        """ :return: munchified parameters
-        """
-        return self.local_estimator_params.TEMPORAL_METHOD
-
-    @property
     def sampling_positions(self) -> np.ndarray:
         """ :return: tuple of sampling positions
         """
@@ -54,12 +48,11 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         """ :return: correlation matrix
         """
         merge_array = np.dstack([image.pixels for image in self.images_sequence])
+        temporal_lag = self.local_estimator_params.TEMPORAL_LAG
         full_corr = normxcorr2(merge_array[:, :, 0].T,
-                               merge_array[:, :, self._parameters.TEMPORAL_LAG].T)
-        for index in np.arange(self._parameters.TEMPORAL_LAG, self._number_frames -
-                               self._parameters.TEMPORAL_LAG,
-                               self._parameters.TEMPORAL_LAG):
+                               merge_array[:, :, temporal_lag].T)
+        for index in np.arange(temporal_lag, self._number_frames - temporal_lag, temporal_lag):
             corr = normxcorr2(merge_array[:, :, index].T,
-                              merge_array[:, :, index + self._parameters.TEMPORAL_LAG].T)
+                              merge_array[:, :, index + temporal_lag].T)
             full_corr = full_corr + corr
         return full_corr
