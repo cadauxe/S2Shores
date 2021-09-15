@@ -15,6 +15,7 @@ import numpy as np
 from ..generic_utils.image_utils import normxcorr2
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -26,6 +27,7 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 

@@ -19,6 +19,7 @@ from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
 from ..result_display.debug_display import temporal_method_debug
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -30,6 +31,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
@@ -38,7 +40,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         :param selected_directions: selected_directions: the set of directions onto which the
         sinogram must be computed
         """
-        super().__init__(images_sequence, global_estimator, selected_directions)
+        super().__init__(images_sequence, global_estimator, waves_fields_estimations, selected_directions)
         self.create_sequence_time_series()
 
     def create_sequence_time_series(self) -> None:
