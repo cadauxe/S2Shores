@@ -262,9 +262,15 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # Pick the maxima
 
         if self.debug_sample:
-            self._dump_cross_correl_spectrum(sino1_fft, phase_shift, phase_shift_thresholded,
-                                             combined_amplitude, total_spectrum_normalized,
-                                             amplitude_sino1, total_spectrum)
+            self._metrics['sino1_fft'] = sino1_fft
+            self._metrics['phase_shift'] = phase_shift
+            self._metrics['phase_shift_thresholded'] = phase_shift_thresholded
+            self._metrics['combined_amplitude'] = combined_amplitude
+            self._metrics['total_spectrum_normalized'] = total_spectrum_normalized
+            self._metrics['amplitude_sino1'] = amplitude_sino1
+            self._metrics['total_spectrum'] = total_spectrum
+
+            self._dump_cross_correl_spectrum()
 
         return phase_shift_thresholded, total_spectrum, total_spectrum_normalized
 
@@ -314,14 +320,19 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                           self.global_estimator.depth_min,
                           self.gravity)
 
-    def _dump_cross_correl_spectrum(self, sino1_fft, phase_shift, phase_shift_thresholded,
-                                    combined_amplitude, total_spectrum_normalized, amplitude_sino1,
-                                    total_spectrum) -> None:
-        dump_numpy_variable(self.radon_transforms[0].pixels, 'Radon transform 1 input pixels')
-        dump_numpy_variable(
-            self.radon_transforms[0].radon_transform.get_as_array(),
-            'Radon transform 1')
-        dump_numpy_variable(self.directions, 'Directions used for radon transform 1')
+    def _dump_cross_correl_spectrum(self) -> None:
+        sino1_fft = self._metrics['sino1_fft']
+        phase_shift = self._metrics['phase_shift']
+        phase_shift_thresholded = self._metrics['phase_shift_thresholded']
+        combined_amplitude = self._metrics['combined_amplitude']
+        total_spectrum_normalized = self._metrics['total_spectrum_normalized']
+        amplitude_sino1 = self._metrics['amplitude_sino1']
+        total_spectrum = self._metrics['total_spectrum']
+
+        dump_numpy_variable(self.radon_transforms[0].pixels, 'input pixels for Radon transform 1 ')
+        dump_numpy_variable(self.radon_transforms[0].radon_transform.get_as_array(),
+                            'Radon transform 1')
+        dump_numpy_variable(self.directions, 'Directions used for Radon transform 1')
         dump_numpy_variable(sino1_fft, 'sinoFFT1')
         dump_numpy_variable(phase_shift, 'phase shift')
         for index in range(0, phase_shift.shape[1]):
