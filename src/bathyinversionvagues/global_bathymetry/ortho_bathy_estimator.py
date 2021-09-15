@@ -50,7 +50,7 @@ class OrthoBathyEstimator:
         start_load = time.time()
         # nbkeep shall be understood as a filtering in terms of the number of proposed samples.
         # Will disappear when true Waves Fields will be identified and implemented.
-        nb_keep = self.parent_estimator.waveparams.NKEEP
+        nb_keep = self.parent_estimator.nb_max_waves_fields
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
                                          self.sampled_ortho.image.acquisition_time)
@@ -86,7 +86,7 @@ class OrthoBathyEstimator:
         comput_time = time.time() - start
         print(f'Computed {in_water_points}/{total_points} points in: {comput_time:.2f} s')
 
-        return estimated_bathy.build_dataset(self.parent_estimator.waveparams.LAYERS_TYPE, nb_keep)
+        return estimated_bathy.build_dataset(self.parent_estimator.layers_type, nb_keep)
 
     def _run_local_bathy_estimator(self, sub_tile_images: List[np.ndarray],
                                    estimation_point: PointType) -> WavesFieldsEstimations:
@@ -148,7 +148,7 @@ class OrthoBathyEstimator:
                  'institution': 'CNES-LEGOS'}
 
         # metadata from the parameters
-        infos['waveEstimationMethod'] = self.parent_estimator.waveparams.WAVE_EST_METHOD
-        infos['ChainVersions'] = self.parent_estimator.waveparams.CHAINS_VERSIONS
+        infos['waveEstimationMethod'] = self.parent_estimator.local_estimator_code
+        infos['ChainVersions'] = self.parent_estimator.chains_versions
 
         return infos

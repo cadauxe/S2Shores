@@ -5,9 +5,7 @@
 :created: 17/05/2021
 """
 from abc import ABC, abstractmethod
-from typing import List, Optional  # @NoMove
 
-from xarray import Dataset  # @NoMove
 from munch import Munch
 
 from ..data_providers.delta_time_provider import (DeltaTimeProvider, NoDeltaTimeProviderError)
@@ -16,12 +14,14 @@ from ..data_providers.gravity_provider import ConstantGravityProvider, GravityPr
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_image import OrthoImage
 from ..image.sampled_ortho_image import SampledOrthoImage
-from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
-
+from .bathy_estimator_parameters import BathyEstimatorParameters
 from .ortho_bathy_estimator import OrthoBathyEstimator
+from typing import List, Optional  # @NoMove
+
+from xarray import Dataset  # @NoMove
 
 
-class BathyEstimator(ABC):
+class BathyEstimator(ABC, BathyEstimatorParameters):
     """ Management of bathymetry computation and parameters on a single product. Computation
     is split in several cartographic tiles, which must be run separately, either in parallel or
     sequentially.
@@ -35,9 +35,9 @@ class BathyEstimator(ABC):
         :param wave_params: parameters for the global and local bathymetry estimators
         :param nb_subtiles_max: Nb of subtiles for bathymetry estimation
         """
+        super().__init__(wave_params)
         # Store arguments in attributes for further use
         self.image = image
-        self.waveparams = wave_params
 
         self._distoshore_provider: DisToShoreProvider
         self.set_distoshore_provider(InfinityDisToShoreProvider())
@@ -50,22 +50,11 @@ class BathyEstimator(ABC):
 
         # Create subtiles onto which bathymetry estimation will be done
         self.subtiles = SampledOrthoImage.build_subtiles(image, nb_subtiles_max,
-                                                         self.waveparams.DXP, self.waveparams.DYP,
+                                                         self.sampling_step_x,
+                                                         self.sampling_step_y,
                                                          self.measure_extent)
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
-
-    @property
-    @abstractmethod
-    def bands_identifiers(self) -> List[str]:
-        """ :returns: the spectral band identifiers in the product to use for bathymetry estimation
-        """
-
-    @property
-    def local_estimator_code(self) -> str:
-        """ :returns: the code of the local estimator to use with this global estimator
-        """
-        return self.waveparams.WAVE_EST_METHOD
 
     @property
     def smoothing_requested(self) -> bool:
@@ -74,23 +63,17 @@ class BathyEstimator(ABC):
         return self.smoothing_columns_size != 0 and self.smoothing_lines_size != 0
 
     @property
-    def smoothing_columns_size(self) -> int:
-        """ :returns: the size of the smoothing filter along columns in pixels
-        """
-        return self.waveparams.SM_LENGTH
-
-    @property
-    def smoothing_lines_size(self) -> int:
-        """ :returns: the size of the smoothing filter along lines in pixels
-        """
-        return self.waveparams.SM_LENGTH
-
-    @property
     def measure_extent(self) -> MarginsType:
         """ :returns: the cartographic extent to be used for bathy estimation around a point
         """
-        return (self.waveparams.WINDOW / 2., self.waveparams.WINDOW / 2.,
-                self.waveparams.WINDOW / 2., self.waveparams.WINDOW / 2.)
+        return (self.window_size_x / 2., self.window_size_x / 2.,
+                self.window_size_y / 2., self.window_size_y / 2.)
+
+    @property
+    @abstractmethod
+    def bands_identifiers(self) -> List[str]:
+        """ :returns: the spectral band identifiers in the product to use for bathymetry estimation
+        """
 
     @property
     def nb_subtiles(self) -> int:

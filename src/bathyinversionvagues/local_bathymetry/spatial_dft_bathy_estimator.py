@@ -58,9 +58,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         :param wavelength: the wavelength of the waves field
         :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
         """
-        waves_field_estimation = SpatialDFTWavesFieldEstimation(self.gravity,
-                                                                self.local_estimator_params.DEPTH_EST_METHOD,
-                                                                self.local_estimator_params.D_PRECISION)
+        waves_field_estimation = SpatialDFTWavesFieldEstimation(
+            self.gravity,
+            self.global_estimator.depth_estimation_method,
+            self.global_estimator.depth_estimation_precision)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 
@@ -294,8 +295,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """  :returns: the requested sampling of the sinogram FFT
         """
         # frequencies based on wave characteristics:
-        period_samples = np.arange(self.local_estimator_params.MIN_T,
-                                   self.local_estimator_params.MAX_T,
+        period_samples = np.arange(self.global_estimator.waves_period_min,
+                                   self.global_estimator.waves_period_max,
                                    self.local_estimator_params.STEP_T)
         k_forced = wavenumber_offshore(period_samples, self.gravity)
 
@@ -310,7 +311,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """
         return phi_limits(wavenumbers,
                           self.delta_time,
-                          self.local_estimator_params.MIN_D,
+                          self.global_estimator.depth_min,
                           self.gravity)
 
     def _dump_cross_correl_spectrum(self, sino1_fft, phase_shift, phase_shift_thresholded,

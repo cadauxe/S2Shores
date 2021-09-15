@@ -43,7 +43,7 @@ class LocalBathyEstimator(ABC):
         # TODO: Check that the images have the same resolution, satellite (and same size ?)
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
-        self.local_estimator_params = self.global_estimator.waveparams
+        self.local_estimator_params = self.global_estimator.local_estimator_params
 
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
@@ -105,12 +105,12 @@ class LocalBathyEstimator(ABC):
         # on its specific attributes
         # for index, estimation in enumerate(list(self.waves_fields_estimations)):
         for estimation in list(self.waves_fields_estimations):
-            if (estimation.period < self.local_estimator_params.MIN_T or
-                    estimation.period > self.local_estimator_params.MAX_T):
+            if (estimation.period < self.global_estimator.waves_period_min or
+                    estimation.period > self.global_estimator.waves_period_max):
                 self.waves_fields_estimations.remove(estimation)
         for estimation in list(self.waves_fields_estimations):
-            if (estimation.linearity < self.local_estimator_params.MIN_WAVES_LINEARITY or
-                    estimation.linearity > self.local_estimator_params.MAX_WAVES_LINEARITY):
+            if (estimation.linearity < self.global_estimator.waves_linearity_min or
+                    estimation.linearity > self.global_estimator.waves_linearity_max):
                 self.waves_fields_estimations.remove(estimation)
 
     @abstractmethod

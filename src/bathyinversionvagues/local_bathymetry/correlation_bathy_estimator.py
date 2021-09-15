@@ -88,8 +88,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         waves_field_estimation = CorrelationWavesFieldEstimation(
             self.gravity,
-            self.local_estimator_params.DEPTH_EST_METHOD,
-            self.local_estimator_params.D_PRECISION)
+            self.global_estimator.depth_estimation_method,
+            self.global_estimator.depth_estimation_precision)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 
