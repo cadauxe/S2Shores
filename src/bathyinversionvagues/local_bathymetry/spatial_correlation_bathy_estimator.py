@@ -9,12 +9,12 @@
 """
 from typing import Optional, List, TYPE_CHECKING
 
-from munch import Munch  # @NoMove
 import numpy as np
 
 from ..generic_utils.image_utils import normxcorr2
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -22,7 +22,11 @@ if TYPE_CHECKING:
 
 
 class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
+    """ Class performing spatial correlation to compute bathymetry
+    """
+
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
@@ -31,7 +35,7 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         :param selected_directions: selected_directions: the set of directions onto which the
         sinogram must be computed
         """
-        super().__init__(images_sequence, global_estimator, selected_directions)
+        super().__init__(images_sequence, global_estimator, waves_fields_estimations, selected_directions)
         self._shape_x, self._shape_y = self.images_sequence[0].pixels.shape
         self._number_frames = len(self.images_sequence)
         sampling_positions_x = np.reshape(np.arange(self._shape_x), (1, -1))

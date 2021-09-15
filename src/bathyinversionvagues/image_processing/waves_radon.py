@@ -123,7 +123,7 @@ class WavesRadon:
                 for processing_filter, filter_parameters in processing_filters:
                     sinogram.sinogram = np.array(
                         [processing_filter(sinogram.sinogram.flatten(), *filter_parameters)]).T
-                self._radon_transform.set_at_index(direction, sinogram.sinogram)
+                self._radon_transform.set_at_direction(direction, sinogram.sinogram)
 
     # +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
 

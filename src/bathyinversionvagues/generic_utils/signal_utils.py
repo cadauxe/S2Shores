@@ -15,7 +15,7 @@ def find_period(signal: np.ndarray, min_period: int = 50) -> Tuple[float, np.nda
     The signal is supposed to be periodic and centered around zero
 
     :param signal: signal on which period is computed
-    :return: period
+    :return: (period,zeros used to compute period)
     """
     sign = np.sign(signal)
     diff = np.diff(sign)
@@ -34,7 +34,7 @@ def find_dephasing(signal: np.ndarray, period: float) -> Tuple[float, np.ndarray
 
     :param signal: signal on which dephasing is computed
     :param period: period of the signal
-    :return: dephasing
+    :return: (dephasing,signal selected on one period)
     """
     size_sinogram = len(signal)
     left_limit = max(int(size_sinogram / 2 - period / 2), 0)

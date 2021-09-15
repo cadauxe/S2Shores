@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-from typing import Optional, List, TYPE_CHECKING  # @NoMove
+from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
 
 import pandas
 
@@ -18,6 +18,7 @@ from ..generic_utils.image_utils import cross_correlation
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -25,7 +26,11 @@ if TYPE_CHECKING:
 
 
 class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
+    """ Class performing temporal correlation to compute bathymetry
+    """
+
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
@@ -34,7 +39,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         :param selected_directions: selected_directions: the set of directions onto which the
         sinogram must be computed
         """
-        super().__init__(images_sequence, global_estimator, selected_directions)
+        super().__init__(images_sequence, global_estimator, waves_fields_estimations, selected_directions)
         self.create_sequence_time_series()
 
     def create_sequence_time_series(self) -> None:
@@ -93,7 +98,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         return WavesImage(projected_matrix, self.local_estimator_params.RESOLUTION.SPATIAL)
 
     @property
-    def sampling_positions(self) -> np.ndarray:
+    def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
         """ :return: tuple of sampling positions
         """
         return self._sampling_positions
@@ -101,6 +106,8 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
 
 class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                              TemporalCorrelationBathyEstimator):
+    """ Class performing debugging for temporal correlation method
+    """
 
     def explore_results(self) -> None:
         temporal_method_debug(self)
