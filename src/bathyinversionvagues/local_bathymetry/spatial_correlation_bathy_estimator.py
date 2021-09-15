@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional, List, Tuple, TYPE_CHECKING
 
 from munch import Munch  # @NoMove
 import numpy as np
@@ -22,6 +22,9 @@ if TYPE_CHECKING:
 
 
 class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
+    """ Class performing spatial correlation to compute bathymetry
+    """
+
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
@@ -45,7 +48,7 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         return self.local_estimator_params.TEMPORAL_METHOD
 
     @property
-    def sampling_positions(self) -> np.ndarray:
+    def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
         """ :return: tuple of sampling positions
         """
         return self._sampling_positions
