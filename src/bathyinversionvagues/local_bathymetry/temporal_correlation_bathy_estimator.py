@@ -9,16 +9,15 @@
 """
 from typing import Optional, List, TYPE_CHECKING  # @NoMove
 
-from munch import Munch
 import pandas
 
 import numpy as np
 
+from ..bathy_debug.debug_display import temporal_method_debug
 from ..generic_utils.image_utils import cross_correlation
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
 from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
-from ..result_display.debug_display import temporal_method_debug
 
 
 if TYPE_CHECKING:
