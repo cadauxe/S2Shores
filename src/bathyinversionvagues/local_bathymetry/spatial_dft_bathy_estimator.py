@@ -13,14 +13,14 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
+from ..bathy_debug.waves_fields_display import (display_curve, display_4curves,
+                                                display_3curves, display_estimation)
 from ..bathy_physics import wavenumber_offshore, phi_limits
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
-from ..waves_fields_display import (display_curve, display_4curves,
-                                    display_3curves, display_estimation)
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_waves_field_estimation import SpatialDFTWavesFieldEstimation
