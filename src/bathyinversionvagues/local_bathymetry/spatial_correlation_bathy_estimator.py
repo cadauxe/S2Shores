@@ -7,9 +7,8 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-from typing import Optional, List, Tuple, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING
 
-from munch import Munch  # @NoMove
 import numpy as np
 
 from ..generic_utils.image_utils import normxcorr2
@@ -36,7 +35,7 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
         :param selected_directions: selected_directions: the set of directions onto which the
         sinogram must be computed
         """
-        super().__init__(images_sequence, global_estimator, selected_directions)
+        super().__init__(images_sequence, global_estimator, waves_fields_estimations, selected_directions)
         self._shape_x, self._shape_y = self.images_sequence[0].pixels.shape
         self._number_frames = len(self.images_sequence)
         sampling_positions_x = np.reshape(np.arange(self._shape_x), (1, -1))
