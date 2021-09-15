@@ -1,37 +1,43 @@
-#configuration
-WAVE_EST_METHOD: "SPATIAL_DFT" # parmi SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
-DEPTH_EST_METHOD: "LINEAR" # parmi LINEAR
-NKEEP: 3 # number of main waves directions to keep
-LAYERS_TYPE: "DEBUG" # parmi NOMINAL ou DEBUG. Permet de selectionner les couches du produit netCDF
+# parameters 
 
-#expert
-#wave estimation methods
-#wave_common: 
-MIN_D: 2 #minimal depth - meters
-MIN_T: 5 # minimal wave period - seconds
-MAX_T: 25 #maximal wave period - seconds
-MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
-MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
+# parameters used by the global estimator
+GLOBAL_ESTIMATOR:
 
-#global estimator
-DXP: 500.0 # output grid resolution - meters - S2 : 500
-DYP: 500.0 # output grid resolution - meters - S2 : 500
-WINDOW: 800.0 # thumbnail size - meters - S2 : 800
-SM_LENGTH: 10 # smooth filter size - pixels - S2 : 10
-STEP_T: 0.05 # step for period sampling - seconds - 
+  # the local estimator to use
+  WAVE_EST_METHOD: "SPATIAL_DFT" # among SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
 
+  # product characteristics
+  DXP: 500.0 # output grid resolution - meters - S2 : 500
+  DYP: 500.0 # output grid resolution - meters - S2 : 500
+  LAYERS_TYPE: "DEBUG" # among NOMINAL, DEBUG. Allow NetCDF layers selection.
+  NKEEP: 3 # number of main waves directions to keep in the product
+  
+  # window parameters
+  WINDOW: 800.0 # thumbnail size - meters
+  SM_LENGTH: 10 # smoothing filter size - pixels
+
+  # physical constraints
+  MIN_D: 2 #minimal depth - meters
+  MIN_T: 3 # minimal wave period - seconds
+  MAX_T: 25 # maximal wave period - seconds
+  MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
+  MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
+  
+  # depth inversion
+  DEPTH_EST_METHOD: "LINEAR" # among LINEAR
+  D_PRECISION: 0.0005 # regression stop criteria - meters
+  
 #spatial_dft:
-PROMINENCE_MAX_PEAK: 0.3 # find_peaks function tuning - search for the maximal peaks
-PROMINENCE_MULTIPLE_PEAKS: 0.1 # find_peaks function tuning - search for the kkeep max peaks
-UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period (S2 : False)
-MIN_DIR: -180. # min angle for radon transform - degrees
-MAX_DIR: 180. # max angle for radon transform - degrees
-MAX_NDIRS: 360 # nb max of directions for radon transform
-ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
+SPATIAL_DFT:
+  PROMINENCE_MAX_PEAK: 0.3 # find_peaks function tuning - search for the maximal peaks
+  PROMINENCE_MULTIPLE_PEAKS: 0.1 # find_peaks function tuning - search for the kkeep max peaks
+  UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period (S2 : False)
+  MIN_DIR: -180. # min angle for radon transform - degrees
+  MAX_DIR: 180. # max angle for radon transform - degrees
+  MAX_NDIRS: 360 # nb max of directions for radon transform
+  ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
+  STEP_T: 0.05 # step for period sampling - seconds - 
 
-#depth estimation methods
-#depth_common:
-D_PRECISION: 0.0005 # regression stop criteria - meters
 
 PREPROCESSING:
   PASSBAND:
