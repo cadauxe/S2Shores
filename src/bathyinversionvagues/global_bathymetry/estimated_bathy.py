@@ -6,13 +6,13 @@
 """
 from datetime import datetime
 
-from typing import Mapping, Hashable, Any, Dict, Tuple, List
+from typing import Mapping, Hashable, Any, Dict, List
 
 import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
 import xarray as xr  # @NoMove
 
-from ..local_bathymetry.local_bathy_estimator import WavesFieldsEstimations
+from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
 
 
 ALL_LAYERS_TYPES = ['NOMINAL', 'DEBUG']
@@ -20,52 +20,60 @@ ALL_LAYERS_TYPES = ['NOMINAL', 'DEBUG']
 DIMS_Y_X_NKEEP_TIME = ['y', 'x', 'kKeep', 'time']
 DIMS_Y_X_TIME = ['y', 'x', 'time']
 
+
+# TODO: introduce dtype (int for status) and initial value (np.nan or other)
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
 BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
+    'sample_status': {'layer_type': ALL_LAYERS_TYPES,
+                      'layer_name': 'Status',
+                      'dimensions': DIMS_Y_X_TIME,
+                      'precision': 8,
+                      'attrs': {'Dimension': 'Flags',
+                                'name': 'Bathymetry estimation status'}},
     'depth': {'layer_type': ALL_LAYERS_TYPES,
-              'layer_name': 'depth',
+              'layer_name': 'Depth',
               'dimensions': DIMS_Y_X_NKEEP_TIME,
               'precision': 8,
               'attrs': {'Dimension': 'Meters [m]',
                         'name': 'Raw estimated depth'}},
     'direction': {'layer_type': ALL_LAYERS_TYPES,
-                  'layer_name': 'direction',
+                  'layer_name': 'Direction',
                   'dimensions': DIMS_Y_X_NKEEP_TIME,
                   'precision': 8,
                   'attrs': {'Dimension': 'degree',
                             'name': 'Wave_direction'}},
     'period': {'layer_type': ALL_LAYERS_TYPES,
-               'layer_name': 'period',
+               'layer_name': 'Period',
                'dimensions': DIMS_Y_X_NKEEP_TIME,
                'precision': 2,
                'attrs': {'Dimension': 'Seconds [sec]',
                          'name': 'Wave_period'}},
     'celerity': {'layer_type': ALL_LAYERS_TYPES,
-                 'layer_name': 'celerity',
+                 'layer_name': 'Celerity',
                  'dimensions': DIMS_Y_X_NKEEP_TIME,
                  'precision': 8,
                  'attrs': {'Dimension': 'Meters per second [m/sec]',
                            'name': 'Wave_celerity'}},
     'wavelength': {'layer_type': ALL_LAYERS_TYPES,
-                   'layer_name': 'wavelength',
+                   'layer_name': 'Wavelength',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
                    'precision': 8,
                    'attrs': {'Dimension': 'Meters [m]',
-                             'name': 'wavelength'}},
+                             'name': 'Wavelength'}},
     'wavenumber': {'layer_type': ['DEBUG'],
-                   'layer_name': 'wavenumber',
+                   'layer_name': 'Wavenumber',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
                    'precision': 8,
                    'attrs': {'Dimension': 'Per Meter [m-1]',
-                             'name': 'wavenumber'}},
-    'distoshore': {'layer_type': ALL_LAYERS_TYPES,
-                   'layer_name': 'distoshore',
-                   'dimensions': DIMS_Y_X_TIME,
-                   'precision': 8,
-                   'attrs': {'Dimension': 'Kilometers [km]',
-                             'name': 'Distance_to_shore'}},
+                             'name': 'Wavenumber'}},
+    'distance_to_shore': {'layer_type': ALL_LAYERS_TYPES,
+                          'layer_name': 'Distoshore',
+                          'dimensions': DIMS_Y_X_TIME,
+                          'precision': 8,
+                          'attrs': {'Dimension': 'Kilometers [km]',
+                                    'name': 'Distance_to_shore'}},
     'delta_celerity': {'layer_type': ALL_LAYERS_TYPES,
-                       'layer_name': 'deltaC',
+                       'layer_name': 'Delta Celerity',
                        'dimensions': DIMS_Y_X_NKEEP_TIME,
                        'precision': 8,
                        'attrs': {'Dimension': 'Meters per seconds2 [m/sec2]',
@@ -82,25 +90,43 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'precision': 8,
                    'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
                              'name': 'Energy'}},
-    '_gravity': {'layer_type': ['DEBUG'],
-                 'layer_name': 'Gravity',
-                 'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
-                 'precision': 8,
-                 'attrs': {'Dimension': 'Acceleration [m/s2]',
-                           'name': 'Gravity'}},
+    'gravity': {'layer_type': ['DEBUG'],
+                'layer_name': 'Gravity',
+                'dimensions': DIMS_Y_X_TIME,
+                'precision': 8,
+                'attrs': {'Dimension': 'Acceleration [m/s2]',
+                          'name': 'Gravity'}},
     '_delta_time': {'layer_type': ['DEBUG'],
                     'layer_name': 'Delta Acquisition Time',
                     'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
                     'precision': 8,
                     'attrs': {'Dimension': 'Duration (s)',
                               'name': 'DeltaTime'}},
+    'linearity': {'layer_type': ['DEBUG'],
+                  'layer_name': 'Waves Linearity',
+                  'dimensions': DIMS_Y_X_NKEEP_TIME,
+                  'precision': 8,
+                  'attrs': {'Dimension': 'Unitless',
+                            'name': 'linearity'}},
+    'period_offshore': {'layer_type': ['DEBUG'],
+                        'layer_name': 'Period Offshore',
+                        'dimensions': DIMS_Y_X_NKEEP_TIME,
+                        'precision': 8,
+                        'attrs': {'Dimension': 'Seconds [sec]',
+                                  'name': 'period_offshore'}},
+    'delta_phase_ratio': {'layer_type': ['DEBUG'],
+                          'layer_name': 'Delta Phase Ratio',
+                          'dimensions': DIMS_Y_X_NKEEP_TIME,
+                          'precision': 8,
+                          'attrs': {'Dimension': 'Unitless',
+                                    'name': 'delta_phase_ratio'}},
+    'energy_ratio': {'layer_type': ['DEBUG'],
+                     'layer_name': 'Energy Ratio',
+                     'dimensions': DIMS_Y_X_NKEEP_TIME,
+                     'precision': 8,
+                     'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
+                               'name': 'energy_ratio'}},
 }
-# FIXME: Missing:
-#                {'T_off': periods_offshore,
-#                 'dPhiRat': delta_phase_ratios,
-#                 'c2kg': ckgs,
-#                 'energyRat': energies_ratios,
-#                 }
 
 
 class EstimatedBathy:
@@ -124,16 +150,16 @@ class EstimatedBathy:
         self.x_samples = x_samples
         self.y_samples = y_samples
 
-    def store_sample(self, x_index: int, y_index: int,
-                     bathy_info: Tuple[WavesFieldsEstimations, float]) -> None:
-        """ Store a bathymetry sample
+    def store_estimations(self, x_index: int, y_index: int,
+                          bathy_estimations: WavesFieldsEstimations) -> None:
+        """ Store a set of bathymetry estimations at some location
 
         :param x_index: index of the sample along the X axis
         :param y_index: index of the sample along the Y axis
-        :param bathy_info: a tuple with the estimated sample values and the distance to shore
+        :param bathy_estimations: the whole set of bathy estimations data at one point.
         """
         # TODO: use the x and y coordinates instead of an index, for better modularity
-        self.estimated_bathy[y_index, x_index] = bathy_info
+        self.estimated_bathy[y_index, x_index] = bathy_estimations
 
     def build_dataset(self, layers_type: str, nb_keep: int) -> Dataset:
         """ Build an xarray DataSet containing the estimated bathymetry.
@@ -190,14 +216,19 @@ class EstimatedBathy:
     # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
                     y_index: int, x_index: int) -> None:
-        waves_fields_estimations, distance = self.estimated_bathy[y_index, x_index]
+        waves_fields_estimations = self.estimated_bathy[y_index, x_index]
         if layer_data.ndim == 2:
             nb_keep = 0
         else:
             nb_keep = layer_data.shape[2]
-        if sample_property == 'distoshore':
-            bathy_property = np.array(distance)
+
+        # TODO: move this logics inside WavesFieldsEstimations class :
+        # get_property(sample_property, nb_keep)
+        if hasattr(waves_fields_estimations, sample_property):
+            # retrieve property from the estimations header
+            bathy_property = np.array(getattr(waves_fields_estimations, sample_property))
         else:
+            # retrieve property in the list of estimations
             bathy_property = np.full(nb_keep, np.nan)
             try:
                 for index, waves_field_estimations in enumerate(waves_fields_estimations):

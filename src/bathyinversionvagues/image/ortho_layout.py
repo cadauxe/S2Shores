@@ -50,7 +50,7 @@ class OrthoLayout:
     def get_samples_positions(self, step_x: float, step_y: float, local_margins: MarginsType
                               ) -> Tuple[np.ndarray, np.ndarray]:
         """ x_samples, y_samples are the coordinates  of the final samples in georeferenced system
-        sampled from a starting position with steps 'DXP' and 'DYP'
+        sampled from a starting position with steps different steps on X and Y axis.
 
         :param step_x: the cartographic sampling to use along the X axis to sample this image
         :param step_y: the cartographic sampling to use along the X axis to sample this image

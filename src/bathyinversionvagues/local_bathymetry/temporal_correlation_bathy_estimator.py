@@ -41,23 +41,18 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         super().__init__(images_sequence, global_estimator, selected_directions)
         self.create_sequence_time_series()
 
-    @property
-    def _parameters(self) -> Munch:
-        """ :return: munchified parameters
-        """
-        return self.local_estimator_params.TEMPORAL_METHOD
-
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
         To do this random points are selected within the sequence of image and a temporal serie
         is included in the np.array for each selected point
         """
-        if self._parameters.PERCENTAGE_POINTS < 0 or self._parameters.PERCENTAGE_POINTS > 100:
+        percentage_points = self.local_estimator_params.PERCENTAGE_POINTS
+        if percentage_points < 0 or percentage_points > 100:
             raise ValueError('Percentage must be between 0 and 100')
         merge_array = np.dstack([image.pixels for image in self.images_sequence])
         shape_x, shape_y = self.images_sequence[0].pixels.shape
         time_series = np.reshape(merge_array, (shape_x * shape_y, -1))
-        nb_random_points = round(shape_x * shape_y * self._parameters.PERCENTAGE_POINTS / 100)
+        nb_random_points = round(shape_x * shape_y * percentage_points / 100)
         random_indexes = np.random.randint(0, shape_x * shape_y, size=nb_random_points)
         positions_y, positions_x = np.meshgrid(np.linspace(1, shape_x, shape_x),
                                                np.linspace(1, shape_y, shape_y))
@@ -70,8 +65,8 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
     def get_correlation_matrix(self) -> np.ndarray:
         """Compute temporal correlation matrix
         """
-        return cross_correlation(self._time_series[:, self._parameters.TEMPORAL_LAG:],
-                                 self._time_series[:, :-self._parameters.TEMPORAL_LAG])
+        return cross_correlation(self._time_series[:, self.local_estimator_params.TEMPORAL_LAG:],
+                                 self._time_series[:, :-self.local_estimator_params.TEMPORAL_LAG])
 
     def get_correlation_image(self) -> WavesImage:
         """ This function computes the correlation image by projecting the the correlation matrix
@@ -99,7 +94,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
             (np.max(indices_x) + 1, np.max(indices_y) + 1))
         projected_matrix[indices_x, indices_y] = values
-        return WavesImage(projected_matrix, self._parameters.RESOLUTION.SPATIAL)
+        return WavesImage(projected_matrix, self.local_estimator_params.RESOLUTION.SPATIAL)
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -113,5 +108,5 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
     """ Class performing debugging for temporal correlation method
     """
 
-    def draw_results(self) -> None:
+    def explore_results(self) -> None:
         temporal_method_debug(self)

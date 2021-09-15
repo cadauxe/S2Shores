@@ -24,7 +24,9 @@ from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
 from ..image_processing.waves_sinogram import WavesSinogram
 
+from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -36,6 +38,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ constructor
         :param images_sequence: sequence of image used to compute bathymetry
@@ -50,10 +53,11 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_transform: Optional[WavesRadon] = None
         # Filters
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
-            clipping, [self._parameters.TUNING.RATIO_SIZE_CORRELATION])]
+            clipping, [self.local_estimator_params.TUNING.RATIO_SIZE_CORRELATION])]
         self.radon_image_filters: SignalProcessingFilters = [
-            (remove_median, [self._parameters.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
-            (filter_mean, [self._parameters.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
+            (remove_median,
+             [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
+            (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
         # Intern attributes
         self._angles: Optional[np.ndarray] = None
         self._distances: Optional[np.ndarray] = None
@@ -66,6 +70,25 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._duration: Optional[float] = None
         self._temporal_arg_peaks_max: Optional[np.ndarray] = None
         self._wave_length_zeros: Optional[np.ndarray] = None
+
+    def create_waves_field_estimation(self, direction: float, wavelength: float
+                                      ) -> CorrelationWavesFieldEstimation:
+        """ Creates the CorrelationWavesFieldEstimation instance where the local estimator will
+        store its estimations.
+
+        :param direction: the propagation direction of the waves field (degrees measured clockwise
+                          from the North).
+        :param wavelength: the wavelength of the waves field
+        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
+        """
+        waves_field_estimation = CorrelationWavesFieldEstimation(
+            self.gravity,
+            self.global_estimator.depth_estimation_method,
+            self.global_estimator.depth_estimation_precision)
+        waves_field_estimation.direction = direction
+        waves_field_estimation.wavelength = wavelength
+
+        return waves_field_estimation
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -94,13 +117,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
-    @property
-    @abstractmethod
-    def _parameters(self) -> Munch:
-        """ :return: munchified parameters
+    def sort_waves_fields(self) -> None:
+        """ Sort the waves fields estimations based on their energy max.
         """
-        # FIXME: Why not using parameters from global bathy estimatror (this is
-        # the general principle)
+        # FIXME: (ROMAIN) decide if some specific sorting is needed
 
     @property
     @abstractmethod
@@ -116,7 +136,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def get_correlation_image(self) -> WavesImage:
         """ :return: correlation image
         """
-        return WavesImage(self.correlation_matrix, self._parameters.RESOLUTION.SPATIAL)
+        return WavesImage(self.correlation_matrix, self.local_estimator_params.RESOLUTION.SPATIAL)
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -221,7 +241,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         index_unique_sorted = np.argsort(time_unique)
         time_unique_sorted = time_unique[index_unique_sorted]
         timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted),
-                            self._parameters.RESOLUTION.TIME_INTERPOLATION)
+                            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION)
         corr_unique_sorted = self.correlation_matrix.T.flatten()[
             index_unique[index_unique_sorted]]
         interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
@@ -230,10 +250,12 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def temporal_reconstruction_tuning(self) -> None:
         """ Tuning of temporal signal
         """
-        low_frequency = self._parameters.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self._parameters.RESOLUTION.TIME_INTERPOLATION
-        high_frequency = self._parameters.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self._parameters.RESOLUTION.TIME_INTERPOLATION
+        low_frequency = \
+            self.local_estimator_params.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
+            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION
+        high_frequency = \
+            self.local_estimator_params.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
+            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
         self._temporal_signal = sosfiltfilt(sos_filter, self._temporal_signal)

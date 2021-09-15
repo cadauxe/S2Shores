@@ -15,17 +15,13 @@ from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
-from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from .waves_field_estimation import WavesFieldEstimation
+from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
-
-# TODO: create a true class encapsulating the estimations and providing room for scalar infos
-# (distoshore, gravity, delta_time.) as well as logics for handling dimensions.
-WavesFieldsEstimations = List[WavesFieldEstimation]
 
 
 class LocalBathyEstimator(ABC):
@@ -33,6 +29,7 @@ class LocalBathyEstimator(ABC):
     """
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
+                 waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
@@ -46,28 +43,18 @@ class LocalBathyEstimator(ABC):
         # TODO: Check that the images have the same resolution, satellite (and same size ?)
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
-        self.local_estimator_params = self.global_estimator.waveparams
+        self.local_estimator_params = self.global_estimator.local_estimator_params
 
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
-        self._position = (0., 0.)
-        self._gravity = 0.
-        self._waves_fields_estimations: WavesFieldsEstimations = []
+        self._waves_fields_estimations = waves_fields_estimations
+        self._position = self._waves_fields_estimations.location
 
-        self._delta_time = 0.
+        self._delta_time = self.global_estimator.get_delta_time(
+            self._waves_fields_estimations.location)
 
         self._metrics: Dict[str, Any] = {}
-
-    def set_position(self, point: PointType) -> None:
-        """ Specify the cartographic position where this local bathy estimator is working and
-        updates the localized data (gravity, delta time) accordingly
-
-        :param point: a tuple (X, Y) of cartographic coordinates
-        """
-        self._position = point
-        self._gravity = self.global_estimator.get_gravity(self._position, 0.)
-        self._delta_time = self.global_estimator.get_delta_time(self._position)
 
     @property
     @abstractmethod
@@ -87,7 +74,7 @@ class LocalBathyEstimator(ABC):
     def gravity(self) -> float:
         """ :returns: the acceleration of the gravity at the working position of the estimator
         """
-        return self._gravity
+        return self._waves_fields_estimations.gravity
 
     # FIXME: At the moment only a pair of images is handled (list is limited to a singleton)
     @property
@@ -105,6 +92,28 @@ class LocalBathyEstimator(ABC):
         its metrics in _metrics attribute.
         """
 
+    @abstractmethod
+    def sort_waves_fields(self) -> None:
+        """  Sorts the waves fields on whatever criteria.
+        """
+
+    def validate_waves_fields(self) -> None:
+        """  Remove non physical waves fields
+        """
+        # Filter non physical waves fields and bathy estimations
+        # We iterate over a copy of the list in order to keep waves_fields_etimations unaffected
+        # on its specific attributes
+        # for index, estimation in enumerate(list(self.waves_fields_estimations)):
+        for estimation in list(self.waves_fields_estimations):
+            if (estimation.period < self.global_estimator.waves_period_min or
+                    estimation.period > self.global_estimator.waves_period_max):
+                self.waves_fields_estimations.remove(estimation)
+        for estimation in list(self.waves_fields_estimations):
+            if (estimation.linearity < self.global_estimator.waves_linearity_min or
+                    estimation.linearity > self.global_estimator.waves_linearity_max):
+                self.waves_fields_estimations.remove(estimation)
+
+    @abstractmethod
     def create_waves_field_estimation(self, direction: float, wavelength: float
                                       ) -> WavesFieldEstimation:
         """ Creates the WavesFieldEstimation instance where the local estimator will store its
@@ -115,14 +124,6 @@ class LocalBathyEstimator(ABC):
         :param wavelength: the wavelength of the waves field
         :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
         """
-        waves_field_estimation = WavesFieldEstimation(self.delta_time,
-                                                      self.gravity,
-                                                      self.local_estimator_params.DEPTH_EST_METHOD,
-                                                      self.local_estimator_params.D_PRECISION)
-        waves_field_estimation.direction = direction
-        waves_field_estimation.wavelength = wavelength
-
-        return waves_field_estimation
 
     def store_estimation(self, waves_field_estimation: WavesFieldEstimation) -> None:
         """ Store a single estimation into the estimations list
@@ -133,10 +134,9 @@ class LocalBathyEstimator(ABC):
 
     @property
     def waves_fields_estimations(self) -> WavesFieldsEstimations:
-        """ :returns: a copy of the estimations recorded by this estimator.
-                      Used for freeing references to memory expensive data (images, transform, ...)
+        """ :returns: the estimations recorded by this estimator.
         """
-        return deepcopy(self._waves_fields_estimations)
+        return self._waves_fields_estimations
 
     @property
     def metrics(self) -> Dict[str, Any]:
@@ -150,7 +150,9 @@ class LocalBathyEstimator(ABC):
 
         :param step: A string to be printed as header of the debugging info.
         """
-        self.global_estimator.print_estimations_debug(self._waves_fields_estimations, step)
+        if self.debug_sample:
+            print(f'estimations at step: {step}')
+            print(self.waves_fields_estimations)
 
 
 class LocalBathyEstimatorDebug(LocalBathyEstimator):
@@ -158,9 +160,9 @@ class LocalBathyEstimatorDebug(LocalBathyEstimator):
     def run(self) -> None:
         super().run()
         if self.debug_sample:
-            self.draw_results()
+            self.explore_results()
 
     @abstractmethod
-    def draw_results(self) -> None:
-        """ Save a diagram to help comprehension about result on current point
+    def explore_results(self) -> None:
+        """ Method called when estimator has run to allow results exploration for debugging purposes
         """
