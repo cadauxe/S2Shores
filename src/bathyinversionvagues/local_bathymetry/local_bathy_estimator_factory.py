@@ -15,7 +15,7 @@ from ..image_processing.waves_image import WavesImage
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
-from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
+from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator, SpatialDFTBathyEstimatorDebug
 from .temporal_correlation_bathy_estimator import (TemporalCorrelationBathyEstimator,
                                                    TemporalCorrelationBathyEstimatorDebug)
 from .waves_fields_estimations import WavesFieldsEstimations
@@ -31,7 +31,7 @@ LOCAL_BATHY_ESTIMATION_CLS = {'SPATIAL_DFT': SpatialDFTBathyEstimator,
                               'TEMPORAL_CORRELATION': TemporalCorrelationBathyEstimator,
                               'SPATIAL_CORRELATION': SpatialCorrelationBathyEstimator}
 
-LOCAL_BATHY_ESTIMATION_CLS_DEBUG = {'SPATIAL_DFT': SpatialDFTBathyEstimator,
+LOCAL_BATHY_ESTIMATION_CLS_DEBUG = {'SPATIAL_DFT': SpatialDFTBathyEstimatorDebug,
                                     'TEMPORAL_CORRELATION': TemporalCorrelationBathyEstimatorDebug,
                                     'SPATIAL_CORRELATION': SpatialCorrelationBathyEstimator}
 

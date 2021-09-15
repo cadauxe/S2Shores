@@ -22,7 +22,7 @@ from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
 
-from .local_bathy_estimator import LocalBathyEstimator
+from .local_bathy_estimator import LocalBathyEstimator, LocalBathyEstimatorDebug
 from .spatial_dft_waves_field_estimation import SpatialDFTWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
 
@@ -270,8 +270,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self._metrics['amplitude_sino1'] = amplitude_sino1
             self._metrics['total_spectrum'] = total_spectrum
 
-            self._dump_cross_correl_spectrum()
-
         return phase_shift_thresholded, total_spectrum, total_spectrum_normalized
 
     def process_phase(self, phase_shift: np.ndarray, phi_min: np.ndarray, phi_max: np.ndarray
@@ -319,6 +317,15 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                           self.delta_time,
                           self.global_estimator.depth_min,
                           self.gravity)
+
+
+class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
+    """ A local bathymetry estimator estimating bathymetry from the DFT of the sinograms in
+    radon transforms.
+    """
+
+    def explore_results(self) -> None:
+        self._dump_cross_correl_spectrum()
 
     def _dump_cross_correl_spectrum(self) -> None:
         sino1_fft = self._metrics['sino1_fft']
