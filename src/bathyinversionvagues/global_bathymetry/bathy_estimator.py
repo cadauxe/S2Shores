@@ -6,6 +6,9 @@
 """
 from abc import ABC, abstractmethod
 
+from typing import List, Any, Optional  # @NoMove
+
+from xarray import Dataset  # @NoMove
 from munch import Munch
 
 from ..data_providers.delta_time_provider import (DeltaTimeProvider, NoDeltaTimeProviderError)
@@ -14,11 +17,9 @@ from ..data_providers.gravity_provider import ConstantGravityProvider, GravityPr
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_image import OrthoImage
 from ..image.sampled_ortho_image import SampledOrthoImage
+
 from .bathy_estimator_parameters import BathyEstimatorParameters
 from .ortho_bathy_estimator import OrthoBathyEstimator
-from typing import List, Optional  # @NoMove
-
-from xarray import Dataset  # @NoMove
 
 
 class BathyEstimator(ABC, BathyEstimatorParameters):
@@ -113,6 +114,11 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self._debug_samples = samples
 
     def set_debug(self, sample: PointType) -> None:
+        """ Set or reset the debug flag for a given point depending on its presence into the set
+        of points to debug.
+
+        :param sample: The coordinate of the point for which the debug flag must be set
+        """
         self._debug_sample = sample in self._debug_samples
         if self._debug_sample:
             print(f'Debugging point: X:{sample[0]} / Y:{sample[1]}')
@@ -134,6 +140,11 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self._distoshore_provider.client_epsg_code = self.image.epsg_code
 
     def get_distoshore(self, point: PointType) -> float:
+        """ Provides the distance from a given point to the nearest shore.
+
+        :param point: the point from which the distance to shore is requested.
+        :returns: the distance from the point to the nearest shore (km).
+        """
         return self._distoshore_provider.get_distoshore(point)
 
     def set_gravity_provider(self, gravity_provider: GravityProvider) -> None:
@@ -162,15 +173,16 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self._delta_time_provider = delta_time_provider
         self._delta_time_provider.client_epsg_code = self.image.epsg_code
 
-    def get_delta_time(self, point: PointType) -> float:
+    def get_delta_time(self, first_frame_id: Any, second_frame_id: Any, point: PointType) -> float:
         """ Returns the delta time at some point expressed by its X, Y and H coordinates in
         some SRS, using the delta time provider associated to this bathymetry estimator.
 
+        :param first_frame_id: the id of the frame from which the duration will be counted
+        :param second_frame_id: the id of the frame to which the duration will be counted
         :param point: a tuple containing the X and Y coordinates in the SRS set for the provider
-        :returns: the delta times to .
+        :returns: the delta time between frames at this point (s).
         :raises NoDeltaTimeProviderError: when no DeltaTimeProvider has been set for this estimator.
         """
         if self._delta_time_provider is None:
             raise NoDeltaTimeProviderError()
-        return self._delta_time_provider.get_delta_time(self.bands_identifiers[0],
-                                                        self.bands_identifiers[1], point)
+        return self._delta_time_provider.get_delta_time(first_frame_id, second_frame_id, point)
