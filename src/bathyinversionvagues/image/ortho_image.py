@@ -5,11 +5,12 @@
 :created: 17/05/2021
 """
 from abc import ABC, abstractmethod
-from typing import Dict  # @NoMove
 from pathlib import Path
+from typing import Dict  # @NoMove
 
-import numpy as np  # @NoMove
 from osgeo import gdal
+
+from ..image_processing.waves_image import WavesImage
 
 from .ortho_layout import OrthoLayout
 
@@ -68,7 +69,7 @@ class OrthoImage(ABC, OrthoLayout):
         """
 
     def read_pixels(self, band_id: str, line_start: int, line_stop: int,
-                    col_start: int, col_stop: int) -> np.ndarray:
+                    col_start: int, col_stop: int) -> WavesImage:
         """ Read a rectangle of pixels from a specific band of this image.
 
         :param band_id: the identifier of the  band to read
@@ -76,7 +77,7 @@ class OrthoImage(ABC, OrthoLayout):
         :param line_stop: the image line where the rectangle stops
         :param col_start: the image column where the rectangle begins
         :param col_stop: the image column where the rectangle stops
-        :returns: the rectangle of pixels as an array
+        :returns: a sub image
         """
         image_dataset = gdal.Open(str(self.get_image_file_path(band_id)))
         image = image_dataset.GetRasterBand(self.get_band_index_in_file(band_id))
@@ -85,4 +86,4 @@ class OrthoImage(ABC, OrthoLayout):
         pixels = image.ReadAsArray(col_start, line_start, nb_cols, nb_lines)
         # release dataset
         image_dataset = None
-        return pixels
+        return WavesImage(pixels, self.spatial_resolution)
