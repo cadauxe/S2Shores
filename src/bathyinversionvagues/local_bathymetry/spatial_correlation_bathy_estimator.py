@@ -28,14 +28,9 @@ class SpatialCorrelationBathyEstimator(CorrelationBathyEstimator):
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        """ Constructor
 
-        :param images_sequence: sequence of image used to compute bathymetry
-        :param global_estimator: global estimator
-        :param selected_directions: selected_directions: the set of directions onto which the
-        sinogram must be computed
-        """
-        super().__init__(images_sequence, global_estimator, waves_fields_estimations, selected_directions)
+        super().__init__(images_sequence, global_estimator,
+                         waves_fields_estimations, selected_directions)
         self._shape_x, self._shape_y = self.images_sequence[0].pixels.shape
         self._number_frames = len(self.images_sequence)
         sampling_positions_x = np.reshape(np.arange(self._shape_x), (1, -1))

@@ -15,6 +15,7 @@ class GeoTransform:
     - (C, L) -> (X, Y)
 
     According to this model the following holds:
+
     - the pixel at the upper left corner of the image, is indexed by C=0, L=0
     - the cartographic coordinates of a pixel are those of the upper left corner of that pixel
     - resolution in the Y direction is generally negative to account for the opposite directions

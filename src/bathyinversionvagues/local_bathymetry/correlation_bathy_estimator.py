@@ -40,12 +40,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        """ constructor
-        :param images_sequence: sequence of image used to compute bathymetry
-        :param global_estimator: global estimator
-        :param selected_directions: selected_directions: the set of directions onto which the
-        sinogram must be computed
-        """
+
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
         # Processing attributes

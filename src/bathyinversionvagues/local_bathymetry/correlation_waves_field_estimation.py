@@ -38,7 +38,7 @@ class CorrelationWavesFieldEstimation(WavesFieldEstimation):
     @property
     def delta_celerity(self) -> float:
         # FIXME: define this quantity
-        """ :returns: ????????????????? """
+        """ :returns: TBD """
         return np.nan
 
     @property

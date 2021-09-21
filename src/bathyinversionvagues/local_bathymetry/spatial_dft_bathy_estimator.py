@@ -73,8 +73,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self.radon_transforms.append(radon_transform)
 
     def run(self) -> None:
-        """    Radon, FFT, find directional peaks, then do detailed DFT analysis to find
-        detailed phase shifts per linear wave number (k *2pi)
+        """ Radon, FFT, find directional peaks, then do detailed DFT analysis to find
+        detailed phase shifts per linear wave number (k*2pi)
 
         """
         self.preprocess_images()
