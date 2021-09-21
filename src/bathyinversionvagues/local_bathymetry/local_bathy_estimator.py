@@ -40,7 +40,13 @@ class LocalBathyEstimator(ABC):
                                  data providers, debugging, ...)
         :param selected_directions: the set of directions onto which the sinogram must be computed
         """
-        # TODO: Check that the images have the same resolution, satellite (and same size ?)
+        # TODO: Check that the images have the same satellite (and same size ?)
+        if (abs(global_estimator.image._geo_transform.x_resolution) !=
+                abs(global_estimator.image._geo_transform.y_resolution)):
+            raise Exception("X & Y resolution are different")
+
+        self.spatial_resolution = abs(global_estimator.image._geo_transform.x_resolution)
+
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.local_estimator_params
