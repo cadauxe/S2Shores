@@ -40,9 +40,7 @@ class LocalBathyEstimator(ABC):
                                  by this local bathymetry estimator (access to parameters,
                                  data providers, debugging, ...)
         :param selected_directions: the set of directions onto which the sinogram must be computed
-        :raise SequenceImagesEmptyError: when sequence is empty
-        :raise SequenceImagesResolutionError: when sequence has different resolutions
-        :raise SequenceImagesSizeError: when sequence has different sizes
+        :raise SequenceImagesError: when sequence can no be exploited
         """
         if not images_sequence:
             raise SequenceImagesError('Sequence images is empty')
