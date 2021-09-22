@@ -54,7 +54,7 @@ class OrthoBathyEstimator:
         nb_keep = self.parent_estimator.nb_max_waves_fields
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
-                                         self.sampled_ortho.image.acquisition_time)
+                                         self.sampled_ortho.ortho_stack.acquisition_time)
 
         # subtile reading
         sub_tile_images = [self.sampled_ortho.read_pixels(frame_id) for

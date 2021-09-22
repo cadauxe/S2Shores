@@ -7,12 +7,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, Union  # @NoMove
 
 from osgeo import gdal
 
 from ..image_processing.waves_image import WavesImage
+
 from .ortho_layout import OrthoLayout
-from typing import Dict, Union  # @NoMove
 
 
 FrameIdType = Union[str, int, datetime]

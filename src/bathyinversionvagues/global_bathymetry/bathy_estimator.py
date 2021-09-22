@@ -28,17 +28,17 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
     sequentially.
     """
 
-    def __init__(self, image: OrthoStack, wave_params: Munch,
+    def __init__(self, ortho_stack: OrthoStack, wave_params: Munch,
                  nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
-        :param image: the orthorectified image onto which bathymetry must be estimated.
+        :param ortho_stack: the orthorectified stack onto which bathymetry must be estimated.
         :param wave_params: parameters for the global and local bathymetry estimators
         :param nb_subtiles_max: Nb of subtiles for bathymetry estimation
         """
         super().__init__(wave_params)
         # Store arguments in attributes for further use
-        self.image = image
+        self.ortho_stack = ortho_stack
 
         self._distoshore_provider: DisToShoreProvider
         self.set_distoshore_provider(InfinityDisToShoreProvider())
@@ -50,7 +50,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self._delta_time_provider: Optional[DeltaTimeProvider] = None
 
         # Create subtiles onto which bathymetry estimation will be done
-        self.subtiles = SampledOrthoImage.build_subtiles(image, nb_subtiles_max,
+        self.subtiles = SampledOrthoImage.build_subtiles(self.ortho_stack, nb_subtiles_max,
                                                          self.sampling_step_x,
                                                          self.sampling_step_y,
                                                          self.measure_extent)
@@ -90,7 +90,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         # Retrieve the subtile.
         subtile = self.subtiles[subtile_number]
-        print(f'Subtile {subtile_number}: {self.image.short_name} {subtile}')
+        print(f'Subtile {subtile_number}: {self.ortho_stack.short_name} {subtile}')
 
         # Build a bathymertry estimator over the subtile and launch estimation.
         subtile_estimator = OrthoBathyEstimator(self, subtile)
@@ -98,7 +98,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
 
         # Build the bathymetry dataset for the subtile.
         infos = subtile_estimator.build_infos()
-        infos.update(self.image.build_infos())
+        infos.update(self.ortho_stack.build_infos())
         for key, value in infos.items():
             dataset.attrs[key] = value
 
@@ -137,7 +137,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         :param distoshore_provider: the DisToShoreProvider to use
         """
         self._distoshore_provider = distoshore_provider
-        self._distoshore_provider.client_epsg_code = self.image.epsg_code
+        self._distoshore_provider.client_epsg_code = self.ortho_stack.epsg_code
 
     def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance from a given point to the nearest shore.
@@ -153,7 +153,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         :param gravity_provider: the GravityProvider to use
         """
         self._gravity_provider = gravity_provider
-        self._gravity_provider.client_epsg_code = self.image.epsg_code
+        self._gravity_provider.client_epsg_code = self.ortho_stack.epsg_code
 
     def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
         """ Returns the gravity at some point expressed by its X, Y and H coordinates in some SRS,
@@ -171,7 +171,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         :param delta_time_provider: the DeltaTimeProvider to use
         """
         self._delta_time_provider = delta_time_provider
-        self._delta_time_provider.client_epsg_code = self.image.epsg_code
+        self._delta_time_provider.client_epsg_code = self.ortho_stack.epsg_code
 
     def get_delta_time(self, first_frame_id: FrameIdType, second_frame_id: FrameIdType,
                        point: PointType) -> float:
