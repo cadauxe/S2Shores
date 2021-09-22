@@ -57,9 +57,8 @@ class OrthoBathyEstimator:
                                          self.sampled_ortho.image.acquisition_time)
 
         # subtile reading
-        sub_tile_images: List[WavesImage] = []
-        for band_id in self.parent_estimator.bands_identifiers:
-            sub_tile_images.append(self.sampled_ortho.read_pixels(band_id))
+        sub_tile_images = [self.sampled_ortho.read_pixels(frame_id) for
+                           frame_id in self.parent_estimator.bands_identifiers]
         print(f'Loading time: {time.time() - start_load:.2f} s')
 
         start = time.time()

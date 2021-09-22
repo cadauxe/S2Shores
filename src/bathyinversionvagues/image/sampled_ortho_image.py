@@ -8,19 +8,17 @@ from typing import List
 
 import numpy as np
 
+from ..image_processing.waves_image import WavesImage
 from .carto_tile import CartoTile, build_tiling
 from .image_geometry_types import PointType, MarginsType, ImageWindowType
-from .ortho_image import OrthoImage
-
-from ..image_processing.waves_image import WavesImage
+from .ortho_stack import OrthoStack, FrameIdType
 
 
-# FIXME: Could we inherit from OrthoImage?
 class SampledOrthoImage(CartoTile):
     """ This class makes the link between a CartoTile and the image in which it is defined.
     """
 
-    def __init__(self, image: OrthoImage, x_samples: np.ndarray, y_samples: np.ndarray,
+    def __init__(self, image: OrthoStack, x_samples: np.ndarray, y_samples: np.ndarray,
                  margins: MarginsType) -> None:
         """ Define the samples belonging to the subtile. These samples correspond to the cross
         product of the X and Y coordinates.
@@ -43,7 +41,7 @@ class SampledOrthoImage(CartoTile):
                                                                          self._margins)
 
     @classmethod
-    def build_subtiles(cls, image: OrthoImage, nb_subtiles_max: int, step_x: float, step_y: float,
+    def build_subtiles(cls, image: OrthoStack, nb_subtiles_max: int, step_x: float, step_y: float,
                        margins: MarginsType) -> List['SampledOrthoImage']:
         """ Class method building a set of SampledOrthoImage instances, forming a tiling of the
         specified orthorectifed image.
@@ -64,14 +62,14 @@ class SampledOrthoImage(CartoTile):
             subtiles.append(cls(image, *subtile_def, margins))
         return subtiles
 
-    def read_pixels(self, band_id: str) -> WavesImage:
+    def read_pixels(self, frame_id: FrameIdType) -> WavesImage:
         """ Read the whole rectangle of pixels corresponding to this SampledOrthoImage
-        retrieved from a specific band of the orthorectified image.
+        retrieved from a specific frame of the orthorectified stack.
 
-        :param band_id: the identifier of the spectral band
+        :param frame_id: the identifier of the frame in the stack
         :returns: the rectangle of pixels as an array
         """
-        return self.image.read_pixels(band_id,
+        return self.image.read_pixels(frame_id,
                                       self._line_start, self._line_stop,
                                       self._col_start, self._col_stop)
 

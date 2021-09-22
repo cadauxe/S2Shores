@@ -15,7 +15,7 @@ from ..data_providers.delta_time_provider import (DeltaTimeProvider, NoDeltaTime
 from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
 from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
-from ..image.ortho_image import OrthoImage
+from ..image.ortho_stack import OrthoStack
 from ..image.sampled_ortho_image import SampledOrthoImage
 
 from .bathy_estimator_parameters import BathyEstimatorParameters
@@ -28,7 +28,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
     sequentially.
     """
 
-    def __init__(self, image: OrthoImage, wave_params: Munch,
+    def __init__(self, image: OrthoStack, wave_params: Munch,
                  nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
