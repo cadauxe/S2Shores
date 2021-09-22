@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator') -> None:
     # FIXME : Handle severals wave_estimations
     ######################################################
-    wave_estimation = temporal_estimator._waves_fields_estimations[0]
+    wave_estimation = temporal_estimator.waves_fields_estimations[0]
     ######################################################
     fig = plt.figure(constrained_layout=True)
     gs = gridspec.GridSpec(5, 3, figure=fig)

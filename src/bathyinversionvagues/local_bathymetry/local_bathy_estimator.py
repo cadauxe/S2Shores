@@ -58,12 +58,12 @@ class LocalBathyEstimator(ABC):
         self.selected_directions = selected_directions
 
         self._waves_fields_estimations = waves_fields_estimations
-        self._position = self._waves_fields_estimations.location
+        self._position = self.waves_fields_estimations.location
 
         self._delta_time = self.global_estimator.get_delta_time(
             self.global_estimator.bands_identifiers[0],
             self.global_estimator.bands_identifiers[1],
-            self._waves_fields_estimations.location)
+            self.waves_fields_estimations.location)
 
         self._metrics: Dict[str, Any] = {}
 
@@ -85,7 +85,7 @@ class LocalBathyEstimator(ABC):
     def gravity(self) -> float:
         """ :returns: the acceleration of the gravity at the working position of the estimator
         """
-        return self._waves_fields_estimations.gravity
+        return self.waves_fields_estimations.gravity
 
     # FIXME: At the moment only a pair of images is handled (list is limited to a singleton)
     @property
@@ -148,7 +148,7 @@ class LocalBathyEstimator(ABC):
 
         :param waves_field_estimation: a new estimation to store for this local bathy estimator
         """
-        self._waves_fields_estimations.append(waves_field_estimation)
+        self.waves_fields_estimations.append(waves_field_estimation)
 
     @property
     def waves_fields_estimations(self) -> WavesFieldsEstimations:
