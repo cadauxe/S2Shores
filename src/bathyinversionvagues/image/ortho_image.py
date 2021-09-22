@@ -43,6 +43,12 @@ class OrthoImage(ABC, OrthoLayout):
         """
         return self._geo_transform.resolution
 
+    @property
+    def x_y_resolutions_equal(self) -> bool:
+        """ :returns: True if the absolute values of X and Y resolutions are equal
+        """
+        return self._geo_transform.x_y_resolutions_equal
+
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this ortho image
         """

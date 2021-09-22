@@ -56,6 +56,12 @@ class GeoTransform:
         """
         return self.x_resolution
 
+    @property
+    def x_y_resolutions_equal(self) -> bool:
+        """ :returns: True if the absolute values of X and Y resolutions are equal
+        """
+        return self.x_resolution == -self.y_resolution
+
     def projected_coordinates(self, point_column: float, point_line: float) -> PointType:
         """ Computes the georeferenced coordinates of a point defined by its coordinates
         in the image
