@@ -4,7 +4,7 @@
 GLOBAL_ESTIMATOR:
 
   # the local estimator to use
-  WAVE_EST_METHOD: "SPATIAL_DFT" # among SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
+  WAVE_EST_METHOD: "TEMPORAL_CORRELATION" # among SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
 
   # product characteristics
   DXP: 500.0 # output grid resolution - meters - S2 : 500
@@ -13,7 +13,7 @@ GLOBAL_ESTIMATOR:
   NKEEP: 3 # number of main waves directions to keep in the product
   
   # window parameters
-  WINDOW: 800.0 # thumbnail size - meters
+  WINDOW: 400.0 # thumbnail size - meters
   SM_LENGTH: 10 # smoothing filter size - pixels
 
   # physical constraints
@@ -38,21 +38,13 @@ SPATIAL_DFT:
   ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
   STEP_T: 0.05 # step for period sampling - seconds - 
 
-
-PREPROCESSING:
-  PASSBAND:
-    LOW_PERIOD: 5
-    HIGH_PERIOD: 25
-
-TEMPORAL_METHOD:
+TEMPORAL_CORRELATION:
   DEBUG_PATH: ""
   PASS_BAND_FILTER: 1
   RESOLUTION:
-    SPATIAL: 0.5
-    TEMPORAL: 8
     TIME_INTERPOLATION: 0.5
   TEMPORAL_LAG: 1
-  PERCENTAGE_POINTS: 5
+  PERCENTAGE_POINTS: 1
   TUNING:
     RATIO_SIZE_CORRELATION: 1
     MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25
@@ -61,12 +53,10 @@ TEMPORAL_METHOD:
     HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2
     MIN_PEAKS_DISTANCE_PERIOD: 5
 
-SPATIAL_METHOD:
+SPATIAL_CORRELATION:
   DEBUG_PATH: ""
   PASS_BAND_FILTER: 1
   RESOLUTION:
-    SPATIAL: 0.5
-    TEMPORAL: 8
     TIME_INTERPOLATION: 0.5
   TEMPORAL_LAG: 1
   TUNING:

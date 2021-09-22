@@ -16,6 +16,7 @@ from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 import numpy as np
 
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..waves_exceptions import SequenceImagesError
 from .waves_field_estimation import WavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
 
@@ -48,8 +49,21 @@ class LocalBathyEstimator(ABC):
         :param waves_fields_estimations: the waves fields estimations set in which the local
                                          bathymetry estimator will store its estimations.
         :param selected_directions: the set of directions onto which the sinogram must be computed
+        :raise SequenceImagesError: when sequence can no be exploited
         """
-        # TODO: Check that the images have the same resolution, satellite (and same size ?)
+        if not images_sequence:
+            raise SequenceImagesError('Sequence images is empty')
+        spatial_resolution = images_sequence[0].resolution
+        shape = images_sequence[0].pixels.shape
+        for wave_image in images_sequence[1:]:
+            if wave_image.resolution != spatial_resolution:
+                raise SequenceImagesError(
+                    'Images in sequence do not have same resolution')
+            if wave_image.pixels.shape != shape:
+                raise SequenceImagesError('Images in sequence do not have same size')
+
+        self.spatial_resolution = spatial_resolution
+
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.local_estimator_params
@@ -174,6 +188,8 @@ class LocalBathyEstimator(ABC):
 
 
 class LocalBathyEstimatorDebug(LocalBathyEstimator):
+    """ Abstract class handling begud mode for LocalBathyEstimator
+    """
 
     def run(self) -> None:
         super().run()

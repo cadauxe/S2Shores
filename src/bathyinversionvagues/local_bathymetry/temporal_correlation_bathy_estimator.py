@@ -90,7 +90,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
             (np.max(indices_x) + 1, np.max(indices_y) + 1))
         projected_matrix[indices_x, indices_y] = values
-        return WavesImage(projected_matrix, self.local_estimator_params.RESOLUTION.SPATIAL)
+        return WavesImage(projected_matrix, self.spatial_resolution)
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:

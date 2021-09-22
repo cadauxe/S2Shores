@@ -104,7 +104,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def get_correlation_image(self) -> WavesImage:
         """ :return: correlation image
         """
-        return WavesImage(self.correlation_matrix, self.local_estimator_params.RESOLUTION.SPATIAL)
+        return WavesImage(self.correlation_matrix, self.spatial_resolution)
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -175,7 +175,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """ Wave length computation (in meter)
         """
         period, self._metrics['wave_length_zeros'] = find_period(sinogram)
-        wave_length = period * self.local_estimator_params.RESOLUTION.SPATIAL
+        wave_length = period * self.spatial_resolution
         return wave_length
 
     def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
@@ -184,7 +184,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         dephasing, self._metrics['sinogram_period'] = find_dephasing(sinogram,
                                                                      wave_length)
         self._metrics['dephasing'] = dephasing
-        rhomx = self.local_estimator_params.RESOLUTION.SPATIAL * dephasing
+        rhomx = self.spatial_resolution * dephasing
         delta_time = self.global_estimator.get_delta_time(
             self.global_estimator.bands_identifiers[0],
             self.global_estimator.bands_identifiers[1],
@@ -197,7 +197,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """ Temporal reconstruction of the correlation signal following propagation direction
         """
         distances = np.cos(np.radians(direction_propagation - self.angles.T.flatten())) * \
-            self.distances.flatten() * self.local_estimator_params.RESOLUTION.SPATIAL
+            self.distances.flatten() * self.spatial_resolution
         time = distances / celerity
         time_unique, index_unique = np.unique(time, return_index=True)
         index_unique_sorted = np.argsort(time_unique)
