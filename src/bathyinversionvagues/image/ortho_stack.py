@@ -32,7 +32,7 @@ class OrthoStack(ABC, OrthoLayout):
     - when several images are contained in a product or in a directory not all of them are
       considered as frames of the OrthoStack. Just a subset of them are declared as frames, which
       allows for instance to select images of the same resolution to build the stack from
-      the set of images..
+      the set of images.
     """
 
     @property
@@ -84,7 +84,7 @@ class OrthoStack(ABC, OrthoLayout):
         """
 
     @abstractmethod
-    def get_band_index_in_file(self, frame_id: FrameIdType) -> int:
+    def get_frame_index_in_file(self, frame_id: FrameIdType) -> int:
         """ Provides the index of a given frame of this ortho stack in the file specified
         by get_image_file_path()
 
@@ -94,7 +94,7 @@ class OrthoStack(ABC, OrthoLayout):
 
     def read_pixels(self, frame_id: FrameIdType, line_start: int, line_stop: int,
                     col_start: int, col_stop: int) -> WavesImage:
-        """ Read a rectangle of pixels from a specific frame of this image.
+        """ Read a rectangle of pixels from a specific frame of this stack.
 
         :param frame_id: the identifier of the  frame to read
         :param line_start: the image line where the rectangle begins
@@ -104,7 +104,7 @@ class OrthoStack(ABC, OrthoLayout):
         :returns: a sub image taken from the frame
         """
         image_dataset = gdal.Open(str(self.get_image_file_path(frame_id)))
-        image = image_dataset.GetRasterBand(self.get_band_index_in_file(frame_id))
+        image = image_dataset.GetRasterBand(self.get_frame_index_in_file(frame_id))
         nb_cols = col_stop - col_start + 1
         nb_lines = line_stop - line_start + 1
         pixels = image.ReadAsArray(col_start, line_start, nb_cols, nb_lines)

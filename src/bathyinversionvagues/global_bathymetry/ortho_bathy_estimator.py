@@ -124,7 +124,7 @@ class OrthoBathyEstimator:
 
         # Create the sequence of WavesImages (to be used by ALL estimators)
         images_sequence: List[WavesImage] = []
-        for index, band_id in enumerate(self.parent_estimator.bands_identifiers):
+        for index, frame_id in enumerate(self.parent_estimator.bands_identifiers):
             # TODO: make a method in WavesImage to create an excerpt ?
             pixels = sub_tile_images[index].pixels
             window_image = WavesImage(pixels[window[0]:window[1] + 1, window[2]:window[3] + 1],
@@ -133,7 +133,7 @@ class OrthoBathyEstimator:
             if self.parent_estimator.debug_sample:
                 print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
                 print(f'Window in ortho image coordinate: {window}')
-                print(f'--{band_id} imagette {window_image.pixels.shape}:')
+                print(f'--{frame_id} imagette {window_image.pixels.shape}:')
                 print(window_image.pixels)
         return images_sequence
 

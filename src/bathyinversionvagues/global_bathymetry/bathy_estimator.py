@@ -15,7 +15,7 @@ from ..data_providers.delta_time_provider import (DeltaTimeProvider, NoDeltaTime
 from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
 from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
-from ..image.ortho_stack import OrthoStack
+from ..image.ortho_stack import OrthoStack, FrameIdType
 from ..image.sampled_ortho_image import SampledOrthoImage
 
 from .bathy_estimator_parameters import BathyEstimatorParameters
@@ -72,7 +72,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
 
     @property
     @abstractmethod
-    def bands_identifiers(self) -> List[str]:
+    def bands_identifiers(self) -> List[FrameIdType]:
         """ :returns: the spectral band identifiers in the product to use for bathymetry estimation
         """
 
@@ -173,7 +173,8 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self._delta_time_provider = delta_time_provider
         self._delta_time_provider.client_epsg_code = self.image.epsg_code
 
-    def get_delta_time(self, first_frame_id: Any, second_frame_id: Any, point: PointType) -> float:
+    def get_delta_time(self, first_frame_id: FrameIdType, second_frame_id: FrameIdType,
+                       point: PointType) -> float:
         """ Returns the delta time at some point expressed by its X, Y and H coordinates in
         some SRS, using the delta time provider associated to this bathymetry estimator.
 
