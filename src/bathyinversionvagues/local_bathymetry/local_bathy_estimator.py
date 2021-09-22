@@ -16,6 +16,8 @@ from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
 import numpy as np
 
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..sequence_images_exceptions import (SequenceImagesSizeError, SequenceImagesResolutionError,
+                                          SequenceImagesEmptyError)
 from .waves_field_estimation import WavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
 
@@ -39,13 +41,22 @@ class LocalBathyEstimator(ABC):
                                  by this local bathymetry estimator (access to parameters,
                                  data providers, debugging, ...)
         :param selected_directions: the set of directions onto which the sinogram must be computed
+        :raise SequenceImagesEmptyError: when sequence is empty
+        :raise SequenceImagesResolutionError: when sequence has different resolutions
+        :raise SequenceImagesSizeError: when sequence has different sizes
         """
-        # TODO: Check that the images have the same satellite (and same size ?)
-        if (abs(global_estimator.image._geo_transform.x_resolution) !=
-                abs(global_estimator.image._geo_transform.y_resolution)):
-            raise Exception("X & Y resolution are different")
+        if not images_sequence:
+            raise SequenceImagesEmptyError('Sequence images is empty')
+        spatial_resolution = images_sequence[0].resolution
+        shape = images_sequence[0].pixels.shape
+        for wave_image in images_sequence[1:]:
+            if wave_image.resolution != spatial_resolution:
+                raise SequenceImagesResolutionError(
+                    'Images in sequence do not have same resolution')
+            if wave_image.pixels.shape != shape:
+                raise SequenceImagesSizeError('Images in sequence do not have same size')
 
-        self.spatial_resolution = abs(global_estimator.image._geo_transform.x_resolution)
+        self.spatial_resolution = spatial_resolution
 
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
@@ -162,6 +173,8 @@ class LocalBathyEstimator(ABC):
 
 
 class LocalBathyEstimatorDebug(LocalBathyEstimator):
+    """ Abstract class handling begud mode for LocalBathyEstimator
+    """
 
     def run(self) -> None:
         super().run()
