@@ -16,8 +16,7 @@ from typing import Dict, Any, List, Optional, TYPE_CHECKING  # @NoMove
 import numpy as np
 
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..sequence_images_exceptions import (SequenceImagesSizeError, SequenceImagesResolutionError,
-                                          SequenceImagesEmptyError)
+from ..waves_exceptions import SequenceImagesError
 from .waves_field_estimation import WavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
 
@@ -46,15 +45,15 @@ class LocalBathyEstimator(ABC):
         :raise SequenceImagesSizeError: when sequence has different sizes
         """
         if not images_sequence:
-            raise SequenceImagesEmptyError('Sequence images is empty')
+            raise SequenceImagesError('Sequence images is empty')
         spatial_resolution = images_sequence[0].resolution
         shape = images_sequence[0].pixels.shape
         for wave_image in images_sequence[1:]:
             if wave_image.resolution != spatial_resolution:
-                raise SequenceImagesResolutionError(
+                raise SequenceImagesError(
                     'Images in sequence do not have same resolution')
             if wave_image.pixels.shape != shape:
-                raise SequenceImagesSizeError('Images in sequence do not have same size')
+                raise SequenceImagesError('Images in sequence do not have same size')
 
         self.spatial_resolution = spatial_resolution
 
