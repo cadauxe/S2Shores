@@ -63,7 +63,6 @@ class LocalBathyEstimator(ABC):
         self.selected_directions = selected_directions
 
         self._waves_fields_estimations = waves_fields_estimations
-        self._position = self._waves_fields_estimations.location
 
         self._delta_time = self.global_estimator.get_delta_time(
             self._waves_fields_estimations.location)

@@ -208,7 +208,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._metrics['dephasing'] = dephasing
         rhomx = self.spatial_resolution * dephasing
         delta_time = self.global_estimator.get_delta_time(
-            self._position)
+            self._waves_fields_estimations.location)
         self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
         return celerity
