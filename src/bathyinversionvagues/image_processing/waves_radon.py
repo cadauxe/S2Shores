@@ -93,7 +93,27 @@ class WavesRadon:
         """
         return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
 
-    def compute(self, selected_directions: Optional[np.ndarray] = None) -> None:
+    def _radon_augmentation(self, radon_transform, factor_augmented_radon: float) -> np.ndarray:
+        """
+        Augment the resolution of the radon transform image
+        Parameters
+        ----------
+        selected_directions: [int] selected directions
+        factor_augmented_radon: (int) factor of the resolution augmentation.
+
+        """
+        radon_transform_augmented_array = np.empty((int(self.nb_samples / factor_augmented_radon), self.nb_directions))
+        new_axis = np.linspace(0, self.nb_samples - 1, int(self.nb_samples / factor_augmented_radon))
+        current_axis = np.linspace(0, self.nb_samples - 1, self.nb_samples)
+        for direction in range(self.nb_directions):
+            radon_transform_augmented_array[:, direction] = \
+                np.interp(new_axis, current_axis, radon_transform[:, direction])
+
+        return radon_transform_augmented_array
+
+    def compute(self,
+                selected_directions: Optional[np.ndarray] = None,
+                augmented_radon_factor: Optional[int]= None) -> None:
         """ Compute the radon transform of the image for the currently defined set of directions
 
         :raises AttributeError: if the directions have not been specified yet
@@ -103,9 +123,14 @@ class WavesRadon:
                                                     self.directions_step)
         # FIXME: quantization may imply that radon transform is not computed on stored directions
         radon_transform_array = symmetric_radon(self.pixels, theta=selected_directions)
+        if augmented_radon_factor is not None:
+            radon_transform_array = self._radon_augmentation(radon_transform_array,
+                                                             augmented_radon_factor)
+
         self._radon_transform = DirectionalArray(array=radon_transform_array,
                                                  directions=selected_directions,
                                                  directions_step=self.directions_step)
+
         if self._weights is not None and self._radon_transform is not None:
             for direction in range(self.nb_directions):
                 self._radon_transform.array[:, direction] = (

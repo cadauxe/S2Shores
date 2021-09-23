@@ -38,6 +38,11 @@ SPATIAL_DFT:
   ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
   STEP_T: 0.05 # step for period sampling - seconds - 
 
+#spatial_correlation
+SPATIAL_METHOD:
+  CORRELATION_MODE: 'full' # np.correlate mode
+  AUGMENTED_RADON_FACTOR: 0.01 # radon_augmentation - augment the resolution of the radon transform
+  PEAK_POSITION_MAX_FACTOR: 0.8 # peak_position - factor tunning for the maximum peak position
 
 PREPROCESSING:
   PASSBAND:
@@ -61,18 +66,4 @@ TEMPORAL_METHOD:
     HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2
     MIN_PEAKS_DISTANCE_PERIOD: 5
 
-SPATIAL_METHOD:
-  DEBUG_PATH: ""
-  PASS_BAND_FILTER: 1
-  RESOLUTION:
-    SPATIAL: 0.5
-    TEMPORAL: 8
-    TIME_INTERPOLATION: 0.5
-  TEMPORAL_LAG: 1
-  TUNING:
-    RATIO_SIZE_CORRELATION: 1
-    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25
-    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5
-    LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.04
-    HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2
-    MIN_PEAKS_DISTANCE_PERIOD: 5
+
