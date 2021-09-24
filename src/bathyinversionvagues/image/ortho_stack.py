@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Union  # @NoMove
+from typing import Dict, Union, List  # @NoMove
 
 from osgeo import gdal
 
@@ -17,6 +17,7 @@ from .ortho_layout import OrthoLayout
 
 
 FrameIdType = Union[str, int, datetime]
+FramesIdsType = Union[List[str], List[int], List[datetime]]
 
 
 class OrthoStack(ABC, OrthoLayout):
@@ -32,8 +33,7 @@ class OrthoStack(ABC, OrthoLayout):
       different locations.
     - when several images are contained in a product or in a directory not all of them are
       considered as frames of the OrthoStack. Just a subset of them are declared as frames, which
-      allows for instance to select images of the same resolution to build the stack from
-      the set of images.
+      allows for instance to select images of the same resolution from the set of images.
     """
 
     @property
@@ -75,6 +75,15 @@ class OrthoStack(ABC, OrthoLayout):
             'AcquisitionTime': self.acquisition_time,  #
             'epsg': 'EPSG:' + str(self.epsg_code)}
         return infos
+
+    @property
+    @abstractmethod
+    def usable_frames(self) -> FramesIdsType:
+        """ :returns: the list of identifiers of the frames which can be used in the stack.
+                      This can be a subset of all the available frames in the stack, for instance
+                      spectral bands at the same resolution or acquisitions made at consistent
+                      times.
+        """
 
     @abstractmethod
     def get_image_file_path(self, frame_id: FrameIdType) -> Path:

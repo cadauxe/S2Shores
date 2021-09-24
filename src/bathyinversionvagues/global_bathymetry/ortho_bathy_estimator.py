@@ -9,7 +9,6 @@ import warnings
 
 from typing import Dict, List, TYPE_CHECKING
 
-import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
 
 
