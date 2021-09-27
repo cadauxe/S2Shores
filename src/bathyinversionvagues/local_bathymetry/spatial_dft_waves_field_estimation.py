@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class handling the information describing a waves field sample..
+""" Class handling the information describing a waves field sample.
 
 :author: Alain Giros
 :organization: CNES
@@ -37,7 +37,7 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
     @property
     def delta_celerity(self) -> float:
         # FIXME: define this quantity
-        """ :returns: ????????????????? """
+        """ :returns: TBD """
         return np.nan
 
     @property
@@ -68,7 +68,8 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
     @property
     def delta_phase_ratio(self) -> float:
-        """ :returns: the ratio of the phase difference compared to ???? """
+        # FIXME: define this quantity
+        """ :returns: the ratio of the phase difference compared to TBD """
         return self._delta_phase_ratio
 
     @delta_phase_ratio.setter
@@ -77,7 +78,8 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
     @property
     def energy_max(self) -> float:
-        """ :returns: ??? """
+        # FIXME: define this quantity
+        """ :returns: TBD """
         return self._energy_max
 
     @energy_max.setter

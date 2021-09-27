@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
+from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 from scipy.signal import find_peaks
 
@@ -36,6 +36,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     radon transforms.
     """
 
+    waves_field_estimation_cls = SpatialDFTWavesFieldEstimation
+
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
@@ -47,25 +49,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.peaks_dir = None
         self.directions = None
-
-    def create_waves_field_estimation(self, direction: float, wavelength: float
-                                      ) -> SpatialDFTWavesFieldEstimation:
-        """ Creates the SpatialDFTWavesFieldEstimation instance where the local estimator will
-        store its estimations.
-
-        :param direction: the propagation direction of the waves field (degrees measured clockwise
-                          from the North).
-        :param wavelength: the wavelength of the waves field
-        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
-        """
-        waves_field_estimation = SpatialDFTWavesFieldEstimation(
-            self.gravity,
-            self.global_estimator.depth_estimation_method,
-            self.global_estimator.depth_estimation_precision)
-        waves_field_estimation.direction = direction
-        waves_field_estimation.wavelength = wavelength
-
-        return waves_field_estimation
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -90,8 +73,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self.radon_transforms.append(radon_transform)
 
     def run(self) -> None:
-        """    Radon, FFT, find directional peaks, then do detailed DFT analysis to find
-        detailed phase shifts per linear wave number (k *2pi)
+        """ Radon, FFT, find directional peaks, then do detailed DFT analysis to find
+        detailed phase shifts per linear wave number (k*2pi)
 
         """
         self.preprocess_images()
@@ -213,8 +196,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 self.radon_transforms[0].directions[self.directions[peak_freq_index]]
 
             wavelength = 1 / kfft[peak_wavenumber_index][0]
-            waves_field_estimation = self.create_waves_field_estimation(estimated_direction,
-                                                                        wavelength)
+            waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
+                                          self.create_waves_field_estimation(estimated_direction,
+                                                                             wavelength))
 
             waves_field_estimation.delta_time = self.delta_time
             waves_field_estimation.delta_phase = estimated_phase_shift

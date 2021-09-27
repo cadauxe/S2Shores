@@ -21,7 +21,7 @@ def symmetric_radon(image: np.ndarray,
                     circle: bool = True,
                     *,
                     preserve_range: bool = False) -> np.ndarray:
-    """ Calculates the radon transform of an image given specified
+    """ Calculates the radon transform [1]_ [2]_ of an image given specified
     projection angles.
 
     Parameters

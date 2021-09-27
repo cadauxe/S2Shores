@@ -9,7 +9,7 @@ correlation method
 :created: 18/06/2021
 """
 from abc import abstractmethod
-from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
+from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 
 from scipy.interpolate import interp1d
@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 class CorrelationBathyEstimator(LocalBathyEstimator):
     """ Class offering a framework for bathymetry computation based on correlation
     """
+    waves_field_estimation_cls = CorrelationWavesFieldEstimation
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
@@ -61,25 +62,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
             (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
 
-    def create_waves_field_estimation(self, direction: float, wavelength: float
-                                      ) -> CorrelationWavesFieldEstimation:
-        """ Creates the CorrelationWavesFieldEstimation instance where the local estimator will
-        store its estimations.
-
-        :param direction: the propagation direction of the waves field (degrees measured clockwise
-                          from the North).
-        :param wavelength: the wavelength of the waves field
-        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
-        """
-        waves_field_estimation = CorrelationWavesFieldEstimation(
-            self.gravity,
-            self.global_estimator.depth_estimation_method,
-            self.global_estimator.depth_estimation_precision)
-        waves_field_estimation.direction = direction
-        waves_field_estimation.wavelength = wavelength
-
-        return waves_field_estimation
-
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
@@ -99,8 +81,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
             period = self.compute_period(temporal_signal)
             self._metrics['temporal_signal'] = temporal_signal
-            waves_field_estimation = self.create_waves_field_estimation(direction_propagation,
-                                                                        wave_length)
+            waves_field_estimation = cast(CorrelationWavesFieldEstimation,
+                                          self.create_waves_field_estimation(direction_propagation,
+                                                                             wave_length))
             waves_field_estimation.period = period
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
@@ -208,7 +191,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._metrics['dephasing'] = dephasing
         rhomx = self.spatial_resolution * dephasing
         delta_time = self.global_estimator.get_delta_time(
-            self._waves_fields_estimations.location)
+            self.global_estimator.bands_identifiers[0],
+            self.global_estimator.bands_identifiers[1],
+            self._position)
         self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
         return celerity

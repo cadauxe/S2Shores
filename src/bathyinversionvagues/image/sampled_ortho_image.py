@@ -12,7 +12,10 @@ from .carto_tile import CartoTile, build_tiling
 from .image_geometry_types import PointType, MarginsType, ImageWindowType
 from .ortho_image import OrthoImage
 
+from ..image_processing.waves_image import WavesImage
 
+
+# FIXME: Could we inherit from OrthoImage?
 class SampledOrthoImage(CartoTile):
     """ This class makes the link between a CartoTile and the image in which it is defined.
     """
@@ -61,7 +64,7 @@ class SampledOrthoImage(CartoTile):
             subtiles.append(cls(image, *subtile_def, margins))
         return subtiles
 
-    def read_pixels(self, band_id: str) -> np.ndarray:
+    def read_pixels(self, band_id: str) -> WavesImage:
         """ Read the whole rectangle of pixels corresponding to this SampledOrthoImage
         retrieved from a specific band of the orthorectified image.
 
