@@ -57,7 +57,7 @@ class OrthoBathyEstimator:
 
         # subtile reading
         sub_tile_images = [self.sampled_ortho.read_pixels(frame_id) for
-                           frame_id in self.parent_estimator.bands_identifiers]
+                           frame_id in self.parent_estimator.selected_frames]
         print(f'Loading time: {time.time() - start_load:.2f} s')
 
         start = time.time()
@@ -123,7 +123,7 @@ class OrthoBathyEstimator:
 
         # Create the sequence of WavesImages (to be used by ALL estimators)
         images_sequence: List[WavesImage] = []
-        for index, frame_id in enumerate(self.parent_estimator.bands_identifiers):
+        for index, frame_id in enumerate(self.parent_estimator.selected_frames):
             # TODO: make a method in WavesImage to create an excerpt ?
             pixels = sub_tile_images[index].pixels
             window_image = WavesImage(pixels[window[0]:window[1] + 1, window[2]:window[3] + 1],

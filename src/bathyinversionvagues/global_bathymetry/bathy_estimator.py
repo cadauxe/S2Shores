@@ -71,12 +71,6 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
                 self.window_size_y / 2., self.window_size_y / 2.)
 
     @property
-    @abstractmethod
-    def bands_identifiers(self) -> FramesIdsType:
-        """ :returns: the spectral band identifiers in the product to use for bathymetry estimation
-        """
-
-    @property
     def selected_frames(self) -> FramesIdsType:
         """ :returns: the list of frames selected for running the estimation, or the list of all
                       the usable frames if not specified in the parameters.
