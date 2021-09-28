@@ -77,6 +77,16 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
 
     @property
+    def selected_frames(self) -> FramesIdsType:
+        """ :returns: the list of frames selected for running the estimation, or the list of all
+                      the usable frames if not specified in the parameters.
+        """
+        selected_frames = self.selected_frames_param
+        if selected_frames is None:
+            selected_frames = self.ortho_stack.usable_frames
+        return selected_frames
+
+    @property
     def nb_subtiles(self) -> int:
         """ :returns: the number of subtiles
         """
