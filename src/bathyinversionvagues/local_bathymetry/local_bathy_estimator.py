@@ -71,7 +71,7 @@ class LocalBathyEstimator(ABC):
         self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
-        self._waves_fields_estimations = waves_fields_estimations
+        self.waves_fields_estimations = waves_fields_estimations
         self._position = self.waves_fields_estimations.location
 
         self._delta_time = self.global_estimator.get_delta_time(
@@ -168,7 +168,7 @@ class LocalBathyEstimator(ABC):
     def waves_fields_estimations(self) -> WavesFieldsEstimations:
         """ :returns: the estimations recorded by this estimator.
         """
-        return self._waves_fields_estimations
+        return self.waves_fields_estimations
 
     @property
     def metrics(self) -> Dict[str, Any]:
