@@ -9,7 +9,6 @@ import warnings
 
 from typing import Dict, List, TYPE_CHECKING
 
-import numpy as np  # @NoMove
 from xarray import Dataset  # @NoMove
 
 
@@ -54,12 +53,11 @@ class OrthoBathyEstimator:
         nb_keep = self.parent_estimator.nb_max_waves_fields
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
-                                         self.sampled_ortho.image.acquisition_time)
+                                         self.sampled_ortho.ortho_stack.acquisition_time)
 
         # subtile reading
-        sub_tile_images: List[WavesImage] = []
-        for band_id in self.parent_estimator.bands_identifiers:
-            sub_tile_images.append(self.sampled_ortho.read_pixels(band_id))
+        sub_tile_images = [self.sampled_ortho.read_pixels(frame_id) for
+                           frame_id in self.parent_estimator.selected_frames]
         print(f'Loading time: {time.time() - start_load:.2f} s')
 
         start = time.time()
@@ -125,7 +123,7 @@ class OrthoBathyEstimator:
 
         # Create the sequence of WavesImages (to be used by ALL estimators)
         images_sequence: List[WavesImage] = []
-        for index, band_id in enumerate(self.parent_estimator.bands_identifiers):
+        for index, frame_id in enumerate(self.parent_estimator.selected_frames):
             # TODO: make a method in WavesImage to create an excerpt ?
             pixels = sub_tile_images[index].pixels
             window_image = WavesImage(pixels[window[0]:window[1] + 1, window[2]:window[3] + 1],
@@ -134,7 +132,7 @@ class OrthoBathyEstimator:
             if self.parent_estimator.debug_sample:
                 print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
                 print(f'Window in ortho image coordinate: {window}')
-                print(f'--{band_id} imagette {window_image.pixels.shape}:')
+                print(f'--{frame_id} imagette {window_image.pixels.shape}:')
                 print(window_image.pixels)
         return images_sequence
 

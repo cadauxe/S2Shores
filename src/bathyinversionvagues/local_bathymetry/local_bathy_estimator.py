@@ -75,8 +75,8 @@ class LocalBathyEstimator(ABC):
         self._position = self.waves_fields_estimations.location
 
         self._delta_time = self.global_estimator.get_delta_time(
-            self.global_estimator.bands_identifiers[0],
-            self.global_estimator.bands_identifiers[1],
+            self.global_estimator.selected_frames[0],
+            self.global_estimator.selected_frames[1],
             self.waves_fields_estimations.location)
 
         self._metrics: Dict[str, Any] = {}
