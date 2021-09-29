@@ -34,6 +34,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
     """ Class performing spatial correlation to compute bathymetry
     """
 
+    waves_field_estimation_cls = SpatialCorrelationWavesFieldEstimation
+
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
@@ -62,25 +64,6 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             # Remove tendency possibly introduced by smoothing, specially on the shore line
             preprocessing_filters.append((detrend, []))
         return preprocessing_filters
-
-    def create_waves_field_estimation(self, direction: float, wavelength: float,
-                                      ) -> SpatialCorrelationWavesFieldEstimation:
-        """ Creates the SpatialCorrelationWavesFieldEstimation instance where the local estimator
-        will store its estimations.
-
-        :param direction: the propagation direction of the waves field (degrees measured clockwise
-                          from the North).
-        :param wavelength: the wavelength of the waves field
-        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
-        """
-        waves_field_estimation = SpatialCorrelationWavesFieldEstimation(
-            self.gravity,
-            self.global_estimator.depth_estimation_method,
-            self.global_estimator.depth_estimation_precision)
-        waves_field_estimation.direction = direction
-        waves_field_estimation.wavelength = wavelength
-
-        return waves_field_estimation
 
     def run(self) -> None:
         """
@@ -184,3 +167,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         # TODO: add more outputs (dx, corr)
 
         self.store_estimation(waves_field_estimation)
+
+    def sort_waves_fields(self) -> None:
+        """ Sort the waves fields estimations based on some criterion.
+        """
+        # FIXME: (GREGOIRE) decide if some specific sorting is needed
