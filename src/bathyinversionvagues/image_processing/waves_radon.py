@@ -285,13 +285,13 @@ class WavesRadon:
     def get_sinograms_variances(self,
                                 processing_filters: Optional[SignalProcessingFilters] = None,
                                 directions: Optional[np.ndarray] = None) -> np.ndarray:
-        """
-        Return array of variance of each sinogram
-        :param processing_filters: a set a filter to apply on sinograms before computing variance.
-                Sinograms are left unmodified
+        """ Return array of variance of each sinogram
+
+        :param processing_filters: a set a filters to apply on sinograms before computing variance.
+                                   Sinograms are left unmodified
         :param directions: the directions of the requested sinograms.
-                Defaults to all the Radon transform directions if unspecified.
-        :return: array of variance
+                           Defaults to all the Radon transform directions if unspecified.
+        :return: variances of the sinograms
         """
         directions = self.directions if directions is None else directions
         sinograms_variances = np.empty(len(directions), dtype=np.float64)
@@ -311,8 +311,9 @@ class WavesRadon:
             -> Tuple[WavesSinogram, float, np.ndarray]:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,
         and returns it together with the direction value.
+
         :param preprocessing_filters: a set a filter to apply on sinograms before computing maximum
-        variance. Sinograms are left unmodified
+                                      variance. Sinograms are left unmodified
         :param directions: a set of directions to look for maximum variance sinogram. If None, all
                            the directions in the radon transform are considered.
         :returns: the sinogram of maximum variance together with the corresponding direction.

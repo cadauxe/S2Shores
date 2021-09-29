@@ -32,14 +32,9 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        """ Constructor
 
-        :param images_sequence: sequence of image used to compute bathymetry
-        :param global_estimator: global estimator
-        :param selected_directions: selected_directions: the set of directions onto which the
-        sinogram must be computed
-        """
-        super().__init__(images_sequence, global_estimator, waves_fields_estimations, selected_directions)
+        super().__init__(images_sequence, global_estimator,
+                         waves_fields_estimations, selected_directions)
         self.create_sequence_time_series()
 
     def create_sequence_time_series(self) -> None:
@@ -95,7 +90,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
             (np.max(indices_x) + 1, np.max(indices_y) + 1))
         projected_matrix[indices_x, indices_y] = values
-        return WavesImage(projected_matrix, self.local_estimator_params.RESOLUTION.SPATIAL)
+        return WavesImage(projected_matrix, self.spatial_resolution)
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:

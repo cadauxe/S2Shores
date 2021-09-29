@@ -32,3 +32,8 @@ class WavesEstimationError(WavesException):
 class NoRadonTransformError(WavesException):
     """ Exception raised when trying to access a non existent Radon transform
     """
+
+
+class SequenceImagesError(WavesException):
+    """ Exception raised when sequence images can not be properly exploited
+    """

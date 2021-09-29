@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator') -> None:
     # FIXME : Handle severals wave_estimations
     ######################################################
-    wave_estimation = temporal_estimator._waves_fields_estimations[0]
+    wave_estimation = temporal_estimator.waves_fields_estimations[0]
     ######################################################
     fig = plt.figure(constrained_layout=True)
     gs = gridspec.GridSpec(5, 3, figure=fig)
@@ -76,14 +76,14 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
                  color='r')
     ax4.arrow(
         x[int(length_signal / 2 + wave_estimation.wavelength /
-              (2 * temporal_estimator.local_estimator_params.RESOLUTION.SPATIAL))],
+              (2 * temporal_estimator.spatial_resolution))],
         np.min(sinogram_max_var), 0,
         np.abs(np.min(sinogram_max_var)) + np.max(
             sinogram_max_var), linestyle='dashed',
         color='g')
     ax4.arrow(
         x[int(length_signal / 2 - wave_estimation.wavelength /
-              (2 * temporal_estimator.local_estimator_params.RESOLUTION.SPATIAL))],
+              (2 * temporal_estimator.spatial_resolution))],
         np.min(sinogram_max_var), 0,
         np.abs(np.min(sinogram_max_var)) + np.max(
             sinogram_max_var), linestyle='dashed',
@@ -106,4 +106,4 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
                  (0, np.min(temporal_signal)), color='r')
     plt.title('Temporal reconstruction')
     fig.savefig(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH,
-                             f'Infos_point_{temporal_estimator._position[0]}_{temporal_estimator._position[1]}.png'), dpi=300)
+                             f'Infos_point_{temporal_estimator.waves_fields_estimations.location[0]}_{temporal_estimator.waves_fields_estimations.location[1]}.png'), dpi=300)

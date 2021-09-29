@@ -5,10 +5,10 @@
 :created: 05/05/2021
 """
 import time
-from typing import Dict, List, TYPE_CHECKING
 import warnings
 
-import numpy as np  # @NoMove
+from typing import Dict, List, TYPE_CHECKING
+
 from xarray import Dataset  # @NoMove
 
 
@@ -53,12 +53,11 @@ class OrthoBathyEstimator:
         nb_keep = self.parent_estimator.nb_max_waves_fields
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
-                                         self.sampled_ortho.image.acquisition_time)
+                                         self.sampled_ortho.ortho_stack.acquisition_time)
 
         # subtile reading
-        sub_tile_images: List[np.ndarray] = []
-        for band_id in self.parent_estimator.bands_identifiers:
-            sub_tile_images.append(self.sampled_ortho.read_pixels(band_id))
+        sub_tile_images = [self.sampled_ortho.read_pixels(frame_id) for
+                           frame_id in self.parent_estimator.selected_frames]
         print(f'Loading time: {time.time() - start_load:.2f} s')
 
         start = time.time()
@@ -88,7 +87,7 @@ class OrthoBathyEstimator:
 
         return estimated_bathy.build_dataset(self.parent_estimator.layers_type, nb_keep)
 
-    def _run_local_bathy_estimator(self, sub_tile_images: List[np.ndarray],
+    def _run_local_bathy_estimator(self, sub_tile_images: List[WavesImage],
                                    estimation_point: PointType) -> WavesFieldsEstimations:
         distance = self.parent_estimator.get_distoshore(estimation_point)
         gravity = self.parent_estimator.get_gravity(estimation_point, 0.)
@@ -108,7 +107,9 @@ class OrthoBathyEstimator:
                 local_bathy_estimator.run()
                 local_bathy_estimator.validate_waves_fields()
                 local_bathy_estimator.sort_waves_fields()
-                local_bathy_estimator.print_estimations_debug('after estimations sorting')
+                if self.parent_estimator.debug_sample:
+                    print(f'estimations after sorting :')
+                    print(local_bathy_estimator.waves_fields_estimations)
             except NoDeltaTimeValueError:
                 bathy_estimations.delta_time_available = False
                 bathy_estimations.clear()
@@ -117,24 +118,23 @@ class OrthoBathyEstimator:
                 bathy_estimations.clear()
         return bathy_estimations
 
-    def _create_images_sequence(self, sub_tile_images: List[np.ndarray],
+    def _create_images_sequence(self, sub_tile_images: List[WavesImage],
                                 estimation_point: PointType) -> List[WavesImage]:
 
         window = self.sampled_ortho.window_extent(estimation_point)
-        # TODO: Link WavesImage to OrthoImage and use resolution from it?
-        resolution = self.sampled_ortho.image.spatial_resolution
 
         # Create the sequence of WavesImages (to be used by ALL estimators)
         images_sequence: List[WavesImage] = []
-        for index, band_id in enumerate(self.parent_estimator.bands_identifiers):
-            window_image = WavesImage(sub_tile_images[index][window[0]:window[1] + 1,
-                                                             window[2]:window[3] + 1],
-                                      resolution)
+        for index, frame_id in enumerate(self.parent_estimator.selected_frames):
+            # TODO: make a method in WavesImage to create an excerpt ?
+            pixels = sub_tile_images[index].pixels
+            window_image = WavesImage(pixels[window[0]:window[1] + 1, window[2]:window[3] + 1],
+                                      sub_tile_images[index].resolution)
             images_sequence.append(window_image)
             if self.parent_estimator.debug_sample:
-                print(f'Subtile shape {sub_tile_images[index].shape}')
+                print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
                 print(f'Window in ortho image coordinate: {window}')
-                print(f'--{band_id} imagette {window_image.pixels.shape}:')
+                print(f'--{frame_id} imagette {window_image.pixels.shape}:')
                 print(window_image.pixels)
         return images_sequence
 

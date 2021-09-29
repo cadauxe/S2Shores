@@ -9,8 +9,6 @@
 """
 from enum import IntEnum
 
-import numpy as np
-
 from ..image.image_geometry_types import PointType
 
 

@@ -4,7 +4,11 @@
 :author: GIROS Alain
 :created: 17/05/2021
 """
+from typing import Optional
+
 from munch import Munch
+
+from ..image.ortho_stack import FramesIdsType
 
 
 class BathyEstimatorParameters:
@@ -35,6 +39,16 @@ class BathyEstimatorParameters:
         """ :returns: the code of the local estimator to use with this global estimator
         """
         return self._global_estimator_params.WAVE_EST_METHOD
+
+    @property
+    def selected_frames_param(self) -> Optional[FramesIdsType]:
+        """ :returns: the list of frames selected for running the estimation.
+        """
+        try:
+            result = self._global_estimator_params.SELECTED_FRAMES
+        except AttributeError:
+            result = None
+        return result
 
     @property
     def nb_max_waves_fields(self) -> int:

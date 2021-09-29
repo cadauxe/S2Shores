@@ -9,8 +9,7 @@ correlation method
 :created: 18/06/2021
 """
 from abc import abstractmethod
-from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
-
+from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 from scipy.interpolate import interp1d
 from scipy.signal import butter, find_peaks, sosfiltfilt
@@ -27,7 +26,6 @@ from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
 from .waves_fields_estimations import WavesFieldsEstimations
 
-
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
@@ -35,16 +33,11 @@ if TYPE_CHECKING:
 class CorrelationBathyEstimator(LocalBathyEstimator):
     """ Class offering a framework for bathymetry computation based on correlation
     """
+    waves_field_estimation_cls = CorrelationWavesFieldEstimation
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        """ constructor
-        :param images_sequence: sequence of image used to compute bathymetry
-        :param global_estimator: global estimator
-        :param selected_directions: selected_directions: the set of directions onto which the
-        sinogram must be computed
-        """
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
         # Processing attributes
@@ -60,25 +53,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             (remove_median,
              [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
             (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
-
-    def create_waves_field_estimation(self, direction: float, wavelength: float
-                                      ) -> CorrelationWavesFieldEstimation:
-        """ Creates the CorrelationWavesFieldEstimation instance where the local estimator will
-        store its estimations.
-
-        :param direction: the propagation direction of the waves field (degrees measured clockwise
-                          from the North).
-        :param wavelength: the wavelength of the waves field
-        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
-        """
-        waves_field_estimation = CorrelationWavesFieldEstimation(
-            self.gravity,
-            self.global_estimator.depth_estimation_method,
-            self.global_estimator.depth_estimation_precision)
-        waves_field_estimation.direction = direction
-        waves_field_estimation.wavelength = wavelength
-
-        return waves_field_estimation
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -99,8 +73,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
             period = self.compute_period(temporal_signal)
             self._metrics['temporal_signal'] = temporal_signal
-            waves_field_estimation = self.create_waves_field_estimation(direction_propagation,
-                                                                        wave_length)
+            waves_field_estimation = cast(CorrelationWavesFieldEstimation,
+                                          self.create_waves_field_estimation(direction_propagation,
+                                                                             wave_length))
             waves_field_estimation.period = period
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
@@ -126,7 +101,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def get_correlation_image(self) -> WavesImage:
         """ :return: correlation image
         """
-        return WavesImage(self.correlation_matrix, self.local_estimator_params.RESOLUTION.SPATIAL)
+        return WavesImage(self.correlation_matrix, self.spatial_resolution)
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -197,7 +172,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """ Wave length computation (in meter)
         """
         period, self._metrics['wave_length_zeros'] = find_period(sinogram)
-        wave_length = period * self.local_estimator_params.RESOLUTION.SPATIAL
+        wave_length = period * self.spatial_resolution
         return wave_length
 
     def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
@@ -206,9 +181,14 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         dephasing, self._metrics['sinogram_period'] = find_dephasing(sinogram,
                                                                      wave_length)
         self._metrics['dephasing'] = dephasing
-        rhomx = self.local_estimator_params.RESOLUTION.SPATIAL * dephasing
-        delta_time = self.global_estimator.get_delta_time(
-            self._position)
+        rhomx = self.spatial_resolution * dephasing
+        delta_times = np.array([])
+        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
+            delta_times = np.append(self.global_estimator.get_delta_time(
+                self.global_estimator.selected_frames[frame_index],
+                self.global_estimator.selected_frames[frame_index + 1],
+                self._position), delta_times)
+        delta_time = np.mean(delta_times)
         self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
         return celerity
@@ -217,7 +197,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """ Temporal reconstruction of the correlation signal following propagation direction
         """
         distances = np.cos(np.radians(direction_propagation - self.angles.T.flatten())) * \
-            self.distances.flatten() * self.local_estimator_params.RESOLUTION.SPATIAL
+                    self.distances.flatten() * self.spatial_resolution
         time = distances / celerity
         time_unique, index_unique = np.unique(time, return_index=True)
         index_unique_sorted = np.argsort(time_unique)

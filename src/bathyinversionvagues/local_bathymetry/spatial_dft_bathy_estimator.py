@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
+from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 from scipy.signal import find_peaks
 
@@ -36,6 +36,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     radon transforms.
     """
 
+    waves_field_estimation_cls = SpatialDFTWavesFieldEstimation
+
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
                  selected_directions: Optional[np.ndarray] = None) -> None:
@@ -47,25 +49,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.peaks_dir = None
         self.directions = None
-
-    def create_waves_field_estimation(self, direction: float, wavelength: float
-                                      ) -> SpatialDFTWavesFieldEstimation:
-        """ Creates the SpatialDFTWavesFieldEstimation instance where the local estimator will
-        store its estimations.
-
-        :param direction: the propagation direction of the waves field (degrees measured clockwise
-                          from the North).
-        :param wavelength: the wavelength of the waves field
-        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
-        """
-        waves_field_estimation = SpatialDFTWavesFieldEstimation(
-            self.gravity,
-            self.global_estimator.depth_estimation_method,
-            self.global_estimator.depth_estimation_precision)
-        waves_field_estimation.direction = direction
-        waves_field_estimation.wavelength = wavelength
-
-        return waves_field_estimation
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -90,8 +73,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self.radon_transforms.append(radon_transform)
 
     def run(self) -> None:
-        """    Radon, FFT, find directional peaks, then do detailed DFT analysis to find
-        detailed phase shifts per linear wave number (k *2pi)
+        """ Radon, FFT, find directional peaks, then do detailed DFT analysis to find
+        detailed phase shifts per linear wave number (k*2pi)
 
         """
         self.preprocess_images()
@@ -105,9 +88,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.find_spectral_peaks()
 
-        self._metrics['N'] = self.radon_transforms[0].nb_samples
-        self._metrics['radon_image1'] = self.radon_transforms[0]
-        self._metrics['radon_image2'] = self.radon_transforms[1]
+        if self.debug_sample:
+            self._metrics['N'] = self.radon_transforms[0].nb_samples
+            self._metrics['radon_image1'] = self.radon_transforms[0]
+            self._metrics['radon_image2'] = self.radon_transforms[1]
 
     def sort_waves_fields(self) -> None:
         """ Sort the waves fields estimations based on their energy max.
@@ -194,7 +178,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         kfft = self.get_kfft()
         phi_min, phi_max = self.get_phi_limits(kfft)
-        self._metrics['kfft'] = kfft
 
         self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)
         self.radon_transforms[1].compute_sinograms_dfts(self.directions, kfft)
@@ -204,7 +187,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                 prominence=self.local_estimator_params.PROMINENCE_MULTIPLE_PEAKS)
         peaks_freq = peaks_freq[0]
         peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
-        self._metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
 
         for index, peak_freq_index in enumerate(peaks_freq):
             peak_wavenumber_index = peaks_wavenumbers_ind[index]
@@ -213,8 +195,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 self.radon_transforms[0].directions[self.directions[peak_freq_index]]
 
             wavelength = 1 / kfft[peak_wavenumber_index][0]
-            waves_field_estimation = self.create_waves_field_estimation(estimated_direction,
-                                                                        wavelength)
+            waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
+                                          self.create_waves_field_estimation(estimated_direction,
+                                                                             wavelength))
 
             waves_field_estimation.delta_time = self.delta_time
             waves_field_estimation.delta_phase = estimated_phase_shift
@@ -222,7 +205,12 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 phi_max[peak_wavenumber_index]
             waves_field_estimation.energy_max = total_spectrum_normalized[peak_freq_index]
             self.store_estimation(waves_field_estimation)
-        self.print_estimations_debug('after direction refinement')
+
+        if self.debug_sample:
+            self._metrics['kfft'] = kfft
+            self._metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
+            print(f'estimations after direction refinement :')
+            print(self.waves_fields_estimations)
 
     def normalized_cross_correl_spectrum(self, phi_min: np.ndarray, phi_max: np.ndarray
                                          ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -328,13 +316,14 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         self._dump_cross_correl_spectrum()
 
     def _dump_cross_correl_spectrum(self) -> None:
-        sino1_fft = self._metrics['sino1_fft']
-        phase_shift = self._metrics['phase_shift']
-        phase_shift_thresholded = self._metrics['phase_shift_thresholded']
-        combined_amplitude = self._metrics['combined_amplitude']
-        total_spectrum_normalized = self._metrics['total_spectrum_normalized']
-        amplitude_sino1 = self._metrics['amplitude_sino1']
-        total_spectrum = self._metrics['total_spectrum']
+        metrics = self.metrics
+        sino1_fft = metrics['sino1_fft']
+        phase_shift = metrics['phase_shift']
+        phase_shift_thresholded = metrics['phase_shift_thresholded']
+        combined_amplitude = metrics['combined_amplitude']
+        total_spectrum_normalized = metrics['total_spectrum_normalized']
+        amplitude_sino1 = metrics['amplitude_sino1']
+        total_spectrum = metrics['total_spectrum']
 
         dump_numpy_variable(self.radon_transforms[0].pixels, 'input pixels for Radon transform 1 ')
         dump_numpy_variable(self.radon_transforms[0].radon_transform.get_as_array(),
