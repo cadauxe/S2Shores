@@ -88,9 +88,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.find_spectral_peaks()
 
-        self._metrics['N'] = self.radon_transforms[0].nb_samples
-        self._metrics['radon_image1'] = self.radon_transforms[0]
-        self._metrics['radon_image2'] = self.radon_transforms[1]
+        if self.debug_sample:
+            self._metrics['N'] = self.radon_transforms[0].nb_samples
+            self._metrics['radon_image1'] = self.radon_transforms[0]
+            self._metrics['radon_image2'] = self.radon_transforms[1]
 
     def sort_waves_fields(self) -> None:
         """ Sort the waves fields estimations based on their energy max.
@@ -177,7 +178,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         kfft = self.get_kfft()
         phi_min, phi_max = self.get_phi_limits(kfft)
-        self._metrics['kfft'] = kfft
 
         self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)
         self.radon_transforms[1].compute_sinograms_dfts(self.directions, kfft)
@@ -187,7 +187,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                 prominence=self.local_estimator_params.PROMINENCE_MULTIPLE_PEAKS)
         peaks_freq = peaks_freq[0]
         peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
-        self._metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
 
         for index, peak_freq_index in enumerate(peaks_freq):
             peak_wavenumber_index = peaks_wavenumbers_ind[index]
@@ -208,6 +207,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self.store_estimation(waves_field_estimation)
 
         if self.debug_sample:
+            self._metrics['kfft'] = kfft
+            self._metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
             print(f'estimations after direction refinement :')
             print(self.waves_fields_estimations)
 
@@ -315,13 +316,14 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         self._dump_cross_correl_spectrum()
 
     def _dump_cross_correl_spectrum(self) -> None:
-        sino1_fft = self._metrics['sino1_fft']
-        phase_shift = self._metrics['phase_shift']
-        phase_shift_thresholded = self._metrics['phase_shift_thresholded']
-        combined_amplitude = self._metrics['combined_amplitude']
-        total_spectrum_normalized = self._metrics['total_spectrum_normalized']
-        amplitude_sino1 = self._metrics['amplitude_sino1']
-        total_spectrum = self._metrics['total_spectrum']
+        metrics = self.metrics
+        sino1_fft = metrics['sino1_fft']
+        phase_shift = metrics['phase_shift']
+        phase_shift_thresholded = metrics['phase_shift_thresholded']
+        combined_amplitude = metrics['combined_amplitude']
+        total_spectrum_normalized = metrics['total_spectrum_normalized']
+        amplitude_sino1 = metrics['amplitude_sino1']
+        total_spectrum = metrics['total_spectrum']
 
         dump_numpy_variable(self.radon_transforms[0].pixels, 'input pixels for Radon transform 1 ')
         dump_numpy_variable(self.radon_transforms[0].radon_transform.get_as_array(),
