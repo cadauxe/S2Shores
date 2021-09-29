@@ -35,6 +35,13 @@ class WavesSinogram:
         self.nb_samples = sinogram.shape[0]
         self._dft = None
 
+    def augmentation(self, factor_augmentation: float) -> np.ndarray:
+        """ :returns: the interpolated 1D np.ndarray sinogram.
+        """
+        new_axis = np.linspace(0, self.nb_samples - 1, int(self.nb_samples / factor_augmentation))
+        current_axis = np.linspace(0, self.nb_samples - 1, self.nb_samples)
+        return np.interp(new_axis, current_axis, self.sinogram)
+
     @property
     def dft(self) -> np.ndarray:
         """ :returns: the current DFT of the sinogram. If it does not exists, it is computed
