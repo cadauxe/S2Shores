@@ -206,7 +206,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 phi_max[peak_wavenumber_index]
             waves_field_estimation.energy_max = total_spectrum_normalized[peak_freq_index]
             self.store_estimation(waves_field_estimation)
-        self.print_estimations_debug('after direction refinement')
+
+        if self.debug_sample:
+            print(f'estimations after direction refinement :')
+            print(self.waves_fields_estimations)
 
     def normalized_cross_correl_spectrum(self, phi_min: np.ndarray, phi_max: np.ndarray
                                          ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:

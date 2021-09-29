@@ -177,15 +177,6 @@ class LocalBathyEstimator(ABC):
         """
         return deepcopy(self._metrics)
 
-    def print_estimations_debug(self, step: str) -> None:
-        """ Print debugging info on the estimations if the point has been tagged for debugging
-
-        :param step: A string to be printed as header of the debugging info.
-        """
-        if self.debug_sample:
-            print(f'estimations at step: {step}')
-            print(self.waves_fields_estimations)
-
 
 class LocalBathyEstimatorDebug(LocalBathyEstimator):
     """ Abstract class handling begud mode for LocalBathyEstimator
