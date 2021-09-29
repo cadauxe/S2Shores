@@ -35,10 +35,14 @@ class WavesSinogram:
         self.nb_samples = sinogram.shape[0]
         self._dft = None
 
-    def augmentation(self, factor_augmentation: float) -> np.ndarray:
-        """ :returns: the interpolated 1D np.ndarray sinogram.
+    def interpolate(self, factor: float) -> np.ndarray:
+        """ Compute an augmented version of the sinogram, by interpolation with some factor.
+
+        :param factor: fraction of the sinogram sampling step for which new samples has to be evenly
+                       interpolated.
+        :returns: the interpolated sinogram as a 1D array.
         """
-        new_axis = np.linspace(0, self.nb_samples - 1, int(self.nb_samples / factor_augmentation))
+        new_axis = np.linspace(0, self.nb_samples - 1, int(self.nb_samples / factor))
         current_axis = np.linspace(0, self.nb_samples - 1, self.nb_samples)
         return np.interp(new_axis, current_axis, self.sinogram)
 

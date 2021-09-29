@@ -7,19 +7,20 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
+import copy
 from functools import lru_cache
+from typing import Optional, Dict, Tuple  # @NoMove
+
+import numpy as np  # @NoMove
 
 from ..generic_utils.directional_array import (DirectionalArray, linear_directions,
                                                DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
 from ..generic_utils.signal_utils import DFT_fr, get_unity_roots
 from ..generic_utils.symmetric_radon import symmetric_radon
 from ..waves_exceptions import NoRadonTransformError
+
 from .waves_image import WavesImage
 from .waves_sinogram import WavesSinogram, SignalProcessingFilters
-from typing import Optional, Dict, Tuple  # @NoMove
-
-import numpy as np  # @NoMove
-import copy
 
 
 SinogramsSetType = Dict[float, WavesSinogram]
@@ -94,21 +95,21 @@ class WavesRadon:
         """
         return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
 
-    def radon_augmentation(self, factor_augmented_radon: float) -> np.ndarray:
-        """
-        Augment the resolution of the radon transform image
-        Parameters
-        ----------
-        factor_augmented_radon: (float) factor of the resolution augmentation.
+    def radon_augmentation(self, factor_augmented_radon: float) -> 'WavesRadon':
+        """ Augment the resolution of the radon transform along the sinogram direction
 
+        :param factor_augmented_radon: factor of the resolution augmentation.
+        :return: a new radon object with augmented resolution
         """
         waves_radon = copy.deepcopy(self)
-        radon_transform_augmented_array = np.empty((int(self.nb_samples / factor_augmented_radon), self.nb_directions))
+        radon_transform_augmented_array = np.empty(
+            (int(self.nb_samples / factor_augmented_radon), self.nb_directions))
         for direction in range(self.nb_directions):
             sinogram = self.get_sinogram(direction)
-            radon_transform_augmented_array[:, direction] = sinogram.augmentation(factor_augmented_radon)
+            radon_transform_augmented_array[:, direction] = sinogram.interpolate(
+                factor_augmented_radon)
         waves_radon._radon_transform = DirectionalArray(array=radon_transform_augmented_array,
-                                                        directions=selected_directions,
+                                                        directions=self.directions,
                                                         directions_step=self.directions_step)
         waves_radon.sampling_frequency = self.sampling_frequency * factor_augmented_radon
         waves_radon.nb_samples = int(self.nb_samples / factor_augmented_radon)

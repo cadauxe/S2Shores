@@ -30,7 +30,7 @@ class SpatialCorrelationWavesFieldEstimation(WavesFieldEstimation):
         super().__init__(gravity, depth_estimation_method, depth_precision)
 
         self._delta_time = np.nan
-        self._spatial_correlation = None # TODO: set to a matrix of nan
+        self._spatial_correlation = None  # TODO: set to a matrix of nan
 
     @property
     def delta_time(self) -> float:
@@ -53,5 +53,4 @@ class SpatialCorrelationWavesFieldEstimation(WavesFieldEstimation):
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)
         result += f'\ndelta time: {self.delta_time:5.2f} (s)'
-        #result += f'\nenergy_max: {self.energy_max:5.2f} (???)'
         return result
