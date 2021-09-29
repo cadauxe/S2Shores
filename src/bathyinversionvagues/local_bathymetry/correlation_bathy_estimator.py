@@ -11,7 +11,6 @@ correlation method
 from abc import abstractmethod
 from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
-
 from scipy.interpolate import interp1d
 from scipy.signal import butter, find_peaks, sosfiltfilt
 
@@ -26,7 +25,6 @@ from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
 from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
 from .waves_fields_estimations import WavesFieldsEstimations
-
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -184,10 +182,13 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                                                                      wave_length)
         self._metrics['dephasing'] = dephasing
         rhomx = self.spatial_resolution * dephasing
-        delta_time = self.global_estimator.get_delta_time(
-            self.global_estimator.selected_frames[0],
-            self.global_estimator.selected_frames[1],
-            self._position)
+        delta_times = np.array([])
+        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
+            delta_times = np.append(self.global_estimator.get_delta_time(
+                self.global_estimator.selected_frames[frame_index],
+                self.global_estimator.selected_frames[frame_index + 1],
+                self._position), delta_times)
+        delta_time = np.mean(delta_times)
         self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
         return celerity
@@ -196,7 +197,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """ Temporal reconstruction of the correlation signal following propagation direction
         """
         distances = np.cos(np.radians(direction_propagation - self.angles.T.flatten())) * \
-            self.distances.flatten() * self.spatial_resolution
+                    self.distances.flatten() * self.spatial_resolution
         time = distances / celerity
         time_unique, index_unique = np.unique(time, return_index=True)
         index_unique_sorted = np.argsort(time_unique)

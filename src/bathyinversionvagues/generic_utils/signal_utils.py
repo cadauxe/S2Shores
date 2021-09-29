@@ -10,7 +10,9 @@ from typing import Tuple
 import numpy as np
 
 
-def find_period(signal: np.ndarray, min_period: int = 50) -> Tuple[float, np.ndarray]:
+# FIXME remove arbitrary min_period condition
+# use RANSAC instead
+def find_period(signal: np.ndarray, min_period: int = 20) -> Tuple[float, np.ndarray]:
     """ This function computes period of the signal by computing the zeros of the signal
     The signal is supposed to be periodic and centered around zero
 
