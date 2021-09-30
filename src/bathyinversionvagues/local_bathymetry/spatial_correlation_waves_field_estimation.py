@@ -30,7 +30,7 @@ class SpatialCorrelationWavesFieldEstimation(WavesFieldEstimation):
         super().__init__(gravity, depth_estimation_method, depth_precision)
 
         self._delta_time = np.nan
-        self._spatial_correlation = None  # TODO: set to a matrix of nan
+        self._correlation_signal = None  # TODO: set to a matrix of nan
 
     @property
     def delta_time(self) -> float:
@@ -42,13 +42,13 @@ class SpatialCorrelationWavesFieldEstimation(WavesFieldEstimation):
         self._delta_time = value
 
     @property
-    def spatial_correlation(self) -> np.ndarray:
+    def correlation_signal(self) -> np.ndarray:
         """ :returns: the spatial correlation between the 2 radon transform images"""
-        return self._spatial_correlation
+        return self._correlation_signal
 
-    @spatial_correlation.setter
-    def spatial_correlation(self, value: np.ndarray) -> None:
-        self._spatial_correlation = value
+    @correlation_signal.setter
+    def correlation_signal(self, value: np.ndarray) -> None:
+        self._correlation_signal = value
 
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)

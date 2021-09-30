@@ -104,9 +104,9 @@ class WavesRadon:
         waves_radon = copy.deepcopy(self)
         radon_transform_augmented_array = np.empty(
             (int(self.nb_samples / factor_augmented_radon), self.nb_directions))
-        for direction in range(self.nb_directions):
+        for index, direction in enumerate(self.directions):
             sinogram = self.get_sinogram(direction)
-            radon_transform_augmented_array[:, direction] = sinogram.interpolate(
+            radon_transform_augmented_array[:, index] = sinogram.interpolate(
                 factor_augmented_radon)
         waves_radon._radon_transform = DirectionalArray(array=radon_transform_augmented_array,
                                                         directions=self.directions,
