@@ -20,7 +20,6 @@ from ..generic_utils.signal_utils import find_period
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..image_processing.waves_sinogram import WavesSinogram
-
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
@@ -79,8 +78,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
     def compute_radon_transforms(self) -> None:
 
         for image in self.images_sequence:
-            radon_transform = WavesRadon(image)
-            radon_transform.compute(self.selected_directions)
+            radon_transform = WavesRadon(image, self.selected_directions)
             radon_transform_augmented = \
                 radon_transform.radon_augmentation(
                     self.local_estimator_params.AUGMENTED_RADON_FACTOR)
@@ -93,8 +91,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         for frame in range(self._number_frames):
             tmp_image *= self.images_sequence[frame].pixels
         tmp_wavesimage = WavesImage(tmp_image, self.images_sequence[0].resolution)
-        tmp_wavesradon = WavesRadon(tmp_wavesimage)
-        tmp_wavesradon.compute()
+        tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)
         tmp_wavesradon_augmented = tmp_wavesradon.radon_augmentation(
             self.local_estimator_params.AUGMENTED_RADON_FACTOR)
         _, estimated_direction, _ = tmp_wavesradon_augmented.get_sinogram_maximum_variance()

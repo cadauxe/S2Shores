@@ -68,8 +68,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def compute_radon_transforms(self) -> None:
 
         for image in self.images_sequence:
-            radon_transform = WavesRadon(image)
-            radon_transform.compute(self.selected_directions)
+            radon_transform = WavesRadon(image, self.selected_directions)
             self.radon_transforms.append(radon_transform)
 
     def run(self) -> None:

@@ -59,10 +59,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         try:
             self.correlation_image.apply_filters(self.correlation_image_filters)
-            self.radon_transform = WavesRadon(self.correlation_image)
-            # It is very important that circle=True has been chosen to compute radon matrix since
-            # we read values in meters from the axis of the sinogram
-            self.radon_transform.compute()
+            self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
             self.radon_transform.apply_filters(self.radon_image_filters)
             sinogram_max_var, direction_propagation, self._metrics['variances'] = \
                 self.radon_transform.get_sinogram_maximum_variance()

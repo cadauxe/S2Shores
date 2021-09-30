@@ -46,8 +46,8 @@ class WavesRadon:
     """ Class handling the Radon transform of some image.
     """
 
-    def __init__(self, image: WavesImage, directions_step: float = 1.,
-                 weighted: bool = False) -> None:
+    def __init__(self, image: WavesImage, selected_directions: Optional[np.ndarray] = None,
+                 directions_step: float = 1., weighted: bool = False) -> None:
         """ Constructor
 
         :param image: a 2D array containing an image over water
@@ -62,13 +62,18 @@ class WavesRadon:
         self.pixels = image.pixels
         self.sampling_frequency = image.sampling_frequency
         self.nb_samples = min(self.pixels.shape)
-
         self.directions_step = directions_step
 
-        self._sinograms: SinogramsSetType = {}
-        self._radon_transform: Optional[DirectionalArray] = None
+        if selected_directions is None:
+            selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
+                                                    self.directions_step)
 
-        self._weights = sinogram_weights(self.nb_samples) if weighted else None
+        self._sinograms: SinogramsSetType = {}
+        radon_transform_array = self._compute(image.pixels, weighted, selected_directions)
+
+        self._radon_transform = DirectionalArray(array=radon_transform_array,
+                                                 directions=selected_directions,
+                                                 directions_step=self.directions_step)
 
     @property
     def directions(self) -> np.ndarray:
@@ -84,7 +89,7 @@ class WavesRadon:
         return self.radon_transform.nb_directions
 
     @property
-    def radon_transform(self) -> Optional[DirectionalArray]:
+    def radon_transform(self) -> DirectionalArray:
         """ :returns: the radon transform of the image for the currently defined set of directions
         """
         return self._radon_transform
@@ -115,24 +120,21 @@ class WavesRadon:
         waves_radon.nb_samples = int(self.nb_samples / factor_augmented_radon)
         return waves_radon
 
-    def compute(self, selected_directions: Optional[np.ndarray] = None) -> None:
-        """ Compute the radon transform of the image for the currently defined set of directions
+    @staticmethod
+    def _compute(pixels: np.ndarray, weighted: bool, selected_directions: np.ndarray) -> np.ndarray:
+        """ Compute the radon transform of the image over a set of directions
 
-        :raises AttributeError: if the directions have not been specified yet
         """
-        if selected_directions is None:
-            selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
-                                                    self.directions_step)
         # FIXME: quantization may imply that radon transform is not computed on stored directions
-        radon_transform_array = symmetric_radon(self.pixels, theta=selected_directions)
-        self._radon_transform = DirectionalArray(array=radon_transform_array,
-                                                 directions=selected_directions,
-                                                 directions_step=self.directions_step)
+        radon_transform_array = symmetric_radon(pixels, theta=selected_directions)
 
-        if self._weights is not None and self._radon_transform is not None:
-            for direction in range(self.nb_directions):
-                self._radon_transform.array[:, direction] = (
-                    self._radon_transform.array[:, direction] / self._weights)
+        if weighted:
+            weights = sinogram_weights(radon_transform_array.shape[0])
+            for direction in range(radon_transform_array.shape[1]):
+                radon_transform_array[:, direction] = (
+                    radon_transform_array[:, direction] / weights)
+
+        return radon_transform_array
 
     def apply_filters(self, processing_filters: SignalProcessingFilters) -> None:
         """ Apply filters on the sinograms in place
@@ -299,10 +301,10 @@ class WavesRadon:
         for result_index, sinogram_index in enumerate(directions):
             sinogram = self.sinograms[sinogram_index]
             if processing_filters is not None:
-                for filter, filter_parameters in processing_filters:
+                for filter_name, filter_parameters in processing_filters:
                     sinogram = WavesSinogram(
                         np.array(
-                            [filter(sinogram.sinogram.flatten(), *filter_parameters)]).T)
+                            [filter_name(sinogram.sinogram.flatten(), *filter_parameters)]).T)
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 
