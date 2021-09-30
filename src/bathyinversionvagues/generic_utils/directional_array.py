@@ -12,6 +12,7 @@ from typing import Optional, Union, Tuple  # @NoMove
 from numbers import Integral
 
 import numpy as np
+import numpy.typing as npt
 
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 0.
@@ -45,7 +46,7 @@ class DirectionalArray:
                  directions: Optional[np.ndarray] = None,
                  directions_step: float = DEFAULT_DIRECTIONS_STEP,
                  height: Optional[int] = None,
-                 dtype: int = np.float64) -> None:
+                 dtype: npt.DTypeLike = np.float64) -> None:
         """ Constructor
 
         :param array: a 2D array containing an image over water
