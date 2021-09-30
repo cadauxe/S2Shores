@@ -63,7 +63,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             # It is very important that circle=True has been chosen to compute radon matrix since
             # we read values in meters from the axis of the sinogram
             self.radon_transform.compute()
-            self.radon_transform.apply_filter(self.radon_image_filters)
+            self.radon_transform.apply_filters(self.radon_image_filters)
             sinogram_max_var, direction_propagation, self._metrics['variances'] = \
                 self.radon_transform.get_sinogram_maximum_variance()
             self._metrics['sinogram_max_var'] = sinogram_max_var.sinogram.flatten()
@@ -197,7 +197,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """ Temporal reconstruction of the correlation signal following propagation direction
         """
         distances = np.cos(np.radians(direction_propagation - self.angles.T.flatten())) * \
-                    self.distances.flatten() * self.spatial_resolution
+            self.distances.flatten() * self.spatial_resolution
         time = distances / celerity
         time_unique, index_unique = np.unique(time, return_index=True)
         index_unique_sorted = np.argsort(time_unique)

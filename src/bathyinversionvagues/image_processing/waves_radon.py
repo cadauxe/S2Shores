@@ -134,11 +134,11 @@ class WavesRadon:
                 self._radon_transform.array[:, direction] = (
                     self._radon_transform.array[:, direction] / self._weights)
 
-    def apply_filter(self, processing_filters: SignalProcessingFilters) -> None:
-        """ Apply filters on the image pixels in place
+    def apply_filters(self, processing_filters: SignalProcessingFilters) -> None:
+        """ Apply filters on the sinograms in place
 
         :param processing_filters: A list of functions together with their parameters to apply
-                                   sequentially to the image pixels.
+                                   sequentially to the sinograms.
         """
         if self._radon_transform is not None:
             for direction in self.directions:
@@ -313,8 +313,8 @@ class WavesRadon:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,
         and returns it together with the direction value.
 
-        :param preprocessing_filters: a set a filter to apply on sinograms before computing maximum
-                                      variance. Sinograms are left unmodified
+        :param processing_filters: a set a filter to apply on sinograms before computing maximum
+                                   variance. Sinograms are left unmodified
         :param directions: a set of directions to look for maximum variance sinogram. If None, all
                            the directions in the radon transform are considered.
         :returns: the sinogram of maximum variance together with the corresponding direction.
