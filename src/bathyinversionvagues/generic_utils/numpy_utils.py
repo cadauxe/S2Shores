@@ -8,6 +8,7 @@ from functools import lru_cache
 from typing import List, Tuple
 
 import numpy as np
+import numpy.typing as npt
 
 
 def sc_all(array: np.ndarray) -> bool:
@@ -17,7 +18,7 @@ def sc_all(array: np.ndarray) -> bool:
     return True
 
 
-def find(condition: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def find(condition: np.ndarray) -> np.ndarray:
     res, = np.nonzero(np.ravel(condition))
     return res
 
@@ -31,7 +32,7 @@ def permute_axes(image: np.ndarray) -> np.ndarray:
 
 
 @lru_cache()
-def circular_mask(nb_lines: int, nb_columns: int, dtype: int) -> np.ndarray:
+def circular_mask(nb_lines: int, nb_columns: int, dtype: npt.DTypeLike) -> np.ndarray:
     """ Computes the inner disk centered on an image, to be used as a mask in some processing
     (radon transform for instance).
 
