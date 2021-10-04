@@ -27,12 +27,19 @@ class WavesFieldSampleGeometry:
 
     @property
     def direction(self) -> float:
-        """ :returns: The waves field direction relative to its position (degrees)"""
+        """ :returns: The propagation direction relative to the X axis (counterclockwise) (degrees)
+        (degrees)"""
         return self._direction
 
     @direction.setter
     def direction(self, value: float) -> None:
         self._direction = value
+
+    @property
+    def direction_from_north(self) -> float:
+        """ :returns: The direction relative to the North from which the waves field comes from,
+        counted clockwise (degrees)"""
+        return (270. - self._direction) % 360.
 
     @property
     def wavelength(self) -> float:
