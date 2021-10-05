@@ -9,9 +9,8 @@
 """
 from typing import Optional, Union, Tuple  # @NoMove
 
-from numbers import Integral
-
 import numpy as np
+import numpy.typing as npt
 
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 0.
@@ -45,6 +44,7 @@ class DirectionalArray:
         """ Constructor
 
         :param array: a 2D array containing directional vectors along each column
+        :param directions: the set of directions in degrees associated to each array column.
         :param directions_step: the step to use for quantizing direction angles, for indexing
                                 purposes. Direction quantization is such that the 0 degree direction
                                 is used as the origin, and any direction angle is transformed to the
@@ -81,7 +81,7 @@ class DirectionalArray:
                      height: int,
                      directions: Optional[np.ndarray] = None,
                      directions_step: float = DEFAULT_DIRECTIONS_STEP,
-                     dtype: int = np.float64) -> 'DirectionalArray':
+                     dtype: npt.DTypeLike = np.float64) -> 'DirectionalArray':
         """ Creation of an empty DirectionalArray
 
         :param directions_step: the step to use for quantizing direction angles, for indexing
