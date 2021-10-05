@@ -44,7 +44,7 @@ class WavesSinogram:
         """
         new_axis = np.linspace(0, self.nb_samples - 1, int(self.nb_samples / factor))
         current_axis = np.linspace(0, self.nb_samples - 1, self.nb_samples)
-        return np.interp(new_axis, current_axis, self.sinogram)
+        return np.interp(new_axis, current_axis, self.sinogram[:, 0])
 
     @property
     def dft(self) -> np.ndarray:

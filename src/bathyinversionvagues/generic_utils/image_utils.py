@@ -89,6 +89,6 @@ def normalized_cross_correlation(template: np.ndarray, comparison: np.ndarray,
     size_crosscorr = len(norm_cross_corr)
     ind_min = (size_crosscorr - size_sinogram) // 2
     ind_max = (size_crosscorr + size_sinogram) // 2
-    norm_cross_corr = norm_cross_corr[ind_min:ind_max] / size_sinogram
+    norm_cross_corr_out = norm_cross_corr[ind_min:ind_max] / size_sinogram
 
-    return norm_cross_corr
+    return norm_cross_corr_out
