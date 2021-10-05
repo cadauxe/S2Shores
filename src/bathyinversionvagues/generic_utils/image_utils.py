@@ -75,3 +75,20 @@ def normxcorr2(template: np.ndarray, image: np.ndarray, mode: str = 'full') -> n
     out[np.where(np.logical_not(np.isfinite(out)))] = 0
 
     return out
+
+
+def normalized_cross_correlation(template: np.ndarray, comparison: np.ndarray,
+                                 correlation_mode: str) -> np.ndarray:
+    """ :returns: the cross correlation 1D array between a template and a comparison sinogram
+    """
+    comparison = (comparison - np.mean(comparison)) / np.std(comparison)
+    template = (template - np.mean(template)) / np.std(template)
+
+    norm_cross_corr = np.correlate(template, comparison, correlation_mode)
+    size_sinogram = len(template)
+    size_crosscorr = len(norm_cross_corr)
+    ind_min = (size_crosscorr - size_sinogram) // 2
+    ind_max = (size_crosscorr + size_sinogram) // 2
+    norm_cross_corr = norm_cross_corr[ind_min:ind_max] / size_sinogram
+
+    return norm_cross_corr

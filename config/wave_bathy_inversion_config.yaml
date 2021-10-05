@@ -6,8 +6,8 @@ GLOBAL_ESTIMATOR:
   # the local estimator and the selected frames to use
   WAVE_EST_METHOD: "SPATIAL_DFT" # among SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
   SELECTED_FRAMES: # Leave this list empty or comment the parameter to select all usable frames
-  - "B03"
-  - "B08"
+  - "B02"
+  - "B04"
   
   # product characteristics
   DXP: 500.0 # output grid resolution - meters - S2 : 500
@@ -41,6 +41,7 @@ SPATIAL_DFT:
   ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
   STEP_T: 0.05 # step for period sampling - seconds - 
 
+#temporal_correlation
 TEMPORAL_CORRELATION:
   DEBUG_PATH: ""
   PASS_BAND_FILTER: 1
@@ -56,16 +57,8 @@ TEMPORAL_CORRELATION:
     HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2
     MIN_PEAKS_DISTANCE_PERIOD: 5
 
+#spatial_correlation
 SPATIAL_CORRELATION:
-  DEBUG_PATH: ""
-  PASS_BAND_FILTER: 1
-  RESOLUTION:
-    TIME_INTERPOLATION: 0.5
-  TEMPORAL_LAG: 1
-  TUNING:
-    RATIO_SIZE_CORRELATION: 1
-    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25
-    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5
-    LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.04
-    HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2
-    MIN_PEAKS_DISTANCE_PERIOD: 5
+  CORRELATION_MODE: 'full' # np.correlate mode
+  AUGMENTED_RADON_FACTOR: 0.01 # radon_augmentation - augment the resolution of the radon transform
+  PEAK_POSITION_MAX_FACTOR: 0.8 # peak_position - factor tunning for the maximum peak position

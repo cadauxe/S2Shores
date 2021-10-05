@@ -4,7 +4,7 @@
 :author: GIROS Alain
 :created: 17/05/2021
 """
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from typing import List, Optional, Tuple  # @NoMove
 

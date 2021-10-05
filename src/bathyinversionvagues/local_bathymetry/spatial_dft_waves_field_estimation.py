@@ -21,12 +21,7 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
     def __init__(self, gravity: float,
                  depth_estimation_method: str, depth_precision: float) -> None:
-        """ Constructor
 
-        :param gravity: the acceleration of gravity to use (m.s-2)
-        :param depth_estimation_method: the name of the depth estimation method to use
-        :param depth_precision: precision (in meters) to be used for depth estimation
-        """
         super().__init__(gravity, depth_estimation_method, depth_precision)
 
         self._delta_time = np.nan

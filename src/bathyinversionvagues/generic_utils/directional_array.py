@@ -12,7 +12,6 @@ from typing import Optional, Union, Tuple  # @NoMove
 from numbers import Integral
 
 import numpy as np
-import numpy.typing as npt
 
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 0.
@@ -41,70 +40,87 @@ def linear_directions(angle_min: float, angle_max: float, directions_step: float
 # TODO: add a "symmetric" property, allowing to consider directions modulo pi as equivalent
 # TODO: enable ordering such that circularity can be exposed (around +- 180° and 0°)
 class DirectionalArray:
-    def __init__(self,
-                 array: Optional[np.ndarray] = None,
-                 directions: Optional[np.ndarray] = None,
-                 directions_step: float = DEFAULT_DIRECTIONS_STEP,
-                 height: Optional[int] = None,
-                 dtype: npt.DTypeLike = np.float64) -> None:
+    def __init__(self, array: np.ndarray, directions: np.ndarray,
+                 directions_step: float = DEFAULT_DIRECTIONS_STEP) -> None:
         """ Constructor
 
-        :param array: a 2D array containing an image over water
+        :param array: a 2D array containing directional vectors along each column
         :param directions_step: the step to use for quantizing direction angles, for indexing
                                 purposes. Direction quantization is such that the 0 degree direction
                                 is used as the origin, and any direction angle is transformed to the
                                 nearest quantized angle for indexing that direction in the radon
                                 transform.
-        :raises TypeError: when array or directions have not the right number of dimensions or
-                           when height is not provided when array creation is needed.
-        :raises ValueError: when dimensions are not provided when an array is specified or
-                            when the number of dimensions is not consistent with the number of
+        :raises TypeError: when array or directions have not the right number of dimensions
+        :raises ValueError: when the number of dimensions is not consistent with the number of
                             columns in the array.
         """
-        self._directions_step = directions_step
-
         # Check that numpy arguments are of the right dimensions when provided
-        if array is not None and array.ndim != 2:
+        if array.ndim != 2:
             raise TypeError('array for a DirectionalArray must be a 2D numpy array')
-        if directions is not None and directions.ndim != 1:
+
+        if directions.ndim != 1:
             raise TypeError('dimensions for a DirectionalArray must be a 1D numpy array')
 
-        # Check that optional parameters are provided consistently between each other.
-        if array is None:
-            if directions is None:
-                directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
-                                               self._directions_step)
-            if not isinstance(height, Integral):
-                raise TypeError('height is mandatory to create an empty DirectionalArray')
-            array = np.empty((height, directions.shape[0]), dtype=dtype)
-        else:
-            if directions is None:
-                raise ValueError('dimensions must be provided when an array is specified')
+        if directions.size != array.shape[1]:
+            raise ValueError('directions size must be equal to the number of columns of the array')
+
+        self._directions_step = directions_step
 
         quantized_directions = self._prepare_directions(directions)
         if quantized_directions.shape[0] != array.shape[1]:
-            raise ValueError('dimensions has not the same number of elements '
+            raise ValueError('dimensions argument has not the same number of elements '
                              f'({quantized_directions.shape[0]}) than the number '
                              f'of columns in the array ({array.shape[1]})')
 
         self._array = array
+        # TODO: implement the directions as the keys of a dictionary pointing to views in the array?
         self._directions = quantized_directions
+
+    @classmethod
+    def create_empty(cls,
+                     height: int,
+                     directions: Optional[np.ndarray] = None,
+                     directions_step: float = DEFAULT_DIRECTIONS_STEP,
+                     dtype: int = np.float64) -> 'DirectionalArray':
+        """ Creation of an empty DirectionalArray
+
+        :param directions_step: the step to use for quantizing direction angles, for indexing
+                                purposes. Direction quantization is such that the 0 degree direction
+                                is used as the origin, and any direction angle is transformed to the
+                                nearest quantized angle for indexing that direction in the radon
+                                transform.
+        :raises TypeError: when directions is not a 1D array
+        """
+        # Check that directions argument
+        if directions is None:
+            directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX, directions_step)
+        elif directions.ndim != 1:
+            raise TypeError('dimensions for a DirectionalArray must be a 1D numpy array')
+
+        array = np.empty((height, directions.size), dtype=dtype)
+
+        return cls(array, directions=directions, directions_step=directions_step)
 
     # TODO: remove this property and use get_as_array instead
     @property
     def array(self) -> np.ndarray:
-        """ :return: the array of this DimensionalArray """
+        """ :return: the array of this DirectionalArray """
         return self._array
 
     @property
     def directions(self) -> np.ndarray:
-        """ :return: the directions defined in this DimensionalArray """
+        """ :return: the directions defined in this DirectionalArray """
         return self._directions
 
     @property
     def nb_directions(self) -> int:
-        """ :return: the number of directions defined for this DimensionalArray"""
-        return self.directions.size
+        """ :return: the number of directions defined in this DirectionalArray"""
+        return self.array.shape[1]
+
+    @property
+    def height(self) -> int:
+        """ :return: the height of each directional vector in this DirectionalArray"""
+        return self.array.shape[0]
 
     def _prepare_directions(self, directions: np.ndarray) -> np.ndarray:
         """ Quantize a set of directions and verify that no duplicates are created by quantization
@@ -162,7 +178,7 @@ class DirectionalArray:
             return self._array
         quantized_directions, _ = self._quantize_direction(directions)
         # Build array by selecting the requested directions
-        array_excerpt = np.empty((self.array.shape[0], quantized_directions.size))
+        array_excerpt = np.empty((self.height, quantized_directions.size))
         for i, direction in enumerate(quantized_directions):
-            array_excerpt[:, i] = self.values_for(direction).reshape(self.array.shape[0])
+            array_excerpt[:, i] = self.values_for(direction).reshape(self.height)
         return array_excerpt
