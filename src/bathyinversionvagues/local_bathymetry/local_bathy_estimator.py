@@ -60,7 +60,8 @@ class LocalBathyEstimator(ABC):
                 raise SequenceImagesError(
                     'Images in sequence do not have same resolution')
             if wave_image.pixels.shape != shape:
-                raise SequenceImagesError('Images in sequence do not have same size')
+                raise SequenceImagesError(
+                    'Images in sequence do not have same size')
 
         self.spatial_resolution = spatial_resolution
 
@@ -101,7 +102,8 @@ class LocalBathyEstimator(ABC):
         """
         return self.waves_fields_estimations.gravity
 
-    # FIXME: At the moment only a pair of images is handled (list is limited to a singleton)
+    # FIXME: At the moment only a pair of images is handled (list is limited
+    # to a singleton)
     @property
     def delta_time(self) -> float:
         """ :returns: the time differences between 2 consecutive frames in the image sequence
@@ -128,7 +130,8 @@ class LocalBathyEstimator(ABC):
         # Filter non physical waves fields and bathy estimations
         # We iterate over a copy of the list in order to keep waves_fields_etimations unaffected
         # on its specific attributes
-        # for index, estimation in enumerate(list(self.waves_fields_estimations)):
+        # for index, estimation in
+        # enumerate(list(self.waves_fields_estimations)):
         for estimation in list(self.waves_fields_estimations):
             if (estimation.period < self.global_estimator.waves_period_min or
                     estimation.period > self.global_estimator.waves_period_max):
@@ -179,7 +182,7 @@ class LocalBathyEstimator(ABC):
 
 
 class LocalBathyEstimatorDebug(LocalBathyEstimator):
-    """ Abstract class handling begud mode for LocalBathyEstimator
+    """ Abstract class handling debug mode for LocalBathyEstimator
     """
 
     def run(self) -> None:

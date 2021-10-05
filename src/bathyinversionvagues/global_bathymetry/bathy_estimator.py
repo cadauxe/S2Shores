@@ -6,12 +6,14 @@
 """
 from abc import ABC, abstractmethod
 
-from typing import List, Optional  # @NoMove
+from typing import List, Optional, Tuple  # @NoMove
 
 from xarray import Dataset  # @NoMove
 from munch import Munch
+import numpy as np
 
-from ..data_providers.delta_time_provider import (DeltaTimeProvider, NoDeltaTimeProviderError)
+from ..data_providers.delta_time_provider import (
+    DeltaTimeProvider, NoDeltaTimeProviderError)
 from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
 from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
@@ -94,7 +96,8 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         # Retrieve the subtile.
         subtile = self.subtiles[subtile_number]
-        print(f'Subtile {subtile_number}: {self.ortho_stack.short_name} {subtile}')
+        print(
+            f'Subtile {subtile_number}: {self.ortho_stack.short_name} {subtile}')
 
         # Build a bathymertry estimator over the subtile and launch estimation.
         subtile_estimator = OrthoBathyEstimator(self, subtile)
@@ -109,6 +112,28 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         return dataset
 
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
+    def set_debug_area(self, bottom_left_corner: PointType, top_right_corner: PointType, decimation: int) -> None:
+        """ Sets all points within rectangle defined by bottom_left_corner and top_right_corner to debug
+        :param bottom_left_corner: point defining the bottom left corner of the area of interest
+        :param top_right_corner: point defining the top right corner of the area of interest
+        :param decimation: decimation factor for all points within the area of interest (oversize factor will lead to a single point)
+
+        """
+
+        x_samples = np.array([])
+        y_samples = np.array([])
+        for subtile in self.subtiles:
+            x_samples = np.concatenate((x_samples, subtile.x_samples))
+            y_samples = np.concatenate((y_samples, subtile.y_samples))
+        x_samples_filtered = x_samples[np.logical_and(
+            x_samples > bottom_left_corner[0], x_samples < top_right_corner[0])][::decimation]
+        y_samples_filtered = y_samples[np.logical_and(
+            y_samples > bottom_left_corner[1], y_samples < top_right_corner[1])][::decimation]
+        list_samples = []
+        for x in x_samples_filtered:
+            for y in y_samples_filtered:
+                list_samples.append((x, y))
+        self._debug_samples = list_samples
 
     def set_debug_samples(self, samples: List[PointType]) -> None:
         """ Sets the list of sample points to debug
@@ -133,7 +158,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return self._debug_sample
 
-# ++++++++++++++++++++++++++++ External data providers +++++++++++++++++++++++++++++
+# ++++++++++++++++++++++++++++ External data providers +++++++++++++++++++
 
     def set_distoshore_provider(self, distoshore_provider: DisToShoreProvider) -> None:
         """ Sets the DisToShoreProvider to use with this estimator
