@@ -68,8 +68,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def compute_radon_transforms(self) -> None:
 
         for image in self.images_sequence:
-            radon_transform = WavesRadon(image)
-            radon_transform.compute(self.selected_directions)
+            radon_transform = WavesRadon(image, self.selected_directions)
             self.radon_transforms.append(radon_transform)
 
     def run(self) -> None:
@@ -326,7 +325,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         total_spectrum = metrics['total_spectrum']
 
         dump_numpy_variable(self.radon_transforms[0].pixels, 'input pixels for Radon transform 1 ')
-        dump_numpy_variable(self.radon_transforms[0].radon_transform.get_as_array(),
+        dump_numpy_variable(self.radon_transforms[0].get_as_array(),
                             'Radon transform 1')
         dump_numpy_variable(self.directions, 'Directions used for Radon transform 1')
         dump_numpy_variable(sino1_fft, 'sinoFFT1')

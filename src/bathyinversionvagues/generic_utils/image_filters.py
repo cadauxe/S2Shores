@@ -97,7 +97,7 @@ def get_smoothing_kernel(Nr: int, Nc: int) -> np.ndarray:
     return k / np.sum(k.ravel())
 
 
-def funSmoothc(mI, Nr, Nc):
+def funSmoothc(mI : np.ndarray, Nr : int, Nc : int) -> np.ndarray:
     '''
 
     Parameters
@@ -135,13 +135,13 @@ def funSmoothc(mI, Nr, Nc):
     return out[Nr:-Nr, Nc:-Nc]
 
 
-def desmooth(pixels, nx, ny):
+def desmooth(pixels : np.ndarray, nx : int, ny : int) -> np.ndarray:
     smoothed_pixels = funSmooth2(pixels, nx, ny)
     desmoothed_pixels = pixels - smoothed_pixels
     return desmoothed_pixels
 
 
-def funSmooth2(M, nx, ny):
+def funSmooth2(M : np.ndarray, nx : int, ny :int) -> np.ndarray:
     '''
     Parameters
     ----------

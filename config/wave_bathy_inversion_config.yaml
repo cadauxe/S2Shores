@@ -6,8 +6,8 @@ GLOBAL_ESTIMATOR:
   # the local estimator and the selected frames to use
   WAVE_EST_METHOD: "SPATIAL_DFT" # among SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
   SELECTED_FRAMES: # Leave this list empty or comment the parameter to select all usable frames
-  - "B03"
-  - "B08"
+  - "B02"
+  - "B04"
   
   # product characteristics
   DXP: 500.0 # output grid resolution - meters - S2 : 500
