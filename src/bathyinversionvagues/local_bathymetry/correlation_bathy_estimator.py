@@ -20,7 +20,8 @@ from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period, find_dephasing
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon, SignalProcessingFilters
+from ..image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_sinogram import SignalProcessingFilters
 
 from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator

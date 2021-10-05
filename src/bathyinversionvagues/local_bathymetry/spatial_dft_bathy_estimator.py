@@ -325,7 +325,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         total_spectrum = metrics['total_spectrum']
 
         dump_numpy_variable(self.radon_transforms[0].pixels, 'input pixels for Radon transform 1 ')
-        dump_numpy_variable(self.radon_transforms[0].radon_transform.get_as_array(),
+        dump_numpy_variable(self.radon_transforms[0].get_as_array(),
                             'Radon transform 1')
         dump_numpy_variable(self.directions, 'Directions used for Radon transform 1')
         dump_numpy_variable(sino1_fft, 'sinoFFT1')
