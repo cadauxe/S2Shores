@@ -15,7 +15,7 @@
 # numpy==1.13.3
 # scipy==1.0
 #
-numpy
+numpy>=1.20
 scipy
 scikit-image
 
@@ -23,6 +23,6 @@ xarray
 munch
 pandas
 matplotlib
-Sphinx
+Sphinx>=4.1
 setuptools
 GDAL

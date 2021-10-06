@@ -10,6 +10,7 @@
 from typing import Optional, Union, Tuple  # @NoMove
 
 import numpy as np
+import numpy.typing as npt
 
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 0.
