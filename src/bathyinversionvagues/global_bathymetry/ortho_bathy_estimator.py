@@ -150,5 +150,7 @@ class OrthoBathyEstimator:
         # metadata from the parameters
         infos['waveEstimationMethod'] = self.parent_estimator.local_estimator_code
         infos['ChainVersions'] = self.parent_estimator.chains_versions
+        infos['Resolution X'] = self.parent_estimator.sampling_step_x
+        infos['Resolution Y'] = self.parent_estimator.sampling_step_y
 
         return infos
