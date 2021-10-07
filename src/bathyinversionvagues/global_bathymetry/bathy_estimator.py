@@ -6,7 +6,7 @@
 """
 from abc import ABC
 
-from typing import List, Optional  # @NoMove
+from typing import Dict, List, Optional  # @NoMove
 
 from xarray import Dataset  # @NoMove
 from munch import Munch
@@ -101,12 +101,29 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         dataset = subtile_estimator.compute_bathy()
 
         # Build the bathymetry dataset for the subtile.
-        infos = subtile_estimator.build_infos()
+        infos = self.build_infos()
         infos.update(self.ortho_stack.build_infos())
         for key, value in infos.items():
             dataset.attrs[key] = value
 
         return dataset
+    
+    def build_infos(self) -> Dict[str, str]:
+        """ :returns: a dictionary of metadata describing this estimator
+        """
+
+        title = 'Wave parameters and raw bathymetry derived from satellite imagery.'
+        title += ' No tidal vertical adjustment.'
+        infos = {'title': title,
+                 'institution': 'CNES-LEGOS'}
+
+        # metadata from the parameters
+        infos['waveEstimationMethod'] = self.local_estimator_code
+        infos['ChainVersions'] = self.chains_versions
+        infos['Resolution X'] = self.sampling_step_x
+        infos['Resolution Y'] = self.sampling_step_y
+
+        return infos
 
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
 
