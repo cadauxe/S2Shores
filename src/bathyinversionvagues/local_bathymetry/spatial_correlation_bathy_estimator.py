@@ -88,7 +88,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         tmp_image = np.ones(self.images_sequence[0].pixels.shape)
         for frame in range(self._number_frames):
             tmp_image *= self.images_sequence[frame].pixels
-        tmp_wavesimage = WavesImage(tmp_image, self.images_sequence[0].resolution)
+        tmp_wavesimage = WavesImage(tmp_image, self.spatial_resolution)
         tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)
         tmp_wavesradon_augmented = tmp_wavesradon.radon_augmentation(
             self.local_estimator_params.AUGMENTED_RADON_FACTOR)
@@ -123,7 +123,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the wave length (m)
         """
         period, _ = find_period(correlation_signal)
-        wavelength = period * self.images_sequence[0].resolution * self.local_estimator_params.AUGMENTED_RADON_FACTOR
+        wavelength = period * self.spatial_resolution * self.local_estimator_params.AUGMENTED_RADON_FACTOR
         return wavelength
 
     def compute_celerity(self, correlation_signal: np.ndarray, wavelength: float) -> float:
@@ -133,7 +133,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param wavelength: the wave length (m)
         :returns: the celerity (m/s)
         """
-        argmax_ac = len(correlation_signal)
+        argmax_ac = len(correlation_signal) / 2
         peak_position_lim_inf = -1/wavenumber_dual_period(self.global_estimator.waves_period_max,
                                                           abs(self.delta_time),
                                                           self.gravity)
