@@ -10,13 +10,13 @@ GLOBAL_ESTIMATOR:
   - "B04"
   
   # product characteristics
-  DXP: 500.0 # output grid resolution - meters - S2 : 500
-  DYP: 500.0 # output grid resolution - meters - S2 : 500
+  DXP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
+  DYP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # among NOMINAL, DEBUG. Allow NetCDF layers selection.
   NKEEP: 3 # number of main waves directions to keep in the product
   
   # window parameters
-  WINDOW: 800.0 # thumbnail size - meters
+  WINDOW: 800.0 # thumbnail size - meters - ex. PHR : 400
   SM_LENGTH: 10 # smoothing filter size - pixels
 
   # physical constraints
