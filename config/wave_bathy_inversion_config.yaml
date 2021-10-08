@@ -28,7 +28,6 @@ GLOBAL_ESTIMATOR:
   
   # depth inversion
   DEPTH_EST_METHOD: "LINEAR" # among LINEAR
-  D_PRECISION: 0.0005 # regression stop criteria - meters
   
 #spatial_dft:
 SPATIAL_DFT:

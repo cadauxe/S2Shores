@@ -6,24 +6,21 @@
 """
 
 # Imports
+import math
+
 from typing import Tuple
 
 import numpy as np
 
 
-def funLinearC_k(wavenumber: float, celerity: float, precision: float, gravity: float) -> float:
-    # FIXME: What happens if celerity=0? infinite loop ?
-    k = 2 * np.pi * wavenumber
-    w = celerity * k
-    estimated_depth = celerity ** 2 / gravity
-
-    previous_depth = np.Infinity
-    while abs(previous_depth - estimated_depth) > precision:
-        previous_depth = estimated_depth
-        dispe = w ** 2 - (gravity * k * np.tanh(k * previous_depth))
-        fdispe = -gravity * (k ** 2) / (np.cosh(k * previous_depth) ** 2)
-        estimated_depth = previous_depth - (dispe / fdispe)
-    return estimated_depth
+def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) -> float:
+    angular_wavenumber = 2 * np.pi * wavenumber
+    factor = celerity**2 * angular_wavenumber / gravity
+    if abs(factor) > 1.:
+        depth = np.Infinity
+    else:
+        depth = math.atanh(factor) / angular_wavenumber
+    return depth
 
 
 def phi_limits(wave_numbers: np.ndarray, delta_t: float,
@@ -59,6 +56,7 @@ def wavenumber_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
     :returns: the wavenumber according to the linear dispersive relation (1/m)
     """
     return 2. * np.pi / (gravity * (period)**2)
+
 
 def wavenumber_dual_period(period1: np.ndarray, period2: np.ndarray, gravity: float) -> np.ndarray:
     """ Computes the wavenumber from two different periods under the offshore hypothesis

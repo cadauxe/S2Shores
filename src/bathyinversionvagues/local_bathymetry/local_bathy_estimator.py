@@ -153,8 +153,7 @@ class LocalBathyEstimator(ABC):
         """
         waves_field_estimation = self.waves_field_estimation_cls(
             self.gravity,
-            self.global_estimator.depth_estimation_method,
-            self.global_estimator.depth_estimation_precision)
+            self.global_estimator.depth_estimation_method)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 

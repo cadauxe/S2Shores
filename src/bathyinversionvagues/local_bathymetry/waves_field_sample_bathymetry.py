@@ -7,10 +7,13 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
+from typing import cast
+
 import numpy as np
 
-from ..bathy_physics import period_offshore, funLinearC_k
+from ..bathy_physics import period_offshore, depth_from_dispersion
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
+
 
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
 
@@ -22,13 +25,11 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     bathymetry for that sample..
     """
 
-    def __init__(self, gravity: float, depth_estimation_method: str,
-                 depth_precision: float) -> None:
+    def __init__(self, gravity: float, depth_estimation_method: str) -> None:
         """ Constructor
 
         :param gravity: the acceleration of gravity to use (m.s-2)
         :param depth_estimation_method: the name of the depth estimation method to use
-        :param depth_precision: precision (in meters) to be used for depth estimation
         :raises NotImplementedError: when the depth estimation method is unsupported
         """
         if depth_estimation_method not in KNOWN_DEPTH_ESTIMATION_METHODS:
@@ -40,7 +41,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
 
         # FIXME: make those attributes abstract ?
         self._gravity = gravity
-        self._depth_precision = depth_precision
         self._depth_estimation_method = depth_estimation_method
 
     @property
@@ -50,9 +50,9 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         :returns: The depth (m)
         :raises AttributeError: when the depth estimation method is not supported
         """
+        # FIXME: is it necessary to handle a depth_estimation_method ?
         if self._depth_estimation_method == 'LINEAR':
-            estimated_depth = funLinearC_k(self.wavenumber, self.celerity,
-                                           self._depth_precision, self._gravity)
+            estimated_depth = depth_from_dispersion(self.wavenumber, self.celerity, self._gravity)
         else:
             msg = 'depth attribute undefined when depth estimation method is not supported'
             raise AttributeError(msg)
@@ -66,7 +66,8 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def period_offshore(self) -> float:
         """ :returns: The offshore period (s) """
-        return period_offshore(self.wavenumber, self._gravity)
+        period_off = cast(float, period_offshore(self.wavenumber, self._gravity))
+        return period_off
 
     def __str__(self) -> str:
         result = WavesFieldSampleDynamics.__str__(self)

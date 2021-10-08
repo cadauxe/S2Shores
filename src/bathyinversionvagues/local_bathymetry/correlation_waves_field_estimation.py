@@ -21,15 +21,8 @@ class CorrelationWavesFieldEstimation(WavesFieldEstimation):
     It defines the estimation attributes specific to this estimator.
     """
 
-    def __init__(self, gravity: float,
-                 depth_estimation_method: str, depth_precision: float) -> None:
-        """ Constructor
-
-        :param gravity: the acceleration of gravity to use (m.s-2)
-        :param depth_estimation_method: the name of the depth estimation method to use
-        :param depth_precision: precision (in meters) to be used for depth estimation
-        """
-        super().__init__(gravity, depth_estimation_method, depth_precision)
+    def __init__(self, gravity: float, depth_estimation_method: str) -> None:
+        super().__init__(gravity, depth_estimation_method)
 
         self._delta_phase = np.nan
         self._delta_phase_ratio = np.nan

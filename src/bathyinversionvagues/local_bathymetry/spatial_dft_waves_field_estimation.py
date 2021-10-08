@@ -19,10 +19,9 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
     It defines the estimation attributes specific to this estimator.
     """
 
-    def __init__(self, gravity: float,
-                 depth_estimation_method: str, depth_precision: float) -> None:
+    def __init__(self, gravity: float, depth_estimation_method: str) -> None:
 
-        super().__init__(gravity, depth_estimation_method, depth_precision)
+        super().__init__(gravity, depth_estimation_method)
 
         self._delta_time = np.nan
         self._delta_phase = np.nan
