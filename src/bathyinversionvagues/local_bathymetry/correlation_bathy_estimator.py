@@ -185,7 +185,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             delta_times = np.append(self.global_estimator.get_delta_time(
                 self.global_estimator.selected_frames[frame_index],
                 self.global_estimator.selected_frames[frame_index + 1],
-                self._position), delta_times)
+                self.waves_fields_estimations.location), delta_times)
         delta_time = np.mean(delta_times)
         self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
