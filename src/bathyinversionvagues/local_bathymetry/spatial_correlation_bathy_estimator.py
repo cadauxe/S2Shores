@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 20/09/2021
 """
-from typing import Optional, List, TYPE_CHECKING, cast
+from typing import Optional, List, TYPE_CHECKING, cast  # @NoMove
 
 from scipy.signal import find_peaks
 
@@ -23,6 +23,7 @@ from ..image_processing.waves_sinogram import WavesSinogram
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
+
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -51,7 +52,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
     def preprocessing_filters(self) -> ImageProcessingFilters:
         preprocessing_filters: ImageProcessingFilters = []
         preprocessing_filters.append((detrend, []))
-        
+
         if self.global_estimator.smoothing_requested:
             # FIXME: pixels necessary for smoothing are not taken into account, thus
             # zeros are introduced at the borders of the window.
@@ -69,7 +70,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
         celerity = self.compute_celerity(correlation_signal, wavelength)
-        self.save_waves_field_estimation(correlation_signal, estimated_direction, wavelength, celerity)
+        self.save_waves_field_estimation(correlation_signal, estimated_direction, wavelength,
+                                         celerity)
 
     def compute_radon_transforms(self) -> None:
 
@@ -123,7 +125,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the wave length (m)
         """
         period, _ = find_period(correlation_signal)
-        wavelength = period * self.images_sequence[0].resolution * self.local_estimator_params.AUGMENTED_RADON_FACTOR
+        wavelength = period * self.images_sequence[0].resolution * \
+            self.local_estimator_params.AUGMENTED_RADON_FACTOR
         return wavelength
 
     def compute_celerity(self, correlation_signal: np.ndarray, wavelength: float) -> float:
@@ -134,10 +137,11 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the celerity (m/s)
         """
         argmax_ac = len(correlation_signal)
-        peak_position_lim_inf = -1/wavenumber_dual_period(self.global_estimator.waves_period_max,
-                                                          abs(self.delta_time),
-                                                          self.gravity)
-        propagation_factor = self.delta_time / period_offshore(1. / wavelength, self.gravity)
+        delta_time = self.sequential_delta_times[0]
+        peak_position_lim_inf = -1 / wavenumber_dual_period(self.global_estimator.waves_period_max,
+                                                            abs(delta_time),
+                                                            self.gravity)
+        propagation_factor = delta_time / period_offshore(1. / wavelength, self.gravity)
         if propagation_factor < 1:
             peak_position_lim_sup = -peak_position_lim_inf
         else:
@@ -153,7 +157,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             if pt_in_range.size != 0:
                 argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
                 dx = argmax - argmax_ac  # supposed to be in meters, TODO: add variable to adapt to be in meters
-                celerity = abs(dx) / abs(self.delta_time)
+                celerity = abs(dx) / abs(delta_time)
         return celerity
 
     def save_waves_field_estimation(self,
@@ -172,7 +176,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                                       self.create_waves_field_estimation(estimated_direction,
                                                                          wavelength))
         waves_field_estimation.celerity = celerity
-        waves_field_estimation.delta_time = self.delta_time
+        waves_field_estimation.delta_time = self.sequential_delta_times[0]
         waves_field_estimation.correlation_signal = correlation_signal
         self.store_estimation(waves_field_estimation)
 
