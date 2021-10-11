@@ -15,6 +15,7 @@ from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
+from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
 from .waves_field_estimation import WavesFieldEstimation
@@ -77,7 +78,7 @@ class LocalBathyEstimator(ABC):
         self._delta_time = self.global_estimator.get_delta_time(
             self.global_estimator.selected_frames[0],
             self.global_estimator.selected_frames[1],
-            self.waves_fields_estimations.location)
+            self.location)
 
         self._metrics: Dict[str, Any] = {}
 
@@ -100,6 +101,11 @@ class LocalBathyEstimator(ABC):
         """ :returns: the acceleration of the gravity at the working position of the estimator
         """
         return self.waves_fields_estimations.gravity
+
+    @property
+    def location(self) -> PointType:
+        """ :returns: The (X, Y) coordinates of the location where this estimator is acting"""
+        return self.waves_fields_estimations.location
 
     # FIXME: At the moment only a pair of images is handled (list is limited
     # to a singleton)
@@ -127,10 +133,9 @@ class LocalBathyEstimator(ABC):
         """  Remove non physical waves fields
         """
         # Filter non physical waves fields and bathy estimations
-        # We iterate over a copy of the list in order to keep waves_fields_etimations unaffected
+        # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
         # on its specific attributes
-        # for index, estimation in
-        # enumerate(list(self.waves_fields_estimations)):
+        # for index, estimation in enumerate(list(self.waves_fields_estimations)):
         for estimation in list(self.waves_fields_estimations):
             if (estimation.period < self.global_estimator.waves_period_min or
                     estimation.period > self.global_estimator.waves_period_max):
