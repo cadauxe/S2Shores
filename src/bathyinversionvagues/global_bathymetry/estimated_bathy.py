@@ -21,108 +21,175 @@ DIMS_Y_X_NKEEP_TIME = ['y', 'x', 'kKeep', 'time']
 DIMS_Y_X_TIME = ['y', 'x', 'time']
 
 
-# TODO: introduce dtype (int for status) and initial value (np.nan or other)
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
 BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
     'sample_status': {'layer_type': ALL_LAYERS_TYPES,
                       'layer_name': 'Status',
                       'dimensions': DIMS_Y_X_TIME,
+                      'data_type': np.ushort,
+                      'fill_value': 0,
+                      # 'data_type': np.float64,  # value for upward compatibility tests
+                      # 'fill_value': np.nan,  # value for upward compatibility tests
                       'precision': 8,
                       'attrs': {'Dimension': 'Flags',
                                 'name': 'Bathymetry estimation status'}},
     'depth': {'layer_type': ALL_LAYERS_TYPES,
               'layer_name': 'Depth',
               'dimensions': DIMS_Y_X_NKEEP_TIME,
+              'data_type': np.float32,
+              'fill_value': np.nan,
+              # 'data_type': np.float64,  # value for upward compatibility tests
+              # 'fill_value': np.nan,  # value for upward compatibility tests
               'precision': 8,
               'attrs': {'Dimension': 'Meters [m]',
                         'name': 'Raw estimated depth'}},
     'direction_from_north': {'layer_type': ALL_LAYERS_TYPES,
                              'layer_name': 'Direction',
                              'dimensions': DIMS_Y_X_NKEEP_TIME,
+                             'data_type': np.float32,
+                             'fill_value': np.nan,
+                             # 'data_type': np.float64,  # value for upward compatibility tests
+                             # 'fill_value': np.nan,  # value for upward compatibility tests
                              'precision': 8,
                              'attrs': {'Dimension': 'degree',
                                        'name': 'Wave_direction'}},
     'period': {'layer_type': ALL_LAYERS_TYPES,
                'layer_name': 'Period',
                'dimensions': DIMS_Y_X_NKEEP_TIME,
+               'data_type': np.float32,
+               'fill_value': np.nan,
+               # 'data_type': np.float64,  # value for upward compatibility tests
+               # 'fill_value': np.nan,  # value for upward compatibility tests
                'precision': 2,
                'attrs': {'Dimension': 'Seconds [sec]',
                          'name': 'Wave_period'}},
     'celerity': {'layer_type': ALL_LAYERS_TYPES,
                  'layer_name': 'Celerity',
                  'dimensions': DIMS_Y_X_NKEEP_TIME,
+                 'data_type': np.float32,
+                 'fill_value': np.nan,
+                 # 'data_type': np.float64,  # value for upward compatibility tests
+                 # 'fill_value': np.nan,  # value for upward compatibility tests
                  'precision': 8,
                  'attrs': {'Dimension': 'Meters per second [m/sec]',
                            'name': 'Wave_celerity'}},
     'wavelength': {'layer_type': ALL_LAYERS_TYPES,
                    'layer_name': 'Wavelength',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
+                   'data_type': np.float32,
+                   'fill_value': np.nan,
+                   # 'data_type': np.float64,  # value for upward compatibility tests
+                   # 'fill_value': np.nan,  # value for upward compatibility tests
                    'precision': 8,
                    'attrs': {'Dimension': 'Meters [m]',
                              'name': 'Wavelength'}},
     'wavenumber': {'layer_type': ['DEBUG'],
                    'layer_name': 'Wavenumber',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
+                   'data_type': np.float32,
+                   'fill_value': np.nan,
+                   # 'data_type': np.float64,  # value for upward compatibility tests
+                   # 'fill_value': np.nan,  # value for upward compatibility tests
                    'precision': 8,
                    'attrs': {'Dimension': 'Per Meter [m-1]',
                              'name': 'Wavenumber'}},
     'distance_to_shore': {'layer_type': ALL_LAYERS_TYPES,
                           'layer_name': 'Distoshore',
                           'dimensions': DIMS_Y_X_TIME,
+                          'data_type': np.float32,
+                          'fill_value': np.nan,
+                          # 'data_type': np.float64,  # value for upward compatibility tests
+                          # 'fill_value': np.nan,  # value for upward compatibility tests
                           'precision': 8,
                           'attrs': {'Dimension': 'Kilometers [km]',
                                     'name': 'Distance_to_shore'}},
     'delta_celerity': {'layer_type': ALL_LAYERS_TYPES,
                        'layer_name': 'Delta Celerity',
                        'dimensions': DIMS_Y_X_NKEEP_TIME,
+                       'data_type': np.float32,
+                       'fill_value': np.nan,
+                       # 'data_type': np.float64,  # value for upward compatibility tests
+                       # 'fill_value': np.nan,  # value for upward compatibility tests
                        'precision': 8,
                        'attrs': {'Dimension': 'Meters per seconds2 [m/sec2]',
                                  'name': 'delta_celerity'}},
     'delta_phase': {'layer_type': ['DEBUG'],
                     'layer_name': 'PhaseShift',
                     'dimensions': DIMS_Y_X_NKEEP_TIME,
+                    'data_type': np.float32,
+                    'fill_value': np.nan,
+                    # 'data_type': np.float64,  # value for upward compatibility tests
+                    # 'fill_value': np.nan,  # value for upward compatibility tests
                     'precision': 8,
                     'attrs': {'Dimension': 'Radians [rd]',
                               'name': 'Phase shift'}},
     'energy_max': {'layer_type': ['DEBUG'],
                    'layer_name': 'Energy',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
+                   'data_type': np.float32,
+                   'fill_value': np.nan,
+                   # 'data_type': np.float64,  # value for upward compatibility tests
+                   # 'fill_value': np.nan,  # value for upward compatibility tests
                    'precision': 8,
                    'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
                              'name': 'Energy'}},
     'gravity': {'layer_type': ['DEBUG'],
                 'layer_name': 'Gravity',
                 'dimensions': DIMS_Y_X_TIME,
+                'data_type': np.float32,
+                'fill_value': np.nan,
+                # 'data_type': np.float64,  # value for upward compatibility tests
+                # 'fill_value': np.nan,  # value for upward compatibility tests
                 'precision': 8,
                 'attrs': {'Dimension': 'Acceleration [m/s2]',
                           'name': 'Gravity'}},
     '_delta_time': {'layer_type': ['DEBUG'],
                     'layer_name': 'Delta Acquisition Time',
                     'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
+                    'data_type': np.float32,
+                    'fill_value': np.nan,
+                    # 'data_type': np.float64,  # value for upward compatibility tests
+                    # 'fill_value': np.nan,  # value for upward compatibility tests
                     'precision': 8,
                     'attrs': {'Dimension': 'Duration (s)',
                               'name': 'DeltaTime'}},
     'linearity': {'layer_type': ['DEBUG'],
                   'layer_name': 'Waves Linearity',
                   'dimensions': DIMS_Y_X_NKEEP_TIME,
+                  'data_type': np.float32,
+                  'fill_value': np.nan,
+                  # 'data_type': np.float64,  # value for upward compatibility tests
+                  # 'fill_value': np.nan,  # value for upward compatibility tests
                   'precision': 8,
                   'attrs': {'Dimension': 'Unitless',
                             'name': 'linearity'}},
     'period_offshore': {'layer_type': ['DEBUG'],
                         'layer_name': 'Period Offshore',
                         'dimensions': DIMS_Y_X_NKEEP_TIME,
+                        'data_type': np.float32,
+                        'fill_value': np.nan,
+                        # 'data_type': np.float64,  # value for upward compatibility tests
+                        # 'fill_value': np.nan,  # value for upward compatibility tests
                         'precision': 8,
                         'attrs': {'Dimension': 'Seconds [sec]',
                                   'name': 'period_offshore'}},
     'delta_phase_ratio': {'layer_type': ['DEBUG'],
                           'layer_name': 'Delta Phase Ratio',
                           'dimensions': DIMS_Y_X_NKEEP_TIME,
+                          'data_type': np.float32,
+                          'fill_value': np.nan,
+                          # 'data_type': np.float64,  # value for upward compatibility tests
+                          # 'fill_value': np.nan,  # value for upward compatibility tests
                           'precision': 8,
                           'attrs': {'Dimension': 'Unitless',
                                     'name': 'delta_phase_ratio'}},
     'energy_ratio': {'layer_type': ['DEBUG'],
                      'layer_name': 'Energy Ratio',
                      'dimensions': DIMS_Y_X_NKEEP_TIME,
+                     'data_type': np.float32,
+                     'fill_value': np.nan,
+                     # 'data_type': np.float64,  # value for upward compatibility tests
+                     # 'fill_value': np.nan,  # value for upward compatibility tests
                      'precision': 8,
                      'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
                                'name': 'energy_ratio'}},
@@ -201,7 +268,9 @@ class EstimatedBathy:
             layer_shape = (nb_samples_y, nb_samples_x, nb_keep)
         else:
             layer_shape = (nb_samples_y, nb_samples_x)
-        layer_data = np.full(layer_shape, np.nan)
+        layer_data = np.full(layer_shape,
+                             layer_definition['fill_value'],
+                             dtype=layer_definition['data_type'])
 
         for y_index in range(nb_samples_y):
             for x_index in range(nb_samples_x):
