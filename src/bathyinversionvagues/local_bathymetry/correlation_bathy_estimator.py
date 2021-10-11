@@ -62,21 +62,26 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self.correlation_image.apply_filters(self.correlation_image_filters)
             self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
             self.radon_transform.apply_filters(self.radon_image_filters)
-            sinogram_max_var, direction_propagation, self._metrics['variances'] = \
+            sinogram_max_var, direction_propagation, variances = \
                 self.radon_transform.get_sinogram_maximum_variance()
-            self._metrics['sinogram_max_var'] = sinogram_max_var.sinogram.flatten()
+
             wave_length = self.compute_wave_length(sinogram_max_var.sinogram.flatten())
             celerity = self.compute_celerity(sinogram_max_var.sinogram.flatten(), wave_length)
             temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
             temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
             period = self.compute_period(temporal_signal)
-            self._metrics['temporal_signal'] = temporal_signal
+
             waves_field_estimation = cast(CorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
             waves_field_estimation.period = period
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
+
+            if self.debug_sample:
+                self._metrics['variances'] = variances
+                self._metrics['sinogram_max_var'] = sinogram_max_var.sinogram.flatten()
+                self._metrics['temporal_signal'] = temporal_signal
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
@@ -169,16 +174,17 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """ Wave length computation (in meter)
         """
-        period, self._metrics['wave_length_zeros'] = find_period(sinogram)
+        period, wave_length_zeros = find_period(sinogram)
         wave_length = period * self.spatial_resolution
+
+        if self.debug_sample:
+            self._metrics['wave_length_zeros'] = wave_length_zeros
         return wave_length
 
     def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
         """ Celerity computation (in meter/second)
         """
-        dephasing, self._metrics['sinogram_period'] = find_dephasing(sinogram,
-                                                                     wave_length)
-        self._metrics['dephasing'] = dephasing
+        dephasing, sinogram_period = find_dephasing(sinogram, wave_length)
         rhomx = self.spatial_resolution * dephasing
         delta_times = np.array([])
         for frame_index in range(len(self.global_estimator.selected_frames) - 1):
@@ -187,8 +193,12 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                 self.global_estimator.selected_frames[frame_index + 1],
                 self.waves_fields_estimations.location), delta_times)
         delta_time = np.mean(delta_times)
-        self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
+
+        if self.debug_sample:
+            self._metrics['sinogram_period'] = sinogram_period
+            self._metrics['dephasing'] = dephasing
+            self._metrics['delta_time'] = delta_time
         return celerity
 
     def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> np.ndarray:
@@ -226,6 +236,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         arg_peaks_max, _ = find_peaks(
             temporal_signal, distance=self.local_estimator_params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
-        self._metrics['arg_temporal_peaks_max'] = arg_peaks_max
+
         period = float(np.mean(np.diff(arg_peaks_max)))
+
+        if self.debug_sample:
+            self._metrics['arg_temporal_peaks_max'] = arg_peaks_max
         return period
