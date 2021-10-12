@@ -74,14 +74,8 @@ class NetCDFDisToShoreProvider(DisToShoreProvider):
         :param point: a tuple containing the X and Y coordinates in the SRS of the client
         :returns: the distance to the nearest shore (km)
         """
-        provider_point = self.transform_point(point, 0.) 
-        # PATCH SLC TEMPORAIRE
-        if self.provider_epsg_code == 4326:
-            kw_sel = {self._x_axis_label: provider_point[1],
-                  self._y_axis_label: provider_point[0],
-                  'method': 'nearest'}
-        else :
-            kw_sel = {self._x_axis_label: provider_point[0],
+        provider_point = self.transform_point(point, 0.)
+        kw_sel = {self._x_axis_label: provider_point[0],
                   self._y_axis_label: provider_point[1],
                   'method': 'nearest'}
         distance_xr_dataset = self._distoshore_xarray.sel(**kw_sel)
