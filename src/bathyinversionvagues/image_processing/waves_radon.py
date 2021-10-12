@@ -12,8 +12,8 @@ from typing import Optional  # @NoMove
 
 import numpy as np  # @NoMove
 
-from ..generic_utils.directional_array import (linear_directions,
-                                               DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
+from ..generic_utils.quantized_directions import (linear_directions,
+                                                  DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
 from ..generic_utils.symmetric_radon import symmetric_radon
 from .sinograms_array import SinogramsArray
 from .waves_image import WavesImage
@@ -102,7 +102,7 @@ class WavesRadon(SinogramsArray):
             radon_transform_augmented_array[:, index] = sinogram.interpolate(
                 factor_augmented_radon)
         return SinogramsArray(radon_transform_augmented_array,
-                              self.directions, self._directions_step)
+                              self.directions, self.quantization_step)
 
     def compute_sinograms_dfts(self,
                                directions: Optional[np.ndarray] = None,

@@ -28,8 +28,8 @@ class UTestDirectionalArray(unittest.TestCase):
         # Array and directions specified.
         test_array = DirectionalArray(TEST_ARRAY1, np.array([4, -11, 100.]))
         self.assertEqual(test_array.nb_directions, 3)
-        self.assertEqual(test_array.array.shape, (4, 3))
-        self.assertEqual(test_array.array.dtype, np.float64)
+        self.assertEqual(test_array.get_as_array().shape, (4, 3))
+        self.assertEqual(test_array.get_as_array().dtype, np.float64)
 
     def test_d_constructor(self) -> None:
         """ Test the constructor of DirectionalArray in degraded cases
@@ -59,21 +59,21 @@ class UTestDirectionalArray(unittest.TestCase):
         # No directions specified. An empty array with 180 directions is created
         test_array = DirectionalArray.create_empty(10)
         self.assertEqual(test_array.nb_directions, 180)
-        self.assertEqual(test_array.array.shape, (10, 180))
-        self.assertEqual(test_array.array.dtype, np.float64)
+        self.assertEqual(test_array.get_as_array().shape, (10, 180))
+        self.assertEqual(test_array.get_as_array().dtype, np.float64)
 
         # No directions specified. An empty array with the number of directions is created
         test_array = DirectionalArray.create_empty(10, directions=np.array([-11, 4, 5., 100.]))
         self.assertEqual(test_array.nb_directions, 4)
-        self.assertEqual(test_array.array.shape, (10, 4))
-        self.assertEqual(test_array.array.dtype, np.float64)
+        self.assertEqual(test_array.get_as_array().shape, (10, 4))
+        self.assertEqual(test_array.get_as_array().dtype, np.float64)
 
         # No directions specified. An empty array with the number of directions is created
         # FIXME: Unordered directions are accepted, but not reordered
         test_array = DirectionalArray.create_empty(10, directions=np.array([4, -11, 5., 100.]))
         self.assertEqual(test_array.nb_directions, 4)
-        self.assertEqual(test_array.array.shape, (10, 4))
-        self.assertEqual(test_array.array.dtype, np.float64)
+        self.assertEqual(test_array.get_as_array().shape, (10, 4))
+        self.assertEqual(test_array.get_as_array().dtype, np.float64)
 
     def test_d_create_empty(self) -> None:
         """ Test the DirectionalArray.create_empty() class method in degraded cases
