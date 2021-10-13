@@ -64,7 +64,7 @@ class QuantizedDirections:
         unique_directions = np.unique(quantized_directions)
         if unique_directions.size != directions.size:
             raise ValueError('some dimensions values are too close to each other considering '
-                             f'the dimensions quantization step: {self.quantizer._directions_step}°')
+                             f'the dimensions quantization step: {self.quantizer.directions_step}°')
         return quantized_directions
 
     def find_index(self, direction: float) -> int:

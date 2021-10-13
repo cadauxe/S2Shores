@@ -26,6 +26,11 @@ class DirectionsQuantizer:
         """
         self._directions_step = directions_step
 
+    @property
+    def directions_step(self) -> float:
+        """ :returns: the step used to quantize directions """
+        return self._directions_step
+
     def quantize(self, direction: Union[float, np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
         # Firstlt, normalize direction between -180 and +180 degrees
         normalized_direction = self.normalize(direction)

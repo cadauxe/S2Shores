@@ -81,7 +81,7 @@ class DirectionalArray:
     @property
     def quantization_step(self) -> float:
         """ :return: the directions defined in this DirectionalArray """
-        return self._directions.quantizer._directions_step
+        return self._directions.quantizer.directions_step
 
     @property
     def nb_directions(self) -> int:
