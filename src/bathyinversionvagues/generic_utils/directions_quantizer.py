@@ -31,15 +31,15 @@ class DirectionsQuantizer:
         """ :returns: the step used to quantize directions """
         return self._directions_step
 
-    def quantize(self, direction: Union[float, np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
-        # Firstlt, normalize direction between -180 and +180 degrees
+    def quantize(self, direction: Union[float, np.ndarray]) -> np.ndarray:
+        # Firstly, normalize direction between -180 and +180 degrees
         normalized_direction = self.normalize(direction)
 
         index_direction = np.around(normalized_direction / self._directions_step)
         quantized_direction = index_direction * self._directions_step
         # TODO: raise an exception if duplicate directions found after quantization.
 
-        return quantized_direction, index_direction
+        return quantized_direction
 
     @staticmethod
     def normalize(directions: Union[float, np.ndarray]) -> Union[float, np.ndarray]:

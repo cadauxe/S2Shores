@@ -114,7 +114,7 @@ class DirectionalArray:
         if directions is None:
             return self._array
         # TODO: use some method from QuantizedDirections
-        quantized_directions, _ = self._directions.quantizer.quantize(directions)
+        quantized_directions = self._directions.quantizer.quantize(directions)
         # Build array by selecting the requested directions
         array_excerpt = np.empty((self.height, quantized_directions.size))
         for i, direction in enumerate(quantized_directions):

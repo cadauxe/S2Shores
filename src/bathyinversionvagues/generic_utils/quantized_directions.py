@@ -60,7 +60,7 @@ class QuantizedDirections:
         """
         # TODO: consider defining direction_step from dimensions contents before quantizing
         # TODO: consider reordering the directions in increasing order
-        quantized_directions = self.quantizer.quantize(directions)[0]
+        quantized_directions = self.quantizer.quantize(directions)
         unique_directions = np.unique(quantized_directions)
         if unique_directions.size != directions.size:
             raise ValueError('some dimensions values are too close to each other considering '
@@ -69,7 +69,7 @@ class QuantizedDirections:
 
     def find_index(self, direction: float) -> int:
         quantized_direction = self.quantizer.quantize(direction)
-        direction_indexes = np.where(self._directions == quantized_direction[0])
+        direction_indexes = np.where(self._directions == quantized_direction)
         if direction_indexes[0].size != 1:
             raise ValueError(f'direction {direction} not found in the directional array')
         return direction_indexes[0]
