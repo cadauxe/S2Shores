@@ -49,30 +49,6 @@ class DirectionalArray:
                              f'({self.nb_directions}) than the number '
                              f'of columns in the array ({array.shape[1]})')
 
-    @classmethod
-    def create_empty(cls,
-                     height: int,
-                     directions: Optional[np.ndarray] = None,
-                     directions_step: float = DEFAULT_DIRECTIONS_STEP) -> 'DirectionalArray':
-        """ Creation of an empty DirectionalArray
-
-        :param directions_step: the step to use for quantizing direction angles, for indexing
-                                purposes. Direction quantization is such that the 0 degree direction
-                                is used as the origin, and any direction angle is transformed to the
-                                nearest quantized angle for indexing that direction in the radon
-                                transform.
-        :raises TypeError: when directions is not a 1D array
-        """
-        # Check that directions argument
-        if directions is None:
-            directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX, directions_step)
-        elif directions.ndim != 1:
-            raise TypeError('dimensions for a DirectionalArray must be a 1D numpy array')
-
-        array = np.empty((height, directions.size), dtype=np.float64)
-
-        return cls(array, directions=directions, directions_step=directions_step)
-
     @property
     def directions(self) -> np.ndarray:
         """ :return: the directions defined in this DirectionalArray """
