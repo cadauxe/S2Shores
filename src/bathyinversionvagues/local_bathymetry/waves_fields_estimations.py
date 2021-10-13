@@ -81,7 +81,7 @@ class WavesFieldsEstimations(list):
         """ :returns: a synthetic value giving the final estimation status
         """
         status = SampleStatus.SUCCESS
-        if self.distance_to_shore == 0.:
+        if self.distance_to_shore <= 0.:
             status = SampleStatus.ON_GROUND
         elif not self.data_available:
             status = SampleStatus.NO_DATA
