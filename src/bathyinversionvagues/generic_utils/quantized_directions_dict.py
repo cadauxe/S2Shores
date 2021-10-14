@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Definition of the DirectionalArray class and associated functions
+""" Definition of the QuantizedDirectionsDict class and associated functions
 
 :author: Alain Giros
 :organization: CNES
@@ -61,10 +61,10 @@ class QuantizedDirectionsDict(ConstrainedDict):
 
     @property
     def directions(self) -> np.ndarray:
-        """ :return: the directions defined in this DirectionalArray """
+        """ :return: the directions defined in this QuantizedDirectionsDict """
         return np.array(self.sorted_directions)
 
     @property
     def nb_directions(self) -> int:
-        """ :return: the number of directions defined in this DirectionalArray"""
+        """ :return: the number of directions defined in this QuantizedDirectionsDict"""
         return len(self)

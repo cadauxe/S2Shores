@@ -87,7 +87,7 @@ class SinogramsArray(DirectionalArray):
         :param direction: the direction of the requested sinogram.
         :returns: the sinogram of the Radon transform along the requested direction
         """
-        return WavesSinogram(self.values_for(direction))
+        return WavesSinogram(self[direction])
 
     # +++++++++++++++++++ Sinograms processing part +++++++++++++++++++
 
@@ -102,7 +102,7 @@ class SinogramsArray(DirectionalArray):
             sinogram = self.get_sinogram(direction).sinogram
             for processing_filter, filter_parameters in processing_filters:
                 sinogram = np.array([processing_filter(sinogram.flatten(), *filter_parameters)]).T
-            self.set_at_direction(direction, sinogram)
+            self[direction] = sinogram
 
     # TODO: Make a function close to DFT_fr
     @staticmethod
