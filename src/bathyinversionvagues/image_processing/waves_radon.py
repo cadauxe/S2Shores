@@ -12,11 +12,18 @@ from typing import Optional  # @NoMove
 
 import numpy as np  # @NoMove
 
-from ..generic_utils.quantized_directions import (linear_directions,
-                                                  DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
 from ..generic_utils.symmetric_radon import symmetric_radon
 from .sinograms_array import SinogramsArray
 from .waves_image import WavesImage
+
+DEFAULT_ANGLE_MIN = -180.
+DEFAULT_ANGLE_MAX = 0.
+
+
+def linear_directions(angle_min: float, angle_max: float, directions_step: float) -> np.ndarray:
+    return np.linspace(angle_min, angle_max,
+                       int((angle_max - angle_min) / directions_step),
+                       endpoint=False)
 
 
 @lru_cache()
