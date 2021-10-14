@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 12 Oct 2021
 """
-from typing import Union, Tuple  # @NoMove
+from typing import Union  # @NoMove
 
 import numpy as np
 
@@ -39,6 +39,17 @@ class DirectionsQuantizer:
         quantized_direction = index_direction * self._directions_step
         # TODO: raise an exception if duplicate directions found after quantization.
 
+        return quantized_direction
+
+    def quantize_float(self, direction: float) -> float:
+        # direction between 0 and 360 degrees
+        normalized_direction = direction % 360.
+        # direction between -180 and +180 degrees
+        if normalized_direction >= 180.:
+            normalized_direction -= 360.
+
+        index_direction = round(normalized_direction / self._directions_step)
+        quantized_direction = index_direction * self._directions_step
         return quantized_direction
 
     @staticmethod
