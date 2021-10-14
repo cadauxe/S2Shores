@@ -25,12 +25,11 @@ class QuantizedDirectionsDict(ConstrainedDict):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._sorted_directions: Optional[List[float]] = None
-        self._quantizer = DirectionsQuantizer(self.quantization_step)
 
     @property
     @abstractmethod
-    def quantization_step(self) -> float:
-        """ :return: the quantization step of the directions defined in this dictionary """
+    def quantizer(self) -> DirectionsQuantizer:
+        """ :return: the quantizer to be applied to the directions defined in this dictionary """
 
     def constrained_key(self, key: float) -> float:
         # First check if key already accepted
@@ -39,7 +38,7 @@ class QuantizedDirectionsDict(ConstrainedDict):
         # Key not accepted yet. Check it.
         if not isinstance(key, float):
             raise TypeError('Keys for a QuantizedDirectionsDict must be float.')
-        return self._quantizer.quantize_float(key)
+        return self.quantizer.quantize_float(key)
 
     def __setitem__(self, key: float, value: Any) -> None:
         # _sorted_directions attribute must be reset in case a new item enters the dictionary

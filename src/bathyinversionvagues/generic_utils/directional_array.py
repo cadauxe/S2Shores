@@ -12,6 +12,7 @@ from typing import Optional, Any
 import numpy as np
 
 from .directions_quantizer import DEFAULT_DIRECTIONS_STEP
+from .directions_quantizer import DirectionsQuantizer
 from .quantized_directions_dict import QuantizedDirectionsDict
 
 
@@ -44,7 +45,7 @@ class DirectionalArray(QuantizedDirectionsDict):
             raise ValueError('directions size must be equal to the number of columns of the array')
 
         self._array_length: Optional[int] = None
-        self._directions_step = directions_step
+        self._quantizer = DirectionsQuantizer(directions_step)
         super().__init__()
         for index, direction in enumerate(directions.tolist()):
             self[direction] = array[:, index]
@@ -53,26 +54,25 @@ class DirectionalArray(QuantizedDirectionsDict):
                              f'({self.nb_directions}) than the number '
                              f'of columns in the array ({array.shape[1]})')
 
-    @classmethod
-    def from_arrays(cls, array: np.ndarray, directions: np.ndarray,
-                    directions_step: float = DEFAULT_DIRECTIONS_STEP) -> 'DirectionalArray':
-        pass
-
     def constrained_value(self, value: Any) -> Any:
         if not isinstance(value, np.ndarray) or value.ndim != 1:
-            raise TypeError('Values for a DirectionsIndexedArray can only be 1D numpy arrays')
+            raise TypeError('Values for a DirectionalArray can only be 1D numpy arrays')
         if self._array_length is None:
             self._array_length = value.size
         else:
             if value.size != self._array_length:
-                msg = '1D arrays in a DirectionsIndexedArray must have the same size. Expected size'
+                msg = '1D arrays in a DirectionalArray must have the same size. Expected size'
                 msg += f'(from first insert) is {self._array_length}, current is {value.size}'
                 raise ValueError(msg)
         return value
 
     @property
-    def quantization_step(self) -> float:
-        return self._directions_step
+    def quantizer(self) -> DirectionsQuantizer:
+        return self._quantizer
+
+    @quantizer.setter
+    def quantizer(self, quantizer: DirectionsQuantizer) -> None:
+        self._quantizer = quantizer
 
     @property
     def height(self) -> int:
@@ -88,7 +88,7 @@ class DirectionalArray(QuantizedDirectionsDict):
         if directions is None:
             selected_directions = self.sorted_directions
         else:
-            selected_directions_array = self._quantizer.quantize(directions)
+            selected_directions_array = self.quantizer.quantize(directions)
             selected_directions = sorted(selected_directions_array.tolist())
 
         # Build array by selecting the requested directions
