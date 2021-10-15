@@ -35,7 +35,7 @@ class WavesSinogram:
         if not isinstance(values, np.ndarray) or values.ndim != 1:
             raise TypeError('WavesSinogram accepts only a 1D numpy array as argument')
         self.values = values
-        self.nb_samples = values.size
+        self.size = values.size
         self._dft: Optional[np.ndarray] = None
 
     def interpolate(self, factor: float) -> np.ndarray:
@@ -45,8 +45,8 @@ class WavesSinogram:
                        interpolated.
         :returns: the interpolated sinogram as a 1D array.
         """
-        new_axis = np.linspace(0, self.nb_samples - 1, int(self.nb_samples / factor))
-        current_axis = np.linspace(0, self.nb_samples - 1, self.nb_samples)
+        new_axis = np.linspace(0, self.size - 1, int(self.size / factor))
+        current_axis = np.linspace(0, self.size - 1, self.size)
         return np.interp(new_axis, current_axis, self.values[:, 0])
 
     @property
@@ -69,11 +69,11 @@ class WavesSinogram:
         :returns: the DFT of the sinogram
         """
         if frequencies is None:
-            nb_positive_coeffs = int(np.ceil(self.nb_samples / 2))
+            nb_positive_coeffs = int(np.ceil(self.size / 2))
             result = np.fft.fft(self.values)[0:nb_positive_coeffs]
         else:
             # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
-            unity_roots = get_unity_roots(frequencies, self.nb_samples)
+            unity_roots = get_unity_roots(frequencies, self.size)
             result = np.dot(unity_roots, self.values)
         return result
 
