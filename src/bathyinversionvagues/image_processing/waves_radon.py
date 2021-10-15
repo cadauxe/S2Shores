@@ -97,12 +97,14 @@ class WavesRadon(SinogramsArray):
         :param factor_augmented_radon: factor of the resolution augmentation.
         :return: a new SinogramsArray object with augmented resolution
         """
-        radon_transform_augmented_array = np.empty(
-            (int(self.nb_samples / factor_augmented_radon), self.nb_directions))
+        radon_transform_augmented_array: Optional[np.ndarray] = None
         for index, direction in enumerate(self.directions):
             sinogram = self.get_sinogram(direction)
-            radon_transform_augmented_array[:, index] = sinogram.interpolate(
-                factor_augmented_radon)
+            interpolated_sinogram = sinogram.interpolate(factor_augmented_radon)
+            if radon_transform_augmented_array is None:
+                radon_transform_augmented_array = np.empty((interpolated_sinogram.size,
+                                                            self.nb_directions))
+            radon_transform_augmented_array[:, index] = interpolated_sinogram
         radon_augmented = SinogramsArray()
         radon_augmented.quantization_step = self.quantization_step
         radon_augmented.insert_from_arrays(radon_transform_augmented_array, self.directions)
