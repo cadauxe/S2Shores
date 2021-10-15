@@ -11,25 +11,39 @@ from typing import Optional, Any
 
 import numpy as np
 
-from .directions_quantizer import DEFAULT_DIRECTIONS_STEP
-from .directions_quantizer import DirectionsQuantizer
 from .quantized_directions_dict import QuantizedDirectionsDict
 
 
 # TODO: add a "symmetric" property, allowing to consider directions modulo pi as equivalent
 # TODO: enable ordering such that circularity can be exposed (around +- 180° and 0°)
 class DirectionalArray(QuantizedDirectionsDict):
-    def __init__(self, array: np.ndarray, directions: np.ndarray,
-                 directions_step: float = DEFAULT_DIRECTIONS_STEP) -> None:
-        """ Constructor
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self._array_length = -1
+        super().__init__(*args, **kwargs)
+
+    def constrained_value(self, value: Any) -> Any:
+        if not isinstance(value, np.ndarray) or value.ndim != 1:
+            raise TypeError('Values for a DirectionalArray can only be 1D numpy arrays')
+        if self._array_length < 0:
+            self._array_length = value.size
+        else:
+            if value.size != self._array_length:
+                msg = '1D arrays in a DirectionalArray must have the same size. Expected size'
+                msg += f'(from first insert) is {self._array_length}, current is {value.size}'
+                raise ValueError(msg)
+        return value
+
+    @property
+    def height(self) -> int:
+        """ :return: the height of each directional vector in this DirectionalArray"""
+        return self._array_length
+
+    def insert_from_arrays(self, array: np.ndarray, directions: np.ndarray) -> None:
+        """ Insert a set of 1d arrays taken as columns of a 2D array, whose directions are provided
+        in a 1d array of the same size.
 
         :param array: a 2D array containing directional vectors along each column
         :param directions: the set of directions in degrees associated to each array column.
-        :param directions_step: the step to use for quantizing direction angles, for indexing
-                                purposes. Direction quantization is such that the 0 degree direction
-                                is used as the origin, and any direction angle is transformed to the
-                                nearest quantized angle for indexing that direction in the radon
-                                transform.
         :raises TypeError: when array or directions have not the right number of dimensions
         :raises ValueError: when the number of dimensions is not consistent with the number of
                             columns in the array.
@@ -44,40 +58,13 @@ class DirectionalArray(QuantizedDirectionsDict):
         if directions.size != array.shape[1]:
             raise ValueError('directions size must be equal to the number of columns of the array')
 
-        self._array_length: Optional[int] = None
-        self._quantizer = DirectionsQuantizer(directions_step)
-        super().__init__()
+        # FIXME: directions may be quantized.should we check them before insertion
         for index, direction in enumerate(directions.tolist()):
             self[direction] = array[:, index]
         if self.nb_directions != array.shape[1]:
             raise ValueError('dimensions after quantization has not the same number of elements '
                              f'({self.nb_directions}) than the number '
                              f'of columns in the array ({array.shape[1]})')
-
-    def constrained_value(self, value: Any) -> Any:
-        if not isinstance(value, np.ndarray) or value.ndim != 1:
-            raise TypeError('Values for a DirectionalArray can only be 1D numpy arrays')
-        if self._array_length is None:
-            self._array_length = value.size
-        else:
-            if value.size != self._array_length:
-                msg = '1D arrays in a DirectionalArray must have the same size. Expected size'
-                msg += f'(from first insert) is {self._array_length}, current is {value.size}'
-                raise ValueError(msg)
-        return value
-
-    @property
-    def quantizer(self) -> DirectionsQuantizer:
-        return self._quantizer
-
-    @quantizer.setter
-    def quantizer(self, quantizer: DirectionsQuantizer) -> None:
-        self._quantizer = quantizer
-
-    @property
-    def height(self) -> int:
-        """ :return: the height of each directional vector in this DirectionalArray"""
-        return self._array_length
 
     def get_as_array(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
         """ Returns a 2D array with the requested directional values as columns

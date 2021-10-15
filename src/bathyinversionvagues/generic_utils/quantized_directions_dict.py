@@ -7,14 +7,12 @@
 :license: see LICENSE file
 :created: 13 Oct 2021
 """
-from abc import abstractmethod
-
 from typing import Any, Optional, List
 
 import numpy as np
 
 from .constrained_dict import ConstrainedDict
-from .directions_quantizer import DirectionsQuantizer
+from .directions_quantizer import DirectionsQuantizer, DEFAULT_DIRECTIONS_STEP
 
 
 class QuantizedDirectionsDict(ConstrainedDict):
@@ -25,11 +23,24 @@ class QuantizedDirectionsDict(ConstrainedDict):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._sorted_directions: Optional[List[float]] = None
+        self._quantizer: Optional[DirectionsQuantizer] = None
+        self._quantization_step = DEFAULT_DIRECTIONS_STEP
 
     @property
-    @abstractmethod
     def quantizer(self) -> DirectionsQuantizer:
         """ :return: the quantizer to be applied to the directions defined in this dictionary """
+        if self._quantizer is None:
+            self._quantizer = DirectionsQuantizer(self._quantization_step)
+        return self._quantizer
+
+    @property
+    def quantization_step(self) -> float:
+        """ :return: the directions quantization step for this dictionary """
+        return self._quantization_step
+
+    @quantization_step.setter
+    def quantization_step(self, step: float) -> None:
+        self._quantization_step = step
 
     def constrained_key(self, key: float) -> float:
         # First check if key already accepted

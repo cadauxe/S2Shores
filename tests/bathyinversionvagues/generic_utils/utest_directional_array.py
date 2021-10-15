@@ -26,7 +26,8 @@ class UTestDirectionalArray(unittest.TestCase):
         """ Test the constructor of DirectionalArray
         """
         # Array and directions specified.
-        test_array = DirectionalArray(TEST_ARRAY1, np.array([4, -11, 100.]))
+        test_array = DirectionalArray()
+        test_array.insert_from_arrays(TEST_ARRAY1, np.array([4, -11, 100.]))
         self.assertEqual(test_array.nb_directions, 3)
         self.assertEqual(test_array.get_as_array().shape, (4, 3))
         self.assertEqual(test_array.get_as_array().dtype, np.float64)
@@ -35,20 +36,21 @@ class UTestDirectionalArray(unittest.TestCase):
         """ Test the constructor of DirectionalArray in degraded cases
         """
         # Array specified but of wrong types
+        test_array = DirectionalArray()
         with self.assertRaises(TypeError) as excp:
-            _ = DirectionalArray(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]))
+            test_array.insert_from_arrays(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]))
         expected = 'array for a DirectionalArray must be a 2D numpy array'
         self.assertEqual(str(excp.exception), expected)
 
         # Provided directions have not the same number of elements than the array column number
         with self.assertRaises(ValueError) as excp:
-            _ = DirectionalArray(np.empty((10, 6)), np.array([1, 2, 3, 4]))
+            test_array.insert_from_arrays(np.empty((10, 6)), np.array([1, 2, 3, 4]))
         expected = 'directions size must be equal to the number of columns of the array'
         self.assertEqual(str(excp.exception), expected)
 
         # Provided directions have values which are too close with respect to the direction_step
         with self.assertRaises(ValueError) as excp:
-            _ = DirectionalArray(np.empty((10, 4)), np.array([1, 2.50001, 3.4, 4]))
+            test_array.insert_from_arrays(np.empty((10, 4)), np.array([1, 2.50001, 3.4, 4]))
         expected = 'dimensions after quantization has not the same number of elements (3)'
         expected += ' than the number of columns in the array (4)'
         self.assertEqual(str(excp.exception), expected)
@@ -57,7 +59,8 @@ class UTestDirectionalArray(unittest.TestCase):
         """ Test the [] operator of DirectionalArray
         """
         # Array for this test.
-        test_array = DirectionalArray(TEST_ARRAY1, np.array([4, -11, 100.]))
+        test_array = DirectionalArray()
+        test_array.insert_from_arrays(TEST_ARRAY1, np.array([4, -11, 100.]))
 
         # Retrieve an existing direction
         vector = test_array[-11]

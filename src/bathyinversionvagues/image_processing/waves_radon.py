@@ -73,7 +73,9 @@ class WavesRadon(SinogramsArray):
 
         radon_transform_array = self._compute(image.pixels, weighted, selected_directions)
 
-        super().__init__(radon_transform_array, selected_directions, directions_step)
+        super().__init__()
+        self.quantization_step = directions_step
+        self.insert_from_arrays(radon_transform_array, selected_directions)
 
     @staticmethod
     def _compute(pixels: np.ndarray, weighted: bool, selected_directions: np.ndarray) -> np.ndarray:
@@ -120,20 +122,5 @@ class WavesRadon(SinogramsArray):
         :param kfft: the set of wavenumbers to use for sampling the DFT. If None, standard DFT
                      sampling is done.
         """
-        # If no selected directions, DFT will be computed on all directions
-        directions = self.directions if directions is None else directions
-        # Build array on which the dft will be computed
-        radon_excerpt = self.get_as_array(directions)
-
-        if kfft is None:
-            # Compute standard DFT along the column axis and keep positive frequencies only
-            nb_positive_coeffs = int(np.ceil(radon_excerpt.shape[0] / 2))
-            radon_dft_1d = np.fft.fft(radon_excerpt, axis=0)
-            result = radon_dft_1d[0:nb_positive_coeffs, :]
-        else:
-            frequencies = kfft / self.sampling_frequency
-            result = self._dft_interpolated(radon_excerpt, frequencies)
-        # Store individual 1D DFTs in sinograms
-        for sino_index in range(result.shape[1]):
-            sinogram = self.sinograms[directions[sino_index]]
-            sinogram.dft = result[:, sino_index]
+        frequencies = None if kfft is None else kfft / self.sampling_frequency
+        SinogramsArray.compute_sinograms_dfts(self, directions, frequencies)

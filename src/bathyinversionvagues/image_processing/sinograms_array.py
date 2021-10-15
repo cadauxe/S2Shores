@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, Dict, Tuple  # @NoMove
+from typing import Optional, Dict, Tuple, Any  # @NoMove
 
 import numpy as np  # @NoMove
 
@@ -25,23 +25,12 @@ class SinogramsArray(DirectionalArray):
     knowledge of the image
     """
 
-    def __init__(self, radon_transform_array: np.ndarray, directions: np.ndarray,
-                 directions_step: float) -> None:
-        """ Constructor
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
 
-        :param radon_transform_array: a 2D array containing the sinograms of a radon transform
-        :param directions: a 1D array whose size is the same than the second axis of the array,
-                           containing the directions (in degrees) corresponding to the provided
-                           Radon transform directions.
-        :param directions_step: the step to use for quantizing direction angles, for indexing
-                                purposes.
-        """
-        super().__init__(array=radon_transform_array,
-                         directions=directions,
-                         directions_step=directions_step)
-        # A dictionary of all the sinograms, indexed by their direction.
         # FIXME: this is a copy of the sinograms, not pointers to sinograms views
-        self._sinograms = self._get_sinograms_as_dict()
+        # FIXME: this is almost redundant now
+        self._sinograms: Optional[SinogramsSetType] = None
 
     # +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
 
@@ -51,6 +40,8 @@ class SinogramsArray(DirectionalArray):
 
         :returns: the sinograms of the Radon transform as a dictionary indexed by the directions
         """
+        if self._sinograms is None:
+            self._sinograms = self._get_sinograms_as_dict()
         return self._sinograms
 
     def _get_sinograms_as_dict(self, directions: Optional[np.ndarray] = None) -> SinogramsSetType:
@@ -121,6 +112,32 @@ class SinogramsArray(DirectionalArray):
         for i in range(nb_columns):
             signal_dft_1d[:, i] = DFT_fr(signal_2d[:, i], unity_roots)
         return signal_dft_1d
+
+    def compute_sinograms_dfts(self,
+                               directions: Optional[np.ndarray] = None,
+                               frequencies: Optional[np.ndarray] = None) -> None:
+        """ Computes the fft of the radon transform along the projection directions
+
+        :param directions: the set of directions for which the sinograms DFT must be computed
+        :param frequencies: the set of frequancies to use for sampling the DFT.
+                            If None, standard DFT  sampling is done.
+        """
+        # If no selected directions, DFT will be computed on all directions
+        directions = self.directions if directions is None else directions
+        # Build array on which the dft will be computed
+        radon_excerpt = self.get_as_array(directions)
+
+        if frequencies is None:
+            # Compute standard DFT along the column axis and keep positive frequencies only
+            nb_positive_coeffs = int(np.ceil(radon_excerpt.shape[0] / 2))
+            radon_dft_1d = np.fft.fft(radon_excerpt, axis=0)
+            result = radon_dft_1d[0:nb_positive_coeffs, :]
+        else:
+            result = self._dft_interpolated(radon_excerpt, frequencies)
+        # Store individual 1D DFTs in sinograms
+        for sino_index in range(result.shape[1]):
+            sinogram = self.sinograms[directions[sino_index]]
+            sinogram.dft = result[:, sino_index]
 
     def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
         """ Retrieve the current DFT of the sinograms in some directions. If DFTs does not exist
