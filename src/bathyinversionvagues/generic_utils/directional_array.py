@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, Any
+from typing import Optional, Any, Tuple
 
 import numpy as np
 
@@ -61,20 +61,21 @@ class DirectionalArray(QuantizedDirectionsDict):
                              f'({self.nb_directions}) than the number '
                              f'of columns in the array ({array.shape[1]})')
 
-    def get_as_array(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
+    def get_as_arrays(self,
+                      directions: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
         """ Returns a 2D array with the requested directional values as columns
 
         :param directions: a vector of directions to store in the returned array, in their order
         :returns: a 2D array with the requested directional values as columns
         """
         if directions is None:
-            selected_directions = self.sorted_directions
+            selected_directions = np.array(self.sorted_directions)
         else:
             selected_directions_array = self.quantizer.quantize(directions)
-            selected_directions = sorted(selected_directions_array.tolist())
+            selected_directions = np.array(sorted(selected_directions_array.tolist()))
 
         # Build array by selecting the requested directions
         array_excerpt = np.empty((self._array_length, len(selected_directions)))
         for index, direction in enumerate(selected_directions):
             array_excerpt[:, index] = self[direction]
-        return array_excerpt
+        return array_excerpt, selected_directions

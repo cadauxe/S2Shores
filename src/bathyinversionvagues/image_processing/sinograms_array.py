@@ -110,7 +110,7 @@ class SinogramsArray(DirectionalArray):
         # If no selected directions, DFT will be computed on all directions
         directions = self.directions if directions is None else directions
         # Build array on which the dft will be computed
-        radon_excerpt = self.get_as_array(directions)
+        radon_excerpt, directions = self.get_as_arrays(directions)
 
         if frequencies is None:
             # Compute standard DFT along the column axis and keep positive frequencies only

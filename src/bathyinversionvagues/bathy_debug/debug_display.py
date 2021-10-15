@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING  # @NoMove
 
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
@@ -47,7 +48,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
 
     # Third diagram : Radon transform & maximum variance
     ax3 = fig.add_subplot(gs[1, :2])
-    radon_array = temporal_estimator.radon_transform.get_as_array()
+    radon_array, _ = temporal_estimator.radon_transform.get_as_arrays()
     ax3.imshow(radon_array, interpolation='nearest', aspect='auto', origin='lower')
     (l1, l2) = np.shape(radon_array)
     plt.plot(

@@ -224,18 +224,20 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                   - the normalized spectrum
         """
 
+        # TODO: remove nb_directions by tiling phi_mi and phi_max based on phase_shift shape.
         if self.directions is None:
             nb_directions = self.radon_transforms[0].nb_directions
         else:
             nb_directions = self.directions.shape[0]
-        phi_min = np.tile(phi_min[:, np.newaxis], (1, nb_directions))
-        phi_max = np.tile(phi_max[:, np.newaxis], (1, nb_directions))
 
         sino1_fft = self.radon_transforms[0].get_sinograms_dfts(self.directions)
         sino2_fft = self.radon_transforms[1].get_sinograms_dfts(self.directions)
 
         sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
         phase_shift = np.angle(sinograms_correlation_fft)
+
+        phi_min = np.tile(phi_min[:, np.newaxis], (1, nb_directions))
+        phi_max = np.tile(phi_max[:, np.newaxis], (1, nb_directions))
         phase_shift_thresholded = self.process_phase(phase_shift, phi_min, phi_max)
 
         amplitude_sino1 = np.abs(sino1_fft) ** 2
@@ -325,9 +327,9 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         total_spectrum = metrics['total_spectrum']
 
         dump_numpy_variable(self.radon_transforms[0].pixels, 'input pixels for Radon transform 1 ')
-        dump_numpy_variable(self.radon_transforms[0].get_as_array(),
-                            'Radon transform 1')
-        dump_numpy_variable(self.directions, 'Directions used for Radon transform 1')
+        radon_array, directions = self.radon_transforms[0].get_as_arrays()
+        dump_numpy_variable(radon_array, 'Radon transform 1')
+        dump_numpy_variable(directions, 'Directions used for Radon transform 1')
         dump_numpy_variable(sino1_fft, 'sinoFFT1')
         dump_numpy_variable(phase_shift, 'phase shift')
         for index in range(0, phase_shift.shape[1]):
