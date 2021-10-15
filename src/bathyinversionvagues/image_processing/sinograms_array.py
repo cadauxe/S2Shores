@@ -91,7 +91,7 @@ class SinogramsArray(DirectionalArray):
         """
         for direction in self.directions:
             # TODO: add an apply_filters to Sinogram and use it
-            sinogram = self.get_sinogram(direction).sinogram
+            sinogram = self.get_sinogram(direction).values
             for processing_filter, filter_parameters in processing_filters:
                 sinogram = np.array([processing_filter(sinogram.flatten(), *filter_parameters)]).T
             self[direction] = sinogram
@@ -186,7 +186,7 @@ class SinogramsArray(DirectionalArray):
                 for filter_name, filter_parameters in processing_filters:
                     sinogram = WavesSinogram(
                         np.array(
-                            [filter_name(sinogram.sinogram.flatten(), *filter_parameters)]).T)
+                            [filter_name(sinogram.values.flatten(), *filter_parameters)]).T)
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 

@@ -26,13 +26,16 @@ class WavesSinogram:
     """ Class handling a sinogram (the component of a Radon transform in some direction)
     """
 
-    def __init__(self, sinogram: np.ndarray) -> None:
+    def __init__(self, values: np.ndarray) -> None:
         """ Constructor
 
-        :param sinogram: a 1D array containing the sinogram values
+        :param values: a 1D array containing the sinogram values
+        :raises TypeError: when values is not a 1D numpy array
         """
-        self.sinogram = sinogram
-        self.nb_samples = sinogram.shape[0]
+        if not isinstance(values, np.ndarray) or values.ndim != 1:
+            raise TypeError('WavesSinogram accepts only a 1D numpy array as argument')
+        self.values = values
+        self.nb_samples = values.size
         self._dft: Optional[np.ndarray] = None
 
     def interpolate(self, factor: float) -> np.ndarray:
@@ -44,7 +47,7 @@ class WavesSinogram:
         """
         new_axis = np.linspace(0, self.nb_samples - 1, int(self.nb_samples / factor))
         current_axis = np.linspace(0, self.nb_samples - 1, self.nb_samples)
-        return np.interp(new_axis, current_axis, self.sinogram[:, 0])
+        return np.interp(new_axis, current_axis, self.values[:, 0])
 
     @property
     def dft(self) -> np.ndarray:
@@ -67,10 +70,10 @@ class WavesSinogram:
         """
         if frequencies is None:
             nb_positive_coeffs = int(np.ceil(self.nb_samples / 2))
-            result = np.fft.fft(self.sinogram)[0:nb_positive_coeffs]
+            result = np.fft.fft(self.values)[0:nb_positive_coeffs]
         else:
             unity_roots = get_unity_roots(frequencies, self.nb_samples)
-            result = DFT_fr(self.sinogram, unity_roots)
+            result = DFT_fr(self.values, unity_roots)
         return result
 
     def filter_mean(self, kernel_size: int) -> np.ndarray:
@@ -79,23 +82,23 @@ class WavesSinogram:
         :param kernel_size: the number of samples to consider in the filtering window
         :returns: the mean filtered sinogram
         """
-        array = np.ndarray.flatten(self.sinogram)
+        array = np.ndarray.flatten(self.values)
         return filter_mean(array, kernel_size)
 
     @property
     def energy(self) -> float:
         """ :returns: the energy of the sinogram
         """
-        return float(np.sum(self.sinogram * self.sinogram))
+        return float(np.sum(self.values * self.values))
 
     @property
     def mean_power(self) -> float:
         """ :returns: the mean power of the sinogram
         """
-        return self.energy / len(self.sinogram)
+        return self.energy / len(self.values)
 
     @property
     def variance(self) -> float:
         """ :returns: the variance of the sinogram
         """
-        return float(np.var(self.sinogram))
+        return float(np.var(self.values))

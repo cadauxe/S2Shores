@@ -24,6 +24,7 @@ from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
 
+
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
@@ -51,7 +52,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
     def preprocessing_filters(self) -> ImageProcessingFilters:
         preprocessing_filters: ImageProcessingFilters = []
         preprocessing_filters.append((detrend, []))
-        
+
         if self.global_estimator.smoothing_requested:
             # FIXME: pixels necessary for smoothing are not taken into account, thus
             # zeros are introduced at the borders of the window.
@@ -69,7 +70,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
         celerity = self.compute_celerity(correlation_signal, wavelength)
-        self.save_waves_field_estimation(correlation_signal, estimated_direction, wavelength, celerity)
+        self.save_waves_field_estimation(correlation_signal, estimated_direction,
+                                         wavelength, celerity)
 
     def compute_radon_transforms(self) -> None:
 
@@ -103,11 +105,11 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         """
         for radon_transform in self.radon_transforms:
             tmp_wavessinogram = radon_transform.get_sinogram(estimated_direction)
-            tmp_wavessinogram.sinogram *= tmp_wavessinogram.variance
+            tmp_wavessinogram.values *= tmp_wavessinogram.variance
             self.sinograms.append(tmp_wavessinogram)
-        sinogram_1 = self.sinograms[0].sinogram[:, 0]
+        sinogram_1 = self.sinograms[0].values[:, 0]
         # TODO: should be independent from 0/1 (for multiple pairs of frames)
-        sinogram_2 = self.sinograms[1].sinogram[:, 0]
+        sinogram_2 = self.sinograms[1].values[:, 0]
         correl_mode = self.local_estimator_params.CORRELATION_MODE
         corr_init = normalized_cross_correlation(sinogram_1, sinogram_2, correl_mode)
         corr_init_ac = normalized_cross_correlation(corr_init, corr_init, correl_mode)
@@ -123,7 +125,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the wave length (m)
         """
         period, _ = find_period(correlation_signal)
-        wavelength = period * self.images_sequence[0].resolution * self.local_estimator_params.AUGMENTED_RADON_FACTOR
+        wavelength = period * self.images_sequence[0].resolution * \
+            self.local_estimator_params.AUGMENTED_RADON_FACTOR
         return wavelength
 
     def compute_celerity(self, correlation_signal: np.ndarray, wavelength: float) -> float:
@@ -134,9 +137,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the celerity (m/s)
         """
         argmax_ac = len(correlation_signal)
-        peak_position_lim_inf = -1/wavenumber_dual_period(self.global_estimator.waves_period_max,
-                                                          abs(self.delta_time),
-                                                          self.gravity)
+        peak_position_lim_inf = -1 / wavenumber_dual_period(self.global_estimator.waves_period_max,
+                                                            abs(self.delta_time),
+                                                            self.gravity)
         propagation_factor = self.delta_time / period_offshore(1. / wavelength, self.gravity)
         if propagation_factor < 1:
             peak_position_lim_sup = -peak_position_lim_inf
