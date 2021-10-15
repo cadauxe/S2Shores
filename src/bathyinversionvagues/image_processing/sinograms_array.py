@@ -57,21 +57,6 @@ class SinogramsArray(DirectionalArray):
             sinograms_dict[direction] = self.get_sinogram(direction)
         return sinograms_dict
 
-    def get_sinograms_as_array(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
-        """ returns the sinograms of the Radon transform as a np.ndarray of shape (len(sinogram),
-        len(direction))
-
-        :param directions: the set of directions which must be provided in the output dictionary.
-                           When unspecified, all the directions of the Radon transform are returned.
-        :returns: an array with a sinogram on each line
-        """
-        directions = self.directions if directions is None else directions
-        sinograms_array = np.empty((self.height, len(directions)))
-        for index, direction in enumerate(directions):
-            sinogram = self.get_sinogram(direction)
-            sinograms_array[:, index] = sinogram.sinogram.flatten()
-        return sinograms_array
-
     def get_sinogram(self, direction: float) -> WavesSinogram:
         """ returns a new sinogram taken from the Radon transform at some direction
 
