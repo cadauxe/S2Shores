@@ -90,22 +90,3 @@ class WavesRadon(SinogramsArray):
                     radon_transform_array[:, direction] / weights)
 
         return radon_transform_array
-
-    def radon_augmentation(self, factor_augmented_radon: float) -> SinogramsArray:
-        """ Augment the resolution of the radon transform along the sinogram direction
-
-        :param factor_augmented_radon: factor of the resolution augmentation.
-        :return: a new SinogramsArray object with augmented resolution
-        """
-        radon_transform_augmented_array: Optional[np.ndarray] = None
-        for index, direction in enumerate(self.directions):
-            sinogram = self.get_sinogram(direction)
-            interpolated_sinogram = sinogram.interpolate(factor_augmented_radon)
-            if radon_transform_augmented_array is None:
-                radon_transform_augmented_array = np.empty((interpolated_sinogram.size,
-                                                            self.nb_directions))
-            radon_transform_augmented_array[:, index] = interpolated_sinogram
-        radon_augmented = SinogramsArray()
-        radon_augmented.quantization_step = self.quantization_step
-        radon_augmented.insert_from_arrays(radon_transform_augmented_array, self.directions)
-        return radon_augmented
