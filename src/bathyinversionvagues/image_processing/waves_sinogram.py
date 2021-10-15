@@ -33,7 +33,7 @@ class WavesSinogram:
         """
         self.sinogram = sinogram
         self.nb_samples = sinogram.shape[0]
-        self._dft = None
+        self._dft: Optional[np.ndarray] = None
 
     def interpolate(self, factor: float) -> np.ndarray:
         """ Compute an augmented version of the sinogram, by interpolation with some factor.

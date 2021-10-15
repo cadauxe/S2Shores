@@ -29,7 +29,7 @@ class UTestDirectionalArray(unittest.TestCase):
         test_array = DirectionalArray()
         test_array.insert_from_arrays(TEST_ARRAY1, np.array([4, -11, 100.]))
         self.assertEqual(test_array.nb_directions, 3)
-        array_out, directions = test_array.get_as_array()
+        array_out, directions = test_array.get_as_arrays()
         self.assertEqual(len(directions), 3)
         self.assertEqual(array_out.shape, (4, 3))
         self.assertEqual(array_out.dtype, np.float64)

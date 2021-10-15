@@ -64,7 +64,6 @@ class WavesRadon(SinogramsArray):
         """
         self.pixels = image.pixels
         self.sampling_frequency = image.sampling_frequency
-        self.nb_samples = min(self.pixels.shape)
 
         # TODO: Quantize directions when selected_directions is provided?
         if selected_directions is None:

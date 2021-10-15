@@ -33,6 +33,11 @@ class DirectionalArray(QuantizedDirectionsDict):
                 raise ValueError(msg)
         return value
 
+    @property
+    def nb_samples(self) -> int:
+        """ :return: the length of each directional vector in this DirectionalArray"""
+        return self._array_length
+
     def insert_from_arrays(self, array: np.ndarray, directions: np.ndarray) -> None:
         """ Insert a set of 1d arrays taken as columns of a 2D array, whose directions are provided
         in a 1d array of the same size.
