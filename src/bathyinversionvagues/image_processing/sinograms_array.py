@@ -12,7 +12,7 @@ from typing import Optional, Dict, Tuple, Any  # @NoMove
 import numpy as np  # @NoMove
 
 from ..generic_utils.directional_array import DirectionalArray
-from ..generic_utils.signal_utils import DFT_fr, get_unity_roots
+from ..generic_utils.signal_utils import get_unity_roots
 
 from .waves_sinogram import WavesSinogram, SignalProcessingFilters
 
@@ -96,22 +96,23 @@ class SinogramsArray(DirectionalArray):
                 sinogram = np.array([processing_filter(sinogram.flatten(), *filter_parameters)]).T
             self[direction] = sinogram
 
-    # TODO: Make a function close to DFT_fr
+    # TODO: insert into compute_sinograms_dft
     @staticmethod
-    def _dft_interpolated(signal_2d: np.ndarray, frequencies: np.ndarray) -> np.ndarray:
+    def _dft_interpolated(radon_excerpt: np.ndarray, frequencies: np.ndarray) -> np.ndarray:
         """ Computes the 1D dft of a 2D signal along the columns using specific sampling frequencies
 
-        :param signal_2d: a 2D signal
+        :param radon_excerpt: a 2D signal
         :param frequencies: a set of unevenly spaced frequencies at which the DFT must be computed
         :returns: a 2D array with the DFTs of the selected input columns, stored as contiguous
                   columns
         """
-        nb_columns = signal_2d.shape[1]
+        nb_columns = radon_excerpt.shape[1]
         signal_dft_1d = np.empty((frequencies.size, nb_columns), dtype=np.complex128)
 
-        unity_roots = get_unity_roots(frequencies, signal_2d.shape[0])
+        # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
+        unity_roots = get_unity_roots(frequencies, radon_excerpt.shape[0])
         for i in range(nb_columns):
-            signal_dft_1d[:, i] = DFT_fr(signal_2d[:, i], unity_roots)
+            signal_dft_1d[:, i] = np.dot(unity_roots, radon_excerpt[:, i])
         return signal_dft_1d
 
     def compute_sinograms_dfts(self,

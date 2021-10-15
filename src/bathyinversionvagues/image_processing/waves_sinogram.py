@@ -13,7 +13,7 @@ from typing import Optional, List, Tuple, Callable, Any  # @NoMove
 import numpy as np
 
 from ..generic_utils.signal_filters import filter_mean
-from ..generic_utils.signal_utils import get_unity_roots, DFT_fr
+from ..generic_utils.signal_utils import get_unity_roots
 
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
@@ -72,8 +72,9 @@ class WavesSinogram:
             nb_positive_coeffs = int(np.ceil(self.nb_samples / 2))
             result = np.fft.fft(self.values)[0:nb_positive_coeffs]
         else:
+            # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
             unity_roots = get_unity_roots(frequencies, self.nb_samples)
-            result = DFT_fr(self.values, unity_roots)
+            result = np.dot(unity_roots, self.values)
         return result
 
     def filter_mean(self, kernel_size: int) -> np.ndarray:
