@@ -93,7 +93,7 @@ class SinogramsArray(DirectionalArray):
             # TODO: add an apply_filters to Sinogram and use it
             sinogram = self.get_sinogram(direction).values
             for processing_filter, filter_parameters in processing_filters:
-                sinogram = np.array([processing_filter(sinogram.flatten(), *filter_parameters)]).T
+                sinogram = np.array([processing_filter(sinogram, *filter_parameters)]).T
             self[direction] = sinogram
 
     # TODO: insert into compute_sinograms_dft
@@ -187,7 +187,7 @@ class SinogramsArray(DirectionalArray):
                 for filter_name, filter_parameters in processing_filters:
                     sinogram = WavesSinogram(
                         np.array(
-                            [filter_name(sinogram.values.flatten(), *filter_parameters)]).T)
+                            [filter_name(sinogram.values, *filter_parameters)]).T)
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 

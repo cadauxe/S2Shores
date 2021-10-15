@@ -20,7 +20,7 @@ SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
 
 # TODO: make this class derive from a "1D_signal" class which would implement signal processing ?
-# This class would gather several functions from shoreutils.
+# This class would gather several functions from signal_utils.
 # TODO: introduce direction inside the sinogram itself ?
 class WavesSinogram:
     """ Class handling a sinogram (the component of a Radon transform in some direction)
@@ -83,8 +83,7 @@ class WavesSinogram:
         :param kernel_size: the number of samples to consider in the filtering window
         :returns: the mean filtered sinogram
         """
-        array = np.ndarray.flatten(self.values)
-        return filter_mean(array, kernel_size)
+        return filter_mean(self.values, kernel_size)
 
     @property
     def energy(self) -> float:
