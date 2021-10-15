@@ -63,7 +63,6 @@ class WavesRadon(SinogramsArray):
                          weighting function
         """
         self.pixels = image.pixels
-        self.sampling_frequency = image.sampling_frequency
 
         # TODO: Quantize directions when selected_directions is provided?
         if selected_directions is None:
@@ -74,6 +73,7 @@ class WavesRadon(SinogramsArray):
 
         super().__init__()
         self.quantization_step = directions_step
+        self.sampling_frequency = image.sampling_frequency
         self.insert_from_arrays(radon_transform_array, selected_directions)
 
     @staticmethod
@@ -91,12 +91,6 @@ class WavesRadon(SinogramsArray):
 
         return radon_transform_array
 
-    @property
-    def spectrum_wave_numbers(self) -> np.ndarray:
-        """ :returns: wave numbers for each sample of the positive part of the FFT of a direction.
-        """
-        return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
-
     def radon_augmentation(self, factor_augmented_radon: float) -> SinogramsArray:
         """ Augment the resolution of the radon transform along the sinogram direction
 
@@ -109,17 +103,7 @@ class WavesRadon(SinogramsArray):
             sinogram = self.get_sinogram(direction)
             radon_transform_augmented_array[:, index] = sinogram.interpolate(
                 factor_augmented_radon)
-        return SinogramsArray(radon_transform_augmented_array,
-                              self.directions, self.quantization_step)
-
-    def compute_sinograms_dfts(self,
-                               directions: Optional[np.ndarray] = None,
-                               kfft: Optional[np.ndarray] = None) -> None:
-        """ Computes the fft of the radon transform along the projection directions
-
-        :param directions: the set of directions for which the sinograms DFT must be computed
-        :param kfft: the set of wavenumbers to use for sampling the DFT. If None, standard DFT
-                     sampling is done.
-        """
-        frequencies = None if kfft is None else kfft / self.sampling_frequency
-        SinogramsArray.compute_sinograms_dfts(self, directions, frequencies)
+        radon_augmented = SinogramsArray()
+        radon_augmented.quantization_step = self.quantization_step
+        radon_augmented.insert_from_arrays(radon_transform_augmented_array, self.directions)
+        return radon_augmented

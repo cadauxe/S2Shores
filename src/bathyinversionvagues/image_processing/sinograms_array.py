@@ -27,12 +27,27 @@ class SinogramsArray(DirectionalArray):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-
+        self._sampling_frequency = 0.
         # FIXME: this is a copy of the sinograms, not pointers to sinograms views
         # FIXME: this is almost redundant now
         self._sinograms: Optional[SinogramsSetType] = None
 
     # +++++++++++++++++++ Sinograms management part (could go in another class) +++++++++++++++++++
+
+    @property
+    def sampling_frequency(self) -> float:
+        """ :return: the sampling frequency of the sinograms """
+        return self._sampling_frequency
+
+    @sampling_frequency.setter
+    def sampling_frequency(self, frequency: float) -> None:
+        self._sampling_frequency = frequency
+
+    @property
+    def spectrum_wave_numbers(self) -> np.ndarray:
+        """ :returns: wave numbers for each sample of the positive part of the FFT of a direction.
+        """
+        return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
 
     @property
     def sinograms(self) -> SinogramsSetType:
@@ -44,6 +59,7 @@ class SinogramsArray(DirectionalArray):
             self._sinograms = self._get_sinograms_as_dict()
         return self._sinograms
 
+    # FIXME: this method should be removed or generalized
     def _get_sinograms_as_dict(self, directions: Optional[np.ndarray] = None) -> SinogramsSetType:
         """ returns the sinograms of the Radon transform as a dictionary indexed by the directions
 
@@ -100,13 +116,14 @@ class SinogramsArray(DirectionalArray):
 
     def compute_sinograms_dfts(self,
                                directions: Optional[np.ndarray] = None,
-                               frequencies: Optional[np.ndarray] = None) -> None:
+                               kfft: Optional[np.ndarray] = None) -> None:
         """ Computes the fft of the radon transform along the projection directions
 
         :param directions: the set of directions for which the sinograms DFT must be computed
-        :param frequencies: the set of frequancies to use for sampling the DFT.
-                            If None, standard DFT  sampling is done.
+        :param kfft: the set of wavenumbers to use for sampling the DFT. If None, standard DFT
+                     sampling is done.
         """
+        frequencies = None if kfft is None else kfft / self.sampling_frequency
         # If no selected directions, DFT will be computed on all directions
         directions = self.directions if directions is None else directions
         # Build array on which the dft will be computed
@@ -148,10 +165,7 @@ class SinogramsArray(DirectionalArray):
         :return: the sinograms mean powers for the specified directions or for all directions
         """
         directions = self.directions if directions is None else directions
-        sinograms_powers = np.empty(len(directions), dtype=np.float64)
-        for result_index, direction in enumerate(directions):
-            sinograms_powers[result_index] = self.sinograms[direction].mean_power
-        return sinograms_powers
+        return np.array([self.sinograms[direction].mean_power for direction in directions])
 
     def get_sinograms_variances(self,
                                 processing_filters: Optional[SignalProcessingFilters] = None,
