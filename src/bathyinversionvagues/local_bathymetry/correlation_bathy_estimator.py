@@ -60,11 +60,13 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         try:
             self.correlation_image.apply_filters(self.correlation_image_filters)
+            # TODO: remove this attribute.
             self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
-            self.radon_transform.apply_filters(self.radon_image_filters)
+            # FIXME: store filtered_sinograms into metrics (was previously displaed)
+            filtered_sinograms = self.radon_transform.apply_filters(self.radon_image_filters)
             direction_propagation, self._metrics['variances'] = \
-                self.radon_transform.get_direction_maximum_variance()
-            sinogram_max_var = self.radon_transform[direction_propagation]
+                filtered_sinograms.get_direction_maximum_variance()
+            sinogram_max_var = filtered_sinograms[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
             self._metrics['sinogram_max_var'] = sinogram_max_var_values
             wave_length = self.compute_wave_length(sinogram_max_var_values)

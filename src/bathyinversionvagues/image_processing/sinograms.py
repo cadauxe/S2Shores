@@ -43,19 +43,21 @@ class Sinograms(SinogramsDict):
 
     # +++++++++++++++++++ Sinograms processing part +++++++++++++++++++
 
-    def apply_filters(self, processing_filters: SignalProcessingFilters) -> None:
-        """ Apply filters on the sinograms in place
+    def apply_filters(self, processing_filters: SignalProcessingFilters,
+                      directions: Optional[np.ndarray] = None) -> 'Sinograms':
+        """ Apply filters on the sinograms
 
         :param processing_filters: A list of functions together with their parameters to apply
-                                   sequentially to each sinogram.
+                                   sequentially to the selected sinograms.
+        :param directions: the directions of the sinograms to filter.
+                           Defaults to all the sinograms directions if unspecified.
+        :returns: the filtered sinograms
         """
+        directions = self.directions if directions is None else directions
+        filtered_sinograms = Sinograms()
         for direction in self:
-            # TODO: add an apply_filters to Sinogram and use it
-            sinogram_values = self[direction].values
-            for processing_filter, filter_parameters in processing_filters:
-                sinogram_values = np.array(
-                    [processing_filter(sinogram_values, *filter_parameters)]).T
-            self[direction] = WavesSinogram(sinogram_values)
+            filtered_sinograms[direction] = self[direction].apply_filters(processing_filters)
+        return filtered_sinograms
 
     # TODO: insert into compute_sinograms_dft
     @staticmethod
@@ -129,46 +131,32 @@ class Sinograms(SinogramsDict):
         directions = self.directions if directions is None else directions
         return np.array([self[direction].mean_power for direction in directions])
 
-    # FIXME: should not apply filters: instead filter sinograms to produce a new Sinograms
+    # FIXME: output cannot be used safely without outputting the directions
     def get_sinograms_variances(self,
-                                processing_filters: Optional[SignalProcessingFilters] = None,
                                 directions: Optional[np.ndarray] = None) -> np.ndarray:
         """ Return array of variance of each sinogram
 
-        :param processing_filters: a set a filters to apply on sinograms before computing variance.
-                                   Sinograms are left unmodified
         :param directions: the directions of the requested sinograms.
-                           Defaults to all the Radon transform directions if unspecified.
+                           Defaults to all the Sinograms directions if unspecified.
         :return: variances of the sinograms
         """
         directions = self.directions if directions is None else directions
         sinograms_variances = np.empty(len(directions), dtype=np.float64)
         for result_index, direction in enumerate(directions):
-            sinogram = self[direction]
-            # TODO: implements filters in Sinogram and use them
-            if processing_filters is not None:
-                for filter_name, filter_parameters in processing_filters:
-                    sinogram = WavesSinogram(
-                        np.array(
-                            [filter_name(sinogram.values, *filter_parameters)]).T)
-            sinograms_variances[result_index] = sinogram.variance
+            sinograms_variances[result_index] = self[direction].variance
         return sinograms_variances
 
-    def get_direction_maximum_variance(self,
-                                       processing_filters: Optional[SignalProcessingFilters] = None,
-                                       directions: Optional[np.ndarray] = None) \
+    def get_direction_maximum_variance(self, directions: Optional[np.ndarray] = None) \
             -> Tuple[float, np.ndarray]:
-        """ Find the sinogram with maximum variance among the set of sinograms on some directions,
-        and returns it together with the direction value.
+        """ Find the sinogram with maximum variance among the set of sinograms along some
+        directions.
 
-        :param processing_filters: a set a filter to apply on sinograms before computing maximum
-                                   variance. Sinograms are left unmodified
         :param directions: a set of directions to look for maximum variance sinogram. If None, all
-                           the directions in the radon transform are considered.
-        :returns: the sinogram of maximum variance together with the corresponding direction.
+                           the directions in the Sinograms are considered.
+        :returns: the direction of the maximum variance sinogram together with the set of variances.
         """
         directions = self.directions if directions is None else directions
-        variances = self.get_sinograms_variances(processing_filters, directions)
+        variances = self.get_sinograms_variances(directions)
         index_max_variance = np.argmax(variances)
         return directions[index_max_variance], variances
 
