@@ -18,25 +18,25 @@ from .quantized_directions_dict import QuantizedDirectionsDict
 # TODO: enable ordering such that circularity can be exposed (around +- 180° and 0°)
 class DirectionalArray(QuantizedDirectionsDict):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._array_length = -1
+        self._nb_samples = -1
         super().__init__(*args, **kwargs)
 
     def constrained_value(self, value: Any) -> Any:
         if not isinstance(value, np.ndarray) or value.ndim != 1:
             raise TypeError('Values for a DirectionalArray can only be 1D numpy arrays')
-        if self._array_length < 0:
-            self._array_length = value.size
+        if self._nb_samples < 0:
+            self._nb_samples = value.size
         else:
-            if value.size != self._array_length:
+            if value.size != self._nb_samples:
                 msg = '1D arrays in a DirectionalArray must have the same size. Expected size'
-                msg += f'(from first insert) is {self._array_length}, current is {value.size}'
+                msg += f'(from first insert) is {self._nb_samples}, current is {value.size}'
                 raise ValueError(msg)
         return value
 
     @property
     def nb_samples(self) -> int:
         """ :return: the length of each directional vector in this DirectionalArray"""
-        return self._array_length
+        return self._nb_samples
 
     def insert_from_arrays(self, array: np.ndarray, directions: np.ndarray) -> None:
         """ Insert a set of 1d arrays taken as columns of a 2D array, whose directions are provided
@@ -80,7 +80,7 @@ class DirectionalArray(QuantizedDirectionsDict):
             selected_directions = np.array(sorted(selected_directions_array.tolist()))
 
         # Build array by selecting the requested directions
-        array_excerpt = np.empty((self._array_length, len(selected_directions)))
+        array_excerpt = np.empty((self.nb_samples, len(selected_directions)))
         for index, direction in enumerate(selected_directions):
             array_excerpt[:, index] = self[direction]
         return array_excerpt, selected_directions
