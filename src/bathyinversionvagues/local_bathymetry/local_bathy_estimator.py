@@ -75,10 +75,15 @@ class LocalBathyEstimator(ABC):
 
         self._waves_fields_estimations = waves_fields_estimations
 
-        self._delta_time = self.global_estimator.get_delta_time(
-            self.global_estimator.selected_frames[0],
-            self.global_estimator.selected_frames[1],
-            self.location)
+        sequential_delta_times = np.array([])
+        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
+            delta_time = self.global_estimator.get_delta_time(
+                self.global_estimator.selected_frames[frame_index],
+                self.global_estimator.selected_frames[frame_index + 1],
+                self.location)
+            # FIXME: copied from CorrelationBathyEstimator but wrong !?
+            sequential_delta_times = np.append(delta_time, sequential_delta_times)
+        self._sequential_delta_times = sequential_delta_times
 
         self._metrics: Dict[str, Any] = {}
 
@@ -107,13 +112,11 @@ class LocalBathyEstimator(ABC):
         """ :returns: The (X, Y) coordinates of the location where this estimator is acting"""
         return self.waves_fields_estimations.location
 
-    # FIXME: At the moment only a pair of images is handled (list is limited
-    # to a singleton)
     @property
-    def delta_time(self) -> float:
+    def sequential_delta_times(self) -> np.ndarray:
         """ :returns: the time differences between 2 consecutive frames in the image sequence
         """
-        return self._delta_time
+        return self._sequential_delta_times
 
     @abstractmethod
     def run(self) -> None:

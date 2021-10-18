@@ -197,7 +197,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                           self.create_waves_field_estimation(estimated_direction,
                                                                              wavelength))
 
-            waves_field_estimation.delta_time = self.delta_time
+            waves_field_estimation.delta_time = self.sequential_delta_times[0]
             waves_field_estimation.delta_phase = estimated_phase_shift
             waves_field_estimation.delta_phase_ratio = abs(waves_field_estimation.delta_phase) / \
                 phi_max[peak_wavenumber_index]
@@ -302,7 +302,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                   wavenumbers
         """
         return phi_limits(wavenumbers,
-                          self.delta_time,
+                          self.sequential_delta_times[0],
                           self.global_estimator.depth_min,
                           self.gravity)
 

@@ -138,10 +138,11 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the celerity (m/s)
         """
         argmax_ac = len(correlation_signal)
+        delta_time = self.sequential_delta_times[0]
         peak_position_lim_inf = -1 / wavenumber_dual_period(self.global_estimator.waves_period_max,
-                                                            abs(self.delta_time),
+                                                            abs(delta_time),
                                                             self.gravity)
-        propagation_factor = self.delta_time / period_offshore(1. / wavelength, self.gravity)
+        propagation_factor = delta_time / period_offshore(1. / wavelength, self.gravity)
         if propagation_factor < 1:
             peak_position_lim_sup = -peak_position_lim_inf
         else:
@@ -157,7 +158,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             if pt_in_range.size != 0:
                 argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
                 dx = argmax - argmax_ac  # supposed to be in meters, TODO: add variable to adapt to be in meters
-                celerity = abs(dx) / abs(self.delta_time)
+                celerity = abs(dx) / abs(delta_time)
         return celerity
 
     def save_waves_field_estimation(self,
@@ -176,7 +177,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                                       self.create_waves_field_estimation(estimated_direction,
                                                                          wavelength))
         waves_field_estimation.celerity = celerity
-        waves_field_estimation.delta_time = self.delta_time
+        waves_field_estimation.delta_time = self.sequential_delta_times[0]
         waves_field_estimation.correlation_signal = correlation_signal
         self.store_estimation(waves_field_estimation)
 

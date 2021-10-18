@@ -190,13 +190,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         dephasing, sinogram_period = find_dephasing(sinogram, wave_length)
         rhomx = self.spatial_resolution * dephasing
-        delta_times = np.array([])
-        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
-            delta_times = np.append(self.global_estimator.get_delta_time(
-                self.global_estimator.selected_frames[frame_index],
-                self.global_estimator.selected_frames[frame_index + 1],
-                self.location), delta_times)
-        delta_time = np.mean(delta_times)
+        delta_time = np.mean(self.sequential_delta_times)
+        # TODO: store delta_time in estimation
+        self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
 
         if self.debug_sample:
