@@ -45,16 +45,16 @@ SPATIAL_DFT:
 TEMPORAL_CORRELATION:
   DEBUG_PATH: ""
   RESOLUTION:
-    TIME_INTERPOLATION: 0.5
-  TEMPORAL_LAG: 1
-  PERCENTAGE_POINTS: 1
+    TIME_INTERPOLATION: 0.5 # resolution in second for temporal signal
+  TEMPORAL_LAG: 1  # number of frames to let wave propagation happen (example 3 for a 1Hz sequence)
+  PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation 
   TUNING:
-    RATIO_SIZE_CORRELATION: 1
-    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25
-    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5
-    LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.04
-    HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2
-    MIN_PEAKS_DISTANCE_PERIOD: 5
+    RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
+    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
+    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
+    LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.04 # low limit in rad/s of pass band filter used on temporal signal
+    HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2 # high limit in rad/s of pass band filter used on temporal signal 
+    MIN_PEAKS_DISTANCE_PERIOD: 5  # minimum distance in pixels between two peaks in temporal signal  
 
 #spatial_correlation
 SPATIAL_CORRELATION:
