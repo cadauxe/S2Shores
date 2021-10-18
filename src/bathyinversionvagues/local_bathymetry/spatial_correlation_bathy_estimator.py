@@ -7,16 +7,18 @@
 :license: see LICENSE file
 :created: 20/09/2021
 """
-from typing import Optional, List, TYPE_CHECKING, cast
+from typing import Optional, List, TYPE_CHECKING, cast  # @NoMove
 
 from scipy.signal import find_peaks
 
 import numpy as np
 
+
 from ..bathy_physics import period_offshore, wavenumber_dual_period
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period
+from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..image_processing.waves_sinogram import WavesSinogram
@@ -43,7 +45,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                          waves_fields_estimations, selected_directions)
         self._number_frames = len(self.images_sequence)
 
-        self.radon_transforms: List[WavesRadon] = []
+        self.radon_transforms: List[Sinograms] = []
         self.sinograms: List[WavesSinogram] = []
         self.spatial_correlation = None
         self.directions = None
@@ -77,9 +79,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
         for image in self.images_sequence:
             radon_transform = WavesRadon(image, self.selected_directions)
-            radon_transform_augmented = \
-                radon_transform.radon_augmentation(
-                    self.local_estimator_params.AUGMENTED_RADON_FACTOR)
+            radon_transform_augmented = radon_transform.radon_augmentation(
+                self.local_estimator_params.AUGMENTED_RADON_FACTOR)
             self.radon_transforms.append(radon_transform_augmented)
 
     def find_direction(self) -> float:

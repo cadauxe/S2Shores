@@ -8,13 +8,17 @@
 :created: 4 mars 2021
 """
 from functools import lru_cache
-from typing import Optional  # @NoMove
+
+from typing import Optional, List  # @NoMove
 
 import numpy as np  # @NoMove
 
+
 from ..generic_utils.symmetric_radon import symmetric_radon
-from .sinograms_array import SinogramsArray
+from .sinograms import Sinograms
 from .waves_image import WavesImage
+from .waves_sinogram import WavesSinogram
+
 
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 0.
@@ -41,8 +45,7 @@ def sinogram_weights(nb_samples: int) -> np.ndarray:
     return weights
 
 
-# TODO: finalize directions indices removal
-class WavesRadon(SinogramsArray):
+class WavesRadon(Sinograms):
     """ Class handling the Radon transform of some image.
     """
 
@@ -69,15 +72,15 @@ class WavesRadon(SinogramsArray):
             selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
                                                     directions_step)
 
-        radon_transform_array = self._compute(image.pixels, weighted, selected_directions)
+        radon_transform_list = self._compute(image.pixels, weighted, selected_directions)
 
         super().__init__()
         self.quantization_step = directions_step
         self.sampling_frequency = image.sampling_frequency
-        self.insert_from_arrays(radon_transform_array, selected_directions)
+        self.insert_sinograms(radon_transform_list, selected_directions)
 
     @staticmethod
-    def _compute(pixels: np.ndarray, weighted: bool, selected_directions: np.ndarray) -> np.ndarray:
+    def _compute(pixels: np.ndarray, weighted: bool, selected_directions: np.ndarray) -> List[WavesSinogram]:
         """ Compute the radon transform of the image over a set of directions
         """
         # FIXME: quantization may imply that radon transform is not computed on stored directions
@@ -85,8 +88,13 @@ class WavesRadon(SinogramsArray):
 
         if weighted:
             weights = sinogram_weights(radon_transform_array.shape[0])
-            for direction in range(radon_transform_array.shape[1]):
-                radon_transform_array[:, direction] = (
-                    radon_transform_array[:, direction] / weights)
+            # TODO: replace by enumerate(selected_directions)
+            for direction_index in range(radon_transform_array.shape[1]):
+                radon_transform_array[:, direction_index] = (
+                    radon_transform_array[:, direction_index] / weights)
 
-        return radon_transform_array
+        sinograms: List[WavesSinogram] = []
+        for index, _ in enumerate(selected_directions):
+            sinogram = WavesSinogram(radon_transform_array[:, index].flatten())
+            sinograms.append(sinogram)
+        return sinograms
