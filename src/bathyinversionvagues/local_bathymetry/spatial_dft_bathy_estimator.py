@@ -88,7 +88,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.find_spectral_peaks()
 
         if self.debug_sample:
-            self._metrics['N'] = self.radon_transforms[0].nb_samples
             self._metrics['radon_image1'] = self.radon_transforms[0]
             self._metrics['radon_image2'] = self.radon_transforms[1]
 
