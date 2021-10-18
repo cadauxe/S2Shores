@@ -12,7 +12,6 @@
 from typing import Optional, List, Tuple, Callable, Any  # @NoMove
 import numpy as np
 
-from ..generic_utils.signal_filters import filter_mean
 from ..generic_utils.signal_utils import get_unity_roots
 
 
@@ -76,14 +75,6 @@ class WavesSinogram:
             unity_roots = get_unity_roots(frequencies, self.size)
             result = np.dot(unity_roots, self.values)
         return result
-
-    def filter_mean(self, kernel_size: int) -> np.ndarray:
-        """ Apply a mean filter on the sinogram
-
-        :param kernel_size: the number of samples to consider in the filtering window
-        :returns: the mean filtered sinogram
-        """
-        return filter_mean(self.values, kernel_size)
 
     @property
     def energy(self) -> float:
