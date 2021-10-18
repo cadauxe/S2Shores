@@ -13,8 +13,7 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
-
-from ..bathy_physics import period_offshore, wavenumber_dual_period
+from ..bathy_physics import period_offshore, celerity_offshore
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period
@@ -22,6 +21,7 @@ from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..image_processing.waves_sinogram import WavesSinogram
+from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
@@ -91,7 +91,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         tmp_image = np.ones(self.images_sequence[0].pixels.shape)
         for frame in range(self._number_frames):
             tmp_image *= self.images_sequence[frame].pixels
-        tmp_wavesimage = WavesImage(tmp_image, self.images_sequence[0].resolution)
+        tmp_wavesimage = WavesImage(tmp_image, self.spatial_resolution)
         tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)
         tmp_wavesradon_augmented = tmp_wavesradon.radon_augmentation(
             self.local_estimator_params.AUGMENTED_RADON_FACTOR)
@@ -126,7 +126,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the wave length (m)
         """
         period, _ = find_period(correlation_signal)
-        wavelength = period * self.images_sequence[0].resolution * \
+        wavelength = period * self.spatial_resolution * \
             self.local_estimator_params.AUGMENTED_RADON_FACTOR
         return wavelength
 
@@ -137,28 +137,34 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param wavelength: the wave length (m)
         :returns: the celerity (m/s)
         """
-        argmax_ac = len(correlation_signal)
+        argmax_ac = len(correlation_signal) / 2
         delta_time = self.sequential_delta_times[0]
-        peak_position_lim_inf = -1 / wavenumber_dual_period(self.global_estimator.waves_period_max,
-                                                            abs(delta_time),
-                                                            self.gravity)
+        celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
+                                                  self.gravity)
+        spatial_shift_offshore_min = -celerity_offshore_max * abs(delta_time)
         propagation_factor = delta_time / period_offshore(1. / wavelength, self.gravity)
         if propagation_factor < 1:
-            peak_position_lim_sup = -peak_position_lim_inf
+            spatial_shift_offshore_max = -spatial_shift_offshore_min
         else:
             # unused for s2
-            peak_position_lim_sup = -self.local_estimator_params.PEAK_POSITION_MAX_FACTOR * \
+            spatial_shift_offshore_max = -self.local_estimator_params.PEAK_POSITION_MAX_FACTOR * \
                 propagation_factor * wavelength
         peaks_pos, _ = find_peaks(correlation_signal)
         celerity = np.nan
         if peaks_pos.size != 0:
             relative_distance = peaks_pos - argmax_ac
-            pt_in_range = peaks_pos[np.where((relative_distance >= peak_position_lim_inf) & (
-                relative_distance < peak_position_lim_sup))]
+            pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_offshore_min) & (
+                relative_distance < spatial_shift_offshore_max))]
             if pt_in_range.size != 0:
                 argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
-                dx = argmax - argmax_ac  # supposed to be in meters, TODO: add variable to adapt to be in meters
+                # TODO: add variable to adapt to be in meters
+                dx = argmax - argmax_ac  # supposed to be in meters,
                 celerity = abs(dx) / abs(delta_time)
+            else:
+                raise WavesEstimationError('Unable to find any directional peak')
+        else:
+            raise WavesEstimationError('Unable to find any directional peak')
+
         return celerity
 
     def save_waves_field_estimation(self,

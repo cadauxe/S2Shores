@@ -60,12 +60,11 @@ def wavenumber_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
     """
     return 2. * np.pi / (gravity * (period)**2)
 
-def wavenumber_dual_period(period1: np.ndarray, period2: np.ndarray, gravity: float) -> np.ndarray:
-    """ Computes the wavenumber from two different periods under the offshore hypothesis
+def celerity_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
+    """ Computes the celerity max from the period max under the offshore hypothesis
 
-        :param period1: first period (s)
-        :param period2: second period (s)
+        :param period: period of the waves (s)
         :param gravity: acceleration of the gravity (m/s2)
         :returns: the wavenumber according to the linear dispersive relation (1/m)
         """
-    return 2. * np.pi / (gravity * period1 * period2)
+    return (gravity / 2. * np.pi) * period
