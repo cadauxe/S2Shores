@@ -129,6 +129,7 @@ class Sinograms(SinogramsDict):
         directions = self.directions if directions is None else directions
         return np.array([self[direction].mean_power for direction in directions])
 
+    # FIXME: should not apply filters: instead filter sinograms to produce a new Sinograms
     def get_sinograms_variances(self,
                                 processing_filters: Optional[SignalProcessingFilters] = None,
                                 directions: Optional[np.ndarray] = None) -> np.ndarray:
@@ -144,6 +145,7 @@ class Sinograms(SinogramsDict):
         sinograms_variances = np.empty(len(directions), dtype=np.float64)
         for result_index, direction in enumerate(directions):
             sinogram = self[direction]
+            # TODO: implements filters in Sinogram and use them
             if processing_filters is not None:
                 for filter_name, filter_parameters in processing_filters:
                     sinogram = WavesSinogram(
@@ -152,10 +154,10 @@ class Sinograms(SinogramsDict):
             sinograms_variances[result_index] = sinogram.variance
         return sinograms_variances
 
-    def get_sinogram_maximum_variance(self,
-                                      processing_filters: Optional[SignalProcessingFilters] = None,
-                                      directions: Optional[np.ndarray] = None) \
-            -> Tuple[WavesSinogram, float, np.ndarray]:
+    def get_direction_maximum_variance(self,
+                                       processing_filters: Optional[SignalProcessingFilters] = None,
+                                       directions: Optional[np.ndarray] = None) \
+            -> Tuple[float, np.ndarray]:
         """ Find the sinogram with maximum variance among the set of sinograms on some directions,
         and returns it together with the direction value.
 
@@ -168,8 +170,7 @@ class Sinograms(SinogramsDict):
         directions = self.directions if directions is None else directions
         variances = self.get_sinograms_variances(processing_filters, directions)
         index_max_variance = np.argmax(variances)
-        max_variance_dir = directions[index_max_variance]
-        return self[max_variance_dir], max_variance_dir, variances
+        return directions[index_max_variance], variances
 
     def radon_augmentation(self, factor_augmented_radon: float) -> 'Sinograms':
         """ Augment the resolution of the radon transform along the sinogram direction

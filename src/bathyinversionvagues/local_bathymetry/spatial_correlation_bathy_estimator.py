@@ -95,7 +95,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)
         tmp_wavesradon_augmented = tmp_wavesradon.radon_augmentation(
             self.local_estimator_params.AUGMENTED_RADON_FACTOR)
-        _, estimated_direction, _ = tmp_wavesradon_augmented.get_sinogram_maximum_variance()
+        estimated_direction, _ = tmp_wavesradon_augmented.get_direction_maximum_variance()
         return estimated_direction
 
     def compute_spatial_correlation(self, estimated_direction: float) -> np.ndarray:
