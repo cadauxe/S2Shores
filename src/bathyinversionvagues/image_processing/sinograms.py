@@ -172,5 +172,6 @@ class Sinograms(SinogramsDict):
             radon_transform_augmented_list.append(interpolated_sinogram)
         radon_augmented = Sinograms()
         radon_augmented.quantization_step = self.quantization_step
+        radon_augmented.sampling_frequency = self.sampling_frequency / factor_augmented_radon
         radon_augmented.insert_sinograms(radon_transform_augmented_list, self.directions)
         return radon_augmented

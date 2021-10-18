@@ -20,7 +20,7 @@ SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
 # TODO: make this class derive from a "1D_signal" class which would implement signal processing ?
 # This class would gather several functions from signal_utils.
-# TODO: introduce direction inside the sinogram itself ?
+# TODO: introduce sampling_frequency/resolution inside the sinogram itself ?
 class WavesSinogram:
     """ Class handling a sinogram (the component of a Radon transform in some direction)
     """
@@ -37,16 +37,16 @@ class WavesSinogram:
         self.size = values.size
         self._dft: Optional[np.ndarray] = None
 
-    def interpolate(self, factor: float) -> np.ndarray:
+    def interpolate(self, factor: float) -> 'WavesSinogram':
         """ Compute an augmented version of the sinogram, by interpolation with some factor.
 
         :param factor: fraction of the sinogram sampling step for which new samples has to be evenly
                        interpolated.
-        :returns: the interpolated sinogram as a 1D array.
+        :returns: the interpolated sinogram.
         """
         new_axis = np.linspace(0, self.size - 1, int(self.size / factor))
         current_axis = np.linspace(0, self.size - 1, self.size)
-        return np.interp(new_axis, current_axis, self.values[:, 0])
+        return WavesSinogram(np.interp(new_axis, current_axis, self.values[:, 0]))
 
     @property
     def dft(self) -> np.ndarray:
