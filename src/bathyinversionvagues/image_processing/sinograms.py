@@ -100,7 +100,7 @@ class Sinograms(SinogramsDict):
             result = self._dft_interpolated(radon_excerpt, frequencies)
         # Store individual 1D DFTs in sinograms
         for sino_index in range(result.shape[1]):
-            sinogram = self.sinograms[directions[sino_index]]
+            sinogram = self[directions[sino_index]]
             sinogram.dft = result[:, sino_index]
 
     def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
@@ -112,10 +112,10 @@ class Sinograms(SinogramsDict):
         :return: the sinograms DFTs for the specified directions or for all directions
         """
         directions = self.directions if directions is None else directions
-        fft_sino_length = self.sinograms[directions[0]].dft.shape[0]
+        fft_sino_length = self[directions[0]].dft.shape[0]
         result = np.empty((fft_sino_length, len(directions)), dtype=np.complex128)
         for result_index, sinogram_index in enumerate(directions):
-            sinogram = self.sinograms[sinogram_index]
+            sinogram = self[sinogram_index]
             result[:, result_index] = sinogram.dft
         return result
 
@@ -127,7 +127,7 @@ class Sinograms(SinogramsDict):
         :return: the sinograms mean powers for the specified directions or for all directions
         """
         directions = self.directions if directions is None else directions
-        return np.array([self.sinograms[direction].mean_power for direction in directions])
+        return np.array([self[direction].mean_power for direction in directions])
 
     def get_sinograms_variances(self,
                                 processing_filters: Optional[SignalProcessingFilters] = None,
@@ -143,7 +143,7 @@ class Sinograms(SinogramsDict):
         directions = self.directions if directions is None else directions
         sinograms_variances = np.empty(len(directions), dtype=np.float64)
         for result_index, direction in enumerate(directions):
-            sinogram = self.sinograms[direction]
+            sinogram = self[direction]
             if processing_filters is not None:
                 for filter_name, filter_parameters in processing_filters:
                     sinogram = WavesSinogram(
@@ -168,8 +168,8 @@ class Sinograms(SinogramsDict):
         directions = self.directions if directions is None else directions
         variances = self.get_sinograms_variances(processing_filters, directions)
         index_max_variance = np.argmax(variances)
-        return self.sinograms[directions[index_max_variance]], directions[
-            index_max_variance], variances
+        max_variance_dir = directions[index_max_variance]
+        return self[max_variance_dir], max_variance_dir, variances
 
     def radon_augmentation(self, factor_augmented_radon: float) -> 'Sinograms':
         """ Augment the resolution of the radon transform along the sinogram direction

@@ -91,15 +91,6 @@ class SinogramsDict(QuantizedDirectionsDict):
             array_excerpt[:, index] = self[direction].values
         return array_excerpt, selected_directions
 
-    # FIXME:  remove calls to this property
-    @property
-    def sinograms(self) -> 'SinogramsDict':
-        """ the sinograms of the Radon transform as a dictionary indexed by the directions
-
-        :returns: the sinograms of the Radon transform as a dictionary indexed by the directions
-        """
-        return self
-
     def get_sinograms_subset(self, directions: Optional[np.ndarray] = None) -> 'SinogramsDict':
         """ returns the sinograms of the Radon transform as a dictionary indexed by the directions
 
