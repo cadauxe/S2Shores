@@ -9,7 +9,7 @@
 """
 import numpy as np
 
-from ..bathy_physics import get_period_offshore, funLinearC_k
+from ..bathy_physics import period_offshore, funLinearC_k
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
@@ -22,13 +22,13 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     bathymetry for that sample..
     """
 
-    def __init__(self, depth_precision: float, gravity: float,
-                 depth_estimation_method: str) -> None:
+    def __init__(self, gravity: float, depth_estimation_method: str,
+                 depth_precision: float) -> None:
         """ Constructor
 
-        :param depth_precision: precision (in meters) to be used for depth estimation
         :param gravity: the acceleration of gravity to use (m.s-2)
         :param depth_estimation_method: the name of the depth estimation method to use
+        :param depth_precision: precision (in meters) to be used for depth estimation
         :raises NotImplementedError: when the depth estimation method is unsupported
         """
         if depth_estimation_method not in KNOWN_DEPTH_ESTIMATION_METHODS:
@@ -38,6 +38,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
 
         super().__init__()
 
+        # FIXME: make those attributes abstract ?
         self._gravity = gravity
         self._depth_precision = depth_precision
         self._depth_estimation_method = depth_estimation_method
@@ -65,7 +66,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def period_offshore(self) -> float:
         """ :returns: The offshore period (s) """
-        return get_period_offshore(self.wavenumber, self._gravity)
+        return period_offshore(self.wavenumber, self._gravity)
 
     def __str__(self) -> str:
         result = WavesFieldSampleDynamics.__str__(self)

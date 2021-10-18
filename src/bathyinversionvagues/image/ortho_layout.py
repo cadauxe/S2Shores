@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-""" Definition of the OrthoImage class
+""" Definition of the OrthoLayout class
 
 :author: GIROS Alain
-:created: 17/05/2021
+:created: 05/08/2021
 """
-from abc import ABC, abstractproperty, abstractmethod
-from typing import Tuple, Dict  # @NoMove
+from typing import Tuple  # @NoMove
 
 import numpy as np  # @NoMove
 
@@ -15,9 +14,9 @@ from .geo_transform import GeoTransform
 from .image_geometry_types import MarginsType, PointType, ImageWindowType, GdalGeoTransformType
 
 
-class OrthoImage(ABC):
-    """ An orthoimage is an image expressed in a cartographic system. This class is an abstract
-    class linking the cartographic and the image extents of the image.
+class OrthoLayout:
+    """ This class makes the link between the pixels extent of an orthorectified image and
+    its projected extent in some SRS.
     """
 
     def __init__(self, nb_columns: int, nb_lines: int, projection: str,
@@ -42,34 +41,16 @@ class OrthoImage(ABC):
             self._nb_columns, self._nb_lines)
 
     @property
-    @abstractproperty
-    def short_name(self) -> str:
-        """ :returns: the short image name
-        """
-
-    @property
-    @abstractproperty
-    def acquisition_time(self) -> str:
-        """ :returns: the acquisition time of the image
-        """
-
-    @property
     def epsg_code(self) -> int:
         """ :returns: the epsg code of the projection
         """
         return int(self._projection.split(',')[-1][1:-3])
 
-    def build_infos(self) -> Dict[str, str]:
-        """ :returns: a dictionary of metadata describing this ortho image
-        """
-        infos = {'epsg': 'EPSG:' + str(self.epsg_code)}
-        return infos
-
     # TODO: define steps default values based on resolution
     def get_samples_positions(self, step_x: float, step_y: float, local_margins: MarginsType
                               ) -> Tuple[np.ndarray, np.ndarray]:
         """ x_samples, y_samples are the coordinates  of the final samples in georeferenced system
-        sampled from a starting position with steps 'DXP' and 'DYP'
+        sampled from a starting position with steps different steps on X and Y axis.
 
         :param step_x: the cartographic sampling to use along the X axis to sample this image
         :param step_y: the cartographic sampling to use along the X axis to sample this image
@@ -96,8 +77,8 @@ class OrthoImage(ABC):
             for y_coord in y_samples:
                 line_start, line_stop, col_start, col_stop = self.window_pixels((x_coord, y_coord),
                                                                                 local_margins)
-                if (line_start >= 0 and line_stop <= self._nb_lines and
-                        col_start >= 0 and col_stop <= self._nb_columns):
+                if (line_start >= 0 and line_stop < self._nb_lines and
+                        col_start >= 0 and col_stop < self._nb_columns):
                     acceptable_samples_x.append(x_coord)
                     break
 
@@ -106,8 +87,8 @@ class OrthoImage(ABC):
             for x_coord in acceptable_samples_x:
                 line_start, line_stop, col_start, col_stop = self.window_pixels((x_coord, y_coord),
                                                                                 local_margins)
-                if (line_start >= 0 and line_stop <= self._nb_lines and
-                        col_start >= 0 and col_stop <= self._nb_columns):
+                if (line_start >= 0 and line_stop < self._nb_lines and
+                        col_start >= 0 and col_stop < self._nb_columns):
                     acceptable_samples_y.append(y_coord)
                     break
 
@@ -145,16 +126,3 @@ class OrthoImage(ABC):
                       int(window_col_start) - col_start,
                       int(window_col_stop) - col_start)
         return window_pix
-
-    @abstractmethod
-    def read_pixels(self, band_id: str, line_start: int, line_stop: int,
-                    col_start: int, col_stop: int) -> np.ndarray:
-        """ Read a rectangle of pixels from a specific band of this image.
-
-        :param band_id: the identifier of the spectral band
-        :param line_start: the image line where the rectangle begins
-        :param line_stop: the image line where the rectangle stops
-        :param col_start: the image column where the rectangle begins
-        :param col_stop: the image column where the rectangle stops
-        :returns: the rectangle of pixels as an array
-        """

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Exceptions used in bathymetry estimation
+""" Exceptions used in bathymetry estimation
 
 :author: GIROS Alain
 :organization: CNES
@@ -30,6 +29,6 @@ class WavesEstimationError(WavesException):
     """
 
 
-class NoRadonTransformError(WavesException):
-    """ Exception raised when trying to access a non existent Radon transform
+class SequenceImagesError(WavesException):
+    """ Exception raised when sequence images can not be properly exploited
     """

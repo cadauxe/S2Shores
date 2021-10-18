@@ -7,8 +7,8 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import Optional
 import warnings
+from typing import Optional
 
 import numpy as np
 
