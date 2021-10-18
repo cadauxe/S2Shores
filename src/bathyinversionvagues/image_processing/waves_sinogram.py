@@ -93,3 +93,15 @@ class WavesSinogram:
         """ :returns: the variance of the sinogram
         """
         return float(np.var(self.values))
+
+    def apply_filters(self, processing_filters: SignalProcessingFilters) -> 'WavesSinogram':
+        """ Apply a set of filters on the sinogram.
+
+        :param processing_filters: A list of functions together with their parameters to apply
+                                   sequentially to the sinogram.
+        :returns: the filtered sinogram
+        """
+        sinogram_values = self.values
+        for processing_filter, filter_parameters in processing_filters:
+            sinogram_values = np.array([processing_filter(sinogram_values, *filter_parameters)])
+        return WavesSinogram(sinogram_values)
