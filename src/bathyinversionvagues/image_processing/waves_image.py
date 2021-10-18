@@ -9,45 +9,40 @@ module -- Class encapsulating an image onto which waves estimation will be made
 :license: see LICENSE file
 :created: 7 mars 2021
 """
-from typing import Optional, Tuple
+from typing import Tuple, Callable, List, Any
 
 import numpy as np
 
 from ..generic_utils.numpy_utils import circular_mask
 
-from .shoresutils import funDetrend_2d, funSmooth2
+
+ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 
 
 # TODO: add the management of the image position
 # TODO: add the azimuth of the image, if known
-# TODO: add the possibility to apply several preprocessing filters
-class WavesImage():
-    def __init__(self, pixels: np.ndarray, resolution: float,
-                 detrend: bool = True, smoothing: Optional[Tuple[int, int]] = None) -> None:
+class WavesImage:
+    def __init__(self, pixels: np.ndarray, resolution: float) -> None:
         """ Constructor
 
         :param pixels: a 2D array containing an image over water
         :param resolution: Image resolution in meters
-        :param detrend: True (default) if an optional detrend must be applied on the image.
         """
         self.resolution = resolution
         self.pixels = pixels
 
-        # Detrending
-        if detrend:
-            self.detrend()
+        # #FIXME: Disk masking
+        # self.pixels = self.pixels * self.circle_image
 
-        # Background filtering
-        if smoothing is not None:
-            # FIXME: pixels necessary for smoothing are not taken into account, thus
-            # zeros are introduced at the borders of the window.
-            smoothed_pixels = funSmooth2(self.pixels, smoothing[0], smoothing[1])
-            self.pixels = self.pixels - smoothed_pixels
-            # Remove tendency possibly introduced by smoothing, specially on the shore line
-            self.pixels = funDetrend_2d(self.pixels)
+    def apply_filters(self, processing_filters: ImageProcessingFilters) -> None:
+        """ Apply filters on the image pixels in place
 
-            # Disk masking
-            # self.pixels = self.pixels * self.circle_image
+        :param processing_filters: A list of functions together with their parameters to apply
+                                   sequentially to the image pixels.
+        """
+
+        for processing_filter, filter_parameters in processing_filters:
+            self.pixels = processing_filter(self.pixels, *filter_parameters)
 
     @property
     def sampling_frequency(self) -> float:
@@ -70,6 +65,3 @@ class WavesImage():
         """ :returns: The inscribed disk"""
         # FIXME: Ratio of the disk area on the chip area should be closer to PI/4 (0.02 difference)
         return circular_mask(self.pixels.shape[0], self.pixels.shape[1], self.pixels.dtype)
-
-    def detrend(self):
-        self.pixels = funDetrend_2d(self.pixels)

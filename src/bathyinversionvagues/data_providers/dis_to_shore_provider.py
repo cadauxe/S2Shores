@@ -21,7 +21,7 @@ class DisToShoreProvider(ABC, LocalizedDataProvider):
     """
 
     @abstractmethod
-    def get_distance(self, point: PointType) -> float:
+    def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance to shore of a point in kilometers.
 
         :param point: a tuple containing the X and Y coordinates in the SRS set for this provider
@@ -35,7 +35,7 @@ class InfinityDisToShoreProvider(DisToShoreProvider):
     point is always considered on water.
     """
 
-    def get_distance(self, point: PointType) -> float:
+    def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance to shore of a point in kilometers.
 
         :param point: a tuple containing the X and Y coordinates in the SRS set for this provider
@@ -51,24 +51,32 @@ class NetCDFDisToShoreProvider(DisToShoreProvider):
     """
 
     # FIXME: EPSG code needed because no SRS retrieved from the NetCDF file at this time.
-    def __init__(self, distoshore_file_path: Path, distoshore_epsg_code: int) -> None:
+    def __init__(self, distoshore_file_path: Path, distoshore_epsg_code: int,
+                 x_axis_label: str, y_axis_label: str) -> None:
         """ Create a NetCDFDisToShoreProvider object and set necessary informations
 
         :param distoshore_file_path: full path of a netCDF file containing the distance to shore
                                      to be used by this provider.
         :param distoshore_epsg_code: the EPSG code of the SRS used in the NetCDF file.
+        :param x_axis_label: Label of the x axis of the dataset ('x' or 'lon' for instance)
+        :param y_axis_label: Label of the y axis of the dataset ('y' or 'lat' for instance)
         """
         super().__init__()
         self.provider_epsg_code = distoshore_epsg_code
+        self._x_axis_label = x_axis_label
+        self._y_axis_label = y_axis_label
+
         self._distoshore_xarray = xr.open_dataset(distoshore_file_path)
 
-    def get_distance(self, point: PointType) -> float:
+    def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance to shore of a point in kilometers.
 
         :param point: a tuple containing the X and Y coordinates in the SRS of the client
         :returns: the distance to the nearest shore (km)
         """
         provider_point = self.transform_point(point, 0.)
-        distance_xr_dataset = self._distoshore_xarray.sel(y=provider_point[1],
-                                                          x=provider_point[0], method='nearest')
+        kw_sel = {self._x_axis_label: provider_point[0],
+                  self._y_axis_label: provider_point[1],
+                  'method': 'nearest'}
+        distance_xr_dataset = self._distoshore_xarray.sel(**kw_sel)
         return float(distance_xr_dataset['disToShore'].values)

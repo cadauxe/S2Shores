@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Definition of sevral functions useful for building an image tiling
+""" Definition of several functions useful for building an image tiling
 
 :author: GIROS Alain
 :created: 05/05/2021

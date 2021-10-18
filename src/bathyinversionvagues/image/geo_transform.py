@@ -15,6 +15,7 @@ class GeoTransform:
     - (C, L) -> (X, Y)
 
     According to this model the following holds:
+
     - the pixel at the upper left corner of the image, is indexed by C=0, L=0
     - the cartographic coordinates of a pixel are those of the upper left corner of that pixel
     - resolution in the Y direction is generally negative to account for the opposite directions
@@ -54,6 +55,12 @@ class GeoTransform:
         assuming that X and Y resolutions are identical
         """
         return self.x_resolution
+
+    @property
+    def x_y_resolutions_equal(self) -> bool:
+        """ :returns: True if the absolute values of X and Y resolutions are equal
+        """
+        return self.x_resolution == -self.y_resolution
 
     def projected_coordinates(self, point_column: float, point_line: float) -> PointType:
         """ Computes the georeferenced coordinates of a point defined by its coordinates
