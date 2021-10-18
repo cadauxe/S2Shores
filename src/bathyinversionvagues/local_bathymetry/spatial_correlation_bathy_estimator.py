@@ -105,7 +105,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the correlation signal
         """
         for radon_transform in self.radon_transforms:
-            tmp_wavessinogram = radon_transform.get_sinogram(estimated_direction)
+            tmp_wavessinogram = radon_transform[estimated_direction]
             tmp_wavessinogram.values *= tmp_wavessinogram.variance
             self.sinograms.append(tmp_wavessinogram)
         sinogram_1 = self.sinograms[0].values[:, 0]

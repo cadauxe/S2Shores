@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class encapsulating operations on the radon transform of an image for waves processing
+""" Class encapsulating the sinograms of a Radon transform in a dictionary
 
 :author: Alain Giros
 :organization: CNES
@@ -103,12 +103,3 @@ class SinogramsDict(QuantizedDirectionsDict):
         for direction in directions:
             sinograms_dict[direction] = self[direction]
         return sinograms_dict
-
-    # FIXME: remove this method by calling sinograms[direction]
-    def get_sinogram(self, direction: float) -> WavesSinogram:
-        """ returns a new sinogram taken from the Radon transform at some direction
-
-        :param direction: the direction of the requested sinogram.
-        :returns: the sinogram of the Radon transform along the requested direction
-        """
-        return self[direction]
