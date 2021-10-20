@@ -6,7 +6,6 @@ to manage tomographic angles in several ways.
 :created: Thu Apr 1 2021
 """
 from functools import lru_cache
-from numbers import Real
 from warnings import warn
 from typing import Union, Tuple, List, cast, Optional  # @NoMove
 
@@ -16,6 +15,8 @@ from skimage.util.dtype import img_as_float
 import numpy as np
 
 
+# TODO: use DirectionsQuantizer
+# TODO: add quantized directions in the output
 def symmetric_radon(image: np.ndarray,
                     theta: Optional[np.ndarray] = None,
                     circle: bool = True,
@@ -124,7 +125,7 @@ def symmetric_radon(image: np.ndarray,
 
 
 @lru_cache(maxsize=1024)
-def get_rotation_matrix(center: Real, theta: Real) -> np.ndarray:
+def get_rotation_matrix(center: float, theta: float) -> np.ndarray:
     """ Computes the rotation matrix to be applied to compute the radon transform for one angle
 
     :param center: the position of the rotation center in the image along its smallest dimension
@@ -138,13 +139,9 @@ def get_rotation_matrix(center: Real, theta: Real) -> np.ndarray:
                      [0, 0, 1]])
 
 
-ANGLE_0 = cast(Real, 0.)
-ANGLE_180 = cast(Real, 180.)
-
-
-def get_angles_sets(theta: np.ndarray) -> Tuple[List[Tuple[int, Real]], List[Tuple[int, int]]]:
-    """ Split the projection angles in to sets: one containing angles which must be computed,
-    and the other one angles which can be produced by a flip of the computed ones.
+def get_angles_sets(theta: np.ndarray) -> Tuple[List[Tuple[int, float]], List[Tuple[int, int]]]:
+    """ Split the projection angles in two sets: one containing angles which must be computed,
+    and the other one containing angles which can be produced by a flip of the computed ones.
 
     :param theta: the set of tomographic angles
     :returns: The list of angles which must be computed together with their index in the projection
@@ -155,26 +152,26 @@ def get_angles_sets(theta: np.ndarray) -> Tuple[List[Tuple[int, Real]], List[Tup
     normalized_angles = _normalize_angle(theta)
     angles = _quantize(normalized_angles)
 
-    positive_angles_indices = np.argwhere(angles >= ANGLE_0)[:, 0]
-    negative_angles_indices = np.argwhere(angles < ANGLE_0)[:, 0]
+    positive_angles_indices = np.argwhere(angles >= 0.)[:, 0]
+    negative_angles_indices = np.argwhere(angles < 0.)[:, 0]
 
     if positive_angles_indices.size >= negative_angles_indices.size:
         angles_to_compute, angles_to_flip = _process_angles_subsets(angles,
                                                                     positive_angles_indices,
                                                                     negative_angles_indices,
-                                                                    ANGLE_180)
+                                                                    180.)
     else:
         angles_to_compute, angles_to_flip = _process_angles_subsets(angles,
                                                                     negative_angles_indices,
                                                                     positive_angles_indices,
-                                                                    -ANGLE_180)
+                                                                    -180.)
 
     return angles_to_compute, angles_to_flip
 
 
 def _process_angles_subsets(angles: np.ndarray, largest: np.ndarray, smallest: np.ndarray,
-                            angle_offset: Real) \
-        -> Tuple[List[Tuple[int, Real]], List[Tuple[int, int]]]:
+                            angle_offset: float) \
+        -> Tuple[List[Tuple[int, float]], List[Tuple[int, int]]]:
     """ Utility to manage angles split in both cases of largest angles set being positive
     or negative. The largest set must be computed and the smallest one must be either computed
     or must be produced by a flip of computed angles.
@@ -202,7 +199,7 @@ def _process_angles_subsets(angles: np.ndarray, largest: np.ndarray, smallest: n
     return angles_to_compute, angles_to_flip
 
 
-def _normalize_angle(angle: Union[Real, np.ndarray]) -> Union[Real, np.ndarray]:
+def _normalize_angle(angle: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
     """ Normalize angle(s) expressed in degrees to the interval [-180°, 180°[
 
     :param angle: the real valued angle(s) expressed in degrees
@@ -212,18 +209,18 @@ def _normalize_angle(angle: Union[Real, np.ndarray]) -> Union[Real, np.ndarray]:
     # Limit angle between 0 and 360 degrees
     normalized_angle = angle % 360.
     # angle between -180 and +180 degrees
-    if isinstance(normalized_angle, Real):
+    if isinstance(normalized_angle, float):
         # Real case
-        if normalized_angle >= ANGLE_180:
+        if normalized_angle >= 180.:
             normalized_angle -= 360.
     else:
         # np.ndarray case
-        normalized_angle[normalized_angle >= ANGLE_180] -= 360.
+        normalized_angle[normalized_angle >= 180] -= 360.
     return normalized_angle
 
 
-def _quantize(value: Union[Real, np.ndarray],
-              quantization_step: Real = cast(Real, 0.1)) -> Union[Real, np.ndarray]:
+def _quantize(value: Union[float, np.ndarray],
+              quantization_step: float = cast(float, 0.1)) -> Union[float, np.ndarray]:
     """ Quantize real numbers such that 0. is the center of the quantization scale.
 
     :param value: the real value(s) to quantize
@@ -231,7 +228,7 @@ def _quantize(value: Union[Real, np.ndarray],
     :returns: multiple(s) of quantization_step such that:
               quantized_value - quantization_step/2 < value <= quantized_value + quantization_step/2
     """
-    if isinstance(value, Real):
+    if isinstance(value, float):
         half_delta = np.sign(value) * quantization_step / 2.
         index = int((value + half_delta) / quantization_step)
     else:
