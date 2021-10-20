@@ -152,25 +152,16 @@ def get_angles_sets(theta: np.ndarray) -> Tuple[List[Tuple[int, float]], List[Tu
     normalized_angles = _normalize_angle(theta)
     angles = _quantize(normalized_angles)
 
-    positive_angles_indices = np.argwhere(angles >= 0.)[:, 0]
-    negative_angles_indices = np.argwhere(angles < 0.)[:, 0]
+    angles_indices_1 = np.argwhere(angles >= 0.)[:, 0]
+    angles_indices_2 = np.argwhere(angles < 0.)[:, 0]
 
-    if positive_angles_indices.size >= negative_angles_indices.size:
-        angles_to_compute, angles_to_flip = _process_angles_subsets(angles,
-                                                                    positive_angles_indices,
-                                                                    negative_angles_indices,
-                                                                    180.)
-    else:
-        angles_to_compute, angles_to_flip = _process_angles_subsets(angles,
-                                                                    negative_angles_indices,
-                                                                    positive_angles_indices,
-                                                                    -180.)
+    if angles_indices_1.size < angles_indices_2.size:
+        angles_indices_1, angles_indices_2 = angles_indices_2, angles_indices_1
 
-    return angles_to_compute, angles_to_flip
+    return _process_angles_subsets(angles, angles_indices_1, angles_indices_2)
 
 
-def _process_angles_subsets(angles: np.ndarray, largest: np.ndarray, smallest: np.ndarray,
-                            angle_offset: float) \
+def _process_angles_subsets(angles: np.ndarray, largest: np.ndarray, smallest: np.ndarray, ) \
         -> Tuple[List[Tuple[int, float]], List[Tuple[int, int]]]:
     """ Utility to manage angles split in both cases of largest angles set being positive
     or negative. The largest set must be computed and the smallest one must be either computed
@@ -189,7 +180,10 @@ def _process_angles_subsets(angles: np.ndarray, largest: np.ndarray, smallest: n
     angles_to_compute = [(index, angles[index]) for index in largest]
     for index_angle in smallest:
         angle = angles[index_angle]
-        opposite_angle = angle + angle_offset
+        if angle >= 0.:
+            opposite_angle = angle - 180.
+        else:
+            opposite_angle = angle + 180.
         quantized_opposite_angle = _quantize(opposite_angle)
         if quantized_opposite_angle in angles[largest]:
             index_opposite_angle = np.where(angles == quantized_opposite_angle)[0][0]
