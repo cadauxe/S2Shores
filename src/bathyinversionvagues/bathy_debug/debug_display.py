@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
+from ..bathy_physics import funLinearC_k
 
 import numpy as np
 
@@ -35,10 +36,10 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
 
     # Second diagram : correlation matrix
     ax2 = fig.add_subplot(gs[0, 1])
-    imin = np.min(temporal_estimator._correlation_matrix)
-    imax = np.max(temporal_estimator._correlation_matrix)
-    plt.imshow(temporal_estimator._correlation_matrix, norm=Normalize(vmin=imin, vmax=imax))
-    (l1, l2) = np.shape(temporal_estimator._correlation_matrix)
+    imin = np.min(temporal_estimator._correlation_image.pixels)
+    imax = np.max(temporal_estimator._correlation_image.pixels)
+    plt.imshow(temporal_estimator._correlation_image.pixels, norm=Normalize(vmin=imin, vmax=imax))
+    (l1, l2) = np.shape(temporal_estimator._correlation_image.pixels)
     index = np.argmax(temporal_estimator._metrics['variances'])
     ax2.arrow(l1 // 2, l2 // 2,
               np.cos(np.deg2rad(wave_estimation.direction)) * (l1 // 4),
@@ -69,6 +70,8 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     x = np.linspace(-length_signal // 2, length_signal // 2, length_signal)
     y = sinogram_max_var
     ax4.plot(x, y)
+    min_limit_x = np.min(x)
+    min_limit_y = np.min(y)
     ax4.plot(x[temporal_estimator._metrics['wave_length_zeros']],
              y[temporal_estimator._metrics['wave_length_zeros']], 'ro')
     ax4.annotate('L=%d m' % wave_estimation.wavelength,
@@ -94,6 +97,9 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
               x[argmax + left_limit], 0, color='g')
     ax4.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['delta_time'],
                                                            wave_estimation.celerity), (0, 0), color='orange')
+
+    bathy = funLinearC_k(1 / wave_estimation.wavelength, wave_estimation.celerity, 0.01, 9.8)
+    ax4.annotate('depth = {:.2f}'.format(bathy), (min_limit_x, min_limit_y), color='orange')
     plt.title('Sinogram')
 
     # Fifth  diagram : Temporal reconstruction

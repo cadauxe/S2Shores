@@ -186,7 +186,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                 self.global_estimator.selected_frames[frame_index],
                 self.global_estimator.selected_frames[frame_index + 1],
                 self._position), delta_times)
-        delta_time = np.mean(delta_times)
+        delta_time = np.sum(
+            delta_times[:self.local_estimator_params.TEMPORAL_LAG])
         self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
         return celerity
