@@ -65,7 +65,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             sinogram_max_var, direction_propagation, self._metrics['variances'] = \
                 self.radon_transform.get_sinogram_maximum_variance()
             self._metrics['sinogram_max_var'] = sinogram_max_var.sinogram.flatten()
-            wave_length = self.compute_wave_length(sinogram_max_var.sinogram.flatten())
+            wave_length = self.compute_wave_length(sinogram_max_var.sinogram.flatten(
+            ), min_period=self.local_estimator_params.TUNING.MINIMUM_WAVE_LENGTH)
             celerity = self.compute_celerity(sinogram_max_var.sinogram.flatten(), wave_length)
             temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
             temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
@@ -119,7 +120,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         yrawipool_ik_dist = \
             np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - \
             np.tile(self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
-        return np.arctan2(xrawipool_ik_dist, yrawipool_ik_dist).T * 180 / np.pi
+        return np.arctan2(yrawipool_ik_dist, xrawipool_ik_dist) * 180 / np.pi
 
     def get_distances(self) -> np.ndarray:
         """ Distances between positions x and positions y
@@ -166,10 +167,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self._distances = self.get_distances()
         return self._distances
 
-    def compute_wave_length(self, sinogram: np.ndarray) -> float:
+    def compute_wave_length(self, sinogram: np.ndarray, min_period) -> float:
         """ Wave length computation (in meter)
         """
-        period, self._metrics['wave_length_zeros'] = find_period(sinogram)
+        period, self._metrics['wave_length_zeros'] = find_period(sinogram, min_period)
         wave_length = period * self.spatial_resolution
         return wave_length
 

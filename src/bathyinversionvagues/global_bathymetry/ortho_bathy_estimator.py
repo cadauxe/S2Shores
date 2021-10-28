@@ -68,7 +68,6 @@ class OrthoBathyEstimator:
                 self.parent_estimator.set_debug(estimation_point)
                 bathy_estimations = self._run_local_bathy_estimator(sub_tile_images,
                                                                     estimation_point)
-                print(len(bathy_estimations))
                 if bathy_estimations.distance_to_shore > 0:
                     in_water_points += 1
 
