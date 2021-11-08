@@ -56,7 +56,7 @@ class QuantizedDirectionsDict(ConstrainedDict):
         self._sorted_directions = None
         ConstrainedDict.__setitem__(self, key, value)
 
-    def __delitem__(self, key: Any) -> None:
+    def __delitem__(self, key: float) -> None:
         # _sorted_directions attribute must be reset in case an item is deleted from the dictionary
         self._sorted_directions = None
         ConstrainedDict.__delitem__(self, key)

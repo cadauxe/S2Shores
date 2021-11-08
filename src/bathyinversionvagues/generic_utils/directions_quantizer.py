@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 12 Oct 2021
 """
-from typing import Union  # @NoMove
+from typing import Union, cast  # @NoMove
 
 import numpy as np
 
@@ -31,7 +31,9 @@ class DirectionsQuantizer:
         """ :returns: the step used to quantize directions """
         return self._directions_step
 
-    def quantize(self, direction: Union[float, np.ndarray]) -> np.ndarray:
+    def quantize(self, direction: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+        if isinstance(direction, float):
+            return self.quantize_float(direction)
         # Firstly, normalize direction between -180 and +180 degrees
         normalized_direction = self.normalize(direction)
 
@@ -43,18 +45,21 @@ class DirectionsQuantizer:
 
     def quantize_float(self, direction: float) -> float:
         # direction between 0 and 360 degrees
-        normalized_direction = direction % 360.
-        # direction between -180 and +180 degrees
-        if normalized_direction >= 180.:
-            normalized_direction -= 360.
-
+        normalized_direction = cast(float, self.normalize(direction))
         index_direction = round(normalized_direction / self._directions_step)
         quantized_direction = index_direction * self._directions_step
         return quantized_direction
 
     @staticmethod
     def normalize(directions: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
-        # direction between 0 and 360 degrees
+        """ Normalize angle(s) expressed in degrees to the interval [-180°, 180°[
+
+        :param angles: the real valued angle(s) expressed in degrees
+        :returns: multiple(s) of quantization_step such that for each angle:
+                  quantized_angle - quantization_step/2 < angle <=
+                  quantized_angle + quantization_step/2
+        """
+        # angles between 0 and 360 degrees
         normalized_directions = directions % 360.
         # direction between -180 and +180 degrees
         if isinstance(normalized_directions, float):
