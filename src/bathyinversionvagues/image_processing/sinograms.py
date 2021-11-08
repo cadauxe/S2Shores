@@ -95,6 +95,9 @@ class Sinograms(SinogramsDict):
 
         if frequencies is None:
             # Compute standard DFT along the column axis and keep positive frequencies only
+            # TODO: use unitary sinogram dft computation if performances are correct
+            # for sinogram in self.values():
+            #    sinogram.dft = sinogram.compute_dft()
             nb_positive_coeffs = int(np.ceil(radon_excerpt.shape[0] / 2))
             radon_dft_1d = np.fft.fft(radon_excerpt, axis=0)
             result = radon_dft_1d[0:nb_positive_coeffs, :]
@@ -102,8 +105,8 @@ class Sinograms(SinogramsDict):
             result = self._dft_interpolated(radon_excerpt, frequencies)
         # Store individual 1D DFTs in sinograms
         for sino_index in range(result.shape[1]):
-            sinogram = self[directions[sino_index]]
-            sinogram.dft = result[:, sino_index]
+            direction = directions[sino_index]
+            self[direction].dft = result[:, sino_index]
 
     def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
         """ Retrieve the current DFT of the sinograms in some directions. If DFTs does not exist
@@ -116,8 +119,8 @@ class Sinograms(SinogramsDict):
         directions = self.directions if directions is None else directions
         fft_sino_length = self[directions[0]].dft.shape[0]
         result = np.empty((fft_sino_length, len(directions)), dtype=np.complex128)
-        for result_index, sinogram_index in enumerate(directions):
-            sinogram = self[sinogram_index]
+        for result_index, direction in enumerate(directions):
+            sinogram = self[direction]
             result[:, result_index] = sinogram.dft
         return result
 
@@ -145,6 +148,21 @@ class Sinograms(SinogramsDict):
         for result_index, direction in enumerate(directions):
             sinograms_variances[result_index] = self[direction].variance
         return sinograms_variances
+
+    # FIXME: output cannot be used safely without outputting the directions
+    def get_sinograms_energies(self,
+                               directions: Optional[np.ndarray] = None) -> np.ndarray:
+        """ Return array of energy of each sinogram
+
+        :param directions: the directions of the requested sinograms.
+                           Defaults to all the Sinograms directions if unspecified.
+        :return: energies of the sinograms
+        """
+        directions = self.directions if directions is None else directions
+        sinograms_energies = np.empty(len(directions), dtype=np.float64)
+        for result_index, direction in enumerate(directions):
+            sinograms_energies[result_index] = self[direction].energy
+        return sinograms_energies
 
     def get_direction_maximum_variance(self, directions: Optional[np.ndarray] = None) \
             -> Tuple[float, np.ndarray]:
