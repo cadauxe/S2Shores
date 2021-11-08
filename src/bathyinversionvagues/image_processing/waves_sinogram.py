@@ -48,6 +48,7 @@ class WavesSinogram:
         current_axis = np.linspace(0, self.size - 1, self.size)
         return WavesSinogram(np.interp(new_axis, current_axis, self.values[:, 0]))
 
+    # TODO: introduce different DFT properties based on the frequencies used (standard or not)
     @property
     def dft(self) -> np.ndarray:
         """ :returns: the current DFT of the sinogram. If it does not exists, it is computed
@@ -60,6 +61,13 @@ class WavesSinogram:
     @dft.setter
     def dft(self, dft_values: np.ndarray) -> None:
         self._dft = dft_values
+
+    def symmeterize(self) -> 'WavesSinogram':
+        """ :returns: a new WavesSinogram which is the symmetric version of this one.
+        """
+        symmetric_sinogram = WavesSinogram(np.flip(self.values))
+        # TODO: fill in the sinogram properties based on the current values
+        return symmetric_sinogram
 
     def compute_dft(self, frequencies: Optional[np.ndarray] = None) -> np.ndarray:
         """ Computes the DFT of the sinogram
