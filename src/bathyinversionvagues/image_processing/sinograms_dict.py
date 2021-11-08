@@ -26,6 +26,18 @@ class SinogramsDict(QuantizedDirectionsDict):
 
     # +++++++++++++++++++ Sinograms management part +++++++++++++++++++
 
+    def __getitem__(self, direction: float) -> Any:
+        try:
+            sinogram = QuantizedDirectionsDict.__getitem__(self, direction)
+        except KeyError:
+            # Check to see if the symmetric direction exists in the dictionary.
+            # If not, raise KeyError
+            opposite_sinogram = QuantizedDirectionsDict.__getitem__(self, direction + 180.)
+            sinogram = opposite_sinogram.symmeterize()
+            # insert created sinogram in self
+            self[direction] = sinogram
+        return sinogram
+
     @property
     def nb_samples(self) -> int:
         """ :return: the length of each Sinogram in this SinogramsDict"""
