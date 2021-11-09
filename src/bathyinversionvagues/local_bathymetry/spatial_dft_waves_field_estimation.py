@@ -42,14 +42,26 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
     @delta_phase.setter
     def delta_phase(self, value: float) -> None:
         self._delta_phase = value
-        if np.isnan(value) or value == 0:
+        if np.isnan(self._delta_phase) or self._delta_phase == 0:
             self.period = np.nan
         else:
-            if (self.delta_time < 0. and value > 0.) or (self.delta_time > 0. and value < 0.):
+            self.period = self.delta_time * (2 * np.pi / self._delta_phase)
+            if self.period < 0.:
+                # delta_phase and delta_time have opposite signs, thus we must correct quantities.
+                self.period = abs(self.period)
+                # FIXME: should we make delta_phase positive?
+                # self._delta_phase = abs(self._delta_phase)
+                # Propagation direction must be inverted
+                # TODO: uncomment for final results.
+                if self.direction < 0:
+                    self.direction += 180
+                else:
+                    self.direction -= 180
+            # TODO: remove (added to retrieve Erwin's results)
+            if self.direction < 0:
                 self.direction += 180
-                if value < 0:
-                    self._delta_phase = -self._delta_phase
-            self.period = abs(self.delta_time * (2 * np.pi / self._delta_phase))
+            else:
+                self.direction -= 180
 
     @property
     def delta_phase_ratio(self) -> float:
