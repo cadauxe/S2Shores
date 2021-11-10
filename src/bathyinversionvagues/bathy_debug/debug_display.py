@@ -18,6 +18,10 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     # FIXME : Handle severals wave_estimations
     ######################################################
     wave_estimation = temporal_estimator.waves_fields_estimations[0]
+    wave_direction = wave_estimation.direction
+    wave_wavelength = wave_estimation.wavelength
+    wave_celerity = wave_estimation.celerity
+    wave_period = wave_estimation.period
     ######################################################
     fig = plt.figure(constrained_layout=True)
     gs = gridspec.GridSpec(5, 3, figure=fig)
@@ -30,20 +34,21 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
     (l1, l2) = np.shape(image)
     radius = min(l1, l2) / 2
-    ax.arrow(l1 // 2, l2 // 2, np.cos(np.deg2rad(wave_estimation.direction)) * (radius // 2),
-             -np.sin(np.deg2rad(wave_estimation.direction)) * (radius // 2))
+    ax.arrow(l1 // 2, l2 // 2, np.cos(np.deg2rad(wave_direction)) * (radius // 2),
+             -np.sin(np.deg2rad(wave_direction)) * (radius // 2))
     plt.title('Thumbnail')
 
     # Second diagram : correlation matrix
     ax2 = fig.add_subplot(gs[0, 1])
-    imin = np.min(temporal_estimator._correlation_matrix)
-    imax = np.max(temporal_estimator._correlation_matrix)
-    plt.imshow(temporal_estimator._correlation_matrix, norm=Normalize(vmin=imin, vmax=imax))
-    (l1, l2) = np.shape(temporal_estimator._correlation_matrix)
+    correlation_matrix = temporal_estimator.correlation_matrix
+    imin = np.min(correlation_matrix)
+    imax = np.max(correlation_matrix)
+    plt.imshow(correlation_matrix, norm=Normalize(vmin=imin, vmax=imax))
+    (l1, l2) = np.shape(correlation_matrix)
     index = np.argmax(temporal_estimator.metrics['variances'])
     ax2.arrow(l1 // 2, l2 // 2,
-              np.cos(np.deg2rad(wave_estimation.direction)) * (l1 // 4),
-              -np.sin(np.deg2rad(wave_estimation.direction)) * (l1 // 4))
+              np.cos(np.deg2rad(wave_direction)) * (l1 // 4),
+              -np.sin(np.deg2rad(wave_direction)) * (l1 // 4))
     plt.title('Correlation matrix')
 
     # Third diagram : Radon transform & maximum variance
@@ -58,33 +63,29 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
             temporal_estimator.metrics['variances']),
         'r')
     ax3.arrow(index, 0, 0, l1)
-    plt.annotate('%d °' % wave_estimation.direction, (index + 5, 10), color='orange')
+    plt.annotate('%d °' % wave_direction, (index + 5, 10), color='orange')
     plt.title('Radon matrix')
 
     # Fourth diagram : Sinogram & wave length computation
     ax4 = fig.add_subplot(gs[2, :2])
     sinogram_max_var = temporal_estimator.metrics['sinogram_max_var']
     length_signal = len(sinogram_max_var)
-    left_limit = max(int(length_signal / 2 - wave_estimation.wavelength / 2), 0)
+    left_limit = max(int(length_signal / 2 - wave_wavelength / 2), 0)
     sinogram_period = temporal_estimator.metrics['sinogram_period']
     x = np.linspace(-length_signal // 2, length_signal // 2, length_signal)
     y = sinogram_max_var
     ax4.plot(x, y)
     ax4.plot(x[temporal_estimator.metrics['wave_length_zeros']],
              y[temporal_estimator.metrics['wave_length_zeros']], 'ro')
-    ax4.annotate('L=%d m' % wave_estimation.wavelength,
-                 (0, np.min(sinogram_max_var)),
-                 color='r')
+    ax4.annotate('L=%d m' % wave_wavelength, (0, np.min(sinogram_max_var)), color='r')
     ax4.arrow(
-        x[int(length_signal / 2 + wave_estimation.wavelength /
-              (2 * temporal_estimator.spatial_resolution))],
+        x[int(length_signal / 2 + wave_wavelength / (2 * temporal_estimator.spatial_resolution))],
         np.min(sinogram_max_var), 0,
         np.abs(np.min(sinogram_max_var)) + np.max(
             sinogram_max_var), linestyle='dashed',
         color='g')
     ax4.arrow(
-        x[int(length_signal / 2 - wave_estimation.wavelength /
-              (2 * temporal_estimator.spatial_resolution))],
+        x[int(length_signal / 2 - wave_wavelength / (2 * temporal_estimator.spatial_resolution))],
         np.min(sinogram_max_var), 0,
         np.abs(np.min(sinogram_max_var)) + np.max(
             sinogram_max_var), linestyle='dashed',
@@ -93,8 +94,9 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax4.plot(x[argmax + left_limit], sinogram_period[argmax], 'go')
     ax4.arrow(x[int(length_signal / 2)], 0,
               x[argmax + left_limit], 0, color='g')
-    ax4.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(temporal_estimator.metrics['dephasing'], temporal_estimator.metrics['delta_time'],
-                                                           wave_estimation.celerity), (0, 0), color='orange')
+    ax4.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(temporal_estimator.metrics['dephasing'],
+                                                           temporal_estimator.metrics['delta_time'],
+                                                           wave_celerity), (0, 0), color='orange')
     plt.title('Sinogram')
 
     # Fifth  diagram : Temporal reconstruction
@@ -103,7 +105,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax5.plot(temporal_signal)
     ax5.plot(temporal_estimator.metrics['arg_temporal_peaks_max'],
              temporal_signal[temporal_estimator.metrics['arg_temporal_peaks_max']], 'ro')
-    ax5.annotate('T={:.2f} s'.format(wave_estimation.period),
+    ax5.annotate('T={:.2f} s'.format(wave_period),
                  (0, np.min(temporal_signal)), color='r')
     plt.title('Temporal reconstruction')
     fig.savefig(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH,
