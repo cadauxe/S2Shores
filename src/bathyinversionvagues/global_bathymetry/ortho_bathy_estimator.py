@@ -7,7 +7,7 @@
 import time
 import warnings
 
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING  # @NoMove
 
 from xarray import Dataset  # @NoMove
 
@@ -137,5 +137,3 @@ class OrthoBathyEstimator:
                 print(f'--{frame_id} imagette {window_image.pixels.shape}:')
                 print(window_image.pixels)
         return images_sequence
-
-
