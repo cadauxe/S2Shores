@@ -59,25 +59,6 @@ class Sinograms(SinogramsDict):
             filtered_sinograms[direction] = self[direction].apply_filters(processing_filters)
         return filtered_sinograms
 
-    # TODO: insert into compute_sinograms_dft
-    @staticmethod
-    def _dft_interpolated(radon_excerpt: np.ndarray, frequencies: np.ndarray) -> np.ndarray:
-        """ Computes the 1D dft of a 2D signal along the columns using specific sampling frequencies
-
-        :param radon_excerpt: a 2D signal
-        :param frequencies: a set of unevenly spaced frequencies at which the DFT must be computed
-        :returns: a 2D array with the DFTs of the selected input columns, stored as contiguous
-                  columns
-        """
-        nb_columns = radon_excerpt.shape[1]
-        signal_dft_1d = np.empty((frequencies.size, nb_columns), dtype=np.complex128)
-
-        # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
-        unity_roots = get_unity_roots(frequencies, radon_excerpt.shape[0])
-        for i in range(nb_columns):
-            signal_dft_1d[:, i] = np.dot(unity_roots, radon_excerpt[:, i])
-        return signal_dft_1d
-
     def compute_sinograms_dfts(self,
                                directions: Optional[np.ndarray] = None,
                                kfft: Optional[np.ndarray] = None) -> None:
@@ -88,25 +69,12 @@ class Sinograms(SinogramsDict):
                      sampling is done.
         """
         frequencies = None if kfft is None else kfft / self.sampling_frequency
-        # If no selected directions, DFT will be computed on all directions
+        unity_roots = None if frequencies is None else get_unity_roots(frequencies, self.nb_samples)
+        # If no selected directions, DFT is computed on all directions
         directions = self.directions if directions is None else directions
-        # Build array on which the dft will be computed
-        radon_excerpt, directions = self.get_as_arrays(directions)
 
-        if frequencies is None:
-            # Compute standard DFT along the column axis and keep positive frequencies only
-            # TODO: use unitary sinogram dft computation if performances are correct
-            # for sinogram in self.values():
-            #    sinogram.dft = sinogram.compute_dft()
-            nb_positive_coeffs = int(np.ceil(radon_excerpt.shape[0] / 2))
-            radon_dft_1d = np.fft.fft(radon_excerpt, axis=0)
-            result = radon_dft_1d[0:nb_positive_coeffs, :]
-        else:
-            result = self._dft_interpolated(radon_excerpt, frequencies)
-        # Store individual 1D DFTs in sinograms
-        for sino_index in range(result.shape[1]):
-            direction = directions[sino_index]
-            self[direction].dft = result[:, sino_index]
+        for direction in directions:
+            self[direction].dft = self[direction].compute_dft(unity_roots)
 
     def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
         """ Retrieve the current DFT of the sinograms in some directions. If DFTs does not exist

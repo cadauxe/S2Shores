@@ -12,8 +12,6 @@
 from typing import Optional, List, Tuple, Callable, Any  # @NoMove
 import numpy as np
 
-from ..generic_utils.signal_utils import get_unity_roots
-
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
@@ -69,18 +67,17 @@ class WavesSinogram:
         # TODO: fill in the sinogram properties based on the current values
         return symmetric_sinogram
 
-    def compute_dft(self, frequencies: Optional[np.ndarray] = None) -> np.ndarray:
+    def compute_dft(self, unity_roots: Optional[np.ndarray] = None) -> np.ndarray:
         """ Computes the DFT of the sinogram
 
-        :param frequencies: a set of unevenly spaced frequencies at which the DFT must be computed
+        :param unity_roots: a set of unity roots at which the DFT must be computed
         :returns: the DFT of the sinogram
         """
-        if frequencies is None:
+        if unity_roots is None:
             nb_positive_coeffs = int(np.ceil(self.size / 2))
             result = np.fft.fft(self.values)[0:nb_positive_coeffs]
         else:
             # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
-            unity_roots = get_unity_roots(frequencies, self.size)
             result = np.dot(unity_roots, self.values)
         return result
 
