@@ -323,15 +323,16 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         nb_directions = phase_shift.shape[1]
 
-        # Deep water limitation [if the wave travels faster that the deep-water
+        # Deep water limitation [if the wave travels faster than the deep-water
         # limit we consider it non-physical]
         phi_max = np.tile(phi_max[:, np.newaxis], (1, nb_directions))
-        # FIXME: why should we keep the sign of phase_shift, involving working on 2*PI ?
-        result[phase_shift > phi_max] = 0
         # Minimal propagation speed; this depends on the Satellite; Venus or Sentinel 2
         phi_min = np.tile(phi_min[:, np.newaxis], (1, nb_directions))
-        # FIXME: why should we keep the sign of phase_shift, involving working on 2*PI ?
-        result[phase_shift < phi_min] = 0
+
+        phase_shift_valid = (((phi_min < phase_shift) & (phase_shift < phi_max)) |
+                             ((phi_max < phase_shift) & (phase_shift < phi_min)))
+        result[np.logical_not(phase_shift_valid)] = 0
+
         return result
 
     def get_kfft(self) -> np.ndarray:
