@@ -21,7 +21,7 @@ from .waves_sinogram import WavesSinogram
 
 
 DEFAULT_ANGLE_MIN = -180.
-DEFAULT_ANGLE_MAX = 0.
+DEFAULT_ANGLE_MAX = 180.
 
 
 def linear_directions(angle_min: float, angle_max: float, directions_step: float) -> np.ndarray:
@@ -84,6 +84,8 @@ class WavesRadon(Sinograms):
         """ Compute the radon transform of the image over a set of directions
         """
         # FIXME: quantization may imply that radon transform is not computed on stored directions
+        # TODO: make tests with circle=False, circled image and with weights
+        # radon_transform_array = symmetric_radon(pixels, theta=selected_directions, circle=False)
         radon_transform_array = symmetric_radon(pixels, theta=selected_directions)
 
         if weighted:
@@ -95,6 +97,6 @@ class WavesRadon(Sinograms):
 
         sinograms: List[WavesSinogram] = []
         for index, _ in enumerate(selected_directions):
-            sinogram = WavesSinogram(radon_transform_array[:, index].flatten())
+            sinogram = WavesSinogram(radon_transform_array[:, index])
             sinograms.append(sinogram)
         return sinograms
