@@ -29,6 +29,7 @@ from .waves_fields_estimations import WavesFieldsEstimations
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
+import matplotlib.pyplot as plt
 
 
 class CorrelationBathyEstimator(LocalBathyEstimator):
@@ -54,6 +55,15 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             (remove_median,
              [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
             (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
+
+        delta_times = np.array([])
+        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
+            delta_times = np.append(self.global_estimator.get_delta_time(
+                self.global_estimator.selected_frames[frame_index],
+                self.global_estimator.selected_frames[frame_index + 1],
+                self._position), delta_times)
+        self._delta_time = np.sum(delta_times[:self.local_estimator_params.TEMPORAL_LAG])
+        self._metrics['delta_time'] = self.delta_time
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -119,7 +129,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         yrawipool_ik_dist = \
             np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - \
             np.tile(self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
-        return np.arctan2(xrawipool_ik_dist, yrawipool_ik_dist).T * 180 / np.pi
+        return np.arctan2(yrawipool_ik_dist, xrawipool_ik_dist) * 180 / np.pi
 
     def get_distances(self) -> np.ndarray:
         """ Distances between positions x and positions y
@@ -173,23 +183,55 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         wave_length = period * self.spatial_resolution
         return wave_length
 
+    def find_propagated_distance(self, signal: np.array, wave_length: float, epsilon: float) -> float:
+        t_offshore = np.sqrt(wave_length * 2 * np.pi / self.gravity)
+        self._metrics['t_offshore'] = t_offshore
+#         ratio = self.delta_time / t_offshore
+        nb_l = int(self.delta_time // t_offshore)
+#         ratio = ratio - nb_l
+#         ratio_prime = 1 - ratio
+        x = np.arange(-(len(signal) // 2), len(signal) // 2 + 1)
+#         self._metrics['extimated_distance'] = ratio * wave_length
+#         self._metrics['extimated_distance_prime'] = ratio_prime * wave_length
+#         interval1 = np.logical_and(ratio * wave_length - epsilon < x,
+#                                    x < ratio * wave_length + epsilon)
+#         interval2 = np.logical_and(ratio_prime * wave_length - epsilon <
+#                                    x, x < ratio_prime * wave_length + epsilon)
+#         interval3 = np.logical_and(-ratio * wave_length - epsilon < x,
+#                                    x < -ratio * wave_length + epsilon)
+#         interval4 = np.logical_and(-ratio_prime * wave_length - epsilon <
+#                                    x, x < -ratio_prime * wave_length + epsilon)
+#         interval = np.logical_or(np.logical_or(
+#             np.logical_or(interval1, interval2), interval3), interval4)
+        interval = np.logical_and(-wave_length < x, x < wave_length)
+#         self._metrics['direct_interval'] = np.logical_or(interval1, interval3)
+#         self._metrics['indirect_interval'] = np.logical_or(interval2, interval4)
+        self._metrics['interval'] = interval
+        signal[np.logical_not(interval)] = 0
+        max_indice = np.argmax(signal)
+        self._metrics['max_indice'] = max_indice
+#         if interval2[max_indice] or interval4[max_indice]:
+#             dx = (wave_length - abs(x[np.argmax(signal)])) * self.spatial_resolution
+#             self._metrics['direct_propagation'] = False
+#         if interval1[max_indice] or interval3[max_indice]:
+#             dx = abs(x[np.argmax(signal)]) * self.spatial_resolution
+#             self._metrics['direct_propagation'] = True
+        dx = abs(x[np.argmax(signal)]) * self.spatial_resolution
+        dephasing = nb_l * wave_length + dx
+#         self._metrics['ratio'] = ratio
+        self._metrics['dephasing'] = dephasing
+        self._metrics['dx'] = dx
+        self._metrics['nb_l'] = nb_l
+        return dephasing
+
     def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
         """ Celerity computation (in meter/second)
         """
-        dephasing, self._metrics['sinogram_period'] = find_dephasing(sinogram,
-                                                                     wave_length)
-        self._metrics['dephasing'] = dephasing
-        rhomx = self.spatial_resolution * dephasing
-        delta_times = np.array([])
-        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
-            delta_times = np.append(self.global_estimator.get_delta_time(
-                self.global_estimator.selected_frames[frame_index],
-                self.global_estimator.selected_frames[frame_index + 1],
-                self._position), delta_times)
-        delta_time = np.sum(
-            delta_times[:self.local_estimator_params.TEMPORAL_LAG])
-        self._metrics['delta_time'] = delta_time
-        celerity = np.abs(rhomx / delta_time)
+#         dephasing, self._metrics['sinogram_period'] = find_dephasing(sinogram,
+#                                                                      wave_length)
+#         self._metrics['dephasing'] = dephasing
+        dephasing = self.find_propagated_distance(sinogram, wave_length, epsilon=14)
+        celerity = np.abs(dephasing / self.delta_time)
         return celerity
 
     def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> np.ndarray:
