@@ -84,7 +84,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
             if self.debug_sample:
                 self._metrics['variances'] = variances
-                self._metrics['sinogram_max_var'] = sinogram_max_var.sinogram.flatten()
+                self._metrics['sinogram_max_var'] = sinogram_max_var_values
                 self._metrics['temporal_signal'] = temporal_signal
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')

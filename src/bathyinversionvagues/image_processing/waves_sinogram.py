@@ -29,6 +29,7 @@ class WavesSinogram:
         :param values: a 1D array containing the sinogram values
         :raises TypeError: when values is not a 1D numpy array
         """
+        values = values.flatten()
         if not isinstance(values, np.ndarray) or values.ndim != 1:
             raise TypeError('WavesSinogram accepts only a 1D numpy array as argument')
         self.values = values

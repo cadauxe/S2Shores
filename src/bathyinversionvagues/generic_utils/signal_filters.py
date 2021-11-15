@@ -18,6 +18,7 @@ def filter_mean(array: np.ndarray, window: int) -> np.ndarray:
     :returns: filtered array
     :raises ValueError: when the array is too small compared to window size
     """
+    array = array.flatten()
     if len(array) < 2 * window:
         raise ValueError('array is too small compared to the window')
     padded_array = np.concatenate((np.full(window, np.mean(array[:window])),
