@@ -137,18 +137,3 @@ class OrthoBathyEstimator:
                 print(f'--{frame_id} imagette {window_image.pixels.shape}:')
                 print(window_image.pixels)
         return images_sequence
-
-    def build_infos(self) -> Dict[str, str]:
-        """ :returns: a dictionary of metadata describing this estimator
-        """
-
-        title = 'Wave parameters and raw bathymetry derived from satellite imagery.'
-        title += ' No tidal vertical adjustment.'
-        infos = {'title': title,
-                 'institution': 'CNES-LEGOS'}
-
-        # metadata from the parameters
-        infos['waveEstimationMethod'] = self.parent_estimator.local_estimator_code
-        infos['ChainVersions'] = self.parent_estimator.chains_versions
-
-        return infos
