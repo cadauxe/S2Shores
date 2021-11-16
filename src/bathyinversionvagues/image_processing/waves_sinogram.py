@@ -29,7 +29,6 @@ class WavesSinogram:
         :param values: a 1D array containing the sinogram values
         :raises TypeError: when values is not a 1D numpy array
         """
-        values = values.flatten()
         if not isinstance(values, np.ndarray) or values.ndim != 1:
             raise TypeError('WavesSinogram accepts only a 1D numpy array as argument')
         self.values = values
@@ -109,5 +108,5 @@ class WavesSinogram:
         """
         sinogram_values = self.values
         for processing_filter, filter_parameters in processing_filters:
-            sinogram_values = np.array([processing_filter(sinogram_values, *filter_parameters)])
+            sinogram_values = processing_filter(sinogram_values, *filter_parameters)
         return WavesSinogram(sinogram_values)
