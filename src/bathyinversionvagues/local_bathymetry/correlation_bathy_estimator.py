@@ -26,6 +26,7 @@ from ..image_processing.waves_sinogram import SignalProcessingFilters
 from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
 from .waves_fields_estimations import WavesFieldsEstimations
+from bathyinversionvagues.image_processing.waves_radon import linear_directions
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -41,6 +42,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                  selected_directions: Optional[np.ndarray] = None) -> None:
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
+        if self.selected_directions is None:
+            self.selected_directions = linear_directions(-180., 0., 1.)
         # Processing attributes
         self._correlation_matrix: Optional[np.ndarray] = None
         self._correlation_image: Optional[WavesImage] = None
@@ -50,8 +53,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         # Filters
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
             clipping, [self.local_estimator_params.TUNING.RATIO_SIZE_CORRELATION])]
-        self.radon_image_filters: SignalProcessingFilters = [
-            (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
+        self.radon_image_filters: SignalProcessingFilters = [(remove_median,
+                                                              [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
+                                                             (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -83,6 +87,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             if self.debug_sample:
                 self._metrics['variances'] = variances
                 self._metrics['sinogram_max_var'] = sinogram_max_var_values
+                # TODO: use objects in debug
+                #self._metrics['sinogram_max_var'] = sinogram_max_var
                 self._metrics['temporal_signal'] = temporal_signal
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
