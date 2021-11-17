@@ -15,7 +15,7 @@ import numpy as np
 from ..data_providers.delta_time_provider import (
     DeltaTimeProvider, NoDeltaTimeProviderError)
 from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
-from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
+from ..data_providers.gravity_provider import LatitudeVaryingGravityProvider, GravityProvider
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_stack import OrthoStack, FrameIdType, FramesIdsType
 from ..image.sampled_ortho_image import SampledOrthoImage
@@ -43,12 +43,12 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self.ortho_stack = ortho_stack
 
         self._distoshore_provider: DisToShoreProvider
-        self.set_distoshore_provider(InfinityDisToShoreProvider())
+        self.set_distoshore_provider(InfinityDisToShoreProvider())  # default DisToShoreProvider
 
         self._gravity_provider: GravityProvider
-        self.set_gravity_provider(ConstantGravityProvider())
-        # self.set_gravity_provider(LatitudeVaryingGravityProvider())
+        self.set_gravity_provider(LatitudeVaryingGravityProvider())  # default GravityProvider
 
+        # No default DeltaTimeProvider
         self._delta_time_provider: Optional[DeltaTimeProvider] = None
 
         # Create subtiles onto which bathymetry estimation will be done
