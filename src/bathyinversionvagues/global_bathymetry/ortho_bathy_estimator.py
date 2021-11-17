@@ -114,7 +114,8 @@ class OrthoBathyEstimator:
                 bathy_estimations.delta_time_available = False
                 bathy_estimations.clear()
             except WavesException as excp:
-                warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
+                warn_msg = f'Unable to estimate bathymetry: {str(excp)}'
+                warnings.warn(warn_msg)
                 bathy_estimations.clear()
         return bathy_estimations
 
