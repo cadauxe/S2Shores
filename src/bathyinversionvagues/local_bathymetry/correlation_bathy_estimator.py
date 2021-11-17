@@ -203,7 +203,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 #                                    x, x < -ratio_prime * wave_length + epsilon)
 #         interval = np.logical_or(np.logical_or(
 #             np.logical_or(interval1, interval2), interval3), interval4)
-        interval = np.logical_and(-wave_length < x, x < wave_length)
+#         interval = np.logical_and(-wave_length < x, x < wave_length)
+        interval = np.ones(x.shape, dtype=bool)
 #         self._metrics['direct_interval'] = np.logical_or(interval1, interval3)
 #         self._metrics['indirect_interval'] = np.logical_or(interval2, interval4)
         self._metrics['interval'] = interval
