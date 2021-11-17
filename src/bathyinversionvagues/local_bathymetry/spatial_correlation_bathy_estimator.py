@@ -108,9 +108,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             tmp_wavessinogram = radon_transform[estimated_direction]
             tmp_wavessinogram.values *= tmp_wavessinogram.variance
             self.sinograms.append(tmp_wavessinogram)
-        sinogram_1 = self.sinograms[0].values[:, 0]
+        sinogram_1 = self.sinograms[0].values
         # TODO: should be independent from 0/1 (for multiple pairs of frames)
-        sinogram_2 = self.sinograms[1].values[:, 0]
+        sinogram_2 = self.sinograms[1].values
         correl_mode = self.local_estimator_params.CORRELATION_MODE
         corr_init = normalized_cross_correlation(sinogram_1, sinogram_2, correl_mode)
         corr_init_ac = normalized_cross_correlation(corr_init, corr_init, correl_mode)
