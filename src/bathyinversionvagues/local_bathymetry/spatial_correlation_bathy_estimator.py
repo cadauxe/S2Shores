@@ -25,6 +25,7 @@ from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
+from bathyinversionvagues.image_processing.waves_radon import linear_directions
 
 
 if TYPE_CHECKING:
@@ -44,6 +45,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
         self._number_frames = len(self.images_sequence)
+        if self.selected_directions is None:
+            self.selected_directions = linear_directions(-180., 0., 1.)
 
         self.radon_transforms: List[Sinograms] = []
         self.sinograms: List[WavesSinogram] = []
