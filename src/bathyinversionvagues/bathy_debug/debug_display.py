@@ -40,11 +40,11 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
 
     # Second diagram : correlation matrix
     ax2 = fig.add_subplot(gs[0, 1])
-    correlation_matrix = temporal_estimator.correlation_matrix
-    imin = np.min(correlation_matrix)
-    imax = np.max(correlation_matrix)
-    plt.imshow(correlation_matrix, norm=Normalize(vmin=imin, vmax=imax))
-    (l1, l2) = np.shape(correlation_matrix)
+    correlation = temporal_estimator.correlation_image.pixels
+    imin = np.min(correlation)
+    imax = np.max(correlation)
+    plt.imshow(correlation, norm=Normalize(vmin=imin, vmax=imax))
+    (l1, l2) = np.shape(correlation)
     index = np.argmax(temporal_estimator.metrics['variances'])
     ax2.arrow(l1 // 2, l2 // 2,
               np.cos(np.deg2rad(wave_direction)) * (l1 // 4),

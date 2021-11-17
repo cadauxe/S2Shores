@@ -108,5 +108,5 @@ class WavesSinogram:
         """
         sinogram_values = self.values
         for processing_filter, filter_parameters in processing_filters:
-            sinogram_values = np.array([processing_filter(sinogram_values, *filter_parameters)])
+            sinogram_values = processing_filter(sinogram_values, *filter_parameters)
         return WavesSinogram(sinogram_values)
