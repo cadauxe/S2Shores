@@ -25,6 +25,7 @@ from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
+from bathyinversionvagues.image_processing.waves_radon import linear_directions
 
 
 if TYPE_CHECKING:
@@ -44,6 +45,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
         self._number_frames = len(self.images_sequence)
+        if self.selected_directions is None:
+            self.selected_directions = linear_directions(-180., 0., 1.)
 
         self.radon_transforms: List[Sinograms] = []
         self.sinograms: List[WavesSinogram] = []
@@ -108,9 +111,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             tmp_wavessinogram = radon_transform[estimated_direction]
             tmp_wavessinogram.values *= tmp_wavessinogram.variance
             self.sinograms.append(tmp_wavessinogram)
-        sinogram_1 = self.sinograms[0].values[:, 0]
+        sinogram_1 = self.sinograms[0].values
         # TODO: should be independent from 0/1 (for multiple pairs of frames)
-        sinogram_2 = self.sinograms[1].values[:, 0]
+        sinogram_2 = self.sinograms[1].values
         correl_mode = self.local_estimator_params.CORRELATION_MODE
         corr_init = normalized_cross_correlation(sinogram_1, sinogram_2, correl_mode)
         corr_init_ac = normalized_cross_correlation(corr_init, corr_init, correl_mode)
