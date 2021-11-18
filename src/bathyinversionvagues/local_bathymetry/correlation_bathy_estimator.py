@@ -29,7 +29,6 @@ from .waves_fields_estimations import WavesFieldsEstimations
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
-import matplotlib.pyplot as plt
 
 
 class CorrelationBathyEstimator(LocalBathyEstimator):
@@ -70,24 +69,32 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         try:
             self.correlation_image.apply_filters(self.correlation_image_filters)
+            # TODO: remove this attribute.
             self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
-            self.radon_transform.apply_filters(self.radon_image_filters)
-            sinogram_max_var, direction_propagation, self._metrics['variances'] = \
-                self.radon_transform.get_sinogram_maximum_variance()
-            self._metrics['sinogram_max_var'] = sinogram_max_var.sinogram.flatten()
-            wave_length = self.compute_wave_length(sinogram_max_var.sinogram.flatten(
-            ), min_period=self.local_estimator_params.TUNING.MINIMUM_WAVE_LENGTH)
-            celerity = self.compute_celerity(sinogram_max_var.sinogram.flatten(), wave_length)
+            # FIXME: store filtered_sinograms into metrics (was previously displaed)
+            filtered_sinograms = self.radon_transform.apply_filters(self.radon_image_filters)
+            direction_propagation, variances = \
+                filtered_sinograms.get_direction_maximum_variance()
+            sinogram_max_var = filtered_sinograms[direction_propagation]
+            sinogram_max_var_values = sinogram_max_var.values
+            self._metrics['sinogram_max_var'] = sinogram_max_var_values
+            wave_length = self.compute_wave_length(sinogram_max_var_values)
+            celerity = self.compute_celerity(sinogram_max_var_values, wave_length)
             temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
             temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
             period = self.compute_period(temporal_signal)
-            self._metrics['temporal_signal'] = temporal_signal
+
             waves_field_estimation = cast(CorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
             waves_field_estimation.period = period
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
+
+            if self.debug_sample:
+                self._metrics['variances'] = variances
+                self._metrics['sinogram_max_var'] = sinogram_max_var.sinogram.flatten()
+                self._metrics['temporal_signal'] = temporal_signal
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
@@ -182,6 +189,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         period, self._metrics['wave_length_zeros'] = find_period(sinogram, min_period)
         wave_length = period * self.spatial_resolution
+
+        if self.debug_sample:
+            self._metrics['wave_length_zeros'] = wave_length_zeros
         return wave_length
 
     def find_propagated_distance(self, signal: np.array, wave_length: float, epsilon: float) -> float:
@@ -271,6 +281,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         arg_peaks_max, _ = find_peaks(
             temporal_signal, distance=self.local_estimator_params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
-        self._metrics['arg_temporal_peaks_max'] = arg_peaks_max
+
         period = float(np.mean(np.diff(arg_peaks_max)))
+
+        if self.debug_sample:
+            self._metrics['arg_temporal_peaks_max'] = arg_peaks_max
         return period

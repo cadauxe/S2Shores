@@ -20,10 +20,10 @@ def filter_mean(array: np.ndarray, window: int) -> np.ndarray:
     """
     if len(array) < 2 * window:
         raise ValueError('array is too small compared to the window')
-    padded_time_serie = np.concatenate((np.full(window, np.mean(array[:window])),
-                                        array,
-                                        np.full(window, np.mean(array[-(window + 1):]))))
-    return np.convolve(padded_time_serie, np.ones(2 * window + 1) / (2 * window + 1), 'valid')
+    padded_array = np.concatenate((np.full(window, np.mean(array[:window])),
+                                   array,
+                                   np.full(window, np.mean(array[-(window + 1):]))))
+    return np.convolve(padded_array, np.ones(2 * window + 1) / (2 * window + 1), 'valid')
 
 
 def remove_median(array: np.ndarray, kernel_ratio: float) -> np.ndarray:
