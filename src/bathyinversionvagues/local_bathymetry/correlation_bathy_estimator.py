@@ -18,7 +18,7 @@ import numpy as np
 
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_filters import filter_mean, remove_median
-from ..generic_utils.signal_utils import find_period, find_dephasing
+from ..generic_utils.signal_utils import find_period
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..image_processing.waves_sinogram import SignalProcessingFilters
@@ -26,6 +26,7 @@ from ..image_processing.waves_sinogram import SignalProcessingFilters
 from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
 from .waves_fields_estimations import WavesFieldsEstimations
+from ..waves_exceptions import WavesEstimationError
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -54,14 +55,11 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             (remove_median,
              [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
             (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
-
-        delta_times = np.array([])
-        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
-            delta_times = np.append(self.global_estimator.get_delta_time(
-                self.global_estimator.selected_frames[frame_index],
-                self.global_estimator.selected_frames[frame_index + 1],
-                self._position), delta_times)
-        self._delta_time = np.sum(delta_times[:self.local_estimator_params.TEMPORAL_LAG])
+        if self.local_estimator_params.TEMPORAL_LAG >= len(self._sequential_delta_times):
+            raise WaveEstimationError(
+                'There are enough frames compared to chosen number of lag frames')
+        self.delta_time = np.sum(
+            self._sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
         self._metrics['delta_time'] = self.delta_time
 
     def run(self) -> None:
@@ -78,7 +76,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             sinogram_max_var = filtered_sinograms[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
             self._metrics['sinogram_max_var'] = sinogram_max_var_values
-            wave_length = self.compute_wave_length(sinogram_max_var_values)
+            wave_length = self.compute_wave_length(
+                sinogram_max_var_values, min_period=self.local_estimator_params.TUNING.MINIMUM_WAVE_LENGTH)
             celerity = self.compute_celerity(sinogram_max_var_values, wave_length)
             temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
             temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
@@ -184,53 +183,28 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self._distances = self.get_distances()
         return self._distances
 
-    def compute_wave_length(self, sinogram: np.ndarray, min_period) -> float:
+    def compute_wave_length(self, sinogram: np.ndarray, min_period: int) -> float:
         """ Wave length computation (in meter)
         """
-        period, self._metrics['wave_length_zeros'] = find_period(sinogram, min_period)
+        period, wave_length_zeros = find_period(sinogram, min_period)
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
             self._metrics['wave_length_zeros'] = wave_length_zeros
         return wave_length
 
-    def find_propagated_distance(self, signal: np.array, wave_length: float, epsilon: float) -> float:
+    def find_propagated_distance(self, signal: np.ndarray, wave_length: float) -> float:
         t_offshore = np.sqrt(wave_length * 2 * np.pi / self.gravity)
         self._metrics['t_offshore'] = t_offshore
-#         ratio = self.delta_time / t_offshore
         nb_l = int(self.delta_time // t_offshore)
-#         ratio = ratio - nb_l
-#         ratio_prime = 1 - ratio
         x = np.arange(-(len(signal) // 2), len(signal) // 2 + 1)
-#         self._metrics['extimated_distance'] = ratio * wave_length
-#         self._metrics['extimated_distance_prime'] = ratio_prime * wave_length
-#         interval1 = np.logical_and(ratio * wave_length - epsilon < x,
-#                                    x < ratio * wave_length + epsilon)
-#         interval2 = np.logical_and(ratio_prime * wave_length - epsilon <
-#                                    x, x < ratio_prime * wave_length + epsilon)
-#         interval3 = np.logical_and(-ratio * wave_length - epsilon < x,
-#                                    x < -ratio * wave_length + epsilon)
-#         interval4 = np.logical_and(-ratio_prime * wave_length - epsilon <
-#                                    x, x < -ratio_prime * wave_length + epsilon)
-#         interval = np.logical_or(np.logical_or(
-#             np.logical_or(interval1, interval2), interval3), interval4)
-#         interval = np.logical_and(-wave_length < x, x < wave_length)
         interval = np.ones(x.shape, dtype=bool)
-#         self._metrics['direct_interval'] = np.logical_or(interval1, interval3)
-#         self._metrics['indirect_interval'] = np.logical_or(interval2, interval4)
         self._metrics['interval'] = interval
         signal[np.logical_not(interval)] = 0
         max_indice = np.argmax(signal)
         self._metrics['max_indice'] = max_indice
-#         if interval2[max_indice] or interval4[max_indice]:
-#             dx = (wave_length - abs(x[np.argmax(signal)])) * self.spatial_resolution
-#             self._metrics['direct_propagation'] = False
-#         if interval1[max_indice] or interval3[max_indice]:
-#             dx = abs(x[np.argmax(signal)]) * self.spatial_resolution
-#             self._metrics['direct_propagation'] = True
         dx = abs(x[np.argmax(signal)]) * self.spatial_resolution
         dephasing = nb_l * wave_length + dx
-#         self._metrics['ratio'] = ratio
         self._metrics['dephasing'] = dephasing
         self._metrics['dx'] = dx
         self._metrics['nb_l'] = nb_l
@@ -239,10 +213,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
         """ Celerity computation (in meter/second)
         """
-#         dephasing, self._metrics['sinogram_period'] = find_dephasing(sinogram,
-#                                                                      wave_length)
-#         self._metrics['dephasing'] = dephasing
-        dephasing = self.find_propagated_distance(sinogram, wave_length, epsilon=14)
+        dephasing = self.find_propagated_distance(sinogram, wave_length)
         celerity = np.abs(dephasing / self.delta_time)
         return celerity
 
