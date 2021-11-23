@@ -20,7 +20,7 @@ from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 
 from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
@@ -61,6 +61,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self.delta_time = np.sum(
             self._sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
         self._metrics['delta_time'] = self.delta_time
+        if self.selected_directions is None:
+            self.selected_directions = linear_directions(-180., 0., 1.)
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -73,9 +75,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             filtered_sinograms = self.radon_transform.apply_filters(self.radon_image_filters)
             direction_propagation, variances = \
                 filtered_sinograms.get_direction_maximum_variance()
-            sinogram_max_var = filtered_sinograms[direction_propagation]
+            sinogram_max_var = self.radon_transform[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
-            self._metrics['sinogram_max_var'] = sinogram_max_var_values
+            self._metrics['sinogram_max_var'] = filtered_sinograms.values
             wave_length = self.compute_wave_length(
                 sinogram_max_var_values, min_period=self.local_estimator_params.TUNING.MINIMUM_WAVE_LENGTH)
             celerity = self.compute_celerity(sinogram_max_var_values, wave_length)
@@ -92,7 +94,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
             if self.debug_sample:
                 self._metrics['variances'] = variances
-                self._metrics['sinogram_max_var'] = sinogram_max_var.sinogram.flatten()
+                self._metrics['sinogram_max_var'] = sinogram_max_var_values
                 self._metrics['temporal_signal'] = temporal_signal
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
@@ -136,7 +138,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         yrawipool_ik_dist = \
             np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - \
             np.tile(self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
-        return np.arctan2(yrawipool_ik_dist, xrawipool_ik_dist) * 180 / np.pi
+        return np.arctan2(xrawipool_ik_dist, yrawipool_ik_dist).T * 180 / np.pi
 
     def get_distances(self) -> np.ndarray:
         """ Distances between positions x and positions y

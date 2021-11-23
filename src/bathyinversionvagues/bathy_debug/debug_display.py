@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING  # @NoMove
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
+import matplotlib as mpl
+from ..bathy_physics import funLinearC_k
 
 import numpy as np
 
@@ -40,7 +42,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
 
     # Second diagram : correlation matrix
     ax2 = fig.add_subplot(gs[0, 1])
-    correlation_matrix = temporal_estimator.correlation_matrix
+    correlation_matrix = temporal_estimator.correlation_image.pixels
     imin = np.min(correlation_matrix)
     imax = np.max(correlation_matrix)
     plt.imshow(correlation_matrix, norm=Normalize(vmin=imin, vmax=imax))
@@ -71,15 +73,9 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     sinogram_max_var = temporal_estimator.metrics['sinogram_max_var']
     length_signal = len(sinogram_max_var)
     left_limit = max(int(length_signal / 2 - wave_wavelength / 2), 0)
-    sinogram_period = temporal_estimator.metrics['sinogram_period']
     x = np.linspace(-length_signal // 2, length_signal // 2, length_signal)
     y = sinogram_max_var
     ax4.plot(x, y)
-    #     ax4.scatter(x[temporal_estimator._metrics['direct_interval']],
-    #                 y[temporal_estimator._metrics['direct_interval']], s=4 * mpl.rcParams['lines.markersize'], c='orange')
-    #     ax4.scatter(x[temporal_estimator._metrics['indirect_interval']],
-    # y[temporal_estimator._metrics['indirect_interval']],
-    # s=mpl.rcParams['lines.markersize'], c='red')
     ax4.scatter(x[temporal_estimator._metrics['interval']],
                 y[temporal_estimator._metrics['interval']], s=4 * mpl.rcParams['lines.markersize'],
                 c='orange')
@@ -89,37 +85,6 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
              y[temporal_estimator._metrics['wave_length_zeros']], 'ro')
     ax4.plot(x[temporal_estimator._metrics['max_indice']],
              y[temporal_estimator._metrics['max_indice']], 'go')
-    #     ax4.annotate('L=%d m' % wave_estimation.wavelength,
-    #                  (0, np.min(sinogram_max_var)),
-    #                  color='r')
-    #     if temporal_estimator._metrics['direct_propagation']:
-    #         ax4.annotate('dx = |dx| = %d \n nb_l = %d \n propagated distance =dx + nb_l*wave_length = %d m' % (temporal_estimator._metrics['dx'], temporal_estimator._metrics['nb_l'], temporal_estimator._metrics['dephasing']),
-    #                      (0, np.max(sinogram_max_var)),
-    #                      color='g')
-    #     else:
-    #         ax4.annotate('dx = L - |dx| = %d \n nb_l = %d \n propagated distance =dx + nb_l*wave_length = %d m' % (temporal_estimator._metrics['dx'], temporal_estimator._metrics['nb_l'], temporal_estimator._metrics['dephasing']),
-    #                      (0, np.max(sinogram_max_var)),
-    #                      color='g')
-    #     ax4.arrow(
-    #         x[int(length_signal / 2 + wave_estimation.wavelength /
-    #               (2 * temporal_estimator.spatial_resolution))],
-    #         np.min(sinogram_max_var), 0,
-    #         np.abs(np.min(sinogram_max_var)) + np.max(
-    #             sinogram_max_var), linestyle='dashed',
-    #         color='g')
-    #     ax4.arrow(
-    #         x[int(length_signal / 2 - wave_estimation.wavelength /
-    #               (2 * temporal_estimator.spatial_resolution))],
-    #         np.min(sinogram_max_var), 0,
-    #         np.abs(np.min(sinogram_max_var)) + np.max(
-    #             sinogram_max_var), linestyle='dashed',
-    #         color='g')
-    #     argmax = np.argmax(temporal_estimator._metrics['sinogram_period'])
-    #     ax4.plot(x[argmax + left_limit], sinogram_period[argmax], 'go')
-    #     ax4.arrow(x[int(length_signal / 2)], 0,
-    #               x[argmax + left_limit], 0, color='g')
-    #     ax4.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['delta_time'],
-    # wave_estimation.celerity), (0, 0), color='orange')
 
     bathy = funLinearC_k(1 / wave_estimation.wavelength, wave_estimation.celerity, 0.01, 9.8)
     ax4.annotate('depth = {:.2f}'.format(bathy), (min_limit_x, min_limit_y), color='orange')
@@ -137,39 +102,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax5.axis('off')
     ax5.annotate('wave_length = %d \n dx = |dx| = %d \n nb_l = %d \n propagated distance =dx + nb_l*wave_length = %d m \n t_offshore = %f \n c = %f / %f = %f m/s' % (wave_estimation.wavelength, temporal_estimator._metrics['dx'], temporal_estimator._metrics['nb_l'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['t_offshore'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['delta_time'], wave_estimation.celerity),
                  (0, 0), color='g')
-#     if temporal_estimator._metrics['direct_propagation']:
-#         ax5.annotate('wave_length = %d \n dx = |dx| = %d \n nb_l = %d \n propagated distance =dx + nb_l*wave_length = %d m \n ratio = %f \n t_offshore = %f \n c = %f / %f = %f m/s' % (wave_estimation.wavelength, temporal_estimator._metrics['dx'], temporal_estimator._metrics['nb_l'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['ratio'], temporal_estimator._metrics['t_offshore'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['delta_time'], wave_estimation.celerity),
-#                      (0, 0), color='g')
-#     else:
-#         ax5.annotate('wave_length = %d \n dx = L - |dx| = %d \n nb_l = %d \n propagated distance =dx + nb_l*wave_length = %d m \n ratio = %f \n t_offshore = %f \n c = %f / %f = %f m/s' % (wave_estimation.wavelength, temporal_estimator._metrics['dx'], temporal_estimator._metrics['nb_l'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['ratio'], temporal_estimator._metrics['t_offshore'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['delta_time'], wave_estimation.celerity),
-#                      (0, 0), color='g')
-#     ax4.arrow(
-#         temporal_estimator._metrics['ratio'] * wave_estimation.wavelength,
-#         np.min(sinogram_max_var), 0, abs(np.min(sinogram_max_var)) + np.max(sinogram_max_var), linestyle='dashed', color='orange')
-#
-#     ax4.arrow(
-#         -temporal_estimator._metrics['ratio'] * wave_estimation.wavelength,
-#         np.min(sinogram_max_var), 0, abs(np.min(sinogram_max_var)) + np.max(sinogram_max_var), linestyle='dashed', color='orange')
-#
-#     ax4.arrow(
-#         (1 - temporal_estimator._metrics['ratio']) * wave_estimation.wavelength,
-#         np.min(sinogram_max_var), 0, abs(np.min(sinogram_max_var)) + np.max(sinogram_max_var), linestyle='dashed', color='red')
-#
-#     ax4.arrow(
-#         (temporal_estimator._metrics['ratio'] - 1) * wave_estimation.wavelength,
-#         np.min(sinogram_max_var), 0, abs(np.min(sinogram_max_var)) + np.max(sinogram_max_var), linestyle='dashed', color='red')
-#     ax5.annotate('ratio = {:.2f}'.format(
-#         temporal_estimator._metrics['ratio']), (0, 50))
-#     ax5.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(
-#         temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['delta_time'], wave_estimation.celerity), (0, 100), color='orange')
-# wave_estimation.celerity), (0, 0), color='orange')
-#     temporal_signal = temporal_estimator._metrics['temporal_signal']
-#     ax5.plot(temporal_signal)
-#     ax5.plot(temporal_estimator._metrics['arg_temporal_peaks_max'],
-#              temporal_signal[temporal_estimator._metrics['arg_temporal_peaks_max']], 'ro')
-#     ax5.annotate('T={:.2f} s'.format(wave_estimation.period),
-#                  (0, np.min(temporal_signal)), color='r')
-#     plt.title('Temporal reconstruction')
+
     print('PATH')
     print(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH))
     fig.savefig(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH,
