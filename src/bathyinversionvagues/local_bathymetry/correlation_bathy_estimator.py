@@ -17,16 +17,16 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..generic_utils.image_filters import detrend, clipping
-from ..generic_utils.signal_filters import filter_mean, remove_median
+from ..generic_utils.signal_filters import filter_mean
 from ..generic_utils.signal_utils import find_period, find_dephasing
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 
 from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
 from .waves_fields_estimations import WavesFieldsEstimations
-from bathyinversionvagues.image_processing.waves_radon import linear_directions
+
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -69,7 +69,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                 filtered_sinograms.get_direction_maximum_variance()
             sinogram_max_var = filtered_sinograms[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
-            self._metrics['sinogram_max_var'] = sinogram_max_var_values
             wave_length = self.compute_wave_length(sinogram_max_var_values)
             celerity = self.compute_celerity(sinogram_max_var_values, wave_length)
             temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
@@ -87,7 +86,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                 self._metrics['variances'] = variances
                 self._metrics['sinogram_max_var'] = sinogram_max_var_values
                 # TODO: use objects in debug
-                #self._metrics['sinogram_max_var'] = sinogram_max_var
+                # self._metrics['sinogram_max_var'] = sinogram_max_var
                 self._metrics['temporal_signal'] = temporal_signal
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
@@ -193,9 +192,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         dephasing, sinogram_period = find_dephasing(sinogram, wave_length)
         rhomx = self.spatial_resolution * dephasing
-        delta_time = np.mean(self.sequential_delta_times)
+        delta_time = np.sum(self.sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
         # TODO: store delta_time in estimation
-        self._metrics['delta_time'] = delta_time
         celerity = np.abs(rhomx / delta_time)
 
         if self.debug_sample:

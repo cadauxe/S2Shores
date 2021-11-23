@@ -8,6 +8,8 @@ from matplotlib.colors import Normalize
 
 import numpy as np
 
+from ..bathy_physics import funLinearC_k
+
 
 if TYPE_CHECKING:
     from ..local_bathymetry.temporal_correlation_bathy_estimator import \
@@ -75,6 +77,8 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     x = np.linspace(-length_signal // 2, length_signal // 2, length_signal)
     y = sinogram_max_var
     ax4.plot(x, y)
+    min_limit_x = np.min(x)
+    min_limit_y = np.min(y)
     ax4.plot(x[temporal_estimator.metrics['wave_length_zeros']],
              y[temporal_estimator.metrics['wave_length_zeros']], 'ro')
     ax4.annotate('L=%d m' % wave_wavelength, (0, np.min(sinogram_max_var)), color='r')
@@ -97,6 +101,8 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax4.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(temporal_estimator.metrics['dephasing'],
                                                            temporal_estimator.metrics['delta_time'],
                                                            wave_celerity), (0, 0), color='orange')
+    bathy = funLinearC_k(1 / wave_wavelength, wave_celerity, 0.01, 9.8)
+    ax4.annotate('depth = {:.2f}'.format(bathy), (min_limit_x, min_limit_y), color='orange')
     plt.title('Sinogram')
 
     # Fifth  diagram : Temporal reconstruction
