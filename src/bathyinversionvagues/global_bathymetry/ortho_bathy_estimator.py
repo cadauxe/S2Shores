@@ -7,7 +7,7 @@
 import time
 import warnings
 
-from typing import Dict, List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING  # @NoMove
 
 from xarray import Dataset  # @NoMove
 
@@ -114,7 +114,8 @@ class OrthoBathyEstimator:
                 bathy_estimations.delta_time_available = False
                 bathy_estimations.clear()
             except WavesException as excp:
-                warnings.warn(f'Unable to estimate bathymetry: {str(excp)}')
+                warn_msg = f'Unable to estimate bathymetry: {str(excp)}'
+                warnings.warn(warn_msg)
                 bathy_estimations.clear()
         return bathy_estimations
 
@@ -137,18 +138,3 @@ class OrthoBathyEstimator:
                 print(f'--{frame_id} imagette {window_image.pixels.shape}:')
                 print(window_image.pixels)
         return images_sequence
-
-    def build_infos(self) -> Dict[str, str]:
-        """ :returns: a dictionary of metadata describing this estimator
-        """
-
-        title = 'Wave parameters and raw bathymetry derived from satellite imagery.'
-        title += ' No tidal vertical adjustment.'
-        infos = {'title': title,
-                 'institution': 'CNES-LEGOS'}
-
-        # metadata from the parameters
-        infos['waveEstimationMethod'] = self.parent_estimator.local_estimator_code
-        infos['ChainVersions'] = self.parent_estimator.chains_versions
-
-        return infos
