@@ -49,7 +49,6 @@ TEMPORAL_CORRELATION:
   TEMPORAL_LAG: 1  # number of frames to let wave propagation happen (example 3 for a 1Hz sequence)
   PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation 
   TUNING:
-    MINIMUM_WAVE_LENGTH : 20 # (in meters) minimum detected wave length. As wave length computation uses zeros detection MINIMUM_WAVE_LENGTH is the minimal distance between two zeros
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
     MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
