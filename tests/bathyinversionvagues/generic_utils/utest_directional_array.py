@@ -26,86 +26,46 @@ class UTestDirectionalArray(unittest.TestCase):
         """ Test the constructor of DirectionalArray
         """
         # Array and directions specified.
-        test_array = DirectionalArray(TEST_ARRAY1, np.array([4, -11, 100.]))
+        test_array = DirectionalArray()
+        test_array.insert_from_arrays(TEST_ARRAY1, np.array([4, -11, 100.]))
         self.assertEqual(test_array.nb_directions, 3)
-        self.assertEqual(test_array.array.shape, (4, 3))
-        self.assertEqual(test_array.array.dtype, np.float64)
+        array_out, directions = test_array.get_as_arrays()
+        self.assertEqual(len(directions), 3)
+        self.assertEqual(array_out.shape, (4, 3))
+        self.assertEqual(array_out.dtype, np.float64)
 
     def test_d_constructor(self) -> None:
         """ Test the constructor of DirectionalArray in degraded cases
         """
         # Array specified but of wrong types
+        test_array = DirectionalArray()
         with self.assertRaises(TypeError) as excp:
-            _ = DirectionalArray(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]))
+            test_array.insert_from_arrays(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]))
         expected = 'array for a DirectionalArray must be a 2D numpy array'
         self.assertEqual(str(excp.exception), expected)
 
         # Provided directions have not the same number of elements than the array column number
         with self.assertRaises(ValueError) as excp:
-            _ = DirectionalArray(np.empty((10, 6)), np.array([1, 2, 3, 4]))
+            test_array.insert_from_arrays(np.empty((10, 6)), np.array([1, 2, 3, 4]))
         expected = 'directions size must be equal to the number of columns of the array'
         self.assertEqual(str(excp.exception), expected)
 
         # Provided directions have values which are too close with respect to the direction_step
         with self.assertRaises(ValueError) as excp:
-            _ = DirectionalArray(np.empty((10, 4)), np.array([1, 2.50001, 3.4, 4]))
-        expected = 'some dimensions values are too close to each other considering '
-        expected += 'the dimensions quantization step: 1.0°'
+            test_array.insert_from_arrays(np.empty((10, 4)), np.array([1, 2.50001, 3.4, 4]))
+        expected = 'dimensions after quantization has not the same number of elements (3)'
+        expected += ' than the number of columns in the array (4)'
         self.assertEqual(str(excp.exception), expected)
 
-    def test_n_create_empty(self) -> None:
-        """ Test the DirectionalArray.create_empty() class method in nominal cases
-        """
-        # No directions specified. An empty array with 180 directions is created
-        test_array = DirectionalArray.create_empty(10)
-        self.assertEqual(test_array.nb_directions, 180)
-        self.assertEqual(test_array.array.shape, (10, 180))
-        self.assertEqual(test_array.array.dtype, np.float64)
-
-        # No directions specified. An empty array with the number of directions is created
-        test_array = DirectionalArray.create_empty(10, directions=np.array([-11, 4, 5., 100.]))
-        self.assertEqual(test_array.nb_directions, 4)
-        self.assertEqual(test_array.array.shape, (10, 4))
-        self.assertEqual(test_array.array.dtype, np.float64)
-
-        # No directions specified. An empty array with the number of directions is created
-        # FIXME: Unordered directions are accepted, but not reordered
-        test_array = DirectionalArray.create_empty(10, directions=np.array([4, -11, 5., 100.]))
-        self.assertEqual(test_array.nb_directions, 4)
-        self.assertEqual(test_array.array.shape, (10, 4))
-        self.assertEqual(test_array.array.dtype, np.float64)
-
-    def test_d_create_empty(self) -> None:
-        """ Test the DirectionalArray.create_empty() class method in degraded cases
-        """
-
-        # Directions specified but of wrong types
-        with self.assertRaises(AttributeError) as excp:
-            _ = DirectionalArray.create_empty(10, directions=[1, 2, 3, 4])
-        expected = "'list' object has no attribute 'ndim'"
-        self.assertEqual(str(excp.exception), expected)
-
-        with self.assertRaises(TypeError) as excp:
-            _ = DirectionalArray.create_empty(10, directions=np.array([[1, 2, 3, 4], [1, 2, 3, 4]]))
-        expected = 'dimensions for a DirectionalArray must be a 1D numpy array'
-        self.assertEqual(str(excp.exception), expected)
-
-        # Provided directions have values which are too close with respect to the direction_step
-        with self.assertRaises(ValueError) as excp:
-            _ = DirectionalArray.create_empty(10, directions=np.array([1, 2.50001, 3.4, 4]))
-        expected = 'some dimensions values are too close to each other considering '
-        expected += 'the dimensions quantization step: 1.0°'
-        self.assertEqual(str(excp.exception), expected)
-
-    def test_n_values_for(self) -> None:
-        """ Test the values_for() method of DirectionalArray
+    def test_n_indexing(self) -> None:
+        """ Test the [] operator of DirectionalArray
         """
         # Array for this test.
-        test_array = DirectionalArray(TEST_ARRAY1, np.array([4, -11, 100.]))
+        test_array = DirectionalArray()
+        test_array.insert_from_arrays(TEST_ARRAY1, np.array([4, -11, 100.]))
 
         # Retrieve an existing direction
-        vector = test_array.values_for(-11)
-        # FIXME: do we accept a 2D array as output for a single direction?
-        self.assertEqual(vector.shape, (4, 1))
+        vector = test_array[-11]
+        self.assertEqual(vector.shape, (4,))
         self.assertEqual(vector.dtype, np.float64)
-        self.assertTrue(np.array_equal(vector, np.array([[9.], [7.], [-35], [-1.7]])))
+        self.assertTrue(np.array_equal(vector, np.array([9., 7., -35, -1.7])))

@@ -6,7 +6,7 @@
 """
 from abc import ABC
 
-from typing import List, Optional, Tuple  # @NoMove
+from typing import List, Optional, Dict  # @NoMove
 
 from xarray import Dataset  # @NoMove
 from munch import Munch
@@ -129,14 +129,17 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         return infos
 
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
-    def set_debug_area(self, bottom_left_corner: PointType, top_right_corner: PointType, decimation: int) -> None:
-        """ Sets all points within rectangle defined by bottom_left_corner and top_right_corner to debug
+    def set_debug_area(self, bottom_left_corner: PointType, top_right_corner: PointType,
+                       decimation: int) -> None:
+        """ Sets all points within rectangle defined by bottom_left_corner and top_right_corner to
+        debug
+
         :param bottom_left_corner: point defining the bottom left corner of the area of interest
         :param top_right_corner: point defining the top right corner of the area of interest
-        :param decimation: decimation factor for all points within the area of interest (oversize factor will lead to a single point)
+        :param decimation: decimation factor for all points within the area of interest
+                           (oversize factor will lead to a single point)
 
         """
-
         x_samples = np.array([])
         y_samples = np.array([])
         for subtile in self.subtiles:
@@ -147,9 +150,9 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         y_samples_filtered = y_samples[np.logical_and(
             y_samples > bottom_left_corner[1], y_samples < top_right_corner[1])][::decimation]
         list_samples = []
-        for x in x_samples_filtered:
-            for y in y_samples_filtered:
-                list_samples.append((x, y))
+        for x_coord in x_samples_filtered:
+            for y_coord in y_samples_filtered:
+                list_samples.append((x_coord, y_coord))
         self._debug_samples = list_samples
 
     def set_debug_samples(self, samples: List[PointType]) -> None:
