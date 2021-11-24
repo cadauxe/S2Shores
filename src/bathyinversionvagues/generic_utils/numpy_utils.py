@@ -5,7 +5,7 @@
 :author: Alain Giros
 """
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import numpy.typing as npt
