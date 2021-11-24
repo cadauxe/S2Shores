@@ -100,7 +100,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
                  (0, np.min(temporal_signal)), color='r')
     plt.title('Temporal reconstruction')
     ax5.axis('off')
-    ax5.annotate('wave_length = %d \n dx = |dx| = %d \n nb_l = %d \n propagated distance =dx + nb_l*wave_length = %d m \n t_offshore = %f \n c = %f / %f = %f m/s' % (wave_estimation.wavelength, temporal_estimator._metrics['dx'], temporal_estimator._metrics['nb_l'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['t_offshore'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['delta_time'], wave_estimation.celerity),
+    ax5.annotate('wave_length = %d \n dx = |dx| = %d \n nb_l = %d \n propagated distance =dx + nb_l*wave_length = %d m \n t_offshore = %f \n c = %f / %f = %f m/s' % (wave_estimation.wavelength, temporal_estimator._metrics['dx'], temporal_estimator._metrics['nb_l'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['t_offshore'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['propagation_duration'], wave_estimation.celerity),
                  (0, 0), color='g')
 
     print('PATH')

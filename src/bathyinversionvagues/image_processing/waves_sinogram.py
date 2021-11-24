@@ -44,7 +44,7 @@ class WavesSinogram:
         """
         new_axis = np.linspace(0, self.size - 1, int(self.size / factor))
         current_axis = np.linspace(0, self.size - 1, self.size)
-        return WavesSinogram(np.interp(new_axis, current_axis, self.values[:, 0]))
+        return WavesSinogram(np.interp(new_axis, current_axis, self.values))
 
     # TODO: introduce different DFT properties based on the frequencies used (standard or not)
     @property

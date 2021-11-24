@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Module gathering all image filters which can be applied on a 2D numpy array
+""" Module gathering all image filters which can be applied on a 1D numpy array
 
 :author: Romain Degoul
 :organization: CNES
