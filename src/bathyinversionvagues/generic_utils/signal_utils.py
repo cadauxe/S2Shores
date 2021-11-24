@@ -10,9 +10,7 @@ from typing import Tuple
 import numpy as np
 
 
-# FIXME remove arbitrary min_period condition
-# use RANSAC instead
-def find_period(signal: np.ndarray, min_period: int = 20) -> Tuple[float, np.ndarray]:
+def find_period(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]:
     """ This function computes period of the signal by computing the zeros of the signal
     The signal is supposed to be periodic and centered around zero
 
@@ -56,13 +54,3 @@ def get_unity_roots(frequencies: np.ndarray, number_of_roots: int) -> np.ndarray
     """
     n = np.arange(number_of_roots)
     return np.exp(-2j * np.pi * frequencies * n)
-
-
-def DFT_fr(signal: np.ndarray, unity_roots: np.ndarray) -> np.ndarray:
-    """ Compute the discrete Fourier Transform of a 1D array
-
-    :param signal: 1D array containing the signal
-    :param unity_roots: an array preinitialized with roots of unity
-    """
-    # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
-    return np.dot(unity_roots, signal)

@@ -8,15 +8,26 @@
 :created: 4 mars 2021
 """
 from functools import lru_cache
-from typing import Optional  # @NoMove
+
+from typing import Optional, List  # @NoMove
 
 import numpy as np  # @NoMove
 
-from ..generic_utils.directional_array import (linear_directions,
-                                               DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX)
+
 from ..generic_utils.symmetric_radon import symmetric_radon
-from .sinograms_array import SinogramsArray
+from .sinograms import Sinograms
 from .waves_image import WavesImage
+from .waves_sinogram import WavesSinogram
+
+
+DEFAULT_ANGLE_MIN = -180.
+DEFAULT_ANGLE_MAX = 180.
+
+
+def linear_directions(angle_min: float, angle_max: float, directions_step: float) -> np.ndarray:
+    return np.linspace(angle_min, angle_max,
+                       int((angle_max - angle_min) / directions_step),
+                       endpoint=False)
 
 
 @lru_cache()
@@ -34,8 +45,7 @@ def sinogram_weights(nb_samples: int) -> np.ndarray:
     return weights
 
 
-# TODO: finalize directions indices removal
-class WavesRadon(SinogramsArray):
+class WavesRadon(Sinograms):
     """ Class handling the Radon transform of some image.
     """
 
@@ -56,77 +66,37 @@ class WavesRadon(SinogramsArray):
                          weighting function
         """
         self.pixels = image.pixels
-        self.sampling_frequency = image.sampling_frequency
-        self.nb_samples = min(self.pixels.shape)
 
         # TODO: Quantize directions when selected_directions is provided?
         if selected_directions is None:
             selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
                                                     directions_step)
 
-        radon_transform_array = self._compute(image.pixels, weighted, selected_directions)
+        radon_transform_list = self._compute(image.pixels, weighted, selected_directions)
 
-        super().__init__(radon_transform_array, selected_directions, directions_step)
+        super().__init__()
+        self.quantization_step = directions_step
+        self.sampling_frequency = image.sampling_frequency
+        self.insert_sinograms(radon_transform_list, selected_directions)
 
     @staticmethod
-    def _compute(pixels: np.ndarray, weighted: bool, selected_directions: np.ndarray) -> np.ndarray:
+    def _compute(pixels: np.ndarray, weighted: bool, selected_directions: np.ndarray) -> List[WavesSinogram]:
         """ Compute the radon transform of the image over a set of directions
         """
         # FIXME: quantization may imply that radon transform is not computed on stored directions
+        # TODO: make tests with circle=False, circled image and with weights
+        # radon_transform_array = symmetric_radon(pixels, theta=selected_directions, circle=False)
         radon_transform_array = symmetric_radon(pixels, theta=selected_directions)
 
         if weighted:
             weights = sinogram_weights(radon_transform_array.shape[0])
-            for direction in range(radon_transform_array.shape[1]):
-                radon_transform_array[:, direction] = (
-                    radon_transform_array[:, direction] / weights)
+            # TODO: replace by enumerate(selected_directions)
+            for direction_index in range(radon_transform_array.shape[1]):
+                radon_transform_array[:, direction_index] = (
+                    radon_transform_array[:, direction_index] / weights)
 
-        return radon_transform_array
-
-    @property
-    def spectrum_wave_numbers(self) -> np.ndarray:
-        """ :returns: wave numbers for each sample of the positive part of the FFT of a direction.
-        """
-        return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
-
-    def radon_augmentation(self, factor_augmented_radon: float) -> SinogramsArray:
-        """ Augment the resolution of the radon transform along the sinogram direction
-
-        :param factor_augmented_radon: factor of the resolution augmentation.
-        :return: a new SinogramsArray object with augmented resolution
-        """
-        radon_transform_augmented_array = np.empty(
-            (int(self.nb_samples / factor_augmented_radon), self.nb_directions))
-        for index, direction in enumerate(self.directions):
-            sinogram = self.get_sinogram(direction)
-            radon_transform_augmented_array[:, index] = sinogram.interpolate(
-                factor_augmented_radon)
-        return SinogramsArray(radon_transform_augmented_array,
-                              self.directions, self._directions_step)
-
-    def compute_sinograms_dfts(self,
-                               directions: Optional[np.ndarray] = None,
-                               kfft: Optional[np.ndarray] = None) -> None:
-        """ Computes the fft of the radon transform along the projection directions
-
-        :param directions: the set of directions for which the sinograms DFT must be computed
-        :param kfft: the set of wavenumbers to use for sampling the DFT. If None, standard DFT
-                     sampling is done.
-        """
-        # If no selected directions, DFT will be computed on all directions
-        directions = self.directions if directions is None else directions
-        # Build array on which the dft will be computed
-        radon_excerpt = self.get_as_array(directions)
-
-        if kfft is None:
-            # Compute standard DFT along the column axis and keep positive frequencies only
-            nb_positive_coeffs = int(np.ceil(radon_excerpt.shape[0] / 2))
-            radon_dft_1d = np.fft.fft(radon_excerpt, axis=0)
-            result = radon_dft_1d[0:nb_positive_coeffs, :]
-        else:
-            frequencies = kfft / self.sampling_frequency
-            result = self._dft_interpolated(radon_excerpt, frequencies)
-        # Store individual 1D DFTs in sinograms
-        for sino_index in range(result.shape[1]):
-            sinogram = self.sinograms[directions[sino_index]]
-            sinogram.dft = result[:, sino_index]
+        sinograms: List[WavesSinogram] = []
+        for index, _ in enumerate(selected_directions):
+            sinogram = WavesSinogram(radon_transform_array[:, index])
+            sinograms.append(sinogram)
+        return sinograms
