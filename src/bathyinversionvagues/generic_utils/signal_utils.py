@@ -54,13 +54,3 @@ def get_unity_roots(frequencies: np.ndarray, number_of_roots: int) -> np.ndarray
     """
     n = np.arange(number_of_roots)
     return np.exp(-2j * np.pi * frequencies * n)
-
-
-def DFT_fr(signal: np.ndarray, unity_roots: np.ndarray) -> np.ndarray:
-    """ Compute the discrete Fourier Transform of a 1D array
-
-    :param signal: 1D array containing the signal
-    :param unity_roots: an array preinitialized with roots of unity
-    """
-    # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
-    return np.dot(unity_roots, signal)
