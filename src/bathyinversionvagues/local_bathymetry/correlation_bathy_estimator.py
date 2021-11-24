@@ -130,7 +130,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         yrawipool_ik_dist = \
             np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - \
             np.tile(self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
-        return np.arctan2(xrawipool_ik_dist, yrawipool_ik_dist).T * 180 / np.pi
+        return np.arctan2(yrawipool_ik_dist, xrawipool_ik_dist) * 180 / np.pi
 
     def get_distances(self) -> np.ndarray:
         """ Distances between positions x and positions y
@@ -180,7 +180,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """ Wave length computation (in meter)
         """
-        period, wave_length_zeros = find_period(sinogram)
+        min_wavelength = (
+            self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi)
+        period, self._metrics['wave_length_zeros'] = find_period(
+            sinogram, int(min_wavelength/self.spatial_resolution))
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
@@ -192,14 +195,13 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         dephasing, sinogram_period = find_dephasing(sinogram, wave_length)
         rhomx = self.spatial_resolution * dephasing
-        delta_time = np.sum(self.sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
-        # TODO: store delta_time in estimation
-        celerity = np.abs(rhomx / delta_time)
+        propagation_duration = np.sum(self.sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
+        celerity = np.abs(rhomx / propagation_duration)
 
         if self.debug_sample:
             self._metrics['sinogram_period'] = sinogram_period
             self._metrics['dephasing'] = dephasing
-            self._metrics['delta_time'] = delta_time
+            self._metrics['propagation_duration'] = propagation_duration
         return celerity
 
     def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> np.ndarray:
