@@ -128,8 +128,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param correlation_signal: spatial cross correlated signal
         :returns: the wave length (m)
         """
-        min_wavelength = (
-            self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi)
+        min_wavelength = (self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi)
         period, _ = find_period(correlation_signal, int(min_wavelength/self.spatial_resolution))
         wavelength = period * self.spatial_resolution * \
             self.local_estimator_params.AUGMENTED_RADON_FACTOR
