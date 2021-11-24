@@ -180,10 +180,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """ Wave length computation (in meter)
         """
-        min_wavelength = (
-            self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi)
-        period, self._metrics['wave_length_zeros'] = find_period(
-            sinogram, int(min_wavelength/self.spatial_resolution))
+        min_wavelength = (self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi)
+        period, wave_length_zeros = find_period(sinogram,
+                                                int(min_wavelength / self.spatial_resolution))
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
@@ -195,7 +194,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """
         dephasing, sinogram_period = find_dephasing(sinogram, wave_length)
         rhomx = self.spatial_resolution * dephasing
-        propagation_duration = np.sum(self.sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
+        propagation_duration = np.sum(
+            self.sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
         celerity = np.abs(rhomx / propagation_duration)
 
         if self.debug_sample:
