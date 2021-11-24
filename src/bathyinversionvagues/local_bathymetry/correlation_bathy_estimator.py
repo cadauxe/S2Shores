@@ -180,7 +180,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """ Wave length computation (in meter)
         """
-        min_wavelength = floor((
+        min_wavelength = int((
             self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi))
         period, self._metrics['wave_length_zeros'] = find_period(
             sinogram, min_wavelength)
