@@ -36,6 +36,28 @@ class OrthoStack(ABC, OrthoLayout):
       allows for instance to select images of the same resolution from the set of images.
     """
 
+    def __init__(self, product_path: Path) -> None:
+        """ Constructor.
+
+        :param product_path: Path to the file or directory corresponding to this ortho stack
+        """
+        self._product_path = product_path
+
+        # Extract the relevant information from the first usable spectral band
+        # FIXME: use the selected frames instead ?
+        im_dataset = gdal.Open(str(self.get_image_file_path(self.usable_frames[0])))
+
+        super().__init__(im_dataset.RasterXSize, im_dataset.RasterYSize,
+                         im_dataset.GetProjection(), im_dataset.GetGeoTransform())
+        # We are done with info retrieval: release the dataset
+        im_dataset = None
+
+    @property
+    def product_path(self) -> Path:
+        """ Path to this product
+        """
+        return self._product_path
+
     @property
     @abstractmethod
     def short_name(self) -> str:
