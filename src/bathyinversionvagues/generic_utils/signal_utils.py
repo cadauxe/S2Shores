@@ -20,10 +20,10 @@ def find_period(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]
     sign = np.sign(signal)
     diff = np.diff(sign)
     zeros = np.where(diff != 0)[0]
-    periods = np.diff(zeros)
-    cond = periods > min_period
-    periods = periods[cond]
-    period = 2 * float(np.mean(periods))
+    demiperiods = np.diff(zeros)
+    cond = demiperiods > (min_period/2)
+    demiperiods = demiperiods[cond]
+    period = 2 * float(np.mean(demiperiods))
     return period, np.concatenate((np.array([zeros[0]]), zeros[1:][cond]))
 
 
