@@ -92,13 +92,6 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
 
     # Fifth  diagram : Temporal reconstruction
     ax5 = fig.add_subplot(gs[3, :2])
-    temporal_signal = temporal_estimator.metrics['temporal_signal']
-    ax5.plot(temporal_signal)
-    ax5.plot(temporal_estimator.metrics['arg_temporal_peaks_max'],
-             temporal_signal[temporal_estimator.metrics['arg_temporal_peaks_max']], 'ro')
-    ax5.annotate('T={:.2f} s'.format(wave_period),
-                 (0, np.min(temporal_signal)), color='r')
-    plt.title('Temporal reconstruction')
     ax5.axis('off')
     ax5.annotate('wave_length = %d \n dx = |dx| = %d \n nb_l = %d \n propagated distance =dx + nb_l*wave_length = %d m \n t_offshore = %f \n c = %f / %f = %f m/s' % (wave_estimation.wavelength, temporal_estimator._metrics['dx'], temporal_estimator._metrics['nb_l'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['t_offshore'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['propagation_duration'], wave_estimation.celerity),
                  (0, 0), color='g')

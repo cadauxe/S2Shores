@@ -24,6 +24,13 @@ def find_period(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]
     cond = periods > min_period
     periods = periods[cond]
     period = 2 * float(np.mean(periods))
+    
+    #max = signal.max()
+    #peaks, _ = find_peaks(signal, height=0.2 * max, distance=min_period)
+    #diff = np.diff(peaks)
+    #period = 2 * float(np.mean(diff))
+    #return period, peaks
+    
     return period, np.concatenate((np.array([zeros[0]]), zeros[1:][cond]))
 
 

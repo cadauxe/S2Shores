@@ -56,6 +56,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
             clipping, [self.local_estimator_params.TUNING.RATIO_SIZE_CORRELATION])]
         self.radon_image_filters: SignalProcessingFilters = [
+            (remove_median,
+             [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
             (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
         if self.local_estimator_params.TEMPORAL_LAG >= len(self._sequential_delta_times):
             raise WaveEstimationError(
@@ -71,9 +73,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self.correlation_image.apply_filters(self.correlation_image_filters)
             # TODO: remove this attribute.
             self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
+            filtered_radon = self.radon_transform.apply_filters(self.radon_image_filters)
             # FIXME: store filtered_sinograms into metrics (was previously displaed)
             direction_propagation, variances = \
-                self.radon_transform.get_direction_maximum_variance()
+                filtered_radon.get_direction_maximum_variance()
             sinogram_max_var = self.radon_transform[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
             self._metrics['sinogram_max_var'] = self.radon_transform.values
@@ -137,7 +140,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         yrawipool_ik_dist = \
             np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - \
             np.tile(self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
-        return np.arctan2(xrawipool_ik_dist, yrawipool_ik_dist).T * 180 / np.pi
+        return np.arctan2(yrawipool_ik_dist, xrawipool_ik_dist) * 180 / np.pi
 
     def get_distances(self) -> np.ndarray:
         """ Distances between positions x and positions y
