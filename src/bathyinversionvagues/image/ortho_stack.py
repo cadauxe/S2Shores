@@ -60,6 +60,12 @@ class OrthoStack(ABC, OrthoLayout):
 
     @property
     @abstractmethod
+    def full_name(self) -> str:
+        """ :returns: the full name of this ortho stack
+        """
+
+    @property
+    @abstractmethod
     def short_name(self) -> str:
         """ :returns: the short name of the orthorectified stack
         """
