@@ -96,8 +96,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         # Retrieve the subtile.
         subtile = self.subtiles[subtile_number]
-        print(
-            f'Subtile {subtile_number}: {self.ortho_stack.short_name} {subtile}')
+        print(f'Subtile {subtile_number}: {self.ortho_stack.short_name} {subtile}')
 
         # Build a bathymertry estimator over the subtile and launch estimation.
         subtile_estimator = OrthoBathyEstimator(self, subtile)
