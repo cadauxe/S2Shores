@@ -202,18 +202,17 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def find_propagated_distance(self, signal: np.ndarray, wave_length: float) -> float:
         t_offshore = np.sqrt(wave_length * 2 * np.pi / self.gravity)
         self._metrics['t_offshore'] = t_offshore
-        nb_l = int(self.propagation_duration // t_offshore)
         x = np.arange(-(len(signal) // 2), len(signal) // 2 + 1)
         interval = np.ones(x.shape, dtype=bool)
         self._metrics['interval'] = interval
         signal[np.logical_not(interval)] = 0
-        max_indice = np.argmax(signal)
-        self._metrics['max_indice'] = max_indice
+        peaks, _ = find_peaks(signal)
+        max_indice = np.argmax(signal[peaks])
+        self._metrics['max_indice'] = peaks[max_indice]
         dx = abs(x[np.argmax(signal)]) * self.spatial_resolution
-        dephasing = nb_l * wave_length + dx
+        dephasing = dx
         self._metrics['dephasing'] = dephasing
         self._metrics['dx'] = dx
-        self._metrics['nb_l'] = nb_l
         return dephasing
 
     def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
