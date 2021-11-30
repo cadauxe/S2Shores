@@ -359,7 +359,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                           self.gravity)
 
 
-class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
+class SpatialDFTBathyEstimatorDebug(SpatialDFTBathyEstimator, LocalBathyEstimatorDebug):
     """ A local bathymetry estimator estimating bathymetry from the DFT of the sinograms in
     radon transforms.
     """
