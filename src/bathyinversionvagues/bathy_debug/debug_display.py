@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
 import matplotlib as mpl
 from ..bathy_physics import funLinearC_k
+from ..waves_exceptions import DebugDisplayError
 
 import numpy as np
 
@@ -55,6 +56,8 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
 
     # Third diagram : Radon transform & maximum variance
     ax3 = fig.add_subplot(gs[1, :2])
+    if temporal_estimator.radon_transform is None:
+        raise DebugDisplayError("Radon trasform is not defined")
     radon_array, _ = temporal_estimator.radon_transform.get_as_arrays()
     ax3.imshow(radon_array, interpolation='nearest', aspect='auto', origin='lower')
     (l1, l2) = np.shape(radon_array)
@@ -96,7 +99,5 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax5.annotate('wave_length = %d \n dx = |dx| = %d \n propagated distance =|dx|= %d m \n t_offshore = %f \n c = %f / %f = %f m/s' % (wave_estimation.wavelength, temporal_estimator._metrics['dx'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['t_offshore'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['propagation_duration'], wave_estimation.celerity),
                  (0, 0), color='g')
 
-    print('PATH')
-    print(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH))
     fig.savefig(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH,
                              f'Infos_point_{temporal_estimator.location[0]}_{temporal_estimator.location[1]}.png'), dpi=300)

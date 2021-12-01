@@ -19,8 +19,6 @@ import numpy as np
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period
-from ..generic_utils.signal_filters import filter_mean
-from ..generic_utils.signal_utils import find_period, find_dephasing
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
@@ -92,6 +90,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             waves_field_estimation.period = period
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
+            print(waves_field_estimation)
 
             if self.debug_sample:
                 self._metrics['variances'] = variances

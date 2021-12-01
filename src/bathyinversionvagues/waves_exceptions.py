@@ -32,3 +32,8 @@ class WavesEstimationError(WavesException):
 class SequenceImagesError(WavesException):
     """ Exception raised when sequence images can not be properly exploited
     """
+
+
+class DebugDisplayError(WavesException):
+    """ Exception raised when debug display fails
+    """
