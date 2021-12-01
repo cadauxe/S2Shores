@@ -5,17 +5,18 @@
 :created: 17/05/2021
 """
 from abc import ABC
+from typing import List, Optional, Dict, Union  # @NoMove
 
-from typing import List, Optional, Dict  # @NoMove
+from munch import Munch
+
 
 from xarray import Dataset  # @NoMove
-from munch import Munch
 import numpy as np
 
-from ..data_providers.delta_time_provider import (
-    DeltaTimeProvider, NoDeltaTimeProviderError)
+from ..data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
 from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
-from ..data_providers.gravity_provider import LatitudeVaryingGravityProvider, GravityProvider
+from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, GravityProvider,
+                                               ConstantGravityProvider)
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_stack import OrthoStack, FrameIdType, FramesIdsType
 from ..image.sampled_ortho_image import SampledOrthoImage
@@ -195,12 +196,25 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return self._distoshore_provider.get_distoshore(point)
 
-    def set_gravity_provider(self, gravity_provider: GravityProvider) -> None:
-        """ Sets the GravityProvider to use with this estimator
+    def set_gravity_provider(self, gravity_provider: Union[str, GravityProvider]) -> None:
+        """ Sets the GravityProvider to use with this estimator either by specifying an instance
+        of GravityProvider or by giving the name of the provider to use.
 
-        :param gravity_provider: the GravityProvider to use
+        :param gravity_provider: an instance of GravityProvider or the name of a well known gravity
+                                 provider to use.
+        :raises ValueError: when the gravity provider name is unknown
         """
-        self._gravity_provider = gravity_provider
+        if isinstance(gravity_provider, str):
+            if gravity_provider.upper() not in ['CONSTANT', 'LATITUDE_VARYING']:
+                raise ValueError('Gravity provider type unknown : ', gravity_provider)
+            # No need to set LatitudeVaryingGravityProvider as it is the BathyEstimator default.
+            if gravity_provider.upper() == 'CONSTANT':
+                my_gravity_provider = ConstantGravityProvider()
+            else:
+                my_gravity_provider = LatitudeVaryingGravityProvider()
+        else:
+            my_gravity_provider = gravity_provider
+        self._gravity_provider = my_gravity_provider
         self._gravity_provider.client_epsg_code = self.ortho_stack.epsg_code
 
     def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
