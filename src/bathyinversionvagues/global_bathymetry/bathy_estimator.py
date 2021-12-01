@@ -6,6 +6,7 @@
 """
 from abc import ABC
 from typing import List, Optional, Dict, Union  # @NoMove
+from pathlib import Path
 
 from munch import Munch
 
@@ -197,13 +198,13 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         return self._distoshore_provider.get_distoshore(point)
 
     def set_gravity_provider(self, gravity_provider: Union[str, GravityProvider]) -> None:
-        """ Sets the GravityProvider to use with this estimator either by specifying an instance
-        of GravityProvider or by giving the name of the provider to use.
+        """ Sets the GravityProvider to use with this estimator .
 
         :param gravity_provider: an instance of GravityProvider or the name of a well known gravity
                                  provider to use.
         :raises ValueError: when the gravity provider name is unknown
         """
+        my_gravity_provider: GravityProvider
         if isinstance(gravity_provider, str):
             if gravity_provider.upper() not in ['CONSTANT', 'LATITUDE_VARYING']:
                 raise ValueError('Gravity provider type unknown : ', gravity_provider)
@@ -227,12 +228,19 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return self._gravity_provider.get_gravity(point, altitude)
 
-    def set_delta_time_provider(self, delta_time_provider: DeltaTimeProvider) -> None:
-        """ Sets the DeltaTimeProvider to use with this estimator
+    def set_delta_time_provider(self, delta_time_provider: Union[Path, DeltaTimeProvider]) -> None:
+        """ Sets the DeltaTimeProvider to use with this estimator.
 
-        :param delta_time_provider: the DeltaTimeProvider to use
+        :param delta_time_provider: Either the DeltaTimeProvider to use or a path to a file or a
+                                    directory to ba used by the associated OrthoStack to build its
+                                    provider.
         """
-        self._delta_time_provider = delta_time_provider
+        my_delta_time_provider: DeltaTimeProvider
+        if isinstance(delta_time_provider, Path):
+            my_delta_time_provider = self.ortho_stack.get_delta_time_provider(delta_time_provider)
+        else:
+            my_delta_time_provider = delta_time_provider
+        self._delta_time_provider = my_delta_time_provider
         self._delta_time_provider.client_epsg_code = self.ortho_stack.epsg_code
 
     def get_delta_time(self, first_frame_id: FrameIdType, second_frame_id: FrameIdType,
