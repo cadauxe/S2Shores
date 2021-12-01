@@ -99,8 +99,8 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         return self._sampling_positions
 
 
-class TemporalCorrelationBathyEstimatorDebug(TemporalCorrelationBathyEstimator,
-                                             LocalBathyEstimatorDebug):
+class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
+                                             TemporalCorrelationBathyEstimator):
     """ Class performing debugging for temporal correlation method
     """
 
