@@ -15,7 +15,8 @@ from xarray import Dataset  # @NoMove
 import numpy as np
 
 from ..data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
-from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
+from ..data_providers.dis_to_shore_provider import (InfinityDisToShoreProvider, DisToShoreProvider,
+                                                    NetCDFDisToShoreProvider)
 from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, GravityProvider,
                                                ConstantGravityProvider)
 from ..image.image_geometry_types import MarginsType, PointType
@@ -180,12 +181,19 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         return self._debug_sample
 
 # ++++++++++++++++++++++++++++ External data providers +++++++++++++++++++
-
-    def set_distoshore_provider(self, distoshore_provider: DisToShoreProvider) -> None:
+    def set_distoshore_provider(self, distoshore: Union[Path, DisToShoreProvider]) -> None:
         """ Sets the DisToShoreProvider to use with this estimator
 
-        :param distoshore_provider: the DisToShoreProvider to use
+        :param distoshore: Either the DisToShoreProvider to use or a path to a netCDF file
+                           assuming a geographic NetCDF format.
         """
+        distoshore_provider: DisToShoreProvider
+        if isinstance(distoshore, Path):
+            distoshore_provider = NetCDFDisToShoreProvider(distoshore, 4326,
+                                                           x_axis_label='lon',
+                                                           y_axis_label='lat')
+        else:
+            distoshore_provider = distoshore
         self._distoshore_provider = distoshore_provider
         self._distoshore_provider.client_epsg_code = self.ortho_stack.epsg_code
 
