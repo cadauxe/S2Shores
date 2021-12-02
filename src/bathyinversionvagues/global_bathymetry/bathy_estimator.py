@@ -5,17 +5,20 @@
 :created: 17/05/2021
 """
 from abc import ABC
+from typing import List, Optional, Dict, Union  # @NoMove
+from pathlib import Path
 
-from typing import List, Optional, Dict  # @NoMove
+from munch import Munch
+
 
 from xarray import Dataset  # @NoMove
-from munch import Munch
 import numpy as np
 
-from ..data_providers.delta_time_provider import (
-    DeltaTimeProvider, NoDeltaTimeProviderError)
-from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
-from ..data_providers.gravity_provider import LatitudeVaryingGravityProvider, GravityProvider
+from ..data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
+from ..data_providers.dis_to_shore_provider import (InfinityDisToShoreProvider, DisToShoreProvider,
+                                                    NetCDFDisToShoreProvider)
+from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, GravityProvider,
+                                               ConstantGravityProvider)
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_stack import OrthoStack, FrameIdType, FramesIdsType
 from ..image.sampled_ortho_image import SampledOrthoImage
@@ -178,12 +181,19 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         return self._debug_sample
 
 # ++++++++++++++++++++++++++++ External data providers +++++++++++++++++++
-
-    def set_distoshore_provider(self, distoshore_provider: DisToShoreProvider) -> None:
+    def set_distoshore_provider(self, distoshore: Union[Path, DisToShoreProvider]) -> None:
         """ Sets the DisToShoreProvider to use with this estimator
 
-        :param distoshore_provider: the DisToShoreProvider to use
+        :param distoshore: Either the DisToShoreProvider to use or a path to a netCDF file
+                           assuming a geographic NetCDF format.
         """
+        distoshore_provider: DisToShoreProvider
+        if isinstance(distoshore, Path):
+            distoshore_provider = NetCDFDisToShoreProvider(distoshore, 4326,
+                                                           x_axis_label='lon',
+                                                           y_axis_label='lat')
+        else:
+            distoshore_provider = distoshore
         self._distoshore_provider = distoshore_provider
         self._distoshore_provider.client_epsg_code = self.ortho_stack.epsg_code
 
@@ -195,12 +205,25 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return self._distoshore_provider.get_distoshore(point)
 
-    def set_gravity_provider(self, gravity_provider: GravityProvider) -> None:
-        """ Sets the GravityProvider to use with this estimator
+    def set_gravity_provider(self, gravity_provider: Union[str, GravityProvider]) -> None:
+        """ Sets the GravityProvider to use with this estimator .
 
-        :param gravity_provider: the GravityProvider to use
+        :param gravity_provider: an instance of GravityProvider or the name of a well known gravity
+                                 provider to use.
+        :raises ValueError: when the gravity provider name is unknown
         """
-        self._gravity_provider = gravity_provider
+        my_gravity_provider: GravityProvider
+        if isinstance(gravity_provider, str):
+            if gravity_provider.upper() not in ['CONSTANT', 'LATITUDE_VARYING']:
+                raise ValueError('Gravity provider type unknown : ', gravity_provider)
+            # No need to set LatitudeVaryingGravityProvider as it is the BathyEstimator default.
+            if gravity_provider.upper() == 'CONSTANT':
+                my_gravity_provider = ConstantGravityProvider()
+            else:
+                my_gravity_provider = LatitudeVaryingGravityProvider()
+        else:
+            my_gravity_provider = gravity_provider
+        self._gravity_provider = my_gravity_provider
         self._gravity_provider.client_epsg_code = self.ortho_stack.epsg_code
 
     def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
@@ -213,12 +236,19 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return self._gravity_provider.get_gravity(point, altitude)
 
-    def set_delta_time_provider(self, delta_time_provider: DeltaTimeProvider) -> None:
-        """ Sets the DeltaTimeProvider to use with this estimator
+    def set_delta_time_provider(self, delta_time_provider: Union[Path, DeltaTimeProvider]) -> None:
+        """ Sets the DeltaTimeProvider to use with this estimator.
 
-        :param delta_time_provider: the DeltaTimeProvider to use
+        :param delta_time_provider: Either the DeltaTimeProvider to use or a path to a file or a
+                                    directory to ba used by the associated OrthoStack to build its
+                                    provider.
         """
-        self._delta_time_provider = delta_time_provider
+        my_delta_time_provider: DeltaTimeProvider
+        if isinstance(delta_time_provider, Path):
+            my_delta_time_provider = self.ortho_stack.get_delta_time_provider(delta_time_provider)
+        else:
+            my_delta_time_provider = delta_time_provider
+        self._delta_time_provider = my_delta_time_provider
         self._delta_time_provider.client_epsg_code = self.ortho_stack.epsg_code
 
     def get_delta_time(self, first_frame_id: FrameIdType, second_frame_id: FrameIdType,
