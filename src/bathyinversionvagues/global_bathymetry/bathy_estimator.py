@@ -164,7 +164,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         self._debug_samples = samples
 
-    def set_debug(self, sample: PointType) -> None:
+    def set_debug_flag(self, sample: PointType) -> None:
         """ Set or reset the debug flag for a given point depending on its presence into the set
         of points to debug.
 
