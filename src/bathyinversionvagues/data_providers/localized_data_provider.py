@@ -6,9 +6,12 @@
 """
 from typing import Tuple, Optional  # @NoMove
 
-from osgeo import osr
+from osgeo import osr, gdal
 
 from ..image.image_geometry_types import PointType
+
+GDAL3_OR_GREATER = gdal.VersionInfo()[0] >= '3'
+SWAP_COORDS_EPSG = [4326]
 
 
 class LocalizedDataProvider:
@@ -70,4 +73,11 @@ class LocalizedDataProvider:
             provider_srs.ImportFromEPSG(self.provider_epsg_code)
             self._client_to_provider_transform = osr.CoordinateTransformation(client_srs,
                                                                               provider_srs)
-        return self._client_to_provider_transform.TransformPoint(*point, altitude)
+        if GDAL3_OR_GREATER and self.client_epsg_code in SWAP_COORDS_EPSG:
+            point = (point[1], point[0])
+        transformed_point = self._client_to_provider_transform.TransformPoint(*point, altitude)
+        if GDAL3_OR_GREATER and self.provider_epsg_code in SWAP_COORDS_EPSG:
+            transformed_point = (transformed_point[1],
+                                 transformed_point[0],
+                                 transformed_point[2])
+        return transformed_point
