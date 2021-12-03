@@ -15,6 +15,7 @@ from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
+from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
 from .waves_field_estimation import WavesFieldEstimation
@@ -73,12 +74,16 @@ class LocalBathyEstimator(ABC):
         self.selected_directions = selected_directions
 
         self._waves_fields_estimations = waves_fields_estimations
-        self._position = self.waves_fields_estimations.location
 
-        self._delta_time = self.global_estimator.get_delta_time(
-            self.global_estimator.selected_frames[0],
-            self.global_estimator.selected_frames[1],
-            self.waves_fields_estimations.location)
+        sequential_delta_times = np.array([])
+        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
+            delta_time = self.global_estimator.get_delta_time(
+                self.global_estimator.selected_frames[frame_index],
+                self.global_estimator.selected_frames[frame_index + 1],
+                self.location)
+            # FIXME: copied from CorrelationBathyEstimator but wrong !?
+            sequential_delta_times = np.append(delta_time, sequential_delta_times)
+        self._sequential_delta_times = sequential_delta_times
 
         self._metrics: Dict[str, Any] = {}
 
@@ -102,13 +107,16 @@ class LocalBathyEstimator(ABC):
         """
         return self.waves_fields_estimations.gravity
 
-    # FIXME: At the moment only a pair of images is handled (list is limited
-    # to a singleton)
     @property
-    def delta_time(self) -> float:
+    def location(self) -> PointType:
+        """ :returns: The (X, Y) coordinates of the location where this estimator is acting"""
+        return self.waves_fields_estimations.location
+
+    @property
+    def sequential_delta_times(self) -> np.ndarray:
         """ :returns: the time differences between 2 consecutive frames in the image sequence
         """
-        return self._delta_time
+        return self._sequential_delta_times
 
     @abstractmethod
     def run(self) -> None:
@@ -128,10 +136,9 @@ class LocalBathyEstimator(ABC):
         """  Remove non physical waves fields
         """
         # Filter non physical waves fields and bathy estimations
-        # We iterate over a copy of the list in order to keep waves_fields_etimations unaffected
+        # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
         # on its specific attributes
-        # for index, estimation in
-        # enumerate(list(self.waves_fields_estimations)):
+        # for index, estimation in enumerate(list(self.waves_fields_estimations)):
         for estimation in list(self.waves_fields_estimations):
             if (estimation.period < self.global_estimator.waves_period_min or
                     estimation.period > self.global_estimator.waves_period_max):
@@ -188,7 +195,10 @@ class LocalBathyEstimatorDebug(LocalBathyEstimator):
     def run(self) -> None:
         super().run()
         if self.debug_sample:
-            self.explore_results()
+            try:
+                self.explore_results()
+            except Exception as excp:
+                print(f'Bathymetry debug failed: {str(excp)}')
 
     @abstractmethod
     def explore_results(self) -> None:

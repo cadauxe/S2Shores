@@ -10,11 +10,17 @@ Class managing the computation of waves fields from two images taken at a small 
 :created: 5 mars 2021
 """
 import os
+from typing import Optional  # @NoMove
 
 import matplotlib
+from matplotlib.axes import Axes
+from matplotlib.colors import Normalize
+
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+
+from ..image_processing.waves_radon import WavesRadon
 
 
 def display_curve(data, legend):
@@ -48,22 +54,109 @@ def display_image(data, legend):
     plt.show()
 
 
+def build_image_display(axes: Axes, title: str, image: np.ndarray,
+                        direction: Optional[float] = None) -> None:
+    imin = np.min(image)
+    imax = np.max(image)
+    axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
+    (l1, l2) = np.shape(image)
+    radius = min(l1, l2) / 2
+    if direction is not None:
+        axes.arrow(l1 // 2, l2 // 2,
+                   np.cos(np.deg2rad(direction)) * (radius // 2),
+                   -np.sin(np.deg2rad(direction)) * (radius // 2),
+                   head_width=2, head_length=3, color='r')
+    axes.set_title(title)
+
+
+def build_radon_transform_display(axes: Axes, title: str, transform: WavesRadon) -> None:
+    values, directions = transform.get_as_arrays()
+    imin = np.min(values)
+    imax = np.max(values)
+    radon_extent = [np.min(directions), np.max(directions), 0, values.shape[0]]
+    axes.imshow(values, norm=Normalize(vmin=imin, vmax=imax), extent=radon_extent)
+    axes.set_xticks(directions[::20])
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+    axes.set_title(title)
+
+
+def build_sinograms_variances_display(axes: Axes, title: str, transform: WavesRadon, directions) -> None:
+    variances = transform.get_sinograms_variances()
+    axes.plot(directions, variances)
+    axes.set_xticks(directions[::20])
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+    axes.set_title(title)
+
+
+def build_sinograms_energies_display(axes: Axes, title: str, transform: WavesRadon, directions) -> None:
+    energies = transform.get_sinograms_energies()
+    axes.plot(directions, energies)
+    axes.set_xticks(directions[::20])
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+    axes.set_title(title)
+
+
+def build_sinograms_dft_energies_display(axes: Axes, title: str, energies, directions) -> None:
+    axes.plot(directions, energies)
+    axes.set_xticks(directions[::20])
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+    axes.set_title(title)
+
+
+def display_initial_data(local_estimator):
+    plt.close('all')
+    _, axs = plt.subplots(2, 2)
+    build_image_display(axs[0, 0], 'first image', local_estimator.images_sequence[0].pixels, 100)
+    build_image_display(axs[1, 0], 'second image', local_estimator.images_sequence[0].pixels, -120)
+    first_radon_transform = local_estimator.radon_transforms[0]
+    second_radon_transform = local_estimator.radon_transforms[1]
+    # TODO: make a build_radon_transform_display function
+    build_radon_transform_display(axs[0, 1], 'first radon transform', first_radon_transform)
+    build_radon_transform_display(axs[1, 1], 'second radon transform', second_radon_transform)
+    plt.show()
+
+
+def display_radon_transforms(local_estimator,
+                             sino1_fft, sino1_fft_directions,
+                             sino2_fft, sino2_fft_directions):
+    plt.close('all')
+    _, axs = plt.subplots(3, 2)
+    display_radon_transform(axs, 0, local_estimator.radon_transforms[0], sino1_fft,
+                            'first radon transform')
+    display_radon_transform(axs, 1, local_estimator.radon_transforms[1], sino2_fft,
+                            'second radon transform')
+    plt.show()
+
+
+def display_radon_transform(axs, column, transform, sino_fft, title):
+    build_radon_transform_display(axs[0, column], title, transform)
+    # build_sinograms_variances_display(
+    #     axs[1, column], 'Sinograms variances', transform, transform.directions)
+    # build_sinograms_energies_display(
+    #     axs[2, column], 'Sinograms energies', transform, transform.directions)
+    amplitudes = np.abs(sino_fft)
+    build_image_display(axs[1, column], 'Sinograms DFT amplitude', amplitudes)
+    energies = np.sum(amplitudes * amplitudes, axis=0)
+    # build_sinograms_dft_energies_display(
+    #     axs[4, column], 'Sinograms DFT energy', energies, transform.directions)
+    build_image_display(axs[2, column], 'Sinograms DFT phase', np.angle(sino_fft))
+
+
 def display_estimation(amplitude, amplitude_sino1, phase,
                        phase_thresholded, totspec, totalSpecMax_ref):
     plt.close('all')
     _, axs = plt.subplots(2, 3)
-    axs[0, 1].imshow(amplitude, aspect='auto', cmap='gray')
-    axs[0, 1].set_title('Combined Amplitude')
-    axs[1, 1].imshow(amplitude_sino1, aspect='auto', cmap='gray')
-    axs[1, 1].set_title('Amplitude Sino1')
-    axs[1, 0].imshow(phase, aspect='auto', cmap='gray')
-    axs[1, 0].set_title('phase shift')
     axs[0, 0].imshow(phase_thresholded, aspect='auto', cmap='gray')
     axs[0, 0].set_title('phase shift thresholded')
+    axs[0, 1].imshow(amplitude, aspect='auto', cmap='gray')
+    axs[0, 1].set_title('Combined Amplitude')
     axs[0, 2].imshow(totspec, aspect='auto', cmap='gray')
     axs[0, 2].set_title('totspec')
+    axs[1, 0].imshow(phase, aspect='auto', cmap='gray')
+    axs[1, 0].set_title('phase shift')
+    axs[1, 1].imshow(amplitude_sino1, aspect='auto', cmap='gray')
+    axs[1, 1].set_title('Amplitude Sino1')
     axs[1, 2].plot(totalSpecMax_ref)
-    # axs[0, 2].plot(sinograms2_energies / image2_energy)
     axs[1, 2].set_title('totalSpecMax_ref')
     plt.show()
 
