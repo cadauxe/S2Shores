@@ -22,17 +22,7 @@ class SpatialCorrelationWavesFieldEstimation(WavesFieldEstimation):
     def __init__(self, gravity: float, depth_estimation_method: str) -> None:
         super().__init__(gravity, depth_estimation_method)
 
-        self._delta_time = np.nan
         self._correlation_signal = None  # TODO: set to a matrix of nan
-
-    @property
-    def delta_time(self) -> float:
-        """ :returns: the time difference between the 2 images used for this estimation """
-        return self._delta_time
-
-    @delta_time.setter
-    def delta_time(self, value: float) -> None:
-        self._delta_time = value
 
     @property
     def correlation_signal(self) -> np.ndarray:
@@ -45,5 +35,4 @@ class SpatialCorrelationWavesFieldEstimation(WavesFieldEstimation):
 
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)
-        result += f'\ndelta time: {self.delta_time:5.2f} (s)'
         return result

@@ -34,9 +34,6 @@ SPATIAL_DFT:
   PROMINENCE_MAX_PEAK: 0.3 # find_peaks function tuning - search for the maximal peaks
   PROMINENCE_MULTIPLE_PEAKS: 0.1 # find_peaks function tuning - search for the kkeep max peaks
   UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period (S2 : False)
-  MIN_DIR: -180. # min angle for radon transform - degrees
-  MAX_DIR: 180. # max angle for radon transform - degrees
-  MAX_NDIRS: 360 # nb max of directions for radon transform
   ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
   STEP_T: 0.05 # step for period sampling - seconds - 
 
