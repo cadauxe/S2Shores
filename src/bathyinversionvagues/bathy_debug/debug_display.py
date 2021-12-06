@@ -27,7 +27,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     wave_period = wave_estimation.period
     ######################################################
     fig = plt.figure(constrained_layout=True)
-    gs = gridspec.GridSpec(5, 3, figure=fig)
+    gs = gridspec.GridSpec(5, 2, figure=fig)
 
     # First diagram : first image of the sequence
     image = temporal_estimator.images_sequence[0].pixels
@@ -86,18 +86,45 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     min_limit_y = np.min(y)
     ax4.plot(x[temporal_estimator._metrics['wave_length_zeros']],
              y[temporal_estimator._metrics['wave_length_zeros']], 'ro')
-    ax4.plot(x[temporal_estimator._metrics['max_indice']],
-             y[temporal_estimator._metrics['max_indice']], 'go')
+    ax4.plot(x[temporal_estimator._metrics['max_indices']],
+             y[temporal_estimator._metrics['max_indices']], 'go')
 
     bathy = funLinearC_k(1 / wave_estimation.wavelength, wave_estimation.celerity, 0.01, 9.8)
     ax4.annotate('depth = {:.2f}'.format(bathy), (min_limit_x, min_limit_y), color='orange')
     plt.title('Sinogram')
 
-    # Fifth  diagram : Temporal reconstruction
+    # Fifth  diagram
     ax5 = fig.add_subplot(gs[3, :2])
     ax5.axis('off')
-    ax5.annotate('wave_length = %d \n dx = |dx| = %d \n propagated distance =|dx|= %d m \n t_offshore = %f \n c = %f / %f = %f m/s' % (wave_estimation.wavelength, temporal_estimator._metrics['dx'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['t_offshore'], temporal_estimator._metrics['dephasing'], temporal_estimator._metrics['propagation_duration'], wave_estimation.celerity),
-                 (0, 0), color='g')
+    dephasings = temporal_estimator._metrics['dephasings']
+    celerities = temporal_estimator._metrics['celerities']
+    celerities_from_periods = temporal_estimator._metrics['celerities_from_periods']
+    chain_dx = ' '.join([f'{dephasing:.2f} | ' for dephasing in dephasings])
+    chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
+    chain_celerities_from_period = ' '.join(
+        [f'{celerity_from_period:.2f} | ' for celerity_from_period in celerities_from_periods])
+    ax5.annotate(
+        f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n c = {chain_celerities} \n c_from_period = {chain_celerities_from_period}\n chosen_celerity = {wave_celerity}', (0, 0), color='g')
 
+    # sixth  diagram : Temporal reconstruction
+    #ax5 = fig.add_subplot(gs[4, :2])
+    fig_temporal_signals = plt.figure('Signaux temporal', constrained_layout=True)
+    hops_number = len(temporal_estimator._metrics['temporal_signals'])
+    gs = gridspec.GridSpec(hops_number, 1, figure=fig_temporal_signals)
+    for i in range(hops_number):
+        temporal_signal = temporal_estimator._metrics['temporal_signals'][i]
+        arg_peak_max = temporal_estimator._metrics['arg_peaks_max'][i]
+        dephasing = temporal_estimator._metrics['dephasings'][i]
+        temporal_period = temporal_estimator._metrics['periods'][i]
+        celerities_from_periods = temporal_estimator._metrics['celerities_from_periods'][i]
+        ax = fig_temporal_signals.add_subplot(gs[i, :])
+        ax.plot(temporal_signal)
+        ax.plot(arg_peak_max, temporal_signal[arg_peak_max], 'ro')
+        ax.annotate('T={:.2f} s  | c = L/T = {:.2f}/{:.2f} = {:.2f}'.format(temporal_period, wave_wavelength, temporal_period, celerities_from_periods),
+                    (0, np.min(temporal_signal)), color='r')
+
+    fig_temporal_signals.savefig(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH,
+                                              f'Temporal_signals_{temporal_estimator.location[0]}_{temporal_estimator.location[1]}.png'), dpi=300)
+    plt.close(fig_temporal_signals)
     fig.savefig(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH,
                              f'Infos_point_{temporal_estimator.location[0]}_{temporal_estimator.location[1]}.png'), dpi=300)
