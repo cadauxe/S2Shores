@@ -52,9 +52,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._distances: Optional[np.ndarray] = None
         # Filters
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
-            clipping, [self.local_estimator_params.TUNING.RATIO_SIZE_CORRELATION])]
+            clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
         self.radon_image_filters: SignalProcessingFilters = [
-            (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
+            (filter_mean,
+             [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -195,7 +196,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         dephasing, sinogram_period = find_dephasing(sinogram, wave_length)
         rhomx = self.spatial_resolution * dephasing
         propagation_duration = np.sum(
-            self.sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
+            self.sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
         celerity = np.abs(rhomx / propagation_duration)
 
         if self.debug_sample:
@@ -214,7 +215,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         index_unique_sorted = np.argsort(time_unique)
         time_unique_sorted = time_unique[index_unique_sorted]
         timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted),
-                            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION)
+                            self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION'])
         corr_unique_sorted = self.correlation_matrix.T.flatten()[
             index_unique[index_unique_sorted]]
         interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
@@ -225,11 +226,11 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """ Tuning of temporal signal
         """
         low_frequency = \
-            self.local_estimator_params.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION
+            self.local_estimator_params['TUNING']['LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION'] * \
+            self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
         high_frequency = \
-            self.local_estimator_params.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION
+            self.local_estimator_params['TUNING']['HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION'] \
+            * self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
         return sosfiltfilt(sos_filter, temporal_signal)
@@ -238,7 +239,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         """Period computation (in second)
         """
         arg_peaks_max, _ = find_peaks(
-            temporal_signal, distance=self.local_estimator_params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
+            temporal_signal,
+            distance=self.local_estimator_params['TUNING']['MIN_PEAKS_DISTANCE_PERIOD'])
 
         period = float(np.mean(np.diff(arg_peaks_max)))
 

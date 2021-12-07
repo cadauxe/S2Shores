@@ -5,10 +5,8 @@
 :created: 17/05/2021
 """
 from abc import ABC
-from typing import List, Optional, Dict, Union  # @NoMove
+from typing import List, Optional, Dict, Union, Any  # @NoMove
 from pathlib import Path
-
-from munch import Munch
 
 
 from xarray import Dataset  # @NoMove
@@ -33,7 +31,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
     sequentially.
     """
 
-    def __init__(self, ortho_stack: OrthoStack, wave_params: Munch,
+    def __init__(self, ortho_stack: OrthoStack, wave_params: Dict[str, Any],
                  nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
@@ -125,8 +123,8 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         # metadata from the parameters
         infos['waveEstimationMethod'] = self.local_estimator_code
         infos['ChainVersions'] = self.chains_versions
-        infos['Resolution X'] = self.sampling_step_x
-        infos['Resolution Y'] = self.sampling_step_y
+        infos['Resolution X'] = str(self.sampling_step_x)
+        infos['Resolution Y'] = str(self.sampling_step_y)
 
         return infos
 

@@ -114,5 +114,5 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax5.annotate('T={:.2f} s'.format(wave_period),
                  (0, np.min(temporal_signal)), color='r')
     plt.title('Temporal reconstruction')
-    fig.savefig(os.path.join(temporal_estimator.local_estimator_params.DEBUG_PATH,
+    fig.savefig(os.path.join(temporal_estimator.local_estimator_params['DEBUG_PATH'],
                              f'Infos_point_{temporal_estimator.location[0]}_{temporal_estimator.location[1]}.png'), dpi=300)
