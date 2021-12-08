@@ -21,6 +21,7 @@ from ..data_providers.dis_to_shore_provider import (InfinityDisToShoreProvider, 
                                                     NetCDFDisToShoreProvider)
 from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, GravityProvider,
                                                ConstantGravityProvider)
+from ..data_providers.roi_provider import (RoiProvider, VectorFileRoiProvider)
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_stack import OrthoStack, FrameIdType, FramesIdsType
 from ..image.sampled_ortho_image import SampledOrthoImage
@@ -57,11 +58,16 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         # No default DeltaTimeProvider
         self._delta_time_provider: Optional[DeltaTimeProvider] = None
 
+        # No default RoiProvider
+        self._roi_provider: Optional[RoiProvider] = None
+
         # Create subtiles onto which bathymetry estimation will be done
         self.subtiles = SampledOrthoImage.build_subtiles(self.ortho_stack, nb_subtiles_max,
                                                          self.sampling_step_x,
                                                          self.sampling_step_y,
                                                          self.measure_extent)
+
+        # Init debuggin points handling
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
 
@@ -213,6 +219,35 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         :returns: the distance from the point to the nearest shore (km).
         """
         return self._distoshore_provider.get_distoshore(point)
+
+    def set_roi_provider(self, provider_info: Optional[Union[Path, RoiProvider]] = None) -> None:
+        """ Sets the RoiProvider to use with this estimator
+
+        :param provider_info: Either the RoiProvider to use or a path to a vector file containing
+                              the ROI or None if no provider change.
+        """
+        if isinstance(provider_info, RoiProvider):
+            roi_provider = provider_info
+        elif isinstance(provider_info, Path):
+            roi_provider = VectorFileRoiProvider(provider_info)
+        else:
+            # None or some other type, keep the current provider
+            roi_provider = self._roi_provider
+
+        # Set private attribute.
+        self._roi_provider = roi_provider
+        if self._roi_provider is not None:
+            self._roi_provider.client_epsg_code = self.ortho_stack.epsg_code
+
+    def is_inside_roi(self, point: PointType) -> bool:
+        """ Test if a point is inside the ROI
+
+        :param point: the point to test
+        :returns: True if the point lies inside the ROI.
+        """
+        if self._roi_provider is None:
+            return True
+        return self._roi_provider.contains(point)
 
     def set_gravity_provider(self,
                              provider_info: Optional[Union[str, GravityProvider]] = None) -> None:
