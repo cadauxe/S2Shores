@@ -245,7 +245,8 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         my_delta_time_provider: DeltaTimeProvider
         if isinstance(delta_time_provider, Path):
-            my_delta_time_provider = self.ortho_stack.get_delta_time_provider(delta_time_provider)
+            my_delta_time_provider = \
+                self.ortho_stack.create_delta_time_provider(delta_time_provider)
         else:
             my_delta_time_provider = delta_time_provider
         self._delta_time_provider = my_delta_time_provider

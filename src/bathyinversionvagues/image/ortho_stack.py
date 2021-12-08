@@ -132,8 +132,8 @@ class OrthoStack(ABC, OrthoLayout):
         """
 
     @abstractmethod
-    def get_delta_time_provider(
-            self, external_delta_times_path: Optional[Path]=None) -> DeltaTimeProvider:
+    def create_delta_time_provider(
+            self, external_delta_times_path: Optional[Path] = None) -> DeltaTimeProvider:
         """ Build and returns a DeltaTimeProvider suitable for this OrthoStack. It may be built
         using only data contained inside the ortho stack, or it may need to use data from a file
         which is external to the orhto stack.
