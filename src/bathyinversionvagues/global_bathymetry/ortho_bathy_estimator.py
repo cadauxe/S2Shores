@@ -90,11 +90,11 @@ class OrthoBathyEstimator:
                                    estimation_point: PointType) -> WavesFieldsEstimations:
         distance = self.parent_estimator.get_distoshore(estimation_point)
         gravity = self.parent_estimator.get_gravity(estimation_point, 0.)
-
-        bathy_estimations = WavesFieldsEstimations(estimation_point, gravity, distance)
+        inside_roi = self.parent_estimator.is_inside_roi(estimation_point)
+        bathy_estimations = WavesFieldsEstimations(estimation_point, gravity, distance, inside_roi)
         # do not compute on land
         # FIXME: distance to shore test should take into account windows sizes
-        if distance > 0:
+        if distance > 0 and inside_roi:
             # computes the bathymetry at the specified position
             try:
                 images_sequence = self._create_images_sequence(sub_tile_images,
