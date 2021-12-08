@@ -262,11 +262,8 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         delta_time_provider: Optional[DeltaTimeProvider]
         if isinstance(provider_info, DeltaTimeProvider):
             delta_time_provider = provider_info
-        elif isinstance(provider_info, Path):
-            delta_time_provider = self.ortho_stack.create_delta_time_provider(provider_info)
         else:
-            # None or some other type, keep the current provider
-            delta_time_provider = self._delta_time_provider
+            delta_time_provider = self.ortho_stack.create_delta_time_provider(provider_info)
 
         # Set private attribute.
         self._delta_time_provider = delta_time_provider
