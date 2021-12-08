@@ -180,8 +180,6 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         :param sample: The coordinate of the point for which the debug flag must be set
         """
         self._debug_sample = sample in self._debug_samples
-        if self._debug_sample:
-            print(f'Debugging point: X:{sample[0]} / Y:{sample[1]}')
 
     @property
     def debug_sample(self) -> bool:
