@@ -26,29 +26,29 @@ def funLinearC_k(wavenumber: float, celerity: float, precision: float, gravity: 
     return estimated_depth
 
 
-def phi_limits(wave_numbers: np.ndarray, delta_t: float,
+def phi_limits(wavenumbers: np.ndarray, delta_t: float,
                min_depth: float, gravity: float) -> Tuple[np.ndarray, np.ndarray]:
 
     delta_phi = 2 * np.pi * delta_t
-    squeezed_wave_numbers = wave_numbers.squeeze()
+    squeezed_wavenumbers = wavenumbers.squeeze()
     # shallow water limits:
     min_celerity = np.sqrt(gravity * min_depth)
-    phi_min = delta_phi * min_celerity * squeezed_wave_numbers
+    phi_min = delta_phi * min_celerity * squeezed_wavenumbers
 
     # deep water limits:
-    phi_max = delta_phi / period_offshore(squeezed_wave_numbers, gravity)
+    phi_max = delta_phi / period_offshore(squeezed_wavenumbers, gravity)
 
     return phi_min, phi_max
 
 
-def period_offshore(wave_number: np.ndarray, gravity: float) -> np.ndarray:
+def period_offshore(wavenumber: np.ndarray, gravity: float) -> np.ndarray:
     """ Computes the period from the wavenumber under the offshore hypothesis
 
-    :param wave_number: wavenumber of the waves (1/m)
+    :param wavenumber: wavenumber of the waves (1/m)
     :param gravity: acceleration of the gravity (m/s2)
     :returns: the period according to the linear dispersive relation (s)
     """
-    return np.sqrt(2. * np.pi / (gravity * wave_number))
+    return np.sqrt(2. * np.pi / (gravity * wavenumber))
 
 
 def wavenumber_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
@@ -74,8 +74,19 @@ def wavelength_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
 def celerity_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
     """ Computes the celerity max from the period max under the offshore hypothesis
 
-        :param period: period of the waves (s)
-        :param gravity: acceleration of the gravity (m/s2)
-        :returns: the wavenumber according to the linear dispersive relation (1/m)
-        """
+    :param period: period of the waves (s)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: the celerity according to the linear dispersive relation (m.s-1)
+    """
     return (gravity / 2. * np.pi) * period
+
+
+def linearity_indicator(wavelength: np.ndarray, celerity: np.ndarray, gravity: float) -> np.ndarray:
+    """ Computes a linearity indicator of the depth estimation using the linear dispersive relation
+
+    :param wavelength: wavelength of the waves (m)
+    :param celerity: the celerity of the waves field (m.s-1)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: an indicator of the linearity between celerity and wavelength (unitless - [0, 1])
+    """
+    return 2 * np.pi * (celerity ** 2) / (gravity * wavelength)

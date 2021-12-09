@@ -9,7 +9,7 @@
 """
 import numpy as np
 
-from ..bathy_physics import period_offshore, funLinearC_k
+from ..bathy_physics import period_offshore, funLinearC_k, linearity_indicator
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
@@ -61,7 +61,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def linearity(self) -> float:
         """ :returns: a linearity indicator for depth estimation (unitless) """
-        return self.wavenumber * 2 * np.pi * (self.celerity ** 2) / self._gravity
+        return linearity_indicator(self.wavelength, self.celerity, self._gravity)
 
     @property
     def period_offshore(self) -> float:
