@@ -7,8 +7,7 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-import numpy as np
-
+from typing import cast
 from ..bathy_physics import period_offshore, funLinearC_k, linearity_indicator
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
@@ -61,12 +60,12 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def linearity(self) -> float:
         """ :returns: a linearity indicator for depth estimation (unitless) """
-        return linearity_indicator(self.wavelength, self.celerity, self._gravity)
+        return cast(float, linearity_indicator(self.wavelength, self.celerity, self._gravity))
 
     @property
     def period_offshore(self) -> float:
         """ :returns: The offshore period (s) """
-        return period_offshore(self.wavenumber, self._gravity)
+        return cast(float, period_offshore(self.wavenumber, self._gravity))
 
     def __str__(self) -> str:
         result = WavesFieldSampleDynamics.__str__(self)

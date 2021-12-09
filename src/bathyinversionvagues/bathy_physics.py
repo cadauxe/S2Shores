@@ -6,9 +6,11 @@
 """
 
 # Imports
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
+
+NdArrayOrFloat = Union[np.ndarray, float]
 
 
 def funLinearC_k(wavenumber: float, celerity: float, precision: float, gravity: float) -> float:
@@ -27,7 +29,7 @@ def funLinearC_k(wavenumber: float, celerity: float, precision: float, gravity: 
 
 
 def phi_limits(wavenumbers: np.ndarray, delta_t: float,
-               min_depth: float, gravity: float) -> Tuple[np.ndarray, np.ndarray]:
+               min_depth: float, gravity: float) -> Tuple[NdArrayOrFloat, NdArrayOrFloat]:
 
     delta_phi = 2 * np.pi * delta_t
     squeezed_wavenumbers = wavenumbers.squeeze()
@@ -41,7 +43,7 @@ def phi_limits(wavenumbers: np.ndarray, delta_t: float,
     return phi_min, phi_max
 
 
-def period_offshore(wavenumber: np.ndarray, gravity: float) -> np.ndarray:
+def period_offshore(wavenumber: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the period from the wavenumber under the offshore hypothesis
 
     :param wavenumber: wavenumber of the waves (1/m)
@@ -51,7 +53,7 @@ def period_offshore(wavenumber: np.ndarray, gravity: float) -> np.ndarray:
     return np.sqrt(2. * np.pi / (gravity * wavenumber))
 
 
-def wavenumber_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
+def wavenumber_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the wavenumber from the period under the offshore hypothesis
 
     :param period: period of the waves (s)
@@ -61,7 +63,7 @@ def wavenumber_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
     return 2. * np.pi / (gravity * (period)**2)
 
 
-def wavelength_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
+def wavelength_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the wavelength from the period under the offshore hypothesis
 
     :param period: period of the waves (s)
@@ -71,7 +73,7 @@ def wavelength_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
     return 1. / wavenumber_offshore(period, gravity)
 
 
-def celerity_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
+def celerity_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the celerity max from the period max under the offshore hypothesis
 
     :param period: period of the waves (s)
@@ -81,7 +83,8 @@ def celerity_offshore(period: np.ndarray, gravity: float) -> np.ndarray:
     return (gravity / 2. * np.pi) * period
 
 
-def linearity_indicator(wavelength: np.ndarray, celerity: np.ndarray, gravity: float) -> np.ndarray:
+def linearity_indicator(
+        wavelength: NdArrayOrFloat, celerity: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes a linearity indicator of the depth estimation using the linear dispersive relation
 
     :param wavelength: wavelength of the waves (m)
