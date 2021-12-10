@@ -61,15 +61,15 @@ class OrthoBathyEstimator:
         print(f'Loading time: {time.time() - start_load:.2f} s')
 
         start = time.time()
-        in_water_points = 0
+        computed_points = 0
         for i, x_sample in enumerate(self.sampled_ortho.x_samples):
             for j, y_sample in enumerate(self.sampled_ortho.y_samples):
                 estimation_point = (x_sample, y_sample)
                 self.parent_estimator.set_debug_flag(estimation_point)
                 bathy_estimations = self._run_local_bathy_estimator(sub_tile_images,
                                                                     estimation_point)
-                if bathy_estimations.distance_to_shore > 0:
-                    in_water_points += 1
+                if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
+                    computed_points += 1
 
                 # TODO: do this filtering in build_dataset()
                 # Keep only a limited number of waves fields and bathy estimations
@@ -82,7 +82,7 @@ class OrthoBathyEstimator:
 
         total_points = self.sampled_ortho.nb_samples
         comput_time = time.time() - start
-        print(f'Computed {in_water_points}/{total_points} points in: {comput_time:.2f} s')
+        print(f'Computed {computed_points}/{total_points} points in: {comput_time:.2f} s')
 
         return estimated_bathy.build_dataset(self.parent_estimator.layers_type, nb_keep)
 
