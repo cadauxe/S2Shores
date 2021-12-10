@@ -6,26 +6,23 @@
 """
 
 # Imports
+import math
 from typing import Tuple, Union
 
 import numpy as np
 
+
 NdArrayOrFloat = Union[np.ndarray, float]
 
 
-def funLinearC_k(wavenumber: float, celerity: float, precision: float, gravity: float) -> float:
-    # FIXME: What happens if celerity=0? infinite loop ?
-    k = 2 * np.pi * wavenumber
-    w = celerity * k
-    estimated_depth = celerity ** 2 / gravity
-
-    previous_depth = np.Infinity
-    while abs(previous_depth - estimated_depth) > precision:
-        previous_depth = estimated_depth
-        dispe = w ** 2 - (gravity * k * np.tanh(k * previous_depth))
-        fdispe = -gravity * (k ** 2) / (np.cosh(k * previous_depth) ** 2)
-        estimated_depth = previous_depth - (dispe / fdispe)
-    return estimated_depth
+def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) -> float:
+    angular_wavenumber = 2 * np.pi * wavenumber
+    factor = celerity**2 * angular_wavenumber / gravity
+    if abs(factor) > 1.:
+        depth = np.Infinity
+    else:
+        depth = math.atanh(factor) / angular_wavenumber
+    return depth
 
 
 def phi_limits(wavenumbers: np.ndarray, delta_t: float,
@@ -74,7 +71,7 @@ def wavelength_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloa
 
 
 def celerity_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
-    """ Computes the celerity max from the period max under the offshore hypothesis
+    """ Computes the celerity from the period max under the offshore hypothesis
 
     :param period: period of the waves (s)
     :param gravity: acceleration of the gravity (m/s2)
