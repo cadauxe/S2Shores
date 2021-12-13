@@ -99,7 +99,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax4.arrow(x[int(length_signal / 2)], 0,
               x[argmax + left_limit], 0, color='g')
     ax4.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(temporal_estimator.metrics['dephasing'],
-                                                           temporal_estimator.metrics['delta_time'],
+                                                           temporal_estimator.metrics['propagation_duration'],
                                                            wave_celerity), (0, 0), color='orange')
     depth = depth_from_dispersion(1 / wave_wavelength, wave_celerity, temporal_estimator.gravity)
     ax4.annotate('depth = {:.2f}'.format(depth), (min_limit_x, min_limit_y), color='orange')

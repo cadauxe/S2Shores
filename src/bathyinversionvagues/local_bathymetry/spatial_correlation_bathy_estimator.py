@@ -39,7 +39,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
-                 selected_directions: Optional[np.ndarray]=None) -> None:
+                 selected_directions: Optional[np.ndarray] = None) -> None:
 
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
