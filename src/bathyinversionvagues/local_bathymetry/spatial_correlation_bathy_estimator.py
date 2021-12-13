@@ -19,13 +19,12 @@ from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period
 from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
-from bathyinversionvagues.image_processing.waves_radon import linear_directions
 
 
 if TYPE_CHECKING:
@@ -129,7 +128,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the wave length (m)
         """
         min_wavelength = (self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi)
-        period, _ = find_period(correlation_signal, int(min_wavelength/self.spatial_resolution))
+        period, _ = find_period(correlation_signal, int(min_wavelength / self.spatial_resolution))
         wavelength = period * self.spatial_resolution * \
             self.local_estimator_params.AUGMENTED_RADON_FACTOR
         return wavelength
