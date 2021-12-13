@@ -138,7 +138,6 @@ class LocalBathyEstimator(ABC):
         # Filter non physical waves fields and bathy estimations
         # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
         # on its specific attributes
-        # for index, estimation in enumerate(list(self.waves_fields_estimations)):
         for estimation in list(self.waves_fields_estimations):
             if (estimation.period < self.global_estimator.waves_period_min or
                     estimation.period > self.global_estimator.waves_period_max):
@@ -194,11 +193,10 @@ class LocalBathyEstimatorDebug(LocalBathyEstimator):
 
     def run(self) -> None:
         super().run()
-        if self.debug_sample:
-            try:
-                self.explore_results()
-            except Exception as excp:
-                print(f'Bathymetry debug failed: {str(excp)}')
+        try:
+            self.explore_results()
+        except Exception as excp:
+            print(f'Bathymetry debug failed: {str(excp)}')
 
     @abstractmethod
     def explore_results(self) -> None:

@@ -65,7 +65,7 @@ class OrthoBathyEstimator:
         for i, x_sample in enumerate(self.sampled_ortho.x_samples):
             for j, y_sample in enumerate(self.sampled_ortho.y_samples):
                 estimation_point = (x_sample, y_sample)
-                self.parent_estimator.set_debug(estimation_point)
+                self.parent_estimator.set_debug_flag(estimation_point)
                 bathy_estimations = self._run_local_bathy_estimator(sub_tile_images,
                                                                     estimation_point)
                 if bathy_estimations.distance_to_shore > 0:

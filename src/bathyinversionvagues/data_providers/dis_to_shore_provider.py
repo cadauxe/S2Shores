@@ -6,6 +6,7 @@
 """
 from abc import abstractmethod, ABC
 from pathlib import Path
+from typing import Optional, Any
 
 import xarray as xr  # @NoMove
 import numpy as np
@@ -66,7 +67,8 @@ class NetCDFDisToShoreProvider(DisToShoreProvider):
         self._x_axis_label = x_axis_label
         self._y_axis_label = y_axis_label
 
-        self._distoshore_xarray = xr.open_dataset(distoshore_file_path)
+        self._distoshore_file_path = distoshore_file_path
+        self._distoshore_xarray: Optional[Any] = None
 
     def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance to shore of a point in kilometers.
@@ -74,6 +76,8 @@ class NetCDFDisToShoreProvider(DisToShoreProvider):
         :param point: a tuple containing the X and Y coordinates in the SRS of the client
         :returns: the distance to the nearest shore (km)
         """
+        if self._distoshore_xarray is None:
+            self._distoshore_xarray = xr.open_dataset(self._distoshore_file_path)
         provider_point = self.transform_point(point, 0.)
         kw_sel = {self._x_axis_label: provider_point[0],
                   self._y_axis_label: provider_point[1],
