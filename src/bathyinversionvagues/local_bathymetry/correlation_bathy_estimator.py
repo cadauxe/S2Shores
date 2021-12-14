@@ -16,6 +16,7 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 
 import numpy as np
 
+from ..bathy_physics import wavelength_offshore
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.signal_filters import filter_mean
 from ..generic_utils.signal_utils import find_period, find_dephasing
@@ -180,7 +181,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """ Wave length computation (in meter)
         """
-        min_wavelength = (self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi)
+        min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         period, wave_length_zeros = find_period(sinogram,
                                                 int(min_wavelength / self.spatial_resolution))
         wave_length = period * self.spatial_resolution
