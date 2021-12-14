@@ -29,8 +29,9 @@ class LocalizedDataProvider:
         # Default client SRS is set to EPSG:4326 as well
         self._client_epsg_code = 4326
 
-        # Thus default coordinates transformation does nothing
+        # Thus default coordinates transformations do nothing
         self._client_to_provider_transform: Optional[osr.CoordinateTransformation] = None
+        self._provider_to_client_transform: Optional[osr.CoordinateTransformation] = None
 
     @property
     def client_epsg_code(self) -> int:
@@ -42,6 +43,7 @@ class LocalizedDataProvider:
     def client_epsg_code(self, value: int) -> None:
         self._client_epsg_code = value
         self._client_to_provider_transform = None
+        self._provider_to_client_transform = None
 
     @property
     def provider_epsg_code(self) -> int:
@@ -53,6 +55,7 @@ class LocalizedDataProvider:
     def provider_epsg_code(self, value: int) -> None:
         self._provider_epsg_code = value
         self._client_to_provider_transform = None
+        self._provider_to_client_transform = None
 
     def transform_point(self, point: PointType, altitude: float) -> Tuple[float, float, float]:
         """ Transform a point in 3D from the client SRS to the provider SRS
@@ -77,6 +80,35 @@ class LocalizedDataProvider:
             point = (point[1], point[0])
         transformed_point = self._client_to_provider_transform.TransformPoint(*point, altitude)
         if GDAL3_OR_GREATER and self.provider_epsg_code in SWAP_COORDS_EPSG:
+            transformed_point = (transformed_point[1],
+                                 transformed_point[0],
+                                 transformed_point[2])
+        return transformed_point
+
+    def reverse_transform_point(self, point: PointType, altitude: float) -> \
+            Tuple[float, float, float]:
+        """ Transform a point in 3D from the provider SRS to the client SRS
+
+        :param point: (X, Y) coordinates of the point in the provider SRS
+        :param altitude: altitude of the point in the provider SRS
+        :returns: 3D coordinates in the client SRS corresponding to the point. Meaning of
+                  these coordinates depends on the client SRS: (longitude, latitude, height) for
+                  geographical SRS or (X, Y, height) for cartographic SRS.
+        :warning: this method must not be called outside a worker when this class is used in a
+                  dask context. This is because a osr.CoordinateTransformation object cannot be
+                  serialized using pickle because it is a SwigPyObject object.
+        """
+        if self._provider_to_client_transform is None:
+            client_srs = osr.SpatialReference()
+            client_srs.ImportFromEPSG(self.client_epsg_code)
+            provider_srs = osr.SpatialReference()
+            provider_srs.ImportFromEPSG(self.provider_epsg_code)
+            self._provider_to_client_transform = osr.CoordinateTransformation(provider_srs,
+                                                                              client_srs)
+        if GDAL3_OR_GREATER and self.provider_epsg_code in SWAP_COORDS_EPSG:
+            point = (point[1], point[0])
+        transformed_point = self._provider_to_client_transform.TransformPoint(*point, altitude)
+        if GDAL3_OR_GREATER and self.client_epsg_code in SWAP_COORDS_EPSG:
             transformed_point = (transformed_point[1],
                                  transformed_point[0],
                                  transformed_point[2])
