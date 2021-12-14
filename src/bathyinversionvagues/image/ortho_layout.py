@@ -4,9 +4,10 @@
 :author: GIROS Alain
 :created: 05/08/2021
 """
-from typing import Tuple  # @NoMove
+from typing import Tuple, Optional  # @NoMove
 
 import numpy as np  # @NoMove
+from shapely.geometry import Polygon, Point
 
 from ..generic_utils.tiling_utils import modular_sampling
 
@@ -47,7 +48,8 @@ class OrthoLayout:
         return int(self._projection.split(',')[-1][1:-3])
 
     # TODO: define steps default values based on resolution
-    def get_samples_positions(self, step_x: float, step_y: float, local_margins: MarginsType
+    def get_samples_positions(self, step_x: float, step_y: float, local_margins: MarginsType,
+                              roi_limit: Optional[Polygon] = None
                               ) -> Tuple[np.ndarray, np.ndarray]:
         """ x_samples, y_samples are the coordinates  of the final samples in georeferenced system
         sampled from a starting position with steps different steps on X and Y axis.
@@ -77,10 +79,16 @@ class OrthoLayout:
             for y_coord in y_samples:
                 line_start, line_stop, col_start, col_stop = self.window_pixels((x_coord, y_coord),
                                                                                 local_margins)
+
                 if (line_start >= 0 and line_stop < self._nb_lines and
                         col_start >= 0 and col_stop < self._nb_columns):
-                    acceptable_samples_x.append(x_coord)
-                    break
+                    if roi_limit is None:
+                        inside_roi = True
+                    else:
+                        inside_roi = roi_limit.contains(Point(x_coord, y_coord))
+                    if inside_roi:
+                        acceptable_samples_x.append(x_coord)
+                        break
 
         acceptable_samples_y = []
         for y_coord in y_samples:
@@ -89,8 +97,13 @@ class OrthoLayout:
                                                                                 local_margins)
                 if (line_start >= 0 and line_stop < self._nb_lines and
                         col_start >= 0 and col_stop < self._nb_columns):
-                    acceptable_samples_y.append(y_coord)
-                    break
+                    if roi_limit is None:
+                        inside_roi = True
+                    else:
+                        inside_roi = roi_limit.contains(Point(x_coord, y_coord))
+                    if inside_roi:
+                        acceptable_samples_y.append(y_coord)
+                        break
 
         x_samples = np.array(acceptable_samples_x)
         y_samples = np.array(acceptable_samples_y)
