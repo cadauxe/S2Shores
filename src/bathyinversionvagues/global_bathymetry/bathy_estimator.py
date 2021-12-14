@@ -60,16 +60,28 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
 
         # No default RoiProvider
         self._roi_provider: Optional[RoiProvider] = None
+        self._limit_to_roi = False
 
         # Create subtiles onto which bathymetry estimation will be done
-        self.subtiles = SampledOrthoImage.build_subtiles(self.ortho_stack, nb_subtiles_max,
-                                                         self.sampling_step_x,
-                                                         self.sampling_step_y,
-                                                         self.measure_extent)
+        self._nb_subtiles_max = nb_subtiles_max
+        self.subtiles: List[SampledOrthoImage]
 
         # Init debuggin points handling
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
+
+    def create_subtiles(self) -> None:
+        """ Ignition of the bathy estimator by creating the processing subtiles
+        """
+        roi = None
+        if self._roi_provider is not None and self._limit_to_roi:
+            roi = self._roi_provider.bounding_box(0.1)
+        self.subtiles = SampledOrthoImage.build_subtiles(self.ortho_stack,
+                                                         self._nb_subtiles_max,
+                                                         self.sampling_step_x,
+                                                         self.sampling_step_y,
+                                                         self.measure_extent,
+                                                         roi=roi)
 
     @property
     def smoothing_requested(self) -> bool:
@@ -218,11 +230,14 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return self._distoshore_provider.get_distoshore(point)
 
-    def set_roi_provider(self, provider_info: Optional[Union[Path, RoiProvider]] = None) -> None:
+    def set_roi_provider(self, provider_info: Optional[Union[Path, RoiProvider]] = None,
+                         limit_to_roi: bool = False) -> None:
         """ Sets the RoiProvider to use with this estimator
 
         :param provider_info: Either the RoiProvider to use or a path to a vector file containing
                               the ROI or None if no provider change.
+        :param limit_to_roi: if True, the produced bathymetry will be limited to a bounding box
+                             enclosing the Roi with some margins.
         """
         if isinstance(provider_info, RoiProvider):
             roi_provider = provider_info
@@ -236,6 +251,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self._roi_provider = roi_provider
         if self._roi_provider is not None:
             self._roi_provider.client_epsg_code = self.ortho_stack.epsg_code
+            self._limit_to_roi = limit_to_roi
 
     def is_inside_roi(self, point: PointType) -> bool:
         """ Test if a point is inside the ROI

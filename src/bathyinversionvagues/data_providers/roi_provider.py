@@ -62,8 +62,8 @@ class VectorFileRoiProvider(RoiProvider):
         x_max_client, y_max_client, _ = self.reverse_transform_point((x_max, y_max), 0.)
         delta_width = (x_max_client - x_min_client) * margin / 2.
         delta_height = (y_max_client - y_min_client) * margin / 2.
-        bouding_box_polygon = box(x_min_client - delta_width, y_max_client - delta_height,
-                                  x_max_client + delta_width, y_min_client + delta_height)
+        bouding_box_polygon = box(x_min_client - delta_width, y_max_client + delta_height,
+                                  x_max_client + delta_width, y_min_client - delta_height)
         self._provider_to_client_transform = None  # provision for avoiding core dumps with ogr.
         return bouding_box_polygon
 
