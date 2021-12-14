@@ -6,10 +6,10 @@
 """
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Optional, List  # @NoMove
+from typing import Optional  # @NoMove
 
 from osgeo import ogr
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, Point, MultiPolygon
 
 from ..image.image_geometry_types import PointType
 from .localized_data_provider import LocalizedDataProvider
@@ -42,19 +42,19 @@ class VectorFileRoiProvider(RoiProvider):
         """
         super().__init__()
 
-        self._polygons: Optional[List[ogr.Geometry]] = None
+        self._polygons: Optional[MultiPolygon] = None
         self._vector_file_path = vector_file_path
 
     def contains(self, point: PointType) -> bool:
         if self._polygons is None:
             self._load_polygons()
         tranformed_point = Point(*self.transform_point(point, 0.))
-        return any([polygon.contains(tranformed_point) for polygon in self._polygons])
+        return self._polygons.contains(tranformed_point)
 
     def _load_polygons(self) -> None:
         """ Read the vector file and loads the polygons contained in its first layer
         """
-        self._polygons = []
+        polygons = []
         dataset = ogr.Open(str(self._vector_file_path))
         layer = dataset.GetLayerByIndex(0)
         self.provider_epsg_code = int(layer.GetSpatialRef().GetAuthorityCode(None))
@@ -64,4 +64,5 @@ class VectorFileRoiProvider(RoiProvider):
 
             # We use shapely Polygon in order to circumvent a core dump when using OGR with dask
             polygon = Polygon(polygon_ring.GetPoints())
-            self._polygons.append(polygon)
+            polygons.append(polygon)
+        self._polygons = MultiPolygon(polygons)
