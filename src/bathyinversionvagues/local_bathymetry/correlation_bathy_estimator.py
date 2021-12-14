@@ -13,6 +13,7 @@ from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 from scipy.interpolate import interp1d
 from scipy.signal import butter, find_peaks, sosfiltfilt
+import warnings
 
 import numpy as np
 
@@ -85,7 +86,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             arg_peaks_max = []
             for celerity in celerities:
                 temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
-                temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
+                try:
+                    temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
+                except ValueError:
+                    warnings.warn('Temporal signal is too short to be filtered')
                 temporal_signals.append(temporal_signal)
                 period, arg_peak_max = self.compute_period(temporal_signal)
                 periods.append(period)
@@ -93,7 +97,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
             celerities_from_periods = [wave_length / period for period in periods]
             errors_celerities = np.abs(celerities_from_periods - celerities)
-            index_min = np.argmin(errors_celerities)
+            index_min = np.nanargmin(errors_celerities)
             celerity = celerities[index_min]
             period = periods[index_min]
             waves_field_estimation = cast(CorrelationWavesFieldEstimation,
@@ -225,16 +229,18 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         max_indice = np.argmax(signal[peaks])
         dx = x[peaks[max_indice]]
         propagated_distance = abs(dx) * self.spatial_resolution
-        nb_max_hops = 3
+        nb_max_hops = self.local_estimator_params.HOPS_NUMBER
         if dx > 0:
             dephasings = dx * self.spatial_resolution + wave_length * np.arange(nb_max_hops)
-            self._metrics['max_indices'] = np.array(peaks[max_indice] +
-                                                    np.arange(nb_max_hops) * wave_length / self.spatial_resolution, dtype=int)
+            max_indices = np.array(peaks[max_indice] +
+                                   np.arange(nb_max_hops) * wave_length / self.spatial_resolution, dtype=int)
         else:
             dephasings = dx * self.spatial_resolution - wave_length * np.arange(nb_max_hops)
             dephasings = np.abs(dephasings)
-            self._metrics['max_indices'] = np.array(peaks[max_indice] -
-                                                    np.arange(nb_max_hops) * wave_length / self.spatial_resolution, dtype=int)
+            max_indices = np.array(peaks[max_indice] -
+                                   np.arange(nb_max_hops) * wave_length / self.spatial_resolution, dtype=int)
+        max_indices = max_indices[np.logical_and(max_indices > 0, max_indices < len(signal))]
+        self._metrics['max_indices'] = max_indices
         self._metrics['dephasings'] = dephasings
         self._metrics['dx'] = dx
         return dephasings
@@ -278,6 +284,12 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
+        # Formula found on :
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
+        padlen = 3 * (2 * len(sos_filter) + 1 - min((sos_filter[:, 2] == 0).sum(),
+                                                    (sos_filter[:, 5] == 0).sum()))
+        if not len(temporal_signal) > padlen:
+            raise ValueError('Temporal signal is too short to be filtered')
         return sosfiltfilt(sos_filter, temporal_signal)
 
     def compute_period(self, temporal_signal: np.ndarray) -> float:
