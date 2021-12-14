@@ -6,10 +6,10 @@
 """
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Optional  # @NoMove
+from typing import Optional, cast  # @NoMove
 
 from osgeo import ogr
-from shapely.geometry import Polygon, Point, MultiPolygon
+from shapely.geometry import Polygon, Point, MultiPolygon, box
 
 from ..image.image_geometry_types import PointType
 from .localized_data_provider import LocalizedDataProvider
@@ -29,6 +29,15 @@ class RoiProvider(ABC, LocalizedDataProvider):
         :returns: True if the point lies inside the ROI
         """
 
+    @abstractmethod
+    def bounding_box(self, margin: float = 0.1) -> Polygon:
+        """ Compute the bounding box enclosing the ROI expressed in the client SRS with some margins
+
+        :param margin: a margin to apply to the smallest bounding box expressed as a percentage of
+                       its width and height.
+        :returns: the bounding box
+        """
+
 
 class VectorFileRoiProvider(RoiProvider):
     """ A RoiProvider where the ROI is defined by a vector file in some standard format.
@@ -45,11 +54,24 @@ class VectorFileRoiProvider(RoiProvider):
         self._polygons: Optional[MultiPolygon] = None
         self._vector_file_path = vector_file_path
 
+    def bounding_box(self, margin: float = 0.1) -> Polygon:
+        if self._polygons is None:
+            self._load_polygons()
+        x_min, y_min, x_max, y_max = cast(MultiPolygon, self._polygons).bounds
+        x_min_client, y_min_client, _ = self.reverse_transform_point((x_min, y_min), 0.)
+        x_max_client, y_max_client, _ = self.reverse_transform_point((x_max, y_max), 0.)
+        delta_width = (x_max_client - x_min_client) * margin / 2.
+        delta_height = (y_max_client - y_min_client) * margin / 2.
+        bouding_box_polygon = box(x_min_client - delta_width, y_max_client - delta_height,
+                                  x_max_client + delta_width, y_min_client + delta_height)
+        self._provider_to_client_transform = None  # provision for avoiding core dumps with ogr.
+        return bouding_box_polygon
+
     def contains(self, point: PointType) -> bool:
         if self._polygons is None:
             self._load_polygons()
         tranformed_point = Point(*self.transform_point(point, 0.))
-        return self._polygons.contains(tranformed_point)
+        return cast(MultiPolygon, self._polygons).contains(tranformed_point)
 
     def _load_polygons(self) -> None:
         """ Read the vector file and loads the polygons contained in its first layer
