@@ -20,7 +20,6 @@ scipy
 scikit-image
 
 xarray
-munch
 pandas
 matplotlib
 Sphinx>=4.1
