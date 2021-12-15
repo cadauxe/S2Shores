@@ -8,7 +8,7 @@ from matplotlib.colors import Normalize
 
 import numpy as np
 
-from ..bathy_physics import funLinearC_k
+from ..bathy_physics import depth_from_dispersion
 
 
 if TYPE_CHECKING:
@@ -101,8 +101,8 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax4.annotate('c = {:.2f} / {:.2f} = {:.2f} m/s'.format(temporal_estimator.metrics['dephasing'],
                                                            temporal_estimator.metrics['propagation_duration'],
                                                            wave_celerity), (0, 0), color='orange')
-    bathy = funLinearC_k(1 / wave_wavelength, wave_celerity, 0.01, 9.8)
-    ax4.annotate('depth = {:.2f}'.format(bathy), (min_limit_x, min_limit_y), color='orange')
+    depth = depth_from_dispersion(1 / wave_wavelength, wave_celerity, temporal_estimator.gravity)
+    ax4.annotate('depth = {:.2f}'.format(depth), (min_limit_x, min_limit_y), color='orange')
     plt.title('Sinogram')
 
     # Fifth  diagram : Temporal reconstruction
