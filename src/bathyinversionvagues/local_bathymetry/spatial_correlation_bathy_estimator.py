@@ -13,19 +13,18 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
-from ..bathy_physics import period_offshore, celerity_offshore
+from ..bathy_physics import period_offshore, celerity_offshore, wavelength_offshore
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period
 from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
-from bathyinversionvagues.image_processing.waves_radon import linear_directions
 
 
 if TYPE_CHECKING:
@@ -40,7 +39,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
-                 selected_directions: Optional[np.ndarray]=None) -> None:
+                 selected_directions: Optional[np.ndarray] = None) -> None:
 
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
@@ -128,7 +127,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param correlation_signal: spatial cross correlated signal
         :returns: the wave length (m)
         """
-        period, _ = find_period(correlation_signal)
+        min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
+        period, _ = find_period(correlation_signal, int(min_wavelength / self.spatial_resolution))
         wavelength = period * self.spatial_resolution * \
             self.local_estimator_params.AUGMENTED_RADON_FACTOR
         return wavelength

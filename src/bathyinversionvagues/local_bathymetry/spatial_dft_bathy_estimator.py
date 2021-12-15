@@ -342,7 +342,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         period_samples = np.arange(self.global_estimator.waves_period_min,
                                    self.global_estimator.waves_period_max,
                                    self.local_estimator_params.STEP_T)
-        k_forced = wavenumber_offshore(period_samples, self.gravity)
+        k_forced = cast(np.ndarray, wavenumber_offshore(period_samples, self.gravity))
 
         return k_forced.reshape((k_forced.size, 1))
 
@@ -353,15 +353,15 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         :returns: the minimum and maximum phase shifts for swallow and deep water at different
                   wavenumbers
         """
-        return phi_limits(wavenumbers,
-                          self.sequential_delta_times[0],
-                          self.global_estimator.depth_min,
-                          self.gravity)
+        return cast(Tuple[np.ndarray, np.ndarray],
+                    phi_limits(wavenumbers,
+                               self.sequential_delta_times[0],
+                               self.global_estimator.depth_min,
+                               self.gravity))
 
 
 class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
-    """ A local bathymetry estimator estimating bathymetry from the DFT of the sinograms in
-    radon transforms.
+    """ Class allowing to debug the estimations made by a SpatialDFTBathyEstimator
     """
 
     def explore_results(self) -> None:

@@ -2,14 +2,14 @@
 import os
 from typing import TYPE_CHECKING  # @NoMove
 
+import numpy as np
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
 import matplotlib as mpl
-from ..bathy_physics import funLinearC_k
-from ..waves_exceptions import DebugDisplayError
 
-import numpy as np
+from ..waves_exceptions import DebugDisplayError
+from ..bathy_physics import depth_from_dispersion
 
 
 if TYPE_CHECKING:
@@ -89,7 +89,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     ax4.plot(x[temporal_estimator._metrics['max_indices']],
              y[temporal_estimator._metrics['max_indices']], 'go')
 
-    bathy = funLinearC_k(1 / wave_estimation.wavelength, wave_estimation.celerity, 0.01, 9.8)
+    bathy = depth_from_dispersion(1 / wave_estimation.wavelength, wave_estimation.celerity, 0.01, 9.8)
     ax4.annotate('depth = {:.2f}'.format(bathy), (min_limit_x, min_limit_y), color='orange')
     plt.title('Sinogram')
 
