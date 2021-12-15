@@ -13,7 +13,7 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
-from ..bathy_physics import period_offshore, celerity_offshore
+from ..bathy_physics import period_offshore, celerity_offshore, wavelength_offshore
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period
@@ -39,7 +39,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
-                 selected_directions: Optional[np.ndarray]=None) -> None:
+                 selected_directions: Optional[np.ndarray] = None) -> None:
 
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
@@ -127,7 +127,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param correlation_signal: spatial cross correlated signal
         :returns: the wave length (m)
         """
-        min_wavelength = (self.gravity * self.global_estimator.waves_period_min**2) / (2 * np.pi)
+        min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         period, _ = find_period(correlation_signal, int(min_wavelength / self.spatial_resolution))
         wavelength = period * self.spatial_resolution * \
             self.local_estimator_params['AUGMENTED_RADON_FACTOR']

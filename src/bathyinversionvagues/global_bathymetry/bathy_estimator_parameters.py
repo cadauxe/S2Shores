@@ -133,12 +133,6 @@ class BathyEstimatorParameters:
         return self._global_estimator_params['DEPTH_EST_METHOD']
 
     @property
-    def depth_estimation_precision(self) -> float:
-        """ :returns: the precision to use when estimating depth (m)
-        """
-        return self._global_estimator_params['D_PRECISION']
-
-    @property
     def local_estimator_params(self) -> dict:
         """ :returns: the set of parameters specific to the currently defined local estimator
         """

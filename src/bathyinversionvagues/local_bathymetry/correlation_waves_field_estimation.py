@@ -14,5 +14,5 @@ class CorrelationWavesFieldEstimation(WavesFieldEstimation):
     """ This class encapsulates the information estimated in a waves field sample by a
     CorrelationBathyEstimator.
 
-    It defines the estimation attributes specific to this estimator.
+    At the moment there is no estimation attributes specific to this estimator.
     """
