@@ -93,7 +93,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                     warnings.warn('Temporal signal is too short to be filtered')
                 temporal_signals.append(temporal_signal)
                 period, arg_peak_max = find_period_from_peaks(
-                    temporal_signal, min_period=self.local_estimator_params['TUNING']['MIN_PEAKS_DISTANCE_PERIOD'])
+                    temporal_signal, min_period=self.global_estimator.waves_period_min)
                 periods.append(period)
                 arg_peaks_max.append(arg_peak_max)
 
@@ -236,7 +236,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :returns: np.ndarray of size nb_hops containing computed celerities
         """
         x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
-        interval = np.logical_and(x > -wave_length, x < wave_length)
+        interval = np.logical_and(x * self.spatial_resolution > -wave_length, x * self.spatial_resolution < wave_length)
         self._metrics['interval'] = interval
         peaks, _ = find_peaks(sinogram)
         peaks = peaks[interval[peaks]]
@@ -289,10 +289,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :returns: tuned temporal signal
         """
         low_frequency = \
-            self.local_estimator_params['TUNING']['LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION'] * \
+            self.global_estimator.waves_period_max * \
             self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
         high_frequency = \
-            self.local_estimator_params['TUNING']['HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION'] \
+            self.global_estimator.waves_period_min \
             * self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
