@@ -110,7 +110,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.optimized_curve = total_spectrum_normalized
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
         peaks, values = find_peaks(total_spectrum_normalized,
-                                   prominence=self.local_estimator_params.PROMINENCE_MAX_PEAK)
+                                   prominence=self.local_estimator_params['PROMINENCE_MAX_PEAK'])
         prominences = values['prominences']
 
         # TODO: use symmetric peaks removal method (uncomment and delete next line.
@@ -208,7 +208,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         peaks_dir_indices = self.peaks_dir
         if peaks_dir_indices.size > 0:
             for peak_index in range(0, peaks_dir_indices.size):
-                angles_half_range = self.local_estimator_params.ANGLE_AROUND_PEAK_DIR
+                angles_half_range = self.local_estimator_params['ANGLE_AROUND_PEAK_DIR']
                 direction_index = peaks_dir_indices[peak_index]
                 tmp = np.arange(max(direction_index - angles_half_range, 0),
                                 min(direction_index + angles_half_range + 1, 360)
@@ -237,7 +237,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         phase_shift, total_spectrum, total_spectrum_normalized = \
             self.normalized_cross_correl_spectrum(phi_min, phi_max)
         peaks_freq = find_peaks(total_spectrum_normalized,
-                                prominence=self.local_estimator_params.PROMINENCE_MULTIPLE_PEAKS)
+                                prominence=self.local_estimator_params['PROMINENCE_MULTIPLE_PEAKS'])
         peaks_freq = peaks_freq[0]
         peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
 
@@ -315,7 +315,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         :returns: the thresholded phase shifts
         """
 
-        if not self.local_estimator_params.UNWRAP_PHASE_SHIFT:
+        if not self.local_estimator_params['UNWRAP_PHASE_SHIFT']:
             # currently deactivated but we want this functionality:
             result = np.copy(phase_shift)
         else:
@@ -341,7 +341,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # frequencies based on wave characteristics:
         period_samples = np.arange(self.global_estimator.waves_period_min,
                                    self.global_estimator.waves_period_max,
-                                   self.local_estimator_params.STEP_T)
+                                   self.local_estimator_params['STEP_T'])
         k_forced = cast(np.ndarray, wavenumber_offshore(period_samples, self.gravity))
 
         return k_forced.reshape((k_forced.size, 1))
