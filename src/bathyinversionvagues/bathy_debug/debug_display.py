@@ -60,7 +60,12 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     # Third diagram : Radon transform & maximum variance
     ax3 = fig.add_subplot(gs[1, :2])
     radon_array, _ = temporal_estimator.metrics['radon_transform'].get_as_arrays()
-    ax3.imshow(radon_array, interpolation='nearest', aspect='auto', origin='lower')
+    s1, _ = radon_array.shape
+    directions = temporal_estimator.selected_directions
+    d1 = np.min(directions)
+    d2 = np.max(directions)
+    ax3.imshow(radon_array, interpolation='nearest', aspect='auto',
+               origin='lower', extent=[d1, d2, 0, s1])
     (l1, l2) = np.shape(radon_array)
     plt.plot(temporal_estimator.selected_directions, l1 * temporal_estimator.metrics['variances'] /
              np.max(temporal_estimator.metrics['variances']), 'r')
