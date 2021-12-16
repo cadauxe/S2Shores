@@ -54,17 +54,18 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self._distances: Optional[np.ndarray] = None
         # Filters
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
-            clipping, [self.local_estimator_params.TUNING.RATIO_SIZE_CORRELATION])]
+            clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
         self.radon_image_filters: SignalProcessingFilters = [
             (remove_median,
              [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
             (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
         if self.local_estimator_params.TEMPORAL_LAG >= len(self._sequential_delta_times):
             raise WaveEstimationError(
-                'There are enough frames compared to chosen number of lag frames')
+                'The chosen number of lag frames is bigger than the number of available frames')
         self.propagation_duration = np.sum(
             self._sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
         self._metrics['propagation_duration'] = self.propagation_duration
+
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -274,7 +275,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         index_unique_sorted = np.argsort(time_unique)
         time_unique_sorted = time_unique[index_unique_sorted]
         timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted),
-                            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION)
+                            self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION'])
         corr_unique_sorted = self.correlation_matrix.T.flatten()[
             index_unique[index_unique_sorted]]
         interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
@@ -288,11 +289,11 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :returns: tuned temporal signal
         """
         low_frequency = \
-            self.local_estimator_params.TUNING.LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION
+            self.local_estimator_params['TUNING']['LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION'] * \
+            self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
         high_frequency = \
-            self.local_estimator_params.TUNING.HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION * \
-            self.local_estimator_params.RESOLUTION.TIME_INTERPOLATION
+            self.local_estimator_params['TUNING']['HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION'] \
+            * self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
         sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
                             btype='bandpass', output='sos')
         # Formula found on :
@@ -302,3 +303,4 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         if not len(temporal_signal) > padlen:
             raise ValueError('Temporal signal is too short to be filtered')
         return sosfiltfilt(sos_filter, temporal_signal)
+
