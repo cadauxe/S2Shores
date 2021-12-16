@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import List, Optional, Dict, Union, Any  # @NoMove
 
 
+import xarray as xr  # @NoMove
 from xarray import Dataset  # @NoMove
 
 
@@ -110,7 +111,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return len(self.subtiles)
 
-    def compute_bathy(self, subtile_number: int) -> Dataset:
+    def compute_bathy_for_subtile(self, subtile_number: int) -> Dataset:
         """ Computes the bathymetry dataset for a given subtile.
 
         :param subtile_number: number of the subtile
@@ -131,6 +132,17 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
             dataset.attrs[key] = value
 
         return dataset
+
+    def merge_subtiles(self, bathy_subtiles: List[Dataset], output_path: Path) -> None:
+        """Merge all the subtiles datasets in memory into a single one in a netCDF file
+
+        :param bathy_subtiles: Subtiles datasets
+        :param output_path: Output folder
+        """
+        merged_bathy = xr.combine_by_coords(bathy_subtiles)
+        product_name = self.ortho_stack.full_name
+        netcdf_output_path = (output_path / product_name).with_suffix('.nc')
+        merged_bathy.to_netcdf(path=netcdf_output_path, format='NETCDF4')
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this estimator
