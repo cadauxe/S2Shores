@@ -57,13 +57,13 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
         self.radon_image_filters: SignalProcessingFilters = [
             (remove_median,
-             [self.local_estimator_params.TUNING.MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM]),
-            (filter_mean, [self.local_estimator_params.TUNING.MEAN_FILTER_KERNEL_SIZE_SINOGRAM])]
-        if self.local_estimator_params.TEMPORAL_LAG >= len(self._sequential_delta_times):
+             [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
+            (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+        if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
             raise WaveEstimationError(
                 'The chosen number of lag frames is bigger than the number of available frames')
         self.propagation_duration = np.sum(
-            self._sequential_delta_times[:self.local_estimator_params.TEMPORAL_LAG])
+            self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
         self._metrics['propagation_duration'] = self.propagation_duration
 
 
@@ -81,7 +81,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self._metrics['sinogram_max_var'] = radon_transform.values
             wave_length = self.compute_wave_length(sinogram_max_var_values)
             celerities = self.compute_celerities(
-                sinogram_max_var_values, wave_length, self.local_estimator_params.HOPS_NUMBER)
+                sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
             temporal_signals = []
             periods = []
             arg_peaks_max = []
@@ -93,7 +93,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                     warnings.warn('Temporal signal is too short to be filtered')
                 temporal_signals.append(temporal_signal)
                 period, arg_peak_max = find_period_from_peaks(
-                    temporal_signal, min_period=self.local_estimator_params.TUNING.MIN_PEAKS_DISTANCE_PERIOD)
+                    temporal_signal, min_period=self.local_estimator_params['TUNING']['MIN_PEAKS_DISTANCE_PERIOD'])
                 periods.append(period)
                 arg_peaks_max.append(arg_peak_max)
 
