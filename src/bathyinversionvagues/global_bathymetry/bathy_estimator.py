@@ -34,17 +34,19 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
     sequentially.
     """
 
-    def __init__(self, ortho_stack: OrthoStack, wave_params: Dict[str, Any],
+    def __init__(self, ortho_stack: OrthoStack, wave_params: Dict[str, Any], output_dir: Path,
                  nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
         :param ortho_stack: the orthorectified stack onto which bathymetry must be estimated.
         :param wave_params: parameters for the global and local bathymetry estimators
+        :param output_dir: path to the directory where the netCDF bathy file will be written.
         :param nb_subtiles_max: Nb of subtiles for bathymetry estimation
         """
         super().__init__(wave_params)
         # Store arguments in attributes for further use
-        self.ortho_stack = ortho_stack
+        self._ortho_stack = ortho_stack
+        self._output_dir = output_dir
 
         self._distoshore_provider: DisToShoreProvider
         # set InfinityDisToShoreProvider as default DisToShoreProvider
@@ -75,7 +77,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         roi = None
         if self._roi_provider is not None and self._limit_to_roi:
             roi = self._roi_provider.bounding_box(0.1)
-        self.subtiles = SampledOrthoImage.build_subtiles(self.ortho_stack,
+        self.subtiles = SampledOrthoImage.build_subtiles(self._ortho_stack,
                                                          self._nb_subtiles_max,
                                                          self.sampling_step_x,
                                                          self.sampling_step_y,
@@ -102,7 +104,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         selected_frames = self.selected_frames_param
         if selected_frames is None:
-            selected_frames = self.ortho_stack.usable_frames
+            selected_frames = self._ortho_stack.usable_frames
         return selected_frames
 
     @property
@@ -119,7 +121,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         # Retrieve the subtile.
         subtile = self.subtiles[subtile_number]
-        print(f'Subtile {subtile_number}: {self.ortho_stack.short_name} {subtile}')
+        print(f'Subtile {subtile_number}: {self._ortho_stack.short_name} {subtile}')
 
         # Build a bathymertry estimator over the subtile and launch estimation.
         subtile_estimator = OrthoBathyEstimator(self, subtile)
@@ -127,21 +129,21 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
 
         # Build the bathymetry dataset for the subtile.
         infos = self.build_infos()
-        infos.update(self.ortho_stack.build_infos())
+        infos.update(self._ortho_stack.build_infos())
         for key, value in infos.items():
             dataset.attrs[key] = value
 
         return dataset
 
-    def merge_subtiles(self, bathy_subtiles: List[Dataset], output_path: Path) -> None:
+    # TODO: update datasets inside BathyEstimator?
+    def merge_subtiles(self, bathy_subtiles: List[Dataset]) -> None:
         """Merge all the subtiles datasets in memory into a single one in a netCDF file
 
         :param bathy_subtiles: Subtiles datasets
-        :param output_path: Output folder
         """
         merged_bathy = xr.combine_by_coords(bathy_subtiles)
-        product_name = self.ortho_stack.full_name
-        netcdf_output_path = (output_path / product_name).with_suffix('.nc')
+        product_name = self._ortho_stack.full_name
+        netcdf_output_path = (self._output_dir / product_name).with_suffix('.nc')
         merged_bathy.to_netcdf(path=netcdf_output_path, format='NETCDF4')
 
     def build_infos(self) -> Dict[str, str]:
@@ -230,7 +232,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         # Set private attribute.
         self._distoshore_provider = distoshore_provider
         if self._distoshore_provider is not None:
-            self._distoshore_provider.client_epsg_code = self.ortho_stack.epsg_code
+            self._distoshore_provider.client_epsg_code = self._ortho_stack.epsg_code
 
     def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance from a given point to the nearest shore.
@@ -260,7 +262,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         # Set private attribute.
         self._roi_provider = roi_provider
         if self._roi_provider is not None:
-            self._roi_provider.client_epsg_code = self.ortho_stack.epsg_code
+            self._roi_provider.client_epsg_code = self._ortho_stack.epsg_code
             self._limit_to_roi = limit_to_roi
 
     def is_inside_roi(self, point: PointType) -> bool:
@@ -298,7 +300,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         # Set private attribute.
         self._gravity_provider = gravity_provider
         if self._gravity_provider is not None:
-            self._gravity_provider.client_epsg_code = self.ortho_stack.epsg_code
+            self._gravity_provider.client_epsg_code = self._ortho_stack.epsg_code
 
     def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
         """ Returns the gravity at some point expressed by its X, Y and H coordinates in some SRS,
@@ -322,12 +324,12 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         if isinstance(provider_info, DeltaTimeProvider):
             delta_time_provider = provider_info
         else:
-            delta_time_provider = self.ortho_stack.create_delta_time_provider(provider_info)
+            delta_time_provider = self._ortho_stack.create_delta_time_provider(provider_info)
 
         # Set private attribute.
         self._delta_time_provider = delta_time_provider
         if self._delta_time_provider is not None:
-            self._delta_time_provider.client_epsg_code = self.ortho_stack.epsg_code
+            self._delta_time_provider.client_epsg_code = self._ortho_stack.epsg_code
 
     def get_delta_time(self, first_frame_id: FrameIdType, second_frame_id: FrameIdType,
                        point: PointType) -> float:
