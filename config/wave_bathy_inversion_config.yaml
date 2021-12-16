@@ -49,9 +49,6 @@ TEMPORAL_CORRELATION:
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
     MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
-    LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.04 # low limit in rad/s of pass band filter used on temporal signal
-    HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2 # high limit in rad/s of pass band filter used on temporal signal 
-    MIN_PEAKS_DISTANCE_PERIOD: 5  # minimum distance in pixels between two peaks in temporal signal  
 
 #spatial_correlation
 SPATIAL_CORRELATION:
