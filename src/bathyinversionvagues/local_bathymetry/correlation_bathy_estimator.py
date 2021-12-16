@@ -66,7 +66,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
         self._metrics['propagation_duration'] = self.propagation_duration
 
-
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
@@ -101,11 +100,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             errors_celerities = np.abs(celerities_from_periods - celerities)
             index_min = np.nanargmin(errors_celerities)
             celerity = celerities[index_min]
-            period = periods[index_min]
             waves_field_estimation = cast(CorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
-            waves_field_estimation.period = period
+            waves_field_estimation.period = wave_length / celerity
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
             print(waves_field_estimation)
@@ -303,4 +301,3 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         if not len(temporal_signal) > padlen:
             raise ValueError('Temporal signal is too short to be filtered')
         return sosfiltfilt(sos_filter, temporal_signal)
-

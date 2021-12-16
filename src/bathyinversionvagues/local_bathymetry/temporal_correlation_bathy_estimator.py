@@ -36,6 +36,8 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
         self.create_sequence_time_series()
+        # TODO : stop using random points
+        np.random.seed(0)
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
