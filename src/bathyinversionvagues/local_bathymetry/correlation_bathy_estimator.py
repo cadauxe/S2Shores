@@ -288,13 +288,13 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :raises ValueError: when the signal is too short to be filtered
         :returns: tuned temporal signal
         """
-        low_frequency = \
-            self.global_estimator.waves_period_max * \
-            self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
-        high_frequency = \
-            self.global_estimator.waves_period_min \
-            * self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
-        sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
+        lowcut = 1 / self.global_estimator.waves_period_max
+        highcut = 1 / self.global_estimator.waves_period_min
+        nyq = 0.5 / self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
+        low = lowcut / nyq
+        high = highcut / nyq
+
+        sos_filter = butter(1, (low, high),
                             btype='bandpass', output='sos')
         # Formula found on :
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
