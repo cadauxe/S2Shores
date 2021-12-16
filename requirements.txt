@@ -25,3 +25,4 @@ matplotlib
 Sphinx>=4.1
 setuptools
 GDAL
+Shapely>=1.6
