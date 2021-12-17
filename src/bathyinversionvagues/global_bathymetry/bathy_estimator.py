@@ -6,13 +6,11 @@
 """
 from abc import ABC
 from pathlib import Path
-from typing import List, Optional, Dict, Union  # @NoMove
+from typing import List, Optional, Dict, Union, Any  # @NoMove
 
 
 from xarray import Dataset  # @NoMove
 
-
-from munch import Munch
 
 import numpy as np
 
@@ -21,6 +19,7 @@ from ..data_providers.dis_to_shore_provider import (InfinityDisToShoreProvider, 
                                                     NetCDFDisToShoreProvider)
 from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, GravityProvider,
                                                ConstantGravityProvider)
+from ..data_providers.roi_provider import (RoiProvider, VectorFileRoiProvider)
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_stack import OrthoStack, FrameIdType, FramesIdsType
 from ..image.sampled_ortho_image import SampledOrthoImage
@@ -34,7 +33,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
     sequentially.
     """
 
-    def __init__(self, ortho_stack: OrthoStack, wave_params: Munch,
+    def __init__(self, ortho_stack: OrthoStack, wave_params: Dict[str, Any],
                  nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
@@ -57,13 +56,30 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         # No default DeltaTimeProvider
         self._delta_time_provider: Optional[DeltaTimeProvider] = None
 
+        # No default RoiProvider
+        self._roi_provider: Optional[RoiProvider] = None
+        self._limit_to_roi = False
+
         # Create subtiles onto which bathymetry estimation will be done
-        self.subtiles = SampledOrthoImage.build_subtiles(self.ortho_stack, nb_subtiles_max,
-                                                         self.sampling_step_x,
-                                                         self.sampling_step_y,
-                                                         self.measure_extent)
+        self._nb_subtiles_max = nb_subtiles_max
+        self.subtiles: List[SampledOrthoImage]
+
+        # Init debuggin points handling
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
+
+    def create_subtiles(self) -> None:
+        """ Ignition of the bathy estimator by creating the processing subtiles
+        """
+        roi = None
+        if self._roi_provider is not None and self._limit_to_roi:
+            roi = self._roi_provider.bounding_box(0.1)
+        self.subtiles = SampledOrthoImage.build_subtiles(self.ortho_stack,
+                                                         self._nb_subtiles_max,
+                                                         self.sampling_step_x,
+                                                         self.sampling_step_y,
+                                                         self.measure_extent,
+                                                         roi=roi)
 
     @property
     def smoothing_requested(self) -> bool:
@@ -128,8 +144,8 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         # metadata from the parameters
         infos['waveEstimationMethod'] = self.local_estimator_code
         infos['ChainVersions'] = self.chains_versions
-        infos['Resolution X'] = self.sampling_step_x
-        infos['Resolution Y'] = self.sampling_step_y
+        infos['Resolution X'] = str(self.sampling_step_x)
+        infos['Resolution Y'] = str(self.sampling_step_y)
 
         return infos
 
@@ -174,8 +190,6 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         :param sample: The coordinate of the point for which the debug flag must be set
         """
         self._debug_sample = sample in self._debug_samples
-        if self._debug_sample:
-            print(f'Debugging point: X:{sample[0]} / Y:{sample[1]}')
 
     @property
     def debug_sample(self) -> bool:
@@ -213,6 +227,39 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         :returns: the distance from the point to the nearest shore (km).
         """
         return self._distoshore_provider.get_distoshore(point)
+
+    def set_roi_provider(self, provider_info: Optional[Union[Path, RoiProvider]] = None,
+                         limit_to_roi: bool = False) -> None:
+        """ Sets the RoiProvider to use with this estimator
+
+        :param provider_info: Either the RoiProvider to use or a path to a vector file containing
+                              the ROI or None if no provider change.
+        :param limit_to_roi: if True, the produced bathymetry will be limited to a bounding box
+                             enclosing the Roi with some margins.
+        """
+        if isinstance(provider_info, RoiProvider):
+            roi_provider = provider_info
+        elif isinstance(provider_info, Path):
+            roi_provider = VectorFileRoiProvider(provider_info)
+        else:
+            # None or some other type, keep the current provider
+            roi_provider = self._roi_provider
+
+        # Set private attribute.
+        self._roi_provider = roi_provider
+        if self._roi_provider is not None:
+            self._roi_provider.client_epsg_code = self.ortho_stack.epsg_code
+            self._limit_to_roi = limit_to_roi
+
+    def is_inside_roi(self, point: PointType) -> bool:
+        """ Test if a point is inside the ROI
+
+        :param point: the point to test
+        :returns: True if the point lies inside the ROI.
+        """
+        if self._roi_provider is None:
+            return True
+        return self._roi_provider.contains(point)
 
     def set_gravity_provider(self,
                              provider_info: Optional[Union[str, GravityProvider]] = None) -> None:

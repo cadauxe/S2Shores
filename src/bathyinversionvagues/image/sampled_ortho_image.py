@@ -4,7 +4,9 @@
 :author: GIROS Alain
 :created: 05/05/2021
 """
-from typing import List
+from typing import List, Optional  # @NoMove
+
+from shapely.geometry import Polygon
 
 import numpy as np
 
@@ -42,7 +44,8 @@ class SampledOrthoImage(CartoTile):
 
     @classmethod
     def build_subtiles(cls, image: OrthoStack, nb_subtiles_max: int, step_x: float, step_y: float,
-                       margins: MarginsType) -> List['SampledOrthoImage']:
+                       margins: MarginsType, roi: Optional[Polygon] = None) \
+            -> List['SampledOrthoImage']:
         """ Class method building a set of SampledOrthoImage instances, forming a tiling of the
         specified orthorectifed image.
 
@@ -51,10 +54,11 @@ class SampledOrthoImage(CartoTile):
         :param step_x: the cartographic sampling to use along the X axis for building the tiles
         :param step_y: the cartographic sampling to use along the X axis for building the tiles
         :param margins: the margins to consider around the samples to determine the image extent
+        :param roi: theroi for which bathymetry must be computed, if any.
         :returns: a list of SampledOrthoImage objects covering the orthorectfied image with the
                   specified sampling steps and margins.
         """
-        x_samples, y_samples = image.get_samples_positions(step_x, step_y, margins)
+        x_samples, y_samples = image.get_samples_positions(step_x, step_y, margins, roi)
 
         subtiles_def = build_tiling(x_samples, y_samples, nb_subtiles_max)
         subtiles: List[SampledOrthoImage] = []

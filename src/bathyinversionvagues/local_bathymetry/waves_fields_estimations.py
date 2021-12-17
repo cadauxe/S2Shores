@@ -13,26 +13,29 @@ from ..image.image_geometry_types import PointType
 
 
 class SampleStatus(IntEnum):
+    """ Enum specifying the synthetic status which can be given to a point in the product."""
     SUCCESS = 0
     FAIL = 1
     ON_GROUND = 2
     NO_DATA = 3
     NO_DELTA_TIME = 4
+    OUTSIDE_ROI = 5
+
 
 # TODO: add logics for handling dimensions?
-
-
 class WavesFieldsEstimations(list):
     """ This class gathers information relevant to some location, whatever the bathymetry
     estimators, as well as a list of bathymetry estimations made at this location.
     """
 
-    def __init__(self, location: PointType, gravity: float, distance_to_shore: float) -> None:
+    def __init__(self, location: PointType, gravity: float,
+                 distance_to_shore: float, inside_roi: bool) -> None:
         super().__init__()
 
-        self._distance_to_shore = distance_to_shore
-        self._gravity = gravity
         self._location = location
+        self._gravity = gravity
+        self._distance_to_shore = distance_to_shore
+        self._inside_roi = inside_roi
 
         self._data_available = True
         self._delta_time_available = True
@@ -46,6 +49,11 @@ class WavesFieldsEstimations(list):
     def distance_to_shore(self) -> float:
         """ :returns: The distance from this estimation location to the nearest shore (km)"""
         return self._distance_to_shore
+
+    @property
+    def inside_roi(self) -> bool:
+        """ :returns: True if the point is inside the defined ROI, False otherwise"""
+        return self._inside_roi
 
     @property
     def gravity(self) -> float:
@@ -64,7 +72,7 @@ class WavesFieldsEstimations(list):
 
     @property
     def delta_time_available(self) -> bool:
-        """ :returns: True if delta time was available for doing the estimations, False otherwise """
+        """ :returns: True if delta time was available for doing estimations, False otherwise """
         return self._delta_time_available
 
     @delta_time_available.setter
@@ -83,6 +91,8 @@ class WavesFieldsEstimations(list):
         status = SampleStatus.SUCCESS
         if self.distance_to_shore <= 0.:
             status = SampleStatus.ON_GROUND
+        elif not self.inside_roi:
+            status = SampleStatus.OUTSIDE_ROI
         elif not self.data_available:
             status = SampleStatus.NO_DATA
         elif not self.delta_time_available:
@@ -97,7 +107,8 @@ class WavesFieldsEstimations(list):
         result += f'  availability: '
         result += f' (data: {self.data_available}, delta time: {self.delta_time_available})\n'
         result += f'  STATUS: {self.sample_status}'
-        result += f' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME)\n'
+        result += f' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME,'
+        result += f' 5: OUTSIDE_ROI)\n'
         result += f'{len(self)} estimations available:\n'
         for index, estimation in enumerate(self):
             result += f'---- estimation {index} ---- type: {type(estimation).__name__}\n'
