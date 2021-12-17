@@ -69,7 +69,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
 
         # Init debugging points handling
         # Init debuggin points handling
-        self.debug_path = self.output_path.joinpath('debug')
+        self.debug_path = self._output_dir.joinpath('debug')
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
 
