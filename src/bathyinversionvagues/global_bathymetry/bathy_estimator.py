@@ -67,22 +67,9 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self._nb_subtiles_max = nb_subtiles_max
         self.subtiles: List[SampledOrthoImage]
 
-        # Init debuggin points handling
+        # Init debugging points handling
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
-
-    def create_subtiles(self) -> None:
-        """ Ignition of the bathy estimator by creating the processing subtiles
-        """
-        roi = None
-        if self._roi_provider is not None and self._limit_to_roi:
-            roi = self._roi_provider.bounding_box(0.1)
-        self.subtiles = SampledOrthoImage.build_subtiles(self._ortho_stack,
-                                                         self._nb_subtiles_max,
-                                                         self.sampling_step_x,
-                                                         self.sampling_step_y,
-                                                         self.measure_extent,
-                                                         roi=roi)
 
     @property
     def smoothing_requested(self) -> bool:
@@ -113,6 +100,19 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return len(self.subtiles)
 
+    def create_subtiles(self) -> None:
+        """ Warmup of the bathy estimator by creating the processing subtiles
+        """
+        roi = None
+        if self._roi_provider is not None and self._limit_to_roi:
+            roi = self._roi_provider.bounding_box(0.1)
+        self.subtiles = SampledOrthoImage.build_subtiles(self._ortho_stack,
+                                                         self._nb_subtiles_max,
+                                                         self.sampling_step_x,
+                                                         self.sampling_step_y,
+                                                         self.measure_extent,
+                                                         roi=roi)
+
     def compute_bathy_for_subtile(self, subtile_number: int) -> Dataset:
         """ Computes the bathymetry dataset for a given subtile.
 
@@ -133,9 +133,9 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         for key, value in infos.items():
             dataset.attrs[key] = value
 
+        # We return the dataset instead of storing it in the instance, for multiprocessing reasons.
         return dataset
 
-    # TODO: update datasets inside BathyEstimator?
     def merge_subtiles(self, bathy_subtiles: List[Dataset]) -> None:
         """Merge all the subtiles datasets in memory into a single one in a netCDF file
 
