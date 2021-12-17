@@ -33,8 +33,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
     sequentially.
     """
 
-    def __init__(self, ortho_stack: OrthoStack, wave_params: Dict[str, Any],
-                 nb_subtiles_max: int = 1) -> None:
+    def __init__(self, ortho_stack: OrthoStack, wave_params: Dict[str, Any], output_path: Path, nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
         :param ortho_stack: the orthorectified stack onto which bathymetry must be estimated.
@@ -44,7 +43,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         super().__init__(wave_params)
         # Store arguments in attributes for further use
         self.ortho_stack = ortho_stack
-
+        self.output_path = output_path
         self._distoshore_provider: DisToShoreProvider
         # set InfinityDisToShoreProvider as default DisToShoreProvider
         self.set_distoshore_provider(provider_info=InfinityDisToShoreProvider())
@@ -65,6 +64,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self.subtiles: List[SampledOrthoImage]
 
         # Init debuggin points handling
+        self.debug_path = self.output_path.joinpath('debug')
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
 
@@ -196,6 +196,11 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """ :returns: the current value of the debugging flag
         """
         return self._debug_sample
+
+    def create_debug_output_directory(self) -> None:
+        """ Create the output directory for debug display
+        """
+        self.debug_path.mkdir(exist_ok=False)
 
 # ++++++++++++++++++++++++++++ External data providers +++++++++++++++++++
     def set_distoshore_provider(

@@ -60,7 +60,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
             (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
-            raise WaveEstimationError(
+            raise WavesEstimationError(
                 'The chosen number of lag frames is bigger than the number of available frames')
         self.propagation_duration = np.sum(
             self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
@@ -92,7 +92,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                     warnings.warn('Temporal signal is too short to be filtered')
                 temporal_signals.append(temporal_signal)
                 period, arg_peak_max = find_period_from_peaks(
-                    temporal_signal, min_period=self.global_estimator.waves_period_min)
+                    temporal_signal, min_period=int(self.global_estimator.waves_period_min))
                 periods.append(period)
                 arg_peaks_max.append(arg_peak_max)
 
@@ -234,7 +234,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         :returns: np.ndarray of size nb_hops containing computed celerities
         """
         x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
-        interval = np.logical_and(x * self.spatial_resolution > -wave_length, x * self.spatial_resolution < wave_length)
+        interval = np.logical_and(x * self.spatial_resolution > -wave_length,
+                                  x * self.spatial_resolution < wave_length)
         self._metrics['interval'] = interval
         peaks, _ = find_peaks(sinogram)
         peaks = peaks[interval[peaks]]

@@ -33,6 +33,7 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     sinogram_max_var = temporal_estimator.metrics['sinogram_max_var']
     x = temporal_estimator.metrics['x']
     interval = temporal_estimator._metrics['interval']
+    debug_path = temporal_estimator.global_estimator.debug_path
 
     fig = plt.figure(constrained_layout=True)
     gs = gridspec.GridSpec(5, 2, figure=fig)
@@ -121,8 +122,8 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
         ax.annotate('T={:.2f} s  | c = L/T = {:.2f}/{:.2f} = {:.2f}'.format(temporal_period, wave_wavelength, temporal_period, celerities_from_periods),
                     (0, np.min(temporal_signal)), color='r')
 
-    fig_temporal_signals.savefig(os.path.join(temporal_estimator.local_estimator_params['DEBUG_PATH'],
-                                              f'Temporal_signals_{temporal_estimator.location[0]}_{temporal_estimator.location[1]}.png'), dpi=300)
+    fig_temporal_signals.savefig(os.path.join(
+        debug_path, f'Temporal_signals_{temporal_estimator.location[0]}_{temporal_estimator.location[1]}.png'), dpi=300)
     plt.close(fig_temporal_signals)
-    fig.savefig(os.path.join(temporal_estimator.local_estimator_params['DEBUG_PATH'],
-                             f'Infos_point_{temporal_estimator.location[0]}_{temporal_estimator.location[1]}.png'), dpi=300)
+    fig.savefig(os.path.join(
+        debug_path, f'Infos_point_{temporal_estimator.location[0]}_{temporal_estimator.location[1]}.png'), dpi=300)
