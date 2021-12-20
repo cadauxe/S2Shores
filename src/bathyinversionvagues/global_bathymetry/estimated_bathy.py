@@ -10,7 +10,6 @@ from typing import Mapping, Hashable, Any, Dict, List
 
 import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
-import xarray as xr  # @NoMove
 
 from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
 
@@ -241,15 +240,16 @@ class EstimatedBathy:
             msg = f'incorrect layers_type ({layers_type}). Must be one of: {ALL_LAYERS_TYPES}'
             raise ValueError(msg)
 
-        datasets = []
-        # make individual dataset with attributes:
+        data_arrays = {}
+
+        # build individual DataArray with attributes:
         for sample_property, layer_definition in BATHY_PRODUCT_DEF.items():
             if layers_type in layer_definition['layer_type']:
                 data_array = self._build_data_array(sample_property, layer_definition, nb_keep)
-                datasets.append(data_array.to_dataset(name=layer_definition['layer_name']))
+                data_arrays[layer_definition['layer_name']] = data_array
 
-        # Combine all datasets:
-        return xr.merge(datasets)
+        # Combine all DataArray in a single Dataset:
+        return Dataset(data_vars=data_arrays)
 
     def _build_data_array(self, sample_property: str,
                           layer_definition: Dict[str, Any], nb_keep: int) -> DataArray:
