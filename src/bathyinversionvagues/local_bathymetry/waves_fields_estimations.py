@@ -9,6 +9,8 @@
 """
 from enum import IntEnum
 
+import numpy as np
+
 from ..image.image_geometry_types import PointType
 
 
@@ -39,6 +41,23 @@ class WavesFieldsEstimations(list):
 
         self._data_available = True
         self._delta_time_available = True
+
+    # FIXME: nb_keep should not be a WavesFieldsEstimations concern
+    def get_property(self, property: str, nb_keep: int) -> np.ndarray:
+        # Firstly try to find the property from the estimations common properties
+        if hasattr(self, property):
+            # retrieve property from the estimations header
+            waves_field_property = np.array(getattr(self, property))
+        else:
+            # retrieve property in the list of estimations
+            waves_field_property = np.full(nb_keep, np.nan)
+            try:
+                for index, waves_field_estimations in enumerate(self):
+                    waves_field_property[index] = getattr(waves_field_estimations, property)
+            # FIXME: Should we raise an exception?
+            except AttributeError:
+                waves_field_property = np.array([np.nan])
+        return waves_field_property
 
     @property
     def location(self) -> PointType:

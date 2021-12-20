@@ -291,21 +291,7 @@ class EstimatedBathy:
         else:
             nb_keep = layer_data.shape[2]
 
-        # TODO: move this logics inside WavesFieldsEstimations class :
-        # get_property(sample_property, nb_keep)
-        if hasattr(waves_fields_estimations, sample_property):
-            # retrieve property from the estimations header
-            bathy_property = np.array(getattr(waves_fields_estimations, sample_property))
-        else:
-            # retrieve property in the list of estimations
-            bathy_property = np.full(nb_keep, np.nan)
-            try:
-                for index, waves_field_estimations in enumerate(waves_fields_estimations):
-                    bathy_property[index] = getattr(waves_field_estimations,
-                                                    sample_property)
-            # FIXME: Should we raise an exception? Parameterize MANDATORY/OPTIONAL ?
-            except AttributeError:
-                bathy_property = np.array([np.nan])
+        bathy_property = waves_fields_estimations.get_property(sample_property, nb_keep)
 
         if nb_keep == 0:
             layer_data[y_index, x_index] = bathy_property
