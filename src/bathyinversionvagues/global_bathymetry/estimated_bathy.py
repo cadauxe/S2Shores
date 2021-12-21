@@ -5,13 +5,14 @@
 :created: 14/05/2021
 """
 from datetime import datetime
-
 from typing import Mapping, Hashable, Any, Dict, List
 
 import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
 
+
 from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
+from ..waves_exceptions import WavesEstimationIndexingError
 
 
 ALL_LAYERS_TYPES = ['NOMINAL', 'DEBUG']
@@ -216,16 +217,21 @@ class EstimatedBathy:
         self.x_samples = x_samples
         self.y_samples = y_samples
 
-    def store_estimations(self, x_index: int, y_index: int,
+    def store_estimations(self, x_sample: float, y_sample: float,
                           bathy_estimations: WavesFieldsEstimations) -> None:
         """ Store a set of bathymetry estimations at some location
 
-        :param x_index: index of the sample along the X axis
-        :param y_index: index of the sample along the Y axis
+        :param x_sample: coordinate of the sample along the X axis
+        :param y_sample: coordinate of the sample along the Y axis
         :param bathy_estimations: the whole set of bathy estimations data at one point.
+        :raises WavesEstimationIndexingError: when the x, y sample coordinates cannot be retrieved
         """
-        # TODO: use the x and y coordinates instead of an index, for better modularity
-        self.estimated_bathy[y_index, x_index] = bathy_estimations
+        x_index = np.where(self.x_samples == x_sample)
+        y_index = np.where(self.y_samples == y_sample)
+        if len(x_index[0]) == 0 or len(y_index[0]) == 0:
+            msg_err = f'x_sample: {x_sample} or y_sample: {y_sample} indexes not found'
+            raise WavesEstimationIndexingError(msg_err)
+        self.estimated_bathy[y_index[0][0], x_index[0][0]] = bathy_estimations
 
     def build_dataset(self, layers_type: str, nb_keep: int) -> Dataset:
         """ Build an xarray DataSet containing the estimated bathymetry.
