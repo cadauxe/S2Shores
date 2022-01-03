@@ -31,9 +31,6 @@ class WavesImage:
         self.resolution = resolution
         self.pixels = pixels
 
-        # #FIXME: Disk masking
-        # self.pixels = self.pixels * self.circle_image
-
     def apply_filters(self, processing_filters: ImageProcessingFilters) -> None:
         """ Apply filters on the image pixels in place
 
