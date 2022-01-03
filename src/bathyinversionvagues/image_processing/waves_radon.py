@@ -14,6 +14,7 @@ from typing import Optional, List  # @NoMove
 import numpy as np  # @NoMove
 
 
+from ..generic_utils.image_filters import circular_masking
 from ..generic_utils.symmetric_radon import symmetric_radon
 from .sinograms import Sinograms
 from .waves_image import WavesImage
@@ -32,11 +33,10 @@ def linear_directions(angle_min: float, angle_max: float, directions_step: float
 
 @lru_cache()
 def sinogram_weights(nb_samples: int) -> np.ndarray:
-    """ Computes a cosine weighting function to account for less energy at the extremities of a
-    sinogram.
+    """ Computes weighting function to account for less energy at the extremities of a sinogram.
 
     :param nb_samples: the number of samples in the sinogram (its length)
-    :return: half period of cosine with extremities modified to be non-zero
+    :return: weighting function with extremities modified to be non-zero
 
     """
     samples = np.linspace(-1., 1., nb_samples)
@@ -51,7 +51,7 @@ class WavesRadon(Sinograms):
     """
 
     def __init__(self, image: WavesImage, selected_directions: Optional[np.ndarray] = None,
-                 directions_step: float = 1., weighted: bool = False) -> None:
+                 directions_step: float = 1.) -> None:
         """ Constructor
 
         :param image: a 2D array containing an image
@@ -63,36 +63,31 @@ class WavesRadon(Sinograms):
                                 is used as the origin, and any direction angle is transformed to the
                                 nearest quantized angle for indexing that direction in the radon
                                 transform.
-        :param weighted: a flag specifying if the radon transform must be weighted by a 1/cos(d)
-                         weighting function
         """
-        self.pixels = image.pixels
+        self.pixels = circular_masking(image.pixels)
 
         # TODO: Quantize directions when selected_directions is provided?
         if selected_directions is None:
             selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
                                                     directions_step)
 
-        radon_transform_list = self._compute(image.pixels, weighted, selected_directions)
+        radon_transform_list = self._compute(selected_directions)
 
         super().__init__()
         self.quantization_step = directions_step
         self.sampling_frequency = image.sampling_frequency
         self.insert_sinograms(radon_transform_list, selected_directions)
 
-    @staticmethod
-    def _compute(pixels: np.ndarray, weighted: bool,
-                 selected_directions: np.ndarray) -> List[WavesSinogram]:
+    def _compute(self, selected_directions: np.ndarray) -> List[WavesSinogram]:
         """ Compute the radon transform of the image over a set of directions
         """
         # FIXME: quantization may imply that radon transform is not computed on stored directions
-        radon_transform = symmetric_radon(pixels, theta=selected_directions)
+        radon_transform = symmetric_radon(self.pixels, theta=selected_directions)
 
-        if weighted:
-            weights = sinogram_weights(radon_transform.shape[0])
-            # TODO: replace by enumerate(selected_directions)
-            for direction_index in range(radon_transform.shape[1]):
-                radon_transform[:, direction_index] = radon_transform[:, direction_index] * weights
+        weights = sinogram_weights(radon_transform.shape[0])
+        # TODO: replace by enumerate(selected_directions)
+        for direction_index in range(radon_transform.shape[1]):
+            radon_transform[:, direction_index] = radon_transform[:, direction_index] * weights
 
         sinograms: List[WavesSinogram] = []
         for index, _ in enumerate(selected_directions):

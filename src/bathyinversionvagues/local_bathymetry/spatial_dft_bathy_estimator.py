@@ -18,7 +18,7 @@ from ..bathy_debug.waves_fields_display import (display_curve, display_4curves,
                                                 display_3curves, display_estimation,
                                                 display_initial_data, display_radon_transforms)
 from ..bathy_physics import wavenumber_offshore, phi_limits
-from ..generic_utils.image_filters import detrend, desmooth, circular_masking
+from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
@@ -65,14 +65,12 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                            self.global_estimator.smoothing_columns_size]))
             # Remove tendency possibly introduced by smoothing, specially on the shore line
             preprocessing_filters.append((detrend, []))
-
-        preprocessing_filters.append((circular_masking, []))
         return preprocessing_filters
 
     def compute_radon_transforms(self) -> None:
 
         for image in self.images_sequence:
-            radon_transform = WavesRadon(image, self.selected_directions, weighted=True)
+            radon_transform = WavesRadon(image, self.selected_directions)
             self.radon_transforms.append(radon_transform)
 
     def run(self) -> None:
