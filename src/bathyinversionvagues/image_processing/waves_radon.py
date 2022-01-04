@@ -84,11 +84,6 @@ class WavesRadon(Sinograms):
         # FIXME: quantization may imply that radon transform is not computed on stored directions
         radon_transform = symmetric_radon(self.pixels, theta=selected_directions)
 
-        weights = sinogram_weights(radon_transform.shape[0])
-        # TODO: replace by enumerate(selected_directions)
-        for direction_index in range(radon_transform.shape[1]):
-            radon_transform[:, direction_index] = radon_transform[:, direction_index] * weights
-
         sinograms: List[WavesSinogram] = []
         for index, _ in enumerate(selected_directions):
             sinogram = WavesSinogram(radon_transform[:, index])
