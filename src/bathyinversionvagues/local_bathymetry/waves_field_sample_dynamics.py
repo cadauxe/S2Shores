@@ -7,9 +7,6 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-import warnings
-from typing import Optional
-
 import numpy as np
 
 from .waves_field_sample_geometry import WavesFieldSampleGeometry
@@ -28,7 +25,23 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
     def __init__(self) -> None:
         super().__init__()
         self._period = np.nan
-        self._celerity: Optional[float] = None
+        self._celerity = np.nan
+        self.register_wavelength_change(self.ensure_physical_consistency)
+
+    def ensure_physical_consistency(self) -> None:
+        if np.isnan(self.wavelength):
+            self._period = np.nan
+            self._celerity = np.nan
+        else:
+            if not np.isnan(self.celerity):
+                if np.isnan(self.period):
+                    self._period = self.wavelength / self.celerity
+                else:
+                    self._period = np.nan
+                    self._celerity = np.nan
+            else:
+                if not np.isnan(self.period):
+                    self._celerity = self.wavelength / self.period
 
     @property
     def period(self) -> float:
@@ -38,22 +51,19 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
     @period.setter
     def period(self, value: float) -> None:
         self._period = value
+        self.ensure_physical_consistency()
 
     @property
     def celerity(self) -> float:
         """ :returns: The waves field velocity (m/s) either the celerity which was directly set or
                       computed from the wavelength and the period
         """
-        if self._celerity is None:
-            self._celerity = 1. / (self.wavenumber * self.period)
         return self._celerity
 
-    # FIXME: being able to store a celerity which does not satisfy wavelength = c*T seems crazy
-    # FIXME: remove this setter, which has been added temporarily for integration purpose
     @celerity.setter
     def celerity(self, value: float) -> None:
-        warnings.warn('Setting celerity independently of period and wavelength is non physical')
         self._celerity = value
+        self.ensure_physical_consistency()
 
     def __str__(self) -> str:
         result = WavesFieldSampleGeometry.__str__(self)
