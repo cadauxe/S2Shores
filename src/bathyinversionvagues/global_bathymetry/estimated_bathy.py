@@ -31,8 +31,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                       'dimensions': DIMS_Y_X_TIME,
                       'data_type': np.ushort,
                       'fill_value': 0,
-                      # 'data_type': np.float64,  # value for upward compatibility tests
-                      # 'fill_value': np.nan,  # value for upward compatibility tests
                       'precision': 8,
                       'attrs': {'Dimension': 'Flags',
                                 'name': 'Bathymetry estimation status'}},
@@ -41,8 +39,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
               'dimensions': DIMS_Y_X_NKEEP_TIME,
               'data_type': np.float32,
               'fill_value': np.nan,
-              # 'data_type': np.float64,  # value for upward compatibility tests
-              # 'fill_value': np.nan,  # value for upward compatibility tests
               'precision': 8,
               'attrs': {'Dimension': 'Meters [m]',
                         'name': 'Raw estimated depth'}},
@@ -51,8 +47,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                              'dimensions': DIMS_Y_X_NKEEP_TIME,
                              'data_type': np.float32,
                              'fill_value': np.nan,
-                             # 'data_type': np.float64,  # value for upward compatibility tests
-                             # 'fill_value': np.nan,  # value for upward compatibility tests
                              'precision': 8,
                              'attrs': {'Dimension': 'degree',
                                        'name': 'Wave_direction'}},
@@ -61,8 +55,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                  'dimensions': DIMS_Y_X_NKEEP_TIME,
                  'data_type': np.float32,
                  'fill_value': np.nan,
-                 # 'data_type': np.float64,  # value for upward compatibility tests
-                 # 'fill_value': np.nan,  # value for upward compatibility tests
                  'precision': 8,
                  'attrs': {'Dimension': 'Meters per second [m/sec]',
                            'name': 'Wave_celerity'}},
@@ -71,8 +63,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
                    'data_type': np.float32,
                    'fill_value': np.nan,
-                   # 'data_type': np.float64,  # value for upward compatibility tests
-                   # 'fill_value': np.nan,  # value for upward compatibility tests
                    'precision': 8,
                    'attrs': {'Dimension': 'Meters [m]',
                              'name': 'Wavelength'}},
@@ -81,8 +71,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
                    'data_type': np.float32,
                    'fill_value': np.nan,
-                   # 'data_type': np.float64,  # value for upward compatibility tests
-                   # 'fill_value': np.nan,  # value for upward compatibility tests
                    'precision': 8,
                    'attrs': {'Dimension': 'Per Meter [m-1]',
                              'name': 'Wavenumber'}},
@@ -91,8 +79,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'dimensions': DIMS_Y_X_NKEEP_TIME,
                'data_type': np.float32,
                'fill_value': np.nan,
-               # 'data_type': np.float64,  # value for upward compatibility tests
-               # 'fill_value': np.nan,  # value for upward compatibility tests
                'precision': 2,
                'attrs': {'Dimension': 'Seconds [sec]',
                          'name': 'Wave_period'}},
@@ -101,8 +87,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                           'dimensions': DIMS_Y_X_TIME,
                           'data_type': np.float32,
                           'fill_value': np.nan,
-                          # 'data_type': np.float64,  # value for upward compatibility tests
-                          # 'fill_value': np.nan,  # value for upward compatibility tests
                           'precision': 8,
                           'attrs': {'Dimension': 'Kilometers [km]',
                                     'name': 'Distance_to_shore'}},
@@ -111,8 +95,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                        'dimensions': DIMS_Y_X_NKEEP_TIME,
                        'data_type': np.float32,
                        'fill_value': np.nan,
-                       # 'data_type': np.float64,  # value for upward compatibility tests
-                       # 'fill_value': np.nan,  # value for upward compatibility tests
                        'precision': 8,
                        'attrs': {'Dimension': 'Meters per seconds2 [m/sec2]',
                                  'name': 'delta_celerity'}},
@@ -121,8 +103,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                     'dimensions': DIMS_Y_X_NKEEP_TIME,
                     'data_type': np.float32,
                     'fill_value': np.nan,
-                    # 'data_type': np.float64,  # value for upward compatibility tests
-                    # 'fill_value': np.nan,  # value for upward compatibility tests
                     'precision': 8,
                     'attrs': {'Dimension': 'Radians [rd]',
                               'name': 'Phase shift'}},
@@ -131,8 +111,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                 'dimensions': DIMS_Y_X_TIME,
                 'data_type': np.float32,
                 'fill_value': np.nan,
-                # 'data_type': np.float64,  # value for upward compatibility tests
-                # 'fill_value': np.nan,  # value for upward compatibility tests
                 'precision': 8,
                 'attrs': {'Dimension': 'Acceleration [m/s2]',
                           'name': 'Gravity'}},
@@ -141,8 +119,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
                    'data_type': np.float32,
                    'fill_value': np.nan,
-                   # 'data_type': np.float64,  # value for upward compatibility tests
-                   # 'fill_value': np.nan,  # value for upward compatibility tests
                    'precision': 8,
                    'attrs': {'Dimension': 'Duration (s)',
                              'name': 'DeltaTime'}},
@@ -151,8 +127,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                   'dimensions': DIMS_Y_X_NKEEP_TIME,
                   'data_type': np.float32,
                   'fill_value': np.nan,
-                  # 'data_type': np.float64,  # value for upward compatibility tests
-                  # 'fill_value': np.nan,  # value for upward compatibility tests
                   'precision': 8,
                   'attrs': {'Dimension': 'Unitless',
                             'name': 'linearity'}},
@@ -161,8 +135,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                         'dimensions': DIMS_Y_X_NKEEP_TIME,
                         'data_type': np.float32,
                         'fill_value': np.nan,
-                        # 'data_type': np.float64,  # value for upward compatibility tests
-                        # 'fill_value': np.nan,  # value for upward compatibility tests
                         'precision': 8,
                         'attrs': {'Dimension': 'Seconds [sec]',
                                   'name': 'period_offshore'}},
@@ -171,8 +143,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
                    'data_type': np.float32,
                    'fill_value': np.nan,
-                   # 'data_type': np.float64,  # value for upward compatibility tests
-                   # 'fill_value': np.nan,  # value for upward compatibility tests
                    'precision': 8,
                    'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
                              'name': 'Energy'}},
@@ -181,8 +151,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                           'dimensions': DIMS_Y_X_NKEEP_TIME,
                           'data_type': np.float32,
                           'fill_value': np.nan,
-                          # 'data_type': np.float64,  # value for upward compatibility tests
-                          # 'fill_value': np.nan,  # value for upward compatibility tests
                           'precision': 8,
                           'attrs': {'Dimension': 'Unitless',
                                     'name': 'delta_phase_ratio'}},
@@ -191,8 +159,6 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                      'dimensions': DIMS_Y_X_NKEEP_TIME,
                      'data_type': np.float32,
                      'fill_value': np.nan,
-                     # 'data_type': np.float64,  # value for upward compatibility tests
-                     # 'fill_value': np.nan,  # value for upward compatibility tests
                      'precision': 8,
                      'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
                                'name': 'energy_ratio'}},
