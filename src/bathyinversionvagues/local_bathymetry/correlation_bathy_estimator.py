@@ -103,7 +103,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             waves_field_estimation = cast(CorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
-            waves_field_estimation.period = wave_length / celerity
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
             print(waves_field_estimation)

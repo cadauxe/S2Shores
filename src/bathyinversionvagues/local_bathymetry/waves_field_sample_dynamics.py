@@ -32,7 +32,13 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
     @property
     def period(self) -> float:
-        """ :returns: The waves field period (s) """
+        """ :returns: The waves field period (s) either the period which was directly set or
+                      computed from the wavelength and the celerity"""
+        if np.isnan(self._period):
+            if self._celerity is not None:
+                self._period = 1 /  (self.wavenumber * self._celerity)
+            else :
+                raise ValueError('celerity is needed to compute period')
         return self._period
 
     @period.setter
