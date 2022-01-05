@@ -51,9 +51,10 @@ class WavesFieldSampleGeometry:
 
     @wavelength.setter
     def wavelength(self, value: float) -> None:
-        self._wavelength = value
-        for notify in self._wavelength_change_observers:
-            notify()
+        if value != self._wavelength:
+            self._wavelength = value
+            for notify in self._wavelength_change_observers:
+                notify()
 
     @property
     def wavenumber(self) -> float:
