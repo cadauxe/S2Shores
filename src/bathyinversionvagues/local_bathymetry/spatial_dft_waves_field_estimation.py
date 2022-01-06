@@ -25,7 +25,7 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
         self._delta_phase = np.nan
         self._delta_phase_ratio = np.nan
-        self._energy_max = np.nan
+        self._energy = np.nan
 
     @property
     def delta_celerity(self) -> float:
@@ -73,24 +73,23 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         self._delta_phase_ratio = value
 
     @property
-    def energy_max(self) -> float:
-        # FIXME: define this quantity
-        """ :returns: TBD """
-        return self._energy_max
+    def energy(self) -> float:
+        """ :returns: the energy of the waves field """
+        return self._energy
 
-    @energy_max.setter
-    def energy_max(self, value: float) -> None:
-        self._energy_max = value
+    @energy.setter
+    def energy(self, value: float) -> None:
+        self._energy = value
 
     @property
     def energy_ratio(self) -> float:
         """ :returns: The ratio of energy relative to the max peak """
-        return (self.delta_phase_ratio ** 2) * self.energy_max
+        return (self.delta_phase_ratio ** 2) * self.energy
 
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)
         result += f'\ndelta phase: {self.delta_phase:5.2f} (rd)'
         result += f'  delta phase ratio: {self.delta_phase_ratio:5.2f} '
-        result += f'\nenergy_max: {self.energy_max:5.2f} (???)'
-        result += f'  energy_max ratio: {self.energy_ratio:5.2f} '
+        result += f'\nenergy: {self.energy:5.2f} (???)'
+        result += f'  energy ratio: {self.energy_ratio:5.2f} '
         return result
