@@ -11,9 +11,10 @@ correlation method
 from abc import abstractmethod
 from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
+import warnings
+
 from scipy.interpolate import interp1d
 from scipy.signal import butter, find_peaks, sosfiltfilt
-import warnings
 
 import numpy as np
 
@@ -192,7 +193,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def angles(self) -> np.ndarray:
-        """ 
+        """
         :return: angles in radian
         """
         if self._angles is None:
@@ -201,7 +202,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def distances(self) -> np.ndarray:
-        """ 
+        """
         :return: distances
         """
         if self._distances is None:
