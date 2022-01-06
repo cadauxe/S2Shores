@@ -68,7 +68,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self.subtiles: List[SampledOrthoImage]
 
         # Init debugging points handling
-        self._debug_path = None
+        self._debug_path: Optional[Path] = None
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
 
@@ -166,7 +166,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
 
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
     @property
-    def debug_path(self) -> Path:
+    def debug_path(self) -> Optional[Path]:
         """ :returns: path to a directory where debugging info can be written.
         """
         return self._debug_path
