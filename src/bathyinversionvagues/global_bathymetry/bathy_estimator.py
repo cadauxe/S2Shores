@@ -68,7 +68,6 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self.subtiles: List[SampledOrthoImage]
 
         # Init debugging points handling
-        # Init debuggin points handling
         self._debug_path = None
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
