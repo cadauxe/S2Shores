@@ -12,6 +12,7 @@ from enum import IntEnum
 import numpy as np
 
 from ..image.image_geometry_types import PointType
+from ..waves_exceptions import WavesEstimationAttributeError
 
 
 class SampleStatus(IntEnum):
@@ -43,20 +44,31 @@ class WavesFieldsEstimations(list):
         self._delta_time_available = True
 
     # FIXME: nb_keep should not be a WavesFieldsEstimations concern
-    def get_property(self, property: str, nb_keep: int) -> np.ndarray:
+    def get_property(self, property_name: str, nb_keep: int) -> np.ndarray:
+        """ Retrieve the values of a property either at the level of WavesFieldsEstimations or
+        in the list of WavesFieldEstimation
+
+        :param property_name: name of the estimation property to retrieve
+        :param nb_keep: maximum number of estimations to retrieve
+        :returns: the values of the property either as a scalar or as a 1D array of length nb_keep
+        :raises WavesEstimationAttributeError: when the property does not exist
+        """
         # Firstly try to find the property from the estimations common properties
-        if hasattr(self, property):
+        if hasattr(self, property_name):
             # retrieve property from the estimations header
-            waves_field_property = np.array(getattr(self, property))
+            waves_field_property = np.array(getattr(self, property_name))
         else:
+            if len(self) == 0:
+                err_msg = f'Attribute {property_name} undefined (no estimations)'
+                raise WavesEstimationAttributeError(err_msg)
             # retrieve property in the list of estimations
             waves_field_property = np.full(nb_keep, np.nan)
             try:
-                for index, waves_field_estimations in enumerate(self):
-                    waves_field_property[index] = getattr(waves_field_estimations, property)
-            # FIXME: Should we raise an exception?
+                for index, waves_field_estimation in enumerate(self):
+                    waves_field_property[index] = getattr(waves_field_estimation, property_name)
             except AttributeError:
-                waves_field_property = np.array([np.nan])
+                err_msg = f'Attribute {property_name} undefined for {type(waves_field_estimation)}'
+                raise WavesEstimationAttributeError(err_msg)
         return waves_field_property
 
     @property

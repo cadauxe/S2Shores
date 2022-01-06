@@ -12,7 +12,7 @@ from xarray import Dataset, DataArray  # @NoMove
 
 
 from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
-from ..waves_exceptions import WavesEstimationIndexingError
+from ..waves_exceptions import WavesEstimationIndexingError, WavesEstimationAttributeError
 
 
 DEBUG_LAYER = ['DEBUG']
@@ -220,8 +220,12 @@ class EstimatedBathy:
         # build individual DataArray with attributes:
         for sample_property, layer_definition in BATHY_PRODUCT_DEF.items():
             if layers_type in layer_definition['layer_type']:
-                data_array = self._build_data_array(sample_property, layer_definition, nb_keep)
-                data_arrays[layer_definition['layer_name']] = data_array
+                try:
+                    data_array = self._build_data_array(sample_property, layer_definition, nb_keep)
+                    data_arrays[layer_definition['layer_name']] = data_array
+                except WavesEstimationAttributeError as excp:
+                    # FIXME: introduce optionality to check the exception ?
+                    continue
 
         # Combine all DataArray in a single Dataset:
         return Dataset(data_vars=data_arrays)
@@ -247,9 +251,16 @@ class EstimatedBathy:
                              layer_definition['fill_value'],
                              dtype=layer_definition['data_type'])
 
+        not_found = 0
         for y_index in range(nb_samples_y):
             for x_index in range(nb_samples_x):
-                self._fill_array(sample_property, layer_data, y_index, x_index)
+                try:
+                    self._fill_array(sample_property, layer_data, y_index, x_index)
+                except WavesEstimationAttributeError:
+                    not_found += 1
+                    continue
+        if not_found == nb_samples_x * nb_samples_y:
+            raise WavesEstimationAttributeError(f'no values defined for: {sample_property}')
 
         layer_data.round(layer_definition['precision'])
         # Add a dimension at the end for time singleton
