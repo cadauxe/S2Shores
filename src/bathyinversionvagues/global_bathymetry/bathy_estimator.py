@@ -168,6 +168,8 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
     @property
     def debug_path(self) -> Path:
+        """ :returns: path to a directory where debugging info can be written.
+        """
         return self._debug_path
 
     @debug_path.setter
