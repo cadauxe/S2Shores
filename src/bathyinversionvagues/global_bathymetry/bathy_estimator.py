@@ -169,9 +169,9 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
     @property
     def debug_path(self) -> Path:
         return self._debug_path
-        
+
     @debug_path.setter
-    def debug_path(self,path : Path) -> None:
+    def debug_path(self, path: Path) -> None:
         self._debug_path = path
 
     def set_debug_area(self, bottom_left_corner: PointType, top_right_corner: PointType,
