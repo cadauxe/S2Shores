@@ -99,7 +99,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                        'attrs': {'Dimension': 'Meters per seconds2 [m/sec2]',
                                  'name': 'delta_celerity'}},
     'delta_phase': {'layer_type': EXPERT_LAYER,
-                    'layer_name': 'PhaseShift',
+                    'layer_name': 'Phase Shift',
                     'dimensions': DIMS_Y_X_NKEEP_TIME,
                     'data_type': np.float32,
                     'fill_value': np.nan,
