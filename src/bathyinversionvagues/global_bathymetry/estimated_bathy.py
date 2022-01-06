@@ -223,8 +223,8 @@ class EstimatedBathy:
                 try:
                     data_array = self._build_data_array(sample_property, layer_definition, nb_keep)
                     data_arrays[layer_definition['layer_name']] = data_array
-                except WavesEstimationAttributeError as excp:
-                    # FIXME: introduce optionality to check the exception ?
+                except WavesEstimationAttributeError:
+                    # property was not found at any location: ignore it
                     continue
 
         # Combine all DataArray in a single Dataset:
