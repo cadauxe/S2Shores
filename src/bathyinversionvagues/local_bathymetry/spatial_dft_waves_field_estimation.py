@@ -44,10 +44,10 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         if np.isnan(self._delta_phase) or self._delta_phase == 0:
             self.period = np.nan
         else:
-            self.period = self.delta_time * (2 * np.pi / self._delta_phase)
-            if self.period < 0.:
+            period = self.delta_time * (2 * np.pi / self._delta_phase)
+            if period < 0.:
                 # delta_phase and delta_time have opposite signs, thus we must correct quantities.
-                self.period = abs(self.period)
+                period = abs(period)
                 # FIXME: should we make delta_phase positive?
                 # self._delta_phase = abs(self._delta_phase)
                 # Propagation direction must be inverted
@@ -56,6 +56,7 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
                     self.direction += 180
                 else:
                     self.direction -= 180
+            self.period = period
             # TODO: remove (added to retrieve Erwin's results)
             if self.direction < 0:
                 self.direction += 180
