@@ -272,17 +272,17 @@ class EstimatedBathy:
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
                     y_index: int, x_index: int) -> None:
         waves_fields_estimations = self.estimated_bathy[y_index, x_index]
+        bathy_property = waves_fields_estimations.get_property(sample_property)
+
         if layer_data.ndim == 2:
-            nb_keep = 0
+            layer_data[y_index, x_index] = np.array(bathy_property)
         else:
             nb_keep = layer_data.shape[2]
-
-        bathy_property = waves_fields_estimations.get_property(sample_property, nb_keep)
-
-        if nb_keep == 0:
-            layer_data[y_index, x_index] = bathy_property
-        else:
-            layer_data[y_index, x_index, :] = bathy_property
+            if len(bathy_property) > nb_keep:
+                bathy_property = bathy_property[:nb_keep]
+            elif len(bathy_property) < nb_keep:
+                bathy_property += [np.nan] * (nb_keep - len(bathy_property))
+            layer_data[y_index, x_index, :] = np.array(bathy_property)
 
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         dict_coords: Mapping[Hashable, Any] = {}
