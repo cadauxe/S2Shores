@@ -34,6 +34,11 @@ class SequenceImagesError(WavesException):
     """
 
 
+class DebugDisplayError(WavesException):
+    """ Exception raised when debug display fails
+    """
+
+
 class ProductNotFound(WavesException):
     """ Exception raised when a product cannot be found
     """

@@ -13,21 +13,22 @@ from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 from scipy.interpolate import interp1d
 from scipy.signal import butter, find_peaks, sosfiltfilt
+import warnings
 
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
 from ..generic_utils.image_filters import detrend, clipping
-from ..generic_utils.signal_filters import filter_mean
-from ..generic_utils.signal_utils import find_period, find_dephasing
+from ..generic_utils.signal_filters import filter_mean, remove_median
+from ..generic_utils.signal_utils import find_period_from_peaks, find_period_from_zeros
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
+from ..waves_exceptions import WavesEstimationError
 
 from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
 from .waves_fields_estimations import WavesFieldsEstimations
-
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -55,41 +56,67 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
             clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
         self.radon_image_filters: SignalProcessingFilters = [
-            (filter_mean,
-             [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+            (remove_median,
+             [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
+            (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+        if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
+            raise WavesEstimationError(
+                'The chosen number of lag frames is bigger than the number of available frames')
+        self.propagation_duration = np.sum(
+            self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
+        self._metrics['propagation_duration'] = self.propagation_duration
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
         try:
             self.correlation_image.apply_filters(self.correlation_image_filters)
-            # TODO: remove this attribute.
-            self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
-            # FIXME: store filtered_sinograms into metrics (was previously displaed)
-            filtered_sinograms = self.radon_transform.apply_filters(self.radon_image_filters)
+            radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
+            filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
             direction_propagation, variances = \
-                filtered_sinograms.get_direction_maximum_variance()
-            sinogram_max_var = filtered_sinograms[direction_propagation]
+                filtered_radon.get_direction_maximum_variance()
+            sinogram_max_var = radon_transform[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
+            self._metrics['sinogram_max_var'] = radon_transform.values
             wave_length = self.compute_wave_length(sinogram_max_var_values)
-            celerity = self.compute_celerity(sinogram_max_var_values, wave_length)
-            temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
-            temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
-            period = self.compute_period(temporal_signal)
+            celerities = self.compute_celerities(
+                sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
+            temporal_signals = []
+            periods = []
+            arg_peaks_max = []
+            for celerity in celerities:
+                temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
+                try:
+                    temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
+                except ValueError:
+                    warnings.warn('Temporal signal is too short to be filtered')
+                temporal_signals.append(temporal_signal)
+                period, arg_peak_max = find_period_from_peaks(
+                    temporal_signal, min_period=int(self.global_estimator.waves_period_min))
+                periods.append(period)
+                arg_peaks_max.append(arg_peak_max)
 
+            celerities_from_periods = [wave_length / period for period in periods]
+            errors_celerities = np.abs(celerities_from_periods - celerities)
+            index_min = np.nanargmin(errors_celerities)
+            celerity = celerities[index_min]
             waves_field_estimation = cast(CorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
-            waves_field_estimation.period = period
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
+            print(waves_field_estimation)
 
             if self.debug_sample:
+                self._metrics['radon_transform'] = radon_transform
                 self._metrics['variances'] = variances
                 self._metrics['sinogram_max_var'] = sinogram_max_var_values
                 # TODO: use objects in debug
-                # self._metrics['sinogram_max_var'] = sinogram_max_var
-                self._metrics['temporal_signal'] = temporal_signal
+                self._metrics['temporal_signals'] = temporal_signals
+                self._metrics['arg_peaks_max'] = arg_peaks_max
+                self._metrics['periods'] = periods
+                self._metrics['celerities'] = celerities
+                self._metrics['celerities_from_periods'] = celerities_from_periods
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
@@ -101,7 +128,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
     @property
     @abstractmethod
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
-        """ :return: tuple (x,y) of nd.array positions
+        """ :return: tuples (x,y) of nd.array positions
         """
 
     @abstractmethod
@@ -165,7 +192,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def angles(self) -> np.ndarray:
-        """ :return: angles in radian
+        """ 
+        :return: angles in radian
         """
         if self._angles is None:
             self._angles = self.get_angles()
@@ -173,7 +201,8 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def distances(self) -> np.ndarray:
-        """ :return: distances
+        """ 
+        :return: distances
         """
         if self._distances is None:
             self._distances = self.get_distances()
@@ -181,33 +210,61 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     def compute_wave_length(self, sinogram: np.ndarray) -> float:
         """ Wave length computation (in meter)
+        :param sinogram : sinogram used to compute wave length
+        :returns: wave length
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
-        period, wave_length_zeros = find_period(sinogram,
-                                                int(min_wavelength / self.spatial_resolution))
+        period, wave_length_zeros = find_period_from_zeros(sinogram,
+                                                           int(min_wavelength / self.spatial_resolution))
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
             self._metrics['wave_length_zeros'] = wave_length_zeros
         return wave_length
 
-    def compute_celerity(self, sinogram: np.ndarray, wave_length: float) -> float:
-        """ Celerity computation (in meter/second)
+    def compute_celerities(self, sinogram: np.ndarray, wave_length: float, nb_hops: int) -> np.ndarray:
+        """ Propagated distance computation (in meter)
+        - 1) sinogram maximum is determined on interval [-wave_length, wave_length]
+        - 2) nb_max_hops propagated distances are computed from the position of the maximum using following formula :
+            [dx , dx + wave_length, ..., dx + (nb_max_hops)*wave_length] (an adaptation to negative values is also made if needed)
+        :param sinogram: sinogram having maximum variance
+        :param wave_length: wave_length computed on sinogram
+        :param nb_hops: number of propagated distances computed
+        :returns: np.ndarray of size nb_hops containing computed celerities
         """
-        dephasing, sinogram_period = find_dephasing(sinogram, wave_length)
-        rhomx = self.spatial_resolution * dephasing
-        propagation_duration = np.sum(
-            self.sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
-        celerity = np.abs(rhomx / propagation_duration)
+        x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
+        interval = np.logical_and(x * self.spatial_resolution > -wave_length,
+                                  x * self.spatial_resolution < wave_length)
+        self._metrics['interval'] = interval
+        peaks, _ = find_peaks(sinogram)
+        peaks = peaks[interval[peaks]]
+        max_indice = np.argmax(sinogram[peaks])
+        dx = x[peaks[max_indice]]
+        if dx > 0:
+            dephasings = dx * self.spatial_resolution + wave_length * np.arange(nb_hops)
+            max_indices = np.array(peaks[max_indice] +
+                                   np.arange(nb_hops) * wave_length / self.spatial_resolution, dtype=int)
+        else:
+            dephasings = dx * self.spatial_resolution - wave_length * np.arange(nb_hops)
+            dephasings = np.abs(dephasings)
+            max_indices = np.array(peaks[max_indice] -
+                                   np.arange(nb_hops) * wave_length / self.spatial_resolution, dtype=int)
+        max_indices = max_indices[np.logical_and(max_indices > 0, max_indices < len(sinogram))]
+
+        celerities = dephasings / self.propagation_duration
 
         if self.debug_sample:
-            self._metrics['sinogram_period'] = sinogram_period
-            self._metrics['dephasing'] = dephasing
-            self._metrics['propagation_duration'] = propagation_duration
-        return celerity
+            self._metrics['x'] = x
+            self._metrics['max_indices'] = max_indices
+            self._metrics['dephasings'] = dephasings
+            self._metrics['propagation_duration'] = self.propagation_duration
+        return celerities
 
     def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> np.ndarray:
         """ Temporal reconstruction of the correlation signal following propagation direction
+        :param celerity : computed celerity in meter/second
+        :param direction_propagation: angle of direction propagation in degrees
+        :returns: temporal reconstruction of the signal
         """
         distances = np.cos(np.radians(direction_propagation - self.angles.T.flatten())) * \
             self.distances.flatten() * self.spatial_resolution
@@ -225,26 +282,22 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
 
     def temporal_reconstruction_tuning(self, temporal_signal: np.ndarray) -> np.ndarray:
         """ Tuning of temporal signal
+        :param temporal_signal : temporal signal to be tuned
+        :raises ValueError: when the signal is too short to be filtered
+        :returns: tuned temporal signal
         """
-        low_frequency = \
-            self.local_estimator_params['TUNING']['LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION'] * \
-            self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
-        high_frequency = \
-            self.local_estimator_params['TUNING']['HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION'] \
-            * self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
-        sos_filter = butter(1, (2 * low_frequency, 2 * high_frequency),
+        lowcut = 1 / self.global_estimator.waves_period_max
+        highcut = 1 / self.global_estimator.waves_period_min
+        nyq = 0.5 / self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
+        low = lowcut / nyq
+        high = highcut / nyq
+
+        sos_filter = butter(1, (low, high),
                             btype='bandpass', output='sos')
+        # Formula found on :
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
+        padlen = 3 * (2 * len(sos_filter) + 1 - min((sos_filter[:, 2] == 0).sum(),
+                                                    (sos_filter[:, 5] == 0).sum()))
+        if not len(temporal_signal) > padlen:
+            raise ValueError('Temporal signal is too short to be filtered')
         return sosfiltfilt(sos_filter, temporal_signal)
-
-    def compute_period(self, temporal_signal: np.ndarray) -> float:
-        """Period computation (in second)
-        """
-        arg_peaks_max, _ = find_peaks(
-            temporal_signal,
-            distance=self.local_estimator_params['TUNING']['MIN_PEAKS_DISTANCE_PERIOD'])
-
-        period = float(np.mean(np.diff(arg_peaks_max)))
-
-        if self.debug_sample:
-            self._metrics['arg_temporal_peaks_max'] = arg_peaks_max
-        return period
