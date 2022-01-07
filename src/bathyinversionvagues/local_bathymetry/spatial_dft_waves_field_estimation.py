@@ -25,7 +25,7 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
         self._delta_phase = np.nan
         self._delta_phase_ratio = np.nan
-        self._energy_max = np.nan
+        self._energy = np.nan
 
     @property
     def delta_celerity(self) -> float:
@@ -46,22 +46,16 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         else:
             period = self.delta_time * (2 * np.pi / self._delta_phase)
             if period < 0.:
-                # delta_phase and delta_time have opposite signs, thus we must correct quantities.
+                # delta_phase and delta_time have opposite signs, nothing to correct.
+                # period must be positive
                 period = abs(period)
-                # FIXME: should we make delta_phase positive?
-                # self._delta_phase = abs(self._delta_phase)
-                # Propagation direction must be inverted
-                # TODO: uncomment for final results.
+            else:
+                # delta_phase and delta_time have same signs, propagation direction must be inverted
                 if self.direction < 0:
                     self.direction += 180
                 else:
                     self.direction -= 180
             self.period = period
-            # TODO: remove (added to retrieve Erwin's results)
-            if self.direction < 0:
-                self.direction += 180
-            else:
-                self.direction -= 180
 
     @property
     def delta_phase_ratio(self) -> float:
@@ -74,24 +68,23 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         self._delta_phase_ratio = value
 
     @property
-    def energy_max(self) -> float:
-        # FIXME: define this quantity
-        """ :returns: TBD """
-        return self._energy_max
+    def energy(self) -> float:
+        """ :returns: the energy of the waves field """
+        return self._energy
 
-    @energy_max.setter
-    def energy_max(self, value: float) -> None:
-        self._energy_max = value
+    @energy.setter
+    def energy(self, value: float) -> None:
+        self._energy = value
 
     @property
     def energy_ratio(self) -> float:
         """ :returns: The ratio of energy relative to the max peak """
-        return (self.delta_phase_ratio ** 2) * self.energy_max
+        return (self.delta_phase_ratio ** 2) * self.energy
 
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)
         result += f'\ndelta phase: {self.delta_phase:5.2f} (rd)'
         result += f'  delta phase ratio: {self.delta_phase_ratio:5.2f} '
-        result += f'\nenergy_max: {self.energy_max:5.2f} (???)'
-        result += f'  energy_max ratio: {self.energy_ratio:5.2f} '
+        result += f'\nenergy: {self.energy:5.2f} (???)'
+        result += f'  energy ratio: {self.energy_ratio:5.2f} '
         return result

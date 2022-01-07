@@ -92,7 +92,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def sort_waves_fields(self) -> None:
         """ Sort the waves fields estimations based on their energy max.
         """
-        self.waves_fields_estimations.sort(key=lambda x: x.energy_max, reverse=True)
+        self.waves_fields_estimations.sort(key=lambda x: x.energy, reverse=True)
 
     def find_directions(self) -> None:
         """ Find an initial set of directions from the cross correlation spectrum of the radon
@@ -256,7 +256,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             waves_field_estimation.delta_phase = estimated_phase_shift
             waves_field_estimation.delta_phase_ratio = abs(waves_field_estimation.delta_phase) / \
                 phi_max[peak_wavenumber_index]
-            waves_field_estimation.energy_max = total_spectrum_normalized[peak_freq_index]
+
+            waves_field_estimation.energy = total_spectrum[peak_wavenumber_index, peak_freq_index]
             self.store_estimation(waves_field_estimation)
 
         if self.debug_sample:
@@ -277,6 +278,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """
         sino1_fft = self.radon_transforms[0].get_sinograms_dfts(self.directions)
         sino2_fft = self.radon_transforms[1].get_sinograms_dfts(self.directions)
+        nb_samples = sino1_fft.shape[0]
 
         sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
         phase_shift = np.angle(sinograms_correlation_fft)
@@ -288,7 +290,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         combined_amplitude = (amplitude_sino1 + amplitude_sino2)
 
         # Find maximum total energy per direction theta and normalize by the greater one
-        total_spectrum = np.abs(combined_amplitude * phase_shift_thresholded)
+        total_spectrum = np.abs(combined_amplitude * phase_shift_thresholded) / (nb_samples**3)
         max_heta = np.max(total_spectrum, axis=0)
         total_spectrum_normalized = max_heta / np.max(max_heta)
         # Pick the maxima
