@@ -68,6 +68,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         self.subtiles: List[SampledOrthoImage]
 
         # Init debugging points handling
+        self._debug_path: Optional[Path] = None
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
 
@@ -164,6 +165,16 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         return infos
 
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
+    @property
+    def debug_path(self) -> Optional[Path]:
+        """ :returns: path to a directory where debugging info can be written.
+        """
+        return self._debug_path
+
+    @debug_path.setter
+    def debug_path(self, path: Path) -> None:
+        self._debug_path = path
+
     def set_debug_area(self, bottom_left_corner: PointType, top_right_corner: PointType,
                        decimation: int) -> None:
         """ Sets all points within rectangle defined by bottom_left_corner and top_right_corner to

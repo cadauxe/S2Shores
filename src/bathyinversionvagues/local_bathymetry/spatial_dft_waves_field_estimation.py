@@ -44,17 +44,18 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         if np.isnan(self._delta_phase) or self._delta_phase == 0:
             self.period = np.nan
         else:
-            self.period = self.delta_time * (2 * np.pi / self._delta_phase)
-            if self.period < 0.:
+            period = self.delta_time * (2 * np.pi / self._delta_phase)
+            if period < 0.:
                 # delta_phase and delta_time have opposite signs, nothing to correct.
                 # period must be positive
-                self.period = abs(self.period)
+                period = abs(period)
             else:
                 # delta_phase and delta_time have same signs, propagation direction must be inverted
                 if self.direction < 0:
                     self.direction += 180
                 else:
                     self.direction -= 180
+            self.period = period
 
     @property
     def delta_phase_ratio(self) -> float:
