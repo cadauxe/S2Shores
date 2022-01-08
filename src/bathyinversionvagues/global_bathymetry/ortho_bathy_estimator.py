@@ -62,8 +62,8 @@ class OrthoBathyEstimator:
 
         start = time.time()
         computed_points = 0
-        for i, x_sample in enumerate(self.sampled_ortho.x_samples):
-            for j, y_sample in enumerate(self.sampled_ortho.y_samples):
+        for x_sample in self.sampled_ortho.x_samples:
+            for y_sample in self.sampled_ortho.y_samples:
                 estimation_point = (x_sample, y_sample)
                 self.parent_estimator.set_debug_flag(estimation_point)
                 bathy_estimations = self._run_local_bathy_estimator(sub_tile_images,
@@ -71,14 +71,8 @@ class OrthoBathyEstimator:
                 if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
                     computed_points += 1
 
-                # TODO: do this filtering in build_dataset()
-                # Keep only a limited number of waves fields and bathy estimations
-                while len(bathy_estimations) > nb_keep:
-                    bathy_estimations.pop()
-
-                # Store bathymetry sample
-
-                estimated_bathy.store_estimations(i, j, bathy_estimations)
+                # Store bathymetry sample estimations
+                estimated_bathy.store_estimations(x_sample, y_sample, bathy_estimations)
 
         total_points = self.sampled_ortho.nb_samples
         comput_time = time.time() - start

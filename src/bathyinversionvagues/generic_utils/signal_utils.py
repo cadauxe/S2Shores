@@ -8,23 +8,38 @@
 from typing import Tuple
 
 import numpy as np
+from scipy.signal import find_peaks
 
 
-def find_period(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]:
+def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]:
     """ This function computes period of the signal by computing the zeros of the signal
     The signal is supposed to be periodic and centered around zero
 
     :param signal: signal on which period is computed
+    :param min_period: minimal period between two detected points
     :return: (period,zeros used to compute period)
     """
     sign = np.sign(signal)
     diff = np.diff(sign)
     zeros = np.where(diff != 0)[0]
     demiperiods = np.diff(zeros)
-    cond = demiperiods > (min_period/2)
+    cond = demiperiods > (min_period / 2)
     demiperiods = demiperiods[cond]
     period = 2 * float(np.mean(demiperiods))
     return period, np.concatenate((np.array([zeros[0]]), zeros[1:][cond]))
+
+
+def find_period_from_peaks(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]:
+    """This function computes period of the signal by computing the peaks of the signal
+    The signal is supposed to be periodic
+
+    :param signal: signal on which period is computed
+    :param min_period: minimal period between two detected points
+    :return: (period,peaks indices used to compute period)
+    """
+    arg_peaks_max, _ = find_peaks(signal, distance=min_period)
+    period = float(np.mean(np.diff(arg_peaks_max)))
+    return period, arg_peaks_max
 
 
 def find_dephasing(signal: np.ndarray, period: float) -> Tuple[float, np.ndarray]:
