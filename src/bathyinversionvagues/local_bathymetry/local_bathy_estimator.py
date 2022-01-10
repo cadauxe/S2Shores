@@ -170,7 +170,12 @@ class LocalBathyEstimator(ABC):
 
         :param waves_field_estimation: a new estimation to store for this local bathy estimator
         """
-        self.waves_fields_estimations.append(waves_field_estimation)
+        stored_wavelengths = [estimation.wavelength for estimation in self.waves_fields_estimations]
+        stored_directions = [estimation.direction for estimation in self.waves_fields_estimations]
+        # Remove duplicates: store estimation only if it is not already stored
+        if (waves_field_estimation.wavelength not in stored_wavelengths or
+                waves_field_estimation.direction not in stored_directions):
+            self.waves_fields_estimations.append(waves_field_estimation)
 
     @property
     def waves_fields_estimations(self) -> WavesFieldsEstimations:
