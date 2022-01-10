@@ -247,7 +247,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             estimated_direction = \
                 self.radon_transforms[0].directions[self.directions[peak_freq_index]]
 
-            wavelength = 1 / kfft[peak_wavenumber_index][0]
+            wavelength = 1 / kfft[peak_wavenumber_index]
             waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
                                           self.create_waves_field_estimation(estimated_direction,
                                                                              wavelength))
@@ -348,7 +348,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                    self.local_estimator_params['STEP_T'])
         k_forced = cast(np.ndarray, wavenumber_offshore(period_samples, self.gravity))
 
-        return k_forced.reshape((k_forced.size, 1))
+        return k_forced
 
     def get_phi_limits(self, wavenumbers: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """  Get the delta phase limits form deep and swallow waters

@@ -7,8 +7,9 @@
 
 from typing import Tuple
 
-import numpy as np
 from scipy.signal import find_peaks
+
+import numpy as np
 
 
 def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]:
@@ -68,4 +69,6 @@ def get_unity_roots(frequencies: np.ndarray, number_of_roots: int) -> np.ndarray
     :returns: number_of_roots complex roots of the unity corresponding to fr frequencies
     """
     n = np.arange(number_of_roots)
-    return np.exp(-2j * np.pi * frequencies * n)
+    frequencies = np.expand_dims(frequencies, axis=1)
+    unity_roots = np.exp(-2j * np.pi * frequencies * n)
+    return unity_roots
