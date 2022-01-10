@@ -235,7 +235,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)
         self.radon_transforms[1].compute_sinograms_dfts(self.directions, kfft)
         phase_shift, total_spectrum, total_spectrum_normalized = \
-            self.normalized_cross_correl_spectrum(phi_min, phi_max)
+            self.normalized_cross_correl_spectrum(phi_min, phi_max, interpolated_dft=True)
         peaks_freq = find_peaks(total_spectrum_normalized,
                                 prominence=self.local_estimator_params['PROMINENCE_MULTIPLE_PEAKS'])
         peaks_freq = peaks_freq[0]
@@ -264,20 +264,22 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self._metrics['kfft'] = kfft
             self._metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
 
-    def normalized_cross_correl_spectrum(self, phi_min: np.ndarray, phi_max: np.ndarray
+    def normalized_cross_correl_spectrum(self, phi_min: np.ndarray, phi_max: np.ndarray,
+                                         interpolated_dft: bool = False
                                          ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """ Computes the cross correlation spectrum of the radon transforms of the images, possibly
         restricted to a limited set of directions, and derive the function used to locate maxima.
 
         :param phi_min: minimum acceptable values of delta phi for each wavenumber to explore
         :param phi_max: maximum acceptable values of delta phi for each wavenumber to explore
+        :param interpolated_dft: a flag allowing to select the standard DFT or the interpolated DFT
         :returns: A tuple of 3 numpy arrays with:
                   - the phase shifts, thresholded by phi_min and phi_max
                   - the total spectrum
                   - the normalized spectrum
         """
-        sino1_fft = self.radon_transforms[0].get_sinograms_dfts(self.directions)
-        sino2_fft = self.radon_transforms[1].get_sinograms_dfts(self.directions)
+        sino1_fft = self.radon_transforms[0].get_sinograms_dfts(self.directions, interpolated_dft)
+        sino2_fft = self.radon_transforms[1].get_sinograms_dfts(self.directions, interpolated_dft)
         nb_samples = sino1_fft.shape[0]
 
         sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)

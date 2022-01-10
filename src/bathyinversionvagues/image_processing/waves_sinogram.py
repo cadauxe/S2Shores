@@ -34,6 +34,7 @@ class WavesSinogram:
         self.values = values
         self.size = values.size
         self._dft: Optional[np.ndarray] = None
+        self._interpolated_dft: Optional[np.ndarray] = None
 
     def interpolate(self, factor: float) -> 'WavesSinogram':
         """ Compute an augmented version of the sinogram, by interpolation with some factor.
@@ -46,7 +47,6 @@ class WavesSinogram:
         current_axis = np.linspace(0, self.size - 1, self.size)
         return WavesSinogram(np.interp(new_axis, current_axis, self.values))
 
-    # TODO: introduce different DFT properties based on the frequencies used (standard or not)
     @property
     def dft(self) -> np.ndarray:
         """ :returns: the current DFT of the sinogram. If it does not exists, it is computed
@@ -59,6 +59,20 @@ class WavesSinogram:
     @dft.setter
     def dft(self, dft_values: np.ndarray) -> None:
         self._dft = dft_values
+
+    @property
+    def interpolated_dft(self) -> np.ndarray:
+        """ :returns: the current DFT of the sinogram. If it does not exists, an exception is raised
+
+        :raises ValueError: if the interpolated DFT does not exist
+        """
+        if self._interpolated_dft is None:
+            raise ValueError('Interpolated DFT does not exist')
+        return self._interpolated_dft
+
+    @interpolated_dft.setter
+    def interpolated_dft(self, dft_values: np.ndarray) -> None:
+        self._interpolated_dft = dft_values
 
     def symmeterize(self) -> 'WavesSinogram':
         """ :returns: a new WavesSinogram which is the symmetric version of this one.
