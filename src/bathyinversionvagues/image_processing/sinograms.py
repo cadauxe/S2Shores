@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, Any, List, Tuple  # @NoMove
+from typing import Optional, Any, List, Tuple  # @NoMove @UnusedImport
 
 import numpy as np  # @NoMove
 
@@ -25,6 +25,7 @@ class Sinograms(SinogramsDict):
         super().__init__(*args, **kwargs)
 
         self._sampling_frequency = 0.
+        self.directions_interpolated_dft: Optional[np.ndarray] = None
 
     @property
     def sampling_frequency(self) -> float:
@@ -71,25 +72,43 @@ class Sinograms(SinogramsDict):
         frequencies = None if kfft is None else kfft / self.sampling_frequency
         unity_roots = None if frequencies is None else get_unity_roots(frequencies, self.nb_samples)
         # If no selected directions, DFT is computed on all directions
-        directions = self.directions if directions is None else directions
+        directions_to_compute = self.directions if directions is None else directions
 
-        for direction in directions:
-            self[direction].dft = self[direction].compute_dft(unity_roots)
+        for direction in directions_to_compute:
+            if unity_roots is None:
+                self[direction].dft = self[direction].compute_dft()
+            else:
+                self[direction].interpolated_dft = self[direction].compute_dft(unity_roots)
 
-    def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
+        if unity_roots is not None:
+            self.directions_interpolated_dft = directions_to_compute
+
+    def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None,
+                           interpolated_dft: bool = False) -> np.ndarray:
         """ Retrieve the current DFT of the sinograms in some directions. If DFTs does not exist
         they are computed using standard frequencies.
 
         :param directions: the directions of the requested sinograms.
                            Defaults to all the Radon transform directions if unspecified.
+        :param interpolated_dft: a flag allowing to select the standard DFT or the interpolated DFT
         :return: the sinograms DFTs for the specified directions or for all directions
+        :raises AttributeError: when an interpolated DFT is requested but has not been computed yet.
         """
-        directions = self.directions if directions is None else directions
-        fft_sino_length = self[directions[0]].dft.shape[0]
+        if interpolated_dft:
+            if self.directions_interpolated_dft is None:
+                raise AttributeError('no interpolated DFTs available')
+            directions = self.directions_interpolated_dft
+            fft_sino_length = self[directions[0]].interpolated_dft.shape[0]
+        else:
+            directions = self.directions if directions is None else directions
+            fft_sino_length = self[directions[0]].dft.shape[0]
         result = np.empty((fft_sino_length, len(directions)), dtype=np.complex128)
         for result_index, direction in enumerate(directions):
             sinogram = self[direction]
-            result[:, result_index] = sinogram.dft
+            if interpolated_dft:
+                result[:, result_index] = sinogram.interpolated_dft
+            else:
+                result[:, result_index] = sinogram.dft
         return result
 
     def get_sinograms_mean_power(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
