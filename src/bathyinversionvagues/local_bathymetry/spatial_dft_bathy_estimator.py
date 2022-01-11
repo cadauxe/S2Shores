@@ -115,19 +115,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.peaks_dir = peaks
         if self.peaks_dir.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
-        if self.debug_sample:
-            self._metrics['initial_sino1_fft'] = copy.deepcopy(self._metrics['sino1_fft'])
-            self._metrics['initial_sino2_fft'] = copy.deepcopy(self._metrics['sino2_fft'])
-            self._metrics['initial_phase_shift'] = copy.deepcopy(self._metrics['phase_shift'])
-            self._metrics['initial_phase_shift_thresholded'] = \
-                copy.deepcopy(self._metrics['phase_shift_thresholded'])
-            self._metrics['initial_combined_amplitude'] = copy.deepcopy(
-                self._metrics['combined_amplitude'])
-            self._metrics['initial_total_spectrum_normalized'] = copy.deepcopy(
-                self._metrics['total_spectrum_normalized'])
-            self._metrics['initial_amplitude_sino1'] = copy.deepcopy(
-                self._metrics['amplitude_sino1'])
-            self._metrics['initial_total_spectrum'] = copy.deepcopy(self._metrics['total_spectrum'])
 
     def _process_peaks(self, peaks: np.ndarray, prominences: np.ndarray) -> np.ndarray:
         # Find pairs of symmetric directions
@@ -295,14 +282,18 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # Pick the maxima
 
         if self.debug_sample:
-            self._metrics['sino1_fft'] = sino1_fft
-            self._metrics['sino2_fft'] = sino2_fft
-            self._metrics['phase_shift'] = phase_shift
-            self._metrics['phase_shift_thresholded'] = phase_shift_thresholded
-            self._metrics['combined_amplitude'] = combined_amplitude
-            self._metrics['total_spectrum_normalized'] = total_spectrum_normalized
-            self._metrics['amplitude_sino1'] = amplitude_sino1
-            self._metrics['total_spectrum'] = total_spectrum
+            dft_type_key = 'interpolated_dft' if interpolated_dft else 'standard_dft'
+            if dft_type_key not in self._metrics.keys():
+                self._metrics[dft_type_key] = {}
+            self._metrics[dft_type_key]['sinograms_correlation_fft'] = sinograms_correlation_fft
+            self._metrics[dft_type_key]['phase_shift'] = phase_shift
+            self._metrics[dft_type_key]['phase_shift_thresholded'] = phase_shift_thresholded
+            self._metrics[dft_type_key]['amplitude_sino1'] = amplitude_sino1
+            self._metrics[dft_type_key]['amplitude_sino2'] = amplitude_sino2
+            self._metrics[dft_type_key]['combined_amplitude'] = combined_amplitude
+            self._metrics[dft_type_key]['total_spectrum'] = total_spectrum
+            self._metrics[dft_type_key]['max_heta'] = max_heta
+            self._metrics[dft_type_key]['total_spectrum_normalized'] = total_spectrum_normalized
 
         return phase_shift_thresholded, total_spectrum, total_spectrum_normalized
 
