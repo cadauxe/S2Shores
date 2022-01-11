@@ -69,6 +69,6 @@ class WavesFieldSampleGeometry:
         self._wavelength_change_observers.append(notify)
 
     def __str__(self) -> str:
-        result = f'direction: {self.direction}°\n'
+        result = f'Geometry:   direction: {self.direction}° '
         result += f'wavelength: {self.wavelength:5.2f} (m) wavenumber: {self.wavenumber:8.6f} (m-1)'
         return result
