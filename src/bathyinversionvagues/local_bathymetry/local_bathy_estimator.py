@@ -192,10 +192,7 @@ class LocalBathyEstimatorDebug(LocalBathyEstimator):
 
     def run(self) -> None:
         super().run()
-        try:
-            self.explore_results()
-        except Exception as excp:
-            print(f'Bathymetry debug failed: {str(excp)}')
+        self.explore_results()
 
     @abstractmethod
     def explore_results(self) -> None:

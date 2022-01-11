@@ -2,13 +2,13 @@
 import os
 from typing import TYPE_CHECKING  # @NoMove
 
-import numpy as np
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
-import matplotlib as mpl
 
-from ..waves_exceptions import DebugDisplayError
+import matplotlib as mpl
+import numpy as np
+
 from ..bathy_physics import depth_from_dispersion
 
 
@@ -18,7 +18,8 @@ if TYPE_CHECKING:
 
 
 def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator') -> None:
-    # FIXME : Handle severals wave_estimations
+    # FIXME: Handle severals wave_estimations
+    ######################################################
     wave_estimation = temporal_estimator.waves_fields_estimations[0]
     wave_direction = wave_estimation.direction
     wave_wavelength = wave_estimation.wavelength
@@ -103,8 +104,9 @@ def temporal_method_debug(temporal_estimator: 'TemporalCorrelationBathyEstimator
     chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
     chain_celerities_from_period = ' '.join(
         [f'{celerity_from_period:.2f} | ' for celerity_from_period in celerities_from_periods])
-    ax5.annotate(
-        f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n c = {chain_celerities} \n c_from_period = {chain_celerities_from_period}\n chosen_celerity = {wave_celerity}', (0, 0), color='g')
+    ax5.annotate(f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n c = {chain_celerities} \n'
+                 f' c_from_period = {chain_celerities_from_period}\n'
+                 f' chosen_celerity = {wave_celerity}', (0, 0), color='g')
 
     # sixth  diagram : Temporal reconstruction
     fig_temporal_signals = plt.figure('Signaux temporal', constrained_layout=True)
