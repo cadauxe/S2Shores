@@ -92,7 +92,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def sort_waves_fields(self) -> None:
         """ Sort the waves fields estimations based on their energy max.
         """
-        self.waves_fields_estimations.sort(key=lambda x: x.energy_max, reverse=True)
+        self.waves_fields_estimations.sort(key=lambda x: x.energy, reverse=True)
 
     def find_directions(self) -> None:
         """ Find an initial set of directions from the cross correlation spectrum of the radon
@@ -110,7 +110,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.optimized_curve = total_spectrum_normalized
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
         peaks, values = find_peaks(total_spectrum_normalized,
-                                   prominence=self.local_estimator_params.PROMINENCE_MAX_PEAK)
+                                   prominence=self.local_estimator_params['PROMINENCE_MAX_PEAK'])
         prominences = values['prominences']
 
         # TODO: use symmetric peaks removal method (uncomment and delete next line.
@@ -208,7 +208,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         peaks_dir_indices = self.peaks_dir
         if peaks_dir_indices.size > 0:
             for peak_index in range(0, peaks_dir_indices.size):
-                angles_half_range = self.local_estimator_params.ANGLE_AROUND_PEAK_DIR
+                angles_half_range = self.local_estimator_params['ANGLE_AROUND_PEAK_DIR']
                 direction_index = peaks_dir_indices[peak_index]
                 tmp = np.arange(max(direction_index - angles_half_range, 0),
                                 min(direction_index + angles_half_range + 1, 360)
@@ -237,7 +237,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         phase_shift, total_spectrum, total_spectrum_normalized = \
             self.normalized_cross_correl_spectrum(phi_min, phi_max)
         peaks_freq = find_peaks(total_spectrum_normalized,
-                                prominence=self.local_estimator_params.PROMINENCE_MULTIPLE_PEAKS)
+                                prominence=self.local_estimator_params['PROMINENCE_MULTIPLE_PEAKS'])
         peaks_freq = peaks_freq[0]
         peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
 
@@ -256,7 +256,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             waves_field_estimation.delta_phase = estimated_phase_shift
             waves_field_estimation.delta_phase_ratio = abs(waves_field_estimation.delta_phase) / \
                 phi_max[peak_wavenumber_index]
-            waves_field_estimation.energy_max = total_spectrum_normalized[peak_freq_index]
+
+            waves_field_estimation.energy = total_spectrum[peak_wavenumber_index, peak_freq_index]
             self.store_estimation(waves_field_estimation)
 
         if self.debug_sample:
@@ -277,6 +278,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """
         sino1_fft = self.radon_transforms[0].get_sinograms_dfts(self.directions)
         sino2_fft = self.radon_transforms[1].get_sinograms_dfts(self.directions)
+        nb_samples = sino1_fft.shape[0]
 
         sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
         phase_shift = np.angle(sinograms_correlation_fft)
@@ -288,7 +290,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         combined_amplitude = (amplitude_sino1 + amplitude_sino2)
 
         # Find maximum total energy per direction theta and normalize by the greater one
-        total_spectrum = np.abs(combined_amplitude * phase_shift_thresholded)
+        total_spectrum = np.abs(combined_amplitude * phase_shift_thresholded) / (nb_samples**3)
         max_heta = np.max(total_spectrum, axis=0)
         total_spectrum_normalized = max_heta / np.max(max_heta)
         # Pick the maxima
@@ -315,7 +317,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         :returns: the thresholded phase shifts
         """
 
-        if not self.local_estimator_params.UNWRAP_PHASE_SHIFT:
+        if not self.local_estimator_params['UNWRAP_PHASE_SHIFT']:
             # currently deactivated but we want this functionality:
             result = np.copy(phase_shift)
         else:
@@ -341,8 +343,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # frequencies based on wave characteristics:
         period_samples = np.arange(self.global_estimator.waves_period_min,
                                    self.global_estimator.waves_period_max,
-                                   self.local_estimator_params.STEP_T)
-        k_forced = wavenumber_offshore(period_samples, self.gravity)
+                                   self.local_estimator_params['STEP_T'])
+        k_forced = cast(np.ndarray, wavenumber_offshore(period_samples, self.gravity))
 
         return k_forced.reshape((k_forced.size, 1))
 
@@ -353,15 +355,15 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         :returns: the minimum and maximum phase shifts for swallow and deep water at different
                   wavenumbers
         """
-        return phi_limits(wavenumbers,
-                          self.sequential_delta_times[0],
-                          self.global_estimator.depth_min,
-                          self.gravity)
+        return cast(Tuple[np.ndarray, np.ndarray],
+                    phi_limits(wavenumbers,
+                               self.sequential_delta_times[0],
+                               self.global_estimator.depth_min,
+                               self.gravity))
 
 
 class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
-    """ A local bathymetry estimator estimating bathymetry from the DFT of the sinograms in
-    radon transforms.
+    """ Class allowing to debug the estimations made by a SpatialDFTBathyEstimator
     """
 
     def explore_results(self) -> None:

@@ -19,14 +19,13 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
     It defines the estimation attributes specific to this estimator.
     """
 
-    def __init__(self, gravity: float,
-                 depth_estimation_method: str, depth_precision: float) -> None:
+    def __init__(self, gravity: float, depth_estimation_method: str) -> None:
 
-        super().__init__(gravity, depth_estimation_method, depth_precision)
+        super().__init__(gravity, depth_estimation_method)
 
         self._delta_phase = np.nan
         self._delta_phase_ratio = np.nan
-        self._energy_max = np.nan
+        self._energy = np.nan
 
     @property
     def delta_celerity(self) -> float:
@@ -45,23 +44,18 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         if np.isnan(self._delta_phase) or self._delta_phase == 0:
             self.period = np.nan
         else:
-            self.period = self.delta_time * (2 * np.pi / self._delta_phase)
-            if self.period < 0.:
-                # delta_phase and delta_time have opposite signs, thus we must correct quantities.
-                self.period = abs(self.period)
-                # FIXME: should we make delta_phase positive?
-                # self._delta_phase = abs(self._delta_phase)
-                # Propagation direction must be inverted
-                # TODO: uncomment for final results.
+            period = self.delta_time * (2 * np.pi / self._delta_phase)
+            if period < 0.:
+                # delta_phase and delta_time have opposite signs, nothing to correct.
+                # period must be positive
+                period = abs(period)
+            else:
+                # delta_phase and delta_time have same signs, propagation direction must be inverted
                 if self.direction < 0:
                     self.direction += 180
                 else:
                     self.direction -= 180
-            # TODO: remove (added to retrieve Erwin's results)
-            if self.direction < 0:
-                self.direction += 180
-            else:
-                self.direction -= 180
+            self.period = period
 
     @property
     def delta_phase_ratio(self) -> float:
@@ -74,24 +68,23 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         self._delta_phase_ratio = value
 
     @property
-    def energy_max(self) -> float:
-        # FIXME: define this quantity
-        """ :returns: TBD """
-        return self._energy_max
+    def energy(self) -> float:
+        """ :returns: the energy of the waves field """
+        return self._energy
 
-    @energy_max.setter
-    def energy_max(self, value: float) -> None:
-        self._energy_max = value
+    @energy.setter
+    def energy(self, value: float) -> None:
+        self._energy = value
 
     @property
     def energy_ratio(self) -> float:
         """ :returns: The ratio of energy relative to the max peak """
-        return (self.delta_phase_ratio ** 2) * self.energy_max
+        return (self.delta_phase_ratio ** 2) * self.energy
 
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)
         result += f'\ndelta phase: {self.delta_phase:5.2f} (rd)'
         result += f'  delta phase ratio: {self.delta_phase_ratio:5.2f} '
-        result += f'\nenergy_max: {self.energy_max:5.2f} (???)'
-        result += f'  energy_max ratio: {self.energy_ratio:5.2f} '
+        result += f'\nenergy: {self.energy:5.2f} (???)'
+        result += f'  energy ratio: {self.energy_ratio:5.2f} '
         return result

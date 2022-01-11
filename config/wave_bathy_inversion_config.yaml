@@ -12,7 +12,7 @@ GLOBAL_ESTIMATOR:
   # product characteristics
   DXP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
   DYP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
-  LAYERS_TYPE: "DEBUG" # among NOMINAL, DEBUG. Allow NetCDF layers selection.
+  LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
   NKEEP: 3 # number of main waves directions to keep in the product
   
   # window parameters
@@ -28,7 +28,6 @@ GLOBAL_ESTIMATOR:
   
   # depth inversion
   DEPTH_EST_METHOD: "LINEAR" # among LINEAR
-  D_PRECISION: 0.0005 # regression stop criteria - meters
   
 #spatial_dft:
 SPATIAL_DFT:
@@ -40,18 +39,15 @@ SPATIAL_DFT:
 
 #temporal_correlation
 TEMPORAL_CORRELATION:
-  DEBUG_PATH: ""
   RESOLUTION:
     TIME_INTERPOLATION: 0.5 # resolution in second for temporal signal
   TEMPORAL_LAG: 1  # number of frames to let wave propagation happen (example 3 for a 1Hz sequence)
-  PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation 
+  PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation
+  HOPS_NUMBER: 3 # number of correlation peaks used to determine celerity
   TUNING:
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
     MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
-    LOW_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.04 # low limit in rad/s of pass band filter used on temporal signal
-    HIGH_FREQUENCY_RATIO_TEMPORAL_RECONSTRUCTION: 0.2 # high limit in rad/s of pass band filter used on temporal signal 
-    MIN_PEAKS_DISTANCE_PERIOD: 5  # minimum distance in pixels between two peaks in temporal signal  
 
 #spatial_correlation
 SPATIAL_CORRELATION:

@@ -32,3 +32,23 @@ class WavesEstimationError(WavesException):
 class SequenceImagesError(WavesException):
     """ Exception raised when sequence images can not be properly exploited
     """
+
+
+class DebugDisplayError(WavesException):
+    """ Exception raised when debug display fails
+    """
+
+
+class ProductNotFound(WavesException):
+    """ Exception raised when a product cannot be found
+    """
+
+
+class WavesEstimationIndexingError(WavesException):
+    """ Exception raised when an estimation cannot be found with its coordinates.
+    """
+
+
+class WavesEstimationAttributeError(WavesException):
+    """ Exception raised when an attribute is not available in an estimation.
+    """

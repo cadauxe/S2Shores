@@ -20,9 +20,11 @@ scipy
 scikit-image
 
 xarray
-munch
+netcdf4
 pandas
 matplotlib
 Sphinx>=4.1
 setuptools
 GDAL
+Shapely>=1.6
+

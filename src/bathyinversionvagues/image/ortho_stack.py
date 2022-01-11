@@ -7,12 +7,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Union, List  # @NoMove
+from typing import Dict, Union, List, Optional  # @NoMove
 
 from osgeo import gdal
 
-from ..image_processing.waves_image import WavesImage
 
+from ..data_providers.delta_time_provider import DeltaTimeProvider
+from ..image_processing.waves_image import WavesImage
 from .ortho_layout import OrthoLayout
 
 
@@ -35,6 +36,34 @@ class OrthoStack(ABC, OrthoLayout):
       considered as frames of the OrthoStack. Just a subset of them are declared as frames, which
       allows for instance to select images of the same resolution from the set of images.
     """
+
+    def __init__(self, product_path: Path) -> None:
+        """ Constructor.
+
+        :param product_path: Path to the file or directory corresponding to this ortho stack
+        """
+        self._product_path = product_path
+
+        # Extract the relevant information from the first usable spectral band
+        # FIXME: use the selected frames instead ?
+        im_dataset = gdal.Open(str(self.get_image_file_path(self.usable_frames[0])))
+
+        super().__init__(im_dataset.RasterXSize, im_dataset.RasterYSize,
+                         im_dataset.GetProjection(), im_dataset.GetGeoTransform())
+        # We are done with info retrieval: release the dataset
+        im_dataset = None
+
+    @property
+    def product_path(self) -> Path:
+        """ Path to this product
+        """
+        return self._product_path
+
+    @property
+    @abstractmethod
+    def full_name(self) -> str:
+        """ :returns: the full name of this ortho stack
+        """
 
     @property
     @abstractmethod
@@ -100,6 +129,19 @@ class OrthoStack(ABC, OrthoLayout):
 
         :param frame_id: the identifier of the frame (e.g. 'B02', or 2, or a datetime)
         :returns: the index of the layer in the file where the frame pixels are contained
+        """
+
+    @abstractmethod
+    def create_delta_time_provider(
+            self, external_delta_times_path: Optional[Path] = None) -> DeltaTimeProvider:
+        """ Build and returns a DeltaTimeProvider suitable for this OrthoStack. It may be built
+        using only data contained inside the ortho stack, or it may need to use data from a file
+        which is external to the orhto stack.
+
+        :param external_delta_times_path: path to a file or a directory containing data necessary
+                                          to build the DeltaTimeProvider when they are not inside
+                                          the ortho stack itself.
+        :returns: a DeltaTimeProvider fully configured for being used with this ortho stack.
         """
 
     def read_pixels(self, frame_id: FrameIdType, line_start: int, line_stop: int,

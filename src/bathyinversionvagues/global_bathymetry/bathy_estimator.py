@@ -5,21 +5,25 @@
 :created: 17/05/2021
 """
 from abc import ABC
+from pathlib import Path
+from typing import List, Optional, Dict, Union, Any  # @NoMove
 
-from typing import List, Optional, Dict  # @NoMove
 
+import xarray as xr  # @NoMove
 from xarray import Dataset  # @NoMove
-from munch import Munch
+
+
 import numpy as np
 
-from ..data_providers.delta_time_provider import (
-    DeltaTimeProvider, NoDeltaTimeProviderError)
-from ..data_providers.dis_to_shore_provider import InfinityDisToShoreProvider, DisToShoreProvider
-from ..data_providers.gravity_provider import ConstantGravityProvider, GravityProvider
+from ..data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
+from ..data_providers.dis_to_shore_provider import (InfinityDisToShoreProvider, DisToShoreProvider,
+                                                    NetCDFDisToShoreProvider)
+from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, GravityProvider,
+                                               ConstantGravityProvider)
+from ..data_providers.roi_provider import (RoiProvider, VectorFileRoiProvider)
 from ..image.image_geometry_types import MarginsType, PointType
 from ..image.ortho_stack import OrthoStack, FrameIdType, FramesIdsType
 from ..image.sampled_ortho_image import SampledOrthoImage
-
 from .bathy_estimator_parameters import BathyEstimatorParameters
 from .ortho_bathy_estimator import OrthoBathyEstimator
 
@@ -30,32 +34,41 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
     sequentially.
     """
 
-    def __init__(self, ortho_stack: OrthoStack, wave_params: Munch,
+    def __init__(self, ortho_stack: OrthoStack, wave_params: Dict[str, Any], output_dir: Path,
                  nb_subtiles_max: int = 1) -> None:
         """Create a BathyEstimator object and set necessary informations
 
         :param ortho_stack: the orthorectified stack onto which bathymetry must be estimated.
         :param wave_params: parameters for the global and local bathymetry estimators
+        :param output_dir: path to the directory where the netCDF bathy file will be written.
         :param nb_subtiles_max: Nb of subtiles for bathymetry estimation
         """
         super().__init__(wave_params)
         # Store arguments in attributes for further use
-        self.ortho_stack = ortho_stack
+        self._ortho_stack = ortho_stack
+        self._output_dir = output_dir
 
         self._distoshore_provider: DisToShoreProvider
-        self.set_distoshore_provider(InfinityDisToShoreProvider())
+        # set InfinityDisToShoreProvider as default DisToShoreProvider
+        self.set_distoshore_provider(provider_info=InfinityDisToShoreProvider())
 
         self._gravity_provider: GravityProvider
-        self.set_gravity_provider(ConstantGravityProvider())
-        # self.set_gravity_provider(LatitudeVaryingGravityProvider())
+        # set LatitudeVaryingGravityProvider as default GravityProvider
+        self.set_gravity_provider(provider_info=LatitudeVaryingGravityProvider())
 
+        # No default DeltaTimeProvider
         self._delta_time_provider: Optional[DeltaTimeProvider] = None
 
+        # No default RoiProvider
+        self._roi_provider: Optional[RoiProvider] = None
+        self._limit_to_roi = False
+
         # Create subtiles onto which bathymetry estimation will be done
-        self.subtiles = SampledOrthoImage.build_subtiles(self.ortho_stack, nb_subtiles_max,
-                                                         self.sampling_step_x,
-                                                         self.sampling_step_y,
-                                                         self.measure_extent)
+        self._nb_subtiles_max = nb_subtiles_max
+        self.subtiles: List[SampledOrthoImage]
+
+        # Init debugging points handling
+        self._debug_path: Optional[Path] = None
         self._debug_samples: List[PointType] = []
         self._debug_sample = False
 
@@ -79,7 +92,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         selected_frames = self.selected_frames_param
         if selected_frames is None:
-            selected_frames = self.ortho_stack.usable_frames
+            selected_frames = self._ortho_stack.usable_frames
         return selected_frames
 
     @property
@@ -88,7 +101,20 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return len(self.subtiles)
 
-    def compute_bathy(self, subtile_number: int) -> Dataset:
+    def create_subtiles(self) -> None:
+        """ Warmup of the bathy estimator by creating the processing subtiles
+        """
+        roi = None
+        if self._roi_provider is not None and self._limit_to_roi:
+            roi = self._roi_provider.bounding_box(0.1)
+        self.subtiles = SampledOrthoImage.build_subtiles(self._ortho_stack,
+                                                         self._nb_subtiles_max,
+                                                         self.sampling_step_x,
+                                                         self.sampling_step_y,
+                                                         self.measure_extent,
+                                                         roi=roi)
+
+    def compute_bathy_for_subtile(self, subtile_number: int) -> Dataset:
         """ Computes the bathymetry dataset for a given subtile.
 
         :param subtile_number: number of the subtile
@@ -96,8 +122,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         # Retrieve the subtile.
         subtile = self.subtiles[subtile_number]
-        print(
-            f'Subtile {subtile_number}: {self.ortho_stack.short_name} {subtile}')
+        print(f'Subtile {subtile_number}: {self._ortho_stack.short_name} {subtile}')
 
         # Build a bathymertry estimator over the subtile and launch estimation.
         subtile_estimator = OrthoBathyEstimator(self, subtile)
@@ -105,11 +130,22 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
 
         # Build the bathymetry dataset for the subtile.
         infos = self.build_infos()
-        infos.update(self.ortho_stack.build_infos())
+        infos.update(self._ortho_stack.build_infos())
         for key, value in infos.items():
             dataset.attrs[key] = value
 
+        # We return the dataset instead of storing it in the instance, for multiprocessing reasons.
         return dataset
+
+    def merge_subtiles(self, bathy_subtiles: List[Dataset]) -> None:
+        """Merge all the subtiles datasets in memory into a single one in a netCDF file
+
+        :param bathy_subtiles: Subtiles datasets
+        """
+        merged_bathy = xr.combine_by_coords(bathy_subtiles)
+        product_name = self._ortho_stack.full_name
+        netcdf_output_path = (self._output_dir / product_name).with_suffix('.nc')
+        merged_bathy.to_netcdf(path=netcdf_output_path, format='NETCDF4')
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this estimator
@@ -123,12 +159,22 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         # metadata from the parameters
         infos['waveEstimationMethod'] = self.local_estimator_code
         infos['ChainVersions'] = self.chains_versions
-        infos['Resolution X'] = self.sampling_step_x
-        infos['Resolution Y'] = self.sampling_step_y
+        infos['Resolution X'] = str(self.sampling_step_x)
+        infos['Resolution Y'] = str(self.sampling_step_y)
 
         return infos
 
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
+    @property
+    def debug_path(self) -> Optional[Path]:
+        """ :returns: path to a directory where debugging info can be written.
+        """
+        return self._debug_path
+
+    @debug_path.setter
+    def debug_path(self, path: Path) -> None:
+        self._debug_path = path
+
     def set_debug_area(self, bottom_left_corner: PointType, top_right_corner: PointType,
                        decimation: int) -> None:
         """ Sets all points within rectangle defined by bottom_left_corner and top_right_corner to
@@ -162,15 +208,13 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         self._debug_samples = samples
 
-    def set_debug(self, sample: PointType) -> None:
+    def set_debug_flag(self, sample: PointType) -> None:
         """ Set or reset the debug flag for a given point depending on its presence into the set
         of points to debug.
 
         :param sample: The coordinate of the point for which the debug flag must be set
         """
         self._debug_sample = sample in self._debug_samples
-        if self._debug_sample:
-            print(f'Debugging point: X:{sample[0]} / Y:{sample[1]}')
 
     @property
     def debug_sample(self) -> bool:
@@ -179,14 +223,27 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         return self._debug_sample
 
 # ++++++++++++++++++++++++++++ External data providers +++++++++++++++++++
-
-    def set_distoshore_provider(self, distoshore_provider: DisToShoreProvider) -> None:
+    def set_distoshore_provider(
+            self, provider_info: Optional[Union[Path, DisToShoreProvider]] = None) -> None:
         """ Sets the DisToShoreProvider to use with this estimator
 
-        :param distoshore_provider: the DisToShoreProvider to use
+        :param provider_info: Either the DisToShoreProvider to use or a path to a netCDF file
+                           assuming a geographic NetCDF format.
         """
+        if isinstance(provider_info, DisToShoreProvider):
+            distoshore_provider = provider_info
+        elif isinstance(provider_info, Path):
+            distoshore_provider = NetCDFDisToShoreProvider(provider_info, 4326,
+                                                           x_axis_label='lon',
+                                                           y_axis_label='lat')
+        else:
+            # None or some other type, keep the current provider
+            distoshore_provider = self._distoshore_provider
+
+        # Set private attribute.
         self._distoshore_provider = distoshore_provider
-        self._distoshore_provider.client_epsg_code = self.ortho_stack.epsg_code
+        if self._distoshore_provider is not None:
+            self._distoshore_provider.client_epsg_code = self._ortho_stack.epsg_code
 
     def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance from a given point to the nearest shore.
@@ -196,13 +253,65 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return self._distoshore_provider.get_distoshore(point)
 
-    def set_gravity_provider(self, gravity_provider: GravityProvider) -> None:
-        """ Sets the GravityProvider to use with this estimator
+    def set_roi_provider(self, provider_info: Optional[Union[Path, RoiProvider]] = None,
+                         limit_to_roi: bool = False) -> None:
+        """ Sets the RoiProvider to use with this estimator
 
-        :param gravity_provider: the GravityProvider to use
+        :param provider_info: Either the RoiProvider to use or a path to a vector file containing
+                              the ROI or None if no provider change.
+        :param limit_to_roi: if True, the produced bathymetry will be limited to a bounding box
+                             enclosing the Roi with some margins.
         """
+        if isinstance(provider_info, RoiProvider):
+            roi_provider = provider_info
+        elif isinstance(provider_info, Path):
+            roi_provider = VectorFileRoiProvider(provider_info)
+        else:
+            # None or some other type, keep the current provider
+            roi_provider = self._roi_provider
+
+        # Set private attribute.
+        self._roi_provider = roi_provider
+        if self._roi_provider is not None:
+            self._roi_provider.client_epsg_code = self._ortho_stack.epsg_code
+            self._limit_to_roi = limit_to_roi
+
+    def is_inside_roi(self, point: PointType) -> bool:
+        """ Test if a point is inside the ROI
+
+        :param point: the point to test
+        :returns: True if the point lies inside the ROI.
+        """
+        if self._roi_provider is None:
+            return True
+        return self._roi_provider.contains(point)
+
+    def set_gravity_provider(self,
+                             provider_info: Optional[Union[str, GravityProvider]] = None) -> None:
+        """ Sets the GravityProvider to use with this estimator .
+
+        :param provider_info: an instance of GravityProvider or the name of a well known gravity
+                              provider to use. If None the current provider is left unchanged.
+        :raises ValueError: when the gravity provider name is unknown
+        """
+        if isinstance(provider_info, GravityProvider):
+            gravity_provider = provider_info
+        elif isinstance(provider_info, str):
+            if provider_info.upper() not in ['CONSTANT', 'LATITUDE_VARYING']:
+                raise ValueError('Gravity provider type unknown : ', provider_info)
+            # No need to set LatitudeVaryingGravityProvider as it is the BathyEstimator default.
+            if provider_info.upper() == 'CONSTANT':
+                gravity_provider = ConstantGravityProvider()
+            else:
+                gravity_provider = LatitudeVaryingGravityProvider()
+        else:
+            # None or some other type, keep the current provider
+            gravity_provider = self._gravity_provider
+
+        # Set private attribute.
         self._gravity_provider = gravity_provider
-        self._gravity_provider.client_epsg_code = self.ortho_stack.epsg_code
+        if self._gravity_provider is not None:
+            self._gravity_provider.client_epsg_code = self._ortho_stack.epsg_code
 
     def get_gravity(self, point: PointType, altitude: float = 0.) -> float:
         """ Returns the gravity at some point expressed by its X, Y and H coordinates in some SRS,
@@ -214,13 +323,24 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         """
         return self._gravity_provider.get_gravity(point, altitude)
 
-    def set_delta_time_provider(self, delta_time_provider: DeltaTimeProvider) -> None:
-        """ Sets the DeltaTimeProvider to use with this estimator
+    def set_delta_time_provider(
+            self, provider_info: Optional[Union[Path, DeltaTimeProvider]] = None) -> None:
+        """ Sets the DeltaTimeProvider to use with this estimator.
 
-        :param delta_time_provider: the DeltaTimeProvider to use
+        :param provider_info: Either the DeltaTimeProvider to use or a path to a file or a
+                              directory to ba used by the associated OrthoStack to build its
+                              provider, or None to leave the provider unchanged.
         """
+        delta_time_provider: Optional[DeltaTimeProvider]
+        if isinstance(provider_info, DeltaTimeProvider):
+            delta_time_provider = provider_info
+        else:
+            delta_time_provider = self._ortho_stack.create_delta_time_provider(provider_info)
+
+        # Set private attribute.
         self._delta_time_provider = delta_time_provider
-        self._delta_time_provider.client_epsg_code = self.ortho_stack.epsg_code
+        if self._delta_time_provider is not None:
+            self._delta_time_provider.client_epsg_code = self._ortho_stack.epsg_code
 
     def get_delta_time(self, first_frame_id: FrameIdType, second_frame_id: FrameIdType,
                        point: PointType) -> float:

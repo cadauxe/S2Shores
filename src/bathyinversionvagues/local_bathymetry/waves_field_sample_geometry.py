@@ -7,6 +7,8 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
+from typing import List, Any, Callable
+
 import numpy as np
 
 
@@ -24,6 +26,7 @@ class WavesFieldSampleGeometry:
     def __init__(self) -> None:
         self._direction = np.nan
         self._wavelength = np.nan
+        self._wavelength_change_observers: List[Any] = []
 
     @property
     def direction(self) -> float:
@@ -48,7 +51,10 @@ class WavesFieldSampleGeometry:
 
     @wavelength.setter
     def wavelength(self, value: float) -> None:
-        self._wavelength = value
+        if value != self._wavelength:
+            self._wavelength = value
+            for notify in self._wavelength_change_observers:
+                notify()
 
     @property
     def wavenumber(self) -> float:
@@ -58,6 +64,9 @@ class WavesFieldSampleGeometry:
     @wavenumber.setter
     def wavenumber(self, value: float) -> None:
         self.wavelength = 1. / value
+
+    def register_wavelength_change(self, notify: Callable) -> None:
+        self._wavelength_change_observers.append(notify)
 
     def __str__(self) -> str:
         result = f'direction: {self.direction}°\n'

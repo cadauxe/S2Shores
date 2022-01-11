@@ -36,13 +36,15 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
         self.create_sequence_time_series()
+        # TODO : stop using random points
+        np.random.seed(0)
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
         To do this random points are selected within the sequence of image and a temporal serie
         is included in the np.array for each selected point
         """
-        percentage_points = self.local_estimator_params.PERCENTAGE_POINTS
+        percentage_points = self.local_estimator_params['PERCENTAGE_POINTS']
         if percentage_points < 0 or percentage_points > 100:
             raise ValueError('Percentage must be between 0 and 100')
         merge_array = np.dstack([image.pixels for image in self.images_sequence])
@@ -61,8 +63,9 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
     def get_correlation_matrix(self) -> np.ndarray:
         """Compute temporal correlation matrix
         """
-        return cross_correlation(self._time_series[:, self.local_estimator_params.TEMPORAL_LAG:],
-                                 self._time_series[:, :-self.local_estimator_params.TEMPORAL_LAG])
+        temporal_lag = self.local_estimator_params['TEMPORAL_LAG']
+        return cross_correlation(self._time_series[:, temporal_lag:],
+                                 self._time_series[:, :-temporal_lag])
 
     def get_correlation_image(self) -> WavesImage:
         """ This function computes the correlation image by projecting the the correlation matrix

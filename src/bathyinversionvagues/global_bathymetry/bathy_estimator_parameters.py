@@ -6,8 +6,6 @@
 """
 from typing import Optional
 
-from munch import Munch
-
 from ..image.ortho_stack import FramesIdsType
 
 
@@ -15,7 +13,7 @@ class BathyEstimatorParameters:
     """ Definition of global bathy estimator properties, mapping Munchified parameters.
     """
 
-    def __init__(self, wave_params: Munch) -> None:
+    def __init__(self, wave_params: dict) -> None:
         """ Constructor
 
         :param wave_params: parameters for the global and local bathymetry estimators
@@ -23,29 +21,29 @@ class BathyEstimatorParameters:
         self._waveparams = wave_params
 
     @property
+    def _global_estimator_params(self) -> dict:
+        """ :returns: the set of parameters of the global estimator
+        """
+        return self._waveparams['GLOBAL_ESTIMATOR']
+
+    @property
     def chains_versions(self) -> str:
         """ :returns: the versions of the packages used in the chain
         """
-        return self._waveparams.CHAINS_VERSIONS
-
-    @property
-    def _global_estimator_params(self) -> Munch:
-        """ :returns: the set of parameters of the global estimator
-        """
-        return self._waveparams.GLOBAL_ESTIMATOR
+        return self._waveparams['CHAINS_VERSIONS']
 
     @property
     def local_estimator_code(self) -> str:
         """ :returns: the code of the local estimator to use with this global estimator
         """
-        return self._global_estimator_params.WAVE_EST_METHOD
+        return self._global_estimator_params['WAVE_EST_METHOD']
 
     @property
     def selected_frames_param(self) -> Optional[FramesIdsType]:
         """ :returns: the list of frames selected for running the estimation.
         """
         try:
-            result = self._global_estimator_params.SELECTED_FRAMES
+            result = self._global_estimator_params['SELECTED_FRAMES']
         except AttributeError:
             result = None
         return result
@@ -54,94 +52,88 @@ class BathyEstimatorParameters:
     def nb_max_waves_fields(self) -> int:
         """ :returns: the maximum number of waves fields to keep
         """
-        return self._global_estimator_params.NKEEP
+        return self._global_estimator_params['NKEEP']
 
     @property
     def layers_type(self) -> str:
         """ :returns: the type of layers to write in the bathymetry product
         """
-        return self._global_estimator_params.LAYERS_TYPE
+        return self._global_estimator_params['LAYERS_TYPE']
 
     @property
     def depth_min(self) -> float:
         """ :returns: the minimum depth (m) to consider when doing inversion
         """
-        return self._global_estimator_params.MIN_D
+        return self._global_estimator_params['MIN_D']
 
     @property
     def waves_period_min(self) -> float:
         """ :returns: the minimum waves period (s) to consider when doing inversion
         """
-        return self._global_estimator_params.MIN_T
+        return self._global_estimator_params['MIN_T']
 
     @property
     def waves_period_max(self) -> float:
         """ :returns: the maximum waves period (s) to consider when doing inversion
         """
-        return self._global_estimator_params.MAX_T
+        return self._global_estimator_params['MAX_T']
 
     @property
     def waves_linearity_min(self) -> float:
         """ :returns: the minimum value of waves linearity to consider when doing inversion
         """
-        return self._global_estimator_params.MIN_WAVES_LINEARITY
+        return self._global_estimator_params['MIN_WAVES_LINEARITY']
 
     @property
     def waves_linearity_max(self) -> float:
         """ :returns: the maximum value of waves linearity to consider when doing inversion
         """
-        return self._global_estimator_params.MAX_WAVES_LINEARITY
+        return self._global_estimator_params['MAX_WAVES_LINEARITY']
 
     @property
     def sampling_step_x(self) -> float:
         """ :returns: the sampling step (m) along the X axis to define the samples locations
         """
-        return self._global_estimator_params.DXP
+        return self._global_estimator_params['DXP']
 
     @property
     def sampling_step_y(self) -> float:
         """ :returns: the sampling step (m) along the Y axis to define the samples locations
         """
-        return self._global_estimator_params.DYP
+        return self._global_estimator_params['DYP']
 
     @property
     def window_size_x(self) -> float:
         """ :returns: the size of the estimation window along the X axis (m)
         """
-        return self._global_estimator_params.WINDOW
+        return self._global_estimator_params['WINDOW']
 
     @property
     def window_size_y(self) -> float:
         """ :returns: the size of the estimation window along the Y axis (m)
         """
-        return self._global_estimator_params.WINDOW
+        return self._global_estimator_params['WINDOW']
 
     @property
     def smoothing_columns_size(self) -> int:
         """ :returns: the size of the smoothing filter along columns (pixels)
         """
-        return self._global_estimator_params.SM_LENGTH
+        return self._global_estimator_params['SM_LENGTH']
 
     @property
     def smoothing_lines_size(self) -> int:
         """ :returns: the size of the smoothing filter along lines (pixels)
         """
-        return self._global_estimator_params.SM_LENGTH
+        return self._global_estimator_params['SM_LENGTH']
 
     @property
     def depth_estimation_method(self) -> str:
         """ :returns: the code of the depth estimation method to use for depth inversion
         """
-        return self._global_estimator_params.DEPTH_EST_METHOD
+        return self._global_estimator_params['DEPTH_EST_METHOD']
 
     @property
-    def depth_estimation_precision(self) -> float:
-        """ :returns: the precision to use when estimating depth (m)
-        """
-        return self._global_estimator_params.D_PRECISION
-
-    @property
-    def local_estimator_params(self) -> Munch:
+    def local_estimator_params(self) -> dict:
         """ :returns: the set of parameters specific to the currently defined local estimator
         """
         return self._waveparams[self.local_estimator_code]

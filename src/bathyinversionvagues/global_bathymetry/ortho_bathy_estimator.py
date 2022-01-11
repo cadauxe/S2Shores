@@ -61,28 +61,22 @@ class OrthoBathyEstimator:
         print(f'Loading time: {time.time() - start_load:.2f} s')
 
         start = time.time()
-        in_water_points = 0
-        for i, x_sample in enumerate(self.sampled_ortho.x_samples):
-            for j, y_sample in enumerate(self.sampled_ortho.y_samples):
+        computed_points = 0
+        for x_sample in self.sampled_ortho.x_samples:
+            for y_sample in self.sampled_ortho.y_samples:
                 estimation_point = (x_sample, y_sample)
-                self.parent_estimator.set_debug(estimation_point)
+                self.parent_estimator.set_debug_flag(estimation_point)
                 bathy_estimations = self._run_local_bathy_estimator(sub_tile_images,
                                                                     estimation_point)
-                if bathy_estimations.distance_to_shore > 0:
-                    in_water_points += 1
+                if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
+                    computed_points += 1
 
-                # TODO: do this filtering in build_dataset()
-                # Keep only a limited number of waves fields and bathy estimations
-                while len(bathy_estimations) > nb_keep:
-                    bathy_estimations.pop()
-
-                # Store bathymetry sample
-
-                estimated_bathy.store_estimations(i, j, bathy_estimations)
+                # Store bathymetry sample estimations
+                estimated_bathy.store_estimations(x_sample, y_sample, bathy_estimations)
 
         total_points = self.sampled_ortho.nb_samples
         comput_time = time.time() - start
-        print(f'Computed {in_water_points}/{total_points} points in: {comput_time:.2f} s')
+        print(f'Computed {computed_points}/{total_points} points in: {comput_time:.2f} s')
 
         return estimated_bathy.build_dataset(self.parent_estimator.layers_type, nb_keep)
 
@@ -90,11 +84,11 @@ class OrthoBathyEstimator:
                                    estimation_point: PointType) -> WavesFieldsEstimations:
         distance = self.parent_estimator.get_distoshore(estimation_point)
         gravity = self.parent_estimator.get_gravity(estimation_point, 0.)
-
-        bathy_estimations = WavesFieldsEstimations(estimation_point, gravity, distance)
+        inside_roi = self.parent_estimator.is_inside_roi(estimation_point)
+        bathy_estimations = WavesFieldsEstimations(estimation_point, gravity, distance, inside_roi)
         # do not compute on land
         # FIXME: distance to shore test should take into account windows sizes
-        if distance > 0:
+        if distance > 0 and inside_roi:
             # computes the bathymetry at the specified position
             try:
                 images_sequence = self._create_images_sequence(sub_tile_images,
