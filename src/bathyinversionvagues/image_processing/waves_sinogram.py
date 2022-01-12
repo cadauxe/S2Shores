@@ -12,6 +12,9 @@
 from typing import Optional, List, Tuple, Callable, Any  # @NoMove
 import numpy as np
 
+from ..generic_utils.numpy_utils import HashableNdArray
+from ..generic_utils.signal_utils import get_unity_roots
+
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
@@ -54,7 +57,7 @@ class WavesSinogram:
         from the sinogram using standard frequencies.
         """
         if self._dft.size == 0:
-            self._dft = self.compute_dft()
+            self.compute_dft()
         return self._dft
 
     @dft.setter
@@ -97,19 +100,20 @@ class WavesSinogram:
         # TODO: fill in the sinogram properties based on the current values
         return symmetric_sinogram
 
-    def compute_dft(self, unity_roots: Optional[np.ndarray] = None) -> np.ndarray:
+    def compute_dft(self, frequencies: Optional[HashableNdArray] = None) -> None:
         """ Computes the DFT of the sinogram
 
-        :param unity_roots: a set of unity roots at which the DFT must be computed
-        :returns: the DFT of the sinogram
+        :param frequencies: a set of frequencies at which the DFT must be computed. If None standard
+        frequencies are computed.
         """
-        if unity_roots is None:
+        if frequencies is None:
             nb_positive_coeffs = int(np.ceil(self.size / 2))
-            result = np.fft.fft(self.values)[0:nb_positive_coeffs]
+            self._dft = np.fft.fft(self.values)[0:nb_positive_coeffs]
         else:
             # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
-            result = np.dot(unity_roots, self.values)
-        return result
+            unity_roots = None if frequencies is None else get_unity_roots(frequencies, self.size)
+            self._interpolated_dft = np.dot(unity_roots, self.values)
+            self._interpolated_dft_frequencies = frequencies.unwrap()
 
     @property
     def energy(self) -> float:

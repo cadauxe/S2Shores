@@ -12,7 +12,8 @@ from typing import Optional, Any, List, Tuple  # @NoMove @UnusedImport
 import numpy as np  # @NoMove
 
 
-from ..generic_utils.signal_utils import get_unity_roots
+from ..generic_utils.numpy_utils import HashableNdArray
+
 from .sinograms_dict import SinogramsDict
 from .waves_sinogram import WavesSinogram, SignalProcessingFilters
 
@@ -69,19 +70,14 @@ class Sinograms(SinogramsDict):
         :param kfft: the set of wavenumbers to use for sampling the DFT. If None, standard DFT
                      sampling is done.
         """
-        frequencies = None if kfft is None else kfft / self.sampling_frequency
-        unity_roots = None if frequencies is None else get_unity_roots(frequencies, self.nb_samples)
         # If no selected directions, DFT is computed on all directions
         directions_to_compute = self.directions if directions is None else directions
 
+        frequencies = None if kfft is None else HashableNdArray(kfft / self.sampling_frequency)
         for direction in directions_to_compute:
-            if unity_roots is None:
-                self[direction].dft = self[direction].compute_dft()
-            else:
-                self[direction].interpolated_dft = self[direction].compute_dft(unity_roots)
-                self[direction].interpolated_dft_frequencies = frequencies
+            self[direction].compute_dft(frequencies)
 
-        if unity_roots is not None:
+        if kfft is not None:
             self.directions_interpolated_dft = directions_to_compute
 
     def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None,
