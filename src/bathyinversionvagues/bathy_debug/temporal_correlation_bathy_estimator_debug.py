@@ -43,7 +43,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         correlation_matrix = self.correlation_image.pixels
         sinogram_max_var = self.metrics['sinogram_max_var']
         x = self.metrics['x']
-        interval = self._metrics['interval']
+        interval = self.metrics['interval']
         debug_path = self.global_estimator.debug_path
 
         fig = plt.figure(constrained_layout=True)
@@ -94,10 +94,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                     mpl.rcParams['lines.markersize'], c='orange')
         min_limit_x = np.min(x)
         min_limit_y = np.min(sinogram_max_var)
-        ax4.plot(x[self._metrics['wave_length_zeros']],
-                 sinogram_max_var[self._metrics['wave_length_zeros']], 'ro')
-        ax4.plot(x[self._metrics['max_indices']],
-                 sinogram_max_var[self._metrics['max_indices']], 'go')
+        ax4.plot(x[self.metrics['wave_length_zeros']],
+                 sinogram_max_var[self.metrics['wave_length_zeros']], 'ro')
+        ax4.plot(x[self.metrics['max_indices']],
+                 sinogram_max_var[self.metrics['max_indices']], 'go')
 
         bathy = depth_from_dispersion(1 / wave_estimation.wavelength,
                                       wave_estimation.celerity, self.gravity)
@@ -107,9 +107,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Fifth  diagram
         ax5 = fig.add_subplot(gs[3, :2])
         ax5.axis('off')
-        dephasings = self._metrics['dephasings']
-        celerities = self._metrics['celerities']
-        celerities_from_periods = self._metrics['celerities_from_periods']
+        dephasings = self.metrics['dephasings']
+        celerities = self.metrics['celerities']
+        celerities_from_periods = self.metrics['celerities_from_periods']
         chain_dx = ' '.join([f'{dephasing:.2f} | ' for dephasing in dephasings])
         chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
         chain_celerities_from_period = ' '.join(
@@ -120,14 +120,14 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         # sixth  diagram : Temporal reconstruction
         fig_temporal_signals = plt.figure('Signaux temporal', constrained_layout=True)
-        hops_number = len(self._metrics['temporal_signals'])
+        hops_number = len(self.metrics['temporal_signals'])
         gs = gridspec.GridSpec(hops_number, 1, figure=fig_temporal_signals)
         for i in range(hops_number):
-            temporal_signal = self._metrics['temporal_signals'][i]
-            arg_peak_max = self._metrics['arg_peaks_max'][i]
-            dephasing = self._metrics['dephasings'][i]
-            temporal_period = self._metrics['periods'][i]
-            celerities_from_periods = self._metrics['celerities_from_periods'][i]
+            temporal_signal = self.metrics['temporal_signals'][i]
+            arg_peak_max = self.metrics['arg_peaks_max'][i]
+            dephasing = self.metrics['dephasings'][i]
+            temporal_period = self.metrics['periods'][i]
+            celerities_from_periods = self.metrics['celerities_from_periods'][i]
             ax = fig_temporal_signals.add_subplot(gs[i, :])
             ax.plot(temporal_signal)
             ax.plot(arg_peak_max, temporal_signal[arg_peak_max], 'ro')
