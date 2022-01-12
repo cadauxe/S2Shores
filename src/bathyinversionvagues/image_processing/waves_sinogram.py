@@ -33,8 +33,9 @@ class WavesSinogram:
             raise TypeError('WavesSinogram accepts only a 1D numpy array as argument')
         self.values = values
         self.size = values.size
-        self._dft: Optional[np.ndarray] = None
-        self._interpolated_dft: Optional[np.ndarray] = None
+        self._dft = np.array([])
+        self._interpolated_dft = np.array([])
+        self._interpolated_dft_frequencies = np.array([])
 
     def interpolate(self, factor: float) -> 'WavesSinogram':
         """ Compute an augmented version of the sinogram, by interpolation with some factor.
@@ -52,7 +53,7 @@ class WavesSinogram:
         """ :returns: the current DFT of the sinogram. If it does not exists, it is computed
         from the sinogram using standard frequencies.
         """
-        if self._dft is None:
+        if self._dft.size == 0:
             self._dft = self.compute_dft()
         return self._dft
 
@@ -66,13 +67,28 @@ class WavesSinogram:
 
         :raises ValueError: if the interpolated DFT does not exist
         """
-        if self._interpolated_dft is None:
+        if self._interpolated_dft.size == 0:
             raise ValueError('Interpolated DFT does not exist')
         return self._interpolated_dft
 
     @interpolated_dft.setter
     def interpolated_dft(self, dft_values: np.ndarray) -> None:
         self._interpolated_dft = dft_values
+
+    @property
+    def interpolated_dft_frequencies(self) -> np.ndarray:
+        """ :returns: the frequencies of the current interpolated DFT of the sinogram.
+        If this DFT does not exists, an exception is raised
+
+        :raises ValueError: if the interpolated DFT does not exist
+        """
+        if self._interpolated_dft_frequencies.size == 0:
+            raise ValueError('Interpolated DFT does not exist')
+        return self._interpolated_dft_frequencies
+
+    @interpolated_dft_frequencies.setter
+    def interpolated_dft_frequencies(self, dft_frequencies_values: np.ndarray) -> None:
+        self._interpolated_dft_frequencies = dft_frequencies_values
 
     def symmeterize(self) -> 'WavesSinogram':
         """ :returns: a new WavesSinogram which is the symmetric version of this one.

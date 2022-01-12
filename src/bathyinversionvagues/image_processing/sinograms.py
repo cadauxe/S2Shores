@@ -79,6 +79,7 @@ class Sinograms(SinogramsDict):
                 self[direction].dft = self[direction].compute_dft()
             else:
                 self[direction].interpolated_dft = self[direction].compute_dft(unity_roots)
+                self[direction].interpolated_dft_frequencies = frequencies
 
         if unity_roots is not None:
             self.directions_interpolated_dft = directions_to_compute

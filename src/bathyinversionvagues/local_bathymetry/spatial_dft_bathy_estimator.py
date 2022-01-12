@@ -242,11 +242,15 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
 
         for index, peak_freq_index in enumerate(peaks_freq):
+            direction_index = self.directions[peak_freq_index]
             peak_wavenumber_index = peaks_wavenumbers_ind[index]
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
             estimated_direction = \
-                self.radon_transforms[0].directions[self.directions[peak_freq_index]]
+                self.radon_transforms[0].directions[direction_index]
 
+            # TODO: get wavelength from DFT frequencies
+            # peak_sinogram = self.radon_transforms[0][direction_index]
+            # print(peak_sinogram.interpolated_dft_frequencies)
             wavelength = 1 / kfft[peak_wavenumber_index]
             waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
                                           self.create_waves_field_estimation(estimated_direction,
