@@ -22,20 +22,19 @@ class Sinograms(SinogramsDict):
     """ Class handling a set of sinograms coming from some Radon transform of some image.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, sampling_frequency: float) -> None:
+        """ Constructor
 
-        self._sampling_frequency = 0.
+        :param sampling_frequency: the sampling frequency of the sinograms """
+        super().__init__()
+
+        self._sampling_frequency = sampling_frequency
         self.directions_interpolated_dft: Optional[np.ndarray] = None
 
     @property
     def sampling_frequency(self) -> float:
         """ :return: the sampling frequency of the sinograms """
         return self._sampling_frequency
-
-    @sampling_frequency.setter
-    def sampling_frequency(self, frequency: float) -> None:
-        self._sampling_frequency = frequency
 
     @property
     def spectrum_wave_numbers(self) -> np.ndarray:
@@ -172,8 +171,7 @@ class Sinograms(SinogramsDict):
         for direction in self.directions:
             interpolated_sinogram = self[direction].interpolate(factor_augmented_radon)
             radon_transform_augmented_list.append(interpolated_sinogram)
-        radon_augmented = Sinograms()
+        radon_augmented = Sinograms(self.sampling_frequency / factor_augmented_radon)
         radon_augmented.quantization_step = self.quantization_step
-        radon_augmented.sampling_frequency = self.sampling_frequency / factor_augmented_radon
         radon_augmented.insert_sinograms(radon_transform_augmented_list, self.directions)
         return radon_augmented
