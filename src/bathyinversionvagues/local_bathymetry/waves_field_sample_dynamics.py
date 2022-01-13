@@ -85,5 +85,5 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
     def __str__(self) -> str:
         result = WavesFieldSampleGeometry.__str__(self)
-        result += f'\nperiod: {self.period:5.2f} (s)  celerity: {self.celerity:5.2f}'
+        result += f'\nDynamics:   period: {self.period:5.2f} (s)  celerity: {self.celerity:5.2f}'
         return result

@@ -13,11 +13,9 @@ import pandas
 
 import numpy as np
 
-from ..bathy_debug.debug_display import temporal_method_debug
 from ..generic_utils.image_utils import cross_correlation
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.correlation_bathy_estimator import CorrelationBathyEstimator
-from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
 from .waves_fields_estimations import WavesFieldsEstimations
 
 
@@ -36,7 +34,7 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         super().__init__(images_sequence, global_estimator,
                          waves_fields_estimations, selected_directions)
         self.create_sequence_time_series()
-        # TODO : stop using random points
+        # TODO: stop using random points
         np.random.seed(0)
 
     def create_sequence_time_series(self) -> None:
@@ -100,12 +98,3 @@ class TemporalCorrelationBathyEstimator(CorrelationBathyEstimator):
         """ :return: tuple of sampling positions
         """
         return self._sampling_positions
-
-
-class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
-                                             TemporalCorrelationBathyEstimator):
-    """ Class performing debugging for temporal correlation method
-    """
-
-    def explore_results(self) -> None:
-        temporal_method_debug(self)
