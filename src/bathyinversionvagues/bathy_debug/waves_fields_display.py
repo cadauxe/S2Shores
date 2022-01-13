@@ -239,6 +239,6 @@ def display_context(local_estimator):
     axs[0, 2].set_title('directions energies')
     axs[1, 2].imshow(delta_radon, aspect='auto', cmap='gray')
     axs[1, 2].set_title('radon1 - radon2')
-    plt.show(fig)
+    plt.show()
     display_energies(local_estimator, radon1, radon2)
     animate_sinograms(local_estimator, radon1, radon2)
