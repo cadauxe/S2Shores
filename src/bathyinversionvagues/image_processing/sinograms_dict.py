@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, List, Tuple, Any  # @NoMove
+from typing import Optional, List, Tuple, Any, cast  # @NoMove
 
 import numpy as np  # @NoMove
 
@@ -102,7 +102,7 @@ class SinogramsDict(QuantizedDirectionsDict):
         if directions is None:
             selected_directions = np.array(self.sorted_directions)
         else:
-            selected_directions_array = self.quantizer.quantize(directions)
+            selected_directions_array = cast(np.ndarray, self.quantizer.quantize(directions))
             selected_directions = np.array(sorted(selected_directions_array.tolist()))
 
         # Build array by selecting the requested directions
