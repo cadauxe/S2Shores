@@ -104,8 +104,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         phi_min, phi_max = self.get_phi_limits(kfft)
 
         # TODO: modify directions finding such that only one radon transform is computed (50% gain)
-        self.radon_transforms[0].compute_sinograms_dfts()
-        self.radon_transforms[1].compute_sinograms_dfts()
         _, _, total_spectrum_normalized = self.normalized_cross_correl_spectrum(phi_min, phi_max)
         self.optimized_curve = total_spectrum_normalized
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
