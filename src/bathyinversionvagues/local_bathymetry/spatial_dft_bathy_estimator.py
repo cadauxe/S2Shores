@@ -230,8 +230,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         kfft = self.get_kfft()
         phi_min, phi_max = self.get_phi_limits(kfft)
 
-        self.radon_transforms[0].compute_sinograms_dfts(self.directions, kfft)
-        self.radon_transforms[1].compute_sinograms_dfts(self.directions, kfft)
+        self.radon_transforms[0].interpolate_sinograms_dfts(kfft, self.directions)
+        self.radon_transforms[1].interpolate_sinograms_dfts(kfft, self.directions)
         phase_shift, total_spectrum, total_spectrum_normalized = \
             self.normalized_cross_correl_spectrum(phi_min, phi_max, interpolated_dft=True)
         peaks_freq = find_peaks(total_spectrum_normalized,
