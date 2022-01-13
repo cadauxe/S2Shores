@@ -20,8 +20,16 @@ class SinogramsDict(QuantizedDirectionsDict):
     knowledge of the image
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, directions_quantization: Optional[float] = None) -> None:
+        """ Constructor
+
+        :param directions_quantization: the step to use for quantizing direction angles, for
+                                        indexing purposes. Direction quantization is such that the
+                                        0 degree direction is used as the origin, and any direction
+                                        angle is transformed to the nearest quantized angle for
+                                        indexing that direction in the radon transform.
+        """
+        super().__init__(directions_quantization)
         self._nb_samples = -1
 
     # +++++++++++++++++++ Sinograms management part +++++++++++++++++++

@@ -22,11 +22,18 @@ class Sinograms(SinogramsDict):
     """ Class handling a set of sinograms coming from some Radon transform of some image.
     """
 
-    def __init__(self, sampling_frequency: float) -> None:
+    def __init__(self, sampling_frequency: float,
+                 directions_quantization: Optional[float] = None) -> None:
         """ Constructor
 
-        :param sampling_frequency: the sampling frequency of the sinograms """
-        super().__init__()
+        :param sampling_frequency: the sampling frequency of the sinograms
+        :param directions_quantization: the step to use for quantizing direction angles, for
+                                        indexing purposes. Direction quantization is such that the
+                                        0 degree direction is used as the origin, and any direction
+                                        angle is transformed to the nearest quantized angle for
+                                        indexing that direction in the radon transform.
+        """
+        super().__init__(directions_quantization)
 
         self._sampling_frequency = sampling_frequency
         self.directions_interpolated_dft: Optional[np.ndarray] = None
@@ -171,7 +178,7 @@ class Sinograms(SinogramsDict):
         for direction in self.directions:
             interpolated_sinogram = self[direction].interpolate(factor_augmented_radon)
             radon_transform_augmented_list.append(interpolated_sinogram)
-        radon_augmented = Sinograms(self.sampling_frequency / factor_augmented_radon)
-        radon_augmented.quantization_step = self.quantization_step
+        radon_augmented = Sinograms(self.sampling_frequency / factor_augmented_radon,
+                                    self.quantization_step)
         radon_augmented.insert_sinograms(radon_transform_augmented_list, self.directions)
         return radon_augmented

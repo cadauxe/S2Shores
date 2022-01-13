@@ -22,6 +22,7 @@ from .waves_sinogram import WavesSinogram
 
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 180.
+DEFAULT_ANGLE_STEP = 1.
 
 
 def linear_directions(angle_min: float, angle_max: float, directions_step: float) -> np.ndarray:
@@ -50,7 +51,7 @@ class WavesRadon(Sinograms):
     """
 
     def __init__(self, image: WavesImage, selected_directions: Optional[np.ndarray] = None,
-                 directions_quantization: float = 1., weighted: bool = False) -> None:
+                 directions_quantization: Optional[float] = None, weighted: bool = False) -> None:
         """ Constructor
 
         :param image: a 2D array containing an image
@@ -70,12 +71,11 @@ class WavesRadon(Sinograms):
         # TODO: Quantize directions when selected_directions is provided?
         if selected_directions is None:
             selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
-                                                    directions_quantization)
+                                                    DEFAULT_ANGLE_STEP)
 
         radon_transform_list = self._compute(image.pixels, weighted, selected_directions)
 
-        super().__init__(image.sampling_frequency)
-        self.quantization_step = directions_quantization
+        super().__init__(image.sampling_frequency, directions_quantization)
         self.insert_sinograms(radon_transform_list, selected_directions)
 
     @staticmethod
