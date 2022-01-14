@@ -62,7 +62,7 @@ class Sinograms(SinogramsDict):
         :returns: the filtered sinograms
         """
         directions = self.directions if directions is None else directions
-        filtered_sinograms = Sinograms()
+        filtered_sinograms = Sinograms(self.sampling_frequency)
         for direction in self:
             filtered_sinograms[direction] = self[direction].apply_filters(processing_filters)
         return filtered_sinograms
