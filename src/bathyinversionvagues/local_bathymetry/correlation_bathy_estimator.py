@@ -106,7 +106,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                                                                              wave_length))
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
-            print(waves_field_estimation)
 
             if self.debug_sample:
                 self._metrics['radon_transform'] = radon_transform
