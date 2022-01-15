@@ -292,7 +292,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         metrics = {}
         metrics['sinograms_correlation_fft'] = sinograms_correlation_fft
-        metrics['phase_shift'] = phase_shift
         metrics['phase_shift_thresholded'] = phase_shift_thresholded
         metrics['amplitude_sino1'] = amplitude_sino1
         metrics['amplitude_sino2'] = amplitude_sino2

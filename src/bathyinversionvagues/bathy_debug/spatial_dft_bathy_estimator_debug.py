@@ -7,6 +7,8 @@
 :license: see LICENSE file
 :created: 5 mars 2021
 """
+import numpy as np
+
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
 from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
@@ -23,11 +25,11 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         initial_sino1_fft = self.radon_transforms[0].get_sinograms_dfts()
         initial_sino2_fft = self.radon_transforms[1].get_sinograms_dfts()
         initial_total_spectrum_normalized = metrics['standard_dft']['total_spectrum_normalized']
-        initial_phase_shift = metrics['standard_dft']['phase_shift']
+        initial_phase_shift = np.angle(metrics['standard_dft']['sinograms_correlation_fft'])
 
         sino1_fft = self.radon_transforms[0].get_sinograms_dfts(interpolated_dft=True)
         sino2_fft = self.radon_transforms[1].get_sinograms_dfts(interpolated_dft=True)
-        phase_shift = metrics['interpolated_dft']['phase_shift']
+        phase_shift = np.angle(metrics['interpolated_dft']['sinograms_correlation_fft'])
         phase_shift_thresholded = metrics['interpolated_dft']['phase_shift_thresholded']
         combined_amplitude = metrics['interpolated_dft']['combined_amplitude']
         total_spectrum_normalized = metrics['interpolated_dft']['total_spectrum_normalized']

@@ -149,7 +149,6 @@ def display_cross_correl_spectrum(axs, local_estimator, title, refinement_phase)
     metrics = local_estimator.metrics
     key = 'interpolated_dft' if refinement_phase else 'standard_dft'
     sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
-    phase_shift = metrics[key]['phase_shift']
     phase_shift_thresholded = metrics[key]['phase_shift_thresholded']
     combined_amplitude = metrics[key]['combined_amplitude']
     amplitude_sino1 = metrics[key]['amplitude_sino1']
@@ -160,7 +159,8 @@ def display_cross_correl_spectrum(axs, local_estimator, title, refinement_phase)
 
     build_directional_2d_display(axs[1], 'Sinograms correlation DFT module',
                                  np.abs(sinograms_correlation_fft), directions)
-    build_directional_2d_display(axs[2], 'Sinograms correlation DFT Phase', phase_shift, directions)
+    build_directional_2d_display(axs[2], 'Sinograms correlation DFT Phase',
+                                 np.angle(sinograms_correlation_fft), directions)
     build_directional_2d_display(axs[3], 'Sinograms correlation DFT Phase thresholded',
                                  phase_shift_thresholded, directions)
     build_directional_2d_display(axs[4], 'Sinograms correlation total spectrum',
