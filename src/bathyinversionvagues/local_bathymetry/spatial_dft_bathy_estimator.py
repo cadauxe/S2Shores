@@ -288,14 +288,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         total_spectrum = np.abs(combined_amplitude * phase_shift_thresholded) / (nb_samples**3)
         max_heta = np.max(total_spectrum, axis=0)
         total_spectrum_normalized = max_heta / np.max(max_heta)
-        # Pick the maxima
 
         metrics = {}
         metrics['sinograms_correlation_fft'] = sinograms_correlation_fft
         metrics['phase_shift_thresholded'] = phase_shift_thresholded
-        metrics['amplitude_sino1'] = amplitude_sino1
-        metrics['amplitude_sino2'] = amplitude_sino2
-        metrics['combined_amplitude'] = combined_amplitude
         metrics['total_spectrum'] = total_spectrum
         metrics['max_heta'] = max_heta
         metrics['total_spectrum_normalized'] = total_spectrum_normalized

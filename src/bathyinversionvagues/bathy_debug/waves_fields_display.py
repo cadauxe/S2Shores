@@ -150,9 +150,6 @@ def display_cross_correl_spectrum(axs, local_estimator, title, refinement_phase)
     key = 'interpolated_dft' if refinement_phase else 'standard_dft'
     sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
     phase_shift_thresholded = metrics[key]['phase_shift_thresholded']
-    combined_amplitude = metrics[key]['combined_amplitude']
-    amplitude_sino1 = metrics[key]['amplitude_sino1']
-    amplitude_sino2 = metrics[key]['amplitude_sino2']
     total_spectrum = metrics[key]['total_spectrum']
     total_spectrum_normalized = metrics[key]['total_spectrum_normalized']
     max_heta = metrics[key]['max_heta']

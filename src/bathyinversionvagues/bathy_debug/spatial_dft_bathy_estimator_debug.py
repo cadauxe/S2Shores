@@ -31,9 +31,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         sino2_fft = self.radon_transforms[1].get_sinograms_dfts(interpolated_dft=True)
         phase_shift = np.angle(metrics['interpolated_dft']['sinograms_correlation_fft'])
         phase_shift_thresholded = metrics['interpolated_dft']['phase_shift_thresholded']
-        combined_amplitude = metrics['interpolated_dft']['combined_amplitude']
         total_spectrum_normalized = metrics['interpolated_dft']['total_spectrum_normalized']
-        amplitude_sino1 = metrics['interpolated_dft']['amplitude_sino1']
         total_spectrum = metrics['interpolated_dft']['total_spectrum']
         max_heta = metrics['interpolated_dft']['max_heta']
 
@@ -56,7 +54,6 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         for index in range(0, phase_shift_thresholded.shape[1]):
             print(index, phase_shift_thresholded[1][index])
 
-        dump_numpy_variable(combined_amplitude, 'refined combined_amplitude')
         dump_numpy_variable(total_spectrum_normalized, 'refined total_spectrum_normalized')
 
         if self.peaks_dir is not None:
