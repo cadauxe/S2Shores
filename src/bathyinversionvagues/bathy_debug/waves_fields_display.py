@@ -14,15 +14,10 @@ from typing import Optional, List, Tuple  # @NoMove
 
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
-from matplotlib.figure import Figure
 
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-
-from ..image_processing.waves_image import WavesImage
-from ..image_processing.waves_radon import WavesRadon
-from ..image_processing.waves_sinogram import WavesSinogram
 
 
 def display_curve(data, legend):
@@ -41,7 +36,7 @@ def display_3curves(data1, data2, data3):
 
 
 def display_4curves(data1, data2, data3, data4):
-    _, ax = plt.subplots(2, 2)
+    _, ax = plt.subplots(nrows=2, ncols=2)
     ax[0, 0].plot(data1)
     ax[1, 0].plot(data2)
     ax[0, 1].plot(data3)
@@ -54,6 +49,11 @@ def display_image(data, legend):
     ax.imshow(data, aspect='auto', cmap='gray')
     ax.set_title(legend)
     plt.show()
+
+
+def get_display_title(local_estimator) -> str:
+    title = f'{local_estimator.global_estimator._ortho_stack.short_name} {local_estimator.location}'
+    return title
 
 
 def build_image_display(axes: Axes, title: str, image: np.ndarray,
@@ -95,7 +95,8 @@ def build_directional_curve_display(axes: Axes, title: str,
 
 def display_initial_data(local_estimator):
     plt.close('all')
-    _, axs = plt.subplots(2, 2)
+    fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 8))
+    fig.suptitle(get_display_title(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.waves_fields_estimations]
     build_image_display(axs[0, 0], 'first image',
                         local_estimator.images_sequence[0].pixels,
@@ -115,17 +116,18 @@ def display_initial_data(local_estimator):
 
 def display_radon_transforms(local_estimator, refinement_phase=False):
     plt.close('all')
-    _, axs = plt.subplots(6, 3)
-    display_radon_transform(axs[:, 0], local_estimator.radon_transforms[0],
-                            'first radon transform', refinement_phase)
-    display_radon_transform(axs[:, 2], local_estimator.radon_transforms[1],
-                            'second radon transform', refinement_phase)
-    display_cross_correl_spectrum(axs[:, 1], local_estimator,
+    fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(12, 8))
+    fig.suptitle(get_display_title(local_estimator), fontsize=12)
+    build_radon_transform_display(axs[:, 0], local_estimator.radon_transforms[0],
+                                  'first radon transform', refinement_phase)
+    build_radon_transform_display(axs[:, 2], local_estimator.radon_transforms[1],
+                                  'second radon transform', refinement_phase)
+    build_correl_spectrum_display(axs[:, 1], local_estimator,
                                   'Cross correlation spectrum', refinement_phase)
     plt.show()
 
 
-def display_radon_transform(axs, transform, title, refinement_phase=False):
+def build_radon_transform_display(axs, transform, title, refinement_phase=False):
     values, directions = transform.get_as_arrays()
     sino_fft = transform.get_sinograms_dfts()
     dft_amplitudes = np.abs(sino_fft)
@@ -140,7 +142,7 @@ def display_radon_transform(axs, transform, title, refinement_phase=False):
     build_directional_curve_display(axs[3], 'Sinograms Variances / Energies', variances, directions)
 
 
-def display_cross_correl_spectrum(axs, local_estimator, title, refinement_phase):
+def build_correl_spectrum_display(axs, local_estimator, title, refinement_phase):
     radon_transform = local_estimator.radon_transforms[0]
     if not refinement_phase:
         _, directions = radon_transform.get_as_arrays()
@@ -167,7 +169,9 @@ def display_cross_correl_spectrum(axs, local_estimator, title, refinement_phase)
 
 
 def display_energies(local_estimator, radon1_obj, radon2_obj):
-    _, ax = plt.subplots()
+    fig, ax = plt.subplots()
+    fig.suptitle(get_display_title(local_estimator), fontsize=12)
+
     image1_energy = local_estimator.images_sequence[0].energy_inner_disk
     image2_energy = local_estimator.images_sequence[1].energy_inner_disk
     ax.plot(radon1_obj.get_sinograms_energies() / image1_energy)
@@ -178,6 +182,7 @@ def display_energies(local_estimator, radon1_obj, radon2_obj):
 def animate_sinograms(local_estimator, radon1_obj, radon2_obj):
 
     fig, ax = plt.subplots()
+    fig.suptitle(get_display_title(local_estimator), fontsize=12)
 
     sinogram1_init = radon1_obj[radon1_obj.directions[0]]
     sinogram2_init = radon2_obj[radon2_obj.directions[0]]
@@ -216,9 +221,8 @@ def display_context(local_estimator):
     values1, _ = radon1.get_as_arrays()
     values2, _ = radon2.get_as_arrays()
     delta_radon = np.abs(values1 - values2)
-    fig = Figure(figsize=[12, 8])
-    fig, axs = plt.subplots(nrows=2, ncols=3)
-    # axs = fig.subplots(nrows=2, ncols=3)
+    fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
+    fig.suptitle(get_display_title(local_estimator), fontsize=12)
     axs[0, 0].imshow(radon1.pixels, aspect='auto', cmap='gray')
     axs[0, 0].set_title('subI_Det0')
     axs[1, 0].imshow(values1, aspect='auto', cmap='gray')
