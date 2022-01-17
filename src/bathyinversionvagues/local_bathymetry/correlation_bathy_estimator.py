@@ -65,7 +65,9 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                 'The chosen number of lag frames is bigger than the number of available frames')
         self.propagation_duration = np.sum(
             self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
-        self.metrics['propagation_duration'] = self.propagation_duration
+
+        if self.debug_sample:
+            self.metrics['propagation_duration'] = self.propagation_duration
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -77,7 +79,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
             sinogram_max_var = radon_transform[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
-            self.metrics['sinogram_max_var'] = radon_transform.values
             wave_length = self.compute_wave_length(sinogram_max_var_values)
             celerities = self.compute_celerities(
                 sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
@@ -234,7 +235,6 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
         interval = np.logical_and(x * self.spatial_resolution > -wave_length,
                                   x * self.spatial_resolution < wave_length)
-        self.metrics['interval'] = interval
         peaks, _ = find_peaks(sinogram)
         peaks = peaks[interval[peaks]]
         max_indice = np.argmax(sinogram[peaks])
@@ -242,17 +242,20 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         if dx > 0:
             dephasings = dx * self.spatial_resolution + wave_length * np.arange(nb_hops)
             max_indices = np.array(peaks[max_indice] +
-                                   np.arange(nb_hops) * wave_length / self.spatial_resolution, dtype=int)
+                                   np.arange(nb_hops) * wave_length / self.spatial_resolution,
+                                   dtype=int)
         else:
             dephasings = dx * self.spatial_resolution - wave_length * np.arange(nb_hops)
             dephasings = np.abs(dephasings)
             max_indices = np.array(peaks[max_indice] -
-                                   np.arange(nb_hops) * wave_length / self.spatial_resolution, dtype=int)
+                                   np.arange(nb_hops) * wave_length / self.spatial_resolution,
+                                   dtype=int)
         max_indices = max_indices[np.logical_and(max_indices > 0, max_indices < len(sinogram))]
 
         celerities = dephasings / self.propagation_duration
 
         if self.debug_sample:
+            self.metrics['interval'] = interval
             self.metrics['x'] = x
             self.metrics['max_indices'] = max_indices
             self.metrics['dephasings'] = dephasings
