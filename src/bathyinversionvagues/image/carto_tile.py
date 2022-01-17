@@ -27,9 +27,8 @@ def build_tiling(x_samples: np.ndarray, y_samples: np.ndarray,
     tiles_def = []
     # Full samples cropped in crop*crop tiles
     crop = int(np.sqrt(nb_tiles_max))
-    nb_tiles_x = crop  # Possibly different from nb_tiles_y in the future
-    nb_tiles_y = crop  # Possibly different from nb_tiles_x in the future
-
+    nb_tiles_x = min(crop, x_samples.size)  # Possibly different from nb_tiles_y in the future
+    nb_tiles_y = min(crop, y_samples.size)  # Possibly different from nb_tiles_x in the future
     x_samples_parts = split_samples(x_samples, nb_tiles_x)
     y_samples_parts = split_samples(y_samples, nb_tiles_y)
     for x_samples_part in x_samples_parts:
