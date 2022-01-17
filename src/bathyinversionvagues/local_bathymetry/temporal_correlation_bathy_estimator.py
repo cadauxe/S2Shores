@@ -24,7 +24,7 @@ from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
-from .correlation_waves_field_estimation import CorrelationWavesFieldEstimation
+from .correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
 from .waves_fields_estimations import WavesFieldsEstimations
 
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """ Class performing temporal correlation to compute bathymetry
     """
-    waves_field_estimation_cls = CorrelationWavesFieldEstimation
+    waves_field_estimation_cls = TemporalCorrelationWavesFieldEstimation
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
                  waves_fields_estimations: WavesFieldsEstimations,
@@ -123,7 +123,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             errors_celerities = np.abs(celerities_from_periods - celerities)
             index_min = np.nanargmin(errors_celerities)
             celerity = celerities[index_min]
-            waves_field_estimation = cast(CorrelationWavesFieldEstimation,
+            waves_field_estimation = cast(self.waves_field_estimation_cls,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
             waves_field_estimation.celerity = celerity
