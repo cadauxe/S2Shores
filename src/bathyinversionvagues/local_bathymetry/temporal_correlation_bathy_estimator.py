@@ -13,6 +13,7 @@ from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 import pandas
 from scipy.interpolate import interp1d
 from scipy.signal import butter, find_peaks, sosfiltfilt
+
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
@@ -24,8 +25,8 @@ from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
-from .correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
 from .local_bathy_estimator import LocalBathyEstimator
+from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
 
 
