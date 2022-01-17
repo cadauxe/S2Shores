@@ -184,17 +184,3 @@ class LocalBathyEstimator(ABC):
                       Used for freeing references to memory expensive data (images, transform, ...)
         """
         return deepcopy(self._metrics)
-
-
-class LocalBathyEstimatorDebug(LocalBathyEstimator):
-    """ Abstract class handling debug mode for LocalBathyEstimator
-    """
-
-    def run(self) -> None:
-        super().run()
-        self.explore_results()
-
-    @abstractmethod
-    def explore_results(self) -> None:
-        """ Method called when estimator has run to allow results exploration for debugging purposes
-        """

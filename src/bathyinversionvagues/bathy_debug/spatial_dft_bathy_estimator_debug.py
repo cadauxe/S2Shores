@@ -10,8 +10,9 @@
 import numpy as np
 
 from ..generic_utils.numpy_utils import dump_numpy_variable
-from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
 from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
+
+from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 from .waves_fields_display import display_initial_data, display_radon_transforms, display_context
 
 

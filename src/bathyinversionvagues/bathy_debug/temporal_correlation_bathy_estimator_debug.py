@@ -17,9 +17,10 @@ import matplotlib as mpl
 import numpy as np
 
 from ..bathy_physics import depth_from_dispersion
-from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimatorDebug
 from ..local_bathymetry.temporal_correlation_bathy_estimator import \
     TemporalCorrelationBathyEstimator
+
+from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 
 
 class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
