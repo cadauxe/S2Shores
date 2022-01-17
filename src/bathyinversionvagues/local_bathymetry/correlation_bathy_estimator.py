@@ -65,7 +65,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
                 'The chosen number of lag frames is bigger than the number of available frames')
         self.propagation_duration = np.sum(
             self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
-        self._metrics['propagation_duration'] = self.propagation_duration
+        self.metrics['propagation_duration'] = self.propagation_duration
 
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
@@ -74,11 +74,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self.correlation_image.apply_filters(self.correlation_image_filters)
             radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
             filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
-            direction_propagation, variances = \
-                filtered_radon.get_direction_maximum_variance()
+            direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
             sinogram_max_var = radon_transform[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
-            self._metrics['sinogram_max_var'] = radon_transform.values
+            self.metrics['sinogram_max_var'] = radon_transform.values
             wave_length = self.compute_wave_length(sinogram_max_var_values)
             celerities = self.compute_celerities(
                 sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
@@ -108,15 +107,15 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
             self.store_estimation(waves_field_estimation)
 
             if self.debug_sample:
-                self._metrics['radon_transform'] = radon_transform
-                self._metrics['variances'] = variances
-                self._metrics['sinogram_max_var'] = sinogram_max_var_values
+                self.metrics['radon_transform'] = radon_transform
+                self.metrics['variances'] = variances
+                self.metrics['sinogram_max_var'] = sinogram_max_var_values
                 # TODO: use objects in debug
-                self._metrics['temporal_signals'] = temporal_signals
-                self._metrics['arg_peaks_max'] = arg_peaks_max
-                self._metrics['periods'] = periods
-                self._metrics['celerities'] = celerities
-                self._metrics['celerities_from_periods'] = celerities_from_periods
+                self.metrics['temporal_signals'] = temporal_signals
+                self.metrics['arg_peaks_max'] = arg_peaks_max
+                self.metrics['periods'] = periods
+                self.metrics['celerities'] = celerities
+                self.metrics['celerities_from_periods'] = celerities_from_periods
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
@@ -219,7 +218,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
-            self._metrics['wave_length_zeros'] = wave_length_zeros
+            self.metrics['wave_length_zeros'] = wave_length_zeros
         return wave_length
 
     def compute_celerities(self, sinogram: np.ndarray, wave_length: float, nb_hops: int) -> np.ndarray:
@@ -235,7 +234,7 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
         interval = np.logical_and(x * self.spatial_resolution > -wave_length,
                                   x * self.spatial_resolution < wave_length)
-        self._metrics['interval'] = interval
+        self.metrics['interval'] = interval
         peaks, _ = find_peaks(sinogram)
         peaks = peaks[interval[peaks]]
         max_indice = np.argmax(sinogram[peaks])
@@ -254,10 +253,10 @@ class CorrelationBathyEstimator(LocalBathyEstimator):
         celerities = dephasings / self.propagation_duration
 
         if self.debug_sample:
-            self._metrics['x'] = x
-            self._metrics['max_indices'] = max_indices
-            self._metrics['dephasings'] = dephasings
-            self._metrics['propagation_duration'] = self.propagation_duration
+            self.metrics['x'] = x
+            self.metrics['max_indices'] = max_indices
+            self.metrics['dephasings'] = dephasings
+            self.metrics['propagation_duration'] = self.propagation_duration
         return celerities
 
     def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> np.ndarray:

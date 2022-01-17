@@ -115,7 +115,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             raise WavesEstimationError('Unable to find any directional peak')
 
         if self.debug_sample:
-            self._metrics['standard_dft'] = metrics
+            self.metrics['standard_dft'] = metrics
 
     def _process_peaks(self, peaks: np.ndarray, prominences: np.ndarray) -> np.ndarray:
         # Find pairs of symmetric directions
@@ -252,9 +252,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self.store_estimation(waves_field_estimation)
 
         if self.debug_sample:
-            self._metrics['kfft'] = kfft
-            self._metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
-            self._metrics['interpolated_dft'] = metrics
+            self.metrics['kfft'] = kfft
+            self.metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
+            self.metrics['interpolated_dft'] = metrics
 
     def normalized_cross_correl_spectrum(self, phi_min: np.ndarray, phi_max: np.ndarray,
                                          interpolated_dft: bool = False
