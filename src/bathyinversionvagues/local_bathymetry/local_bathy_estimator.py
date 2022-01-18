@@ -183,4 +183,8 @@ class LocalBathyEstimator(ABC):
         """ :returns: a copy of the dictionary of metrics recorded by this estimator.
                       Used for freeing references to memory expensive data (images, transform, ...)
         """
-        return deepcopy(self._metrics)
+        return self._metrics
+
+    @metrics.setter
+    def metrics(self, values: Dict[str, Any]) -> None:
+        self._metrics = deepcopy(values)
