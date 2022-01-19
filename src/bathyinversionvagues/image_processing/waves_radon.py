@@ -66,6 +66,8 @@ class WavesRadon(Sinograms):
         :param weighted: a flag specifying if the radon transform must be weighted by a 1/cos(d)
                          weighting function
         """
+        super().__init__(image.sampling_frequency, directions_quantization)
+
         self.pixels = image.pixels.copy()
 
         # TODO: Quantize directions when selected_directions is provided?
@@ -73,29 +75,11 @@ class WavesRadon(Sinograms):
             selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
                                                     DEFAULT_ANGLE_STEP)
 
-        radon_transform_list = self._compute(self.pixels, weighted, selected_directions)
-
-        super().__init__(image.sampling_frequency, directions_quantization)
-        self.insert_sinograms(radon_transform_list, selected_directions)
-
-    @staticmethod
-    def _compute(pixels: np.ndarray, weighted: bool, selected_directions: np.ndarray) -> List[WavesSinogram]:
-        """ Compute the radon transform of the image over a set of directions
-        """
-        # FIXME: quantization may imply that radon transform is not computed on stored directions
-        # TODO: make tests with circle=False, circled image and with weights
-        # radon_transform_array = symmetric_radon(pixels, theta=selected_directions, circle=False)
-        radon_transform_array = symmetric_radon(pixels, theta=selected_directions)
-
-        if weighted:
-            weights = sinogram_weights(radon_transform_array.shape[0])
-            # TODO: replace by enumerate(selected_directions)
-            for direction_index in range(radon_transform_array.shape[1]):
-                radon_transform_array[:, direction_index] = (
-                    radon_transform_array[:, direction_index] / weights)
+        radon_transform = symmetric_radon(self.pixels, theta=selected_directions)
 
         sinograms: List[WavesSinogram] = []
         for index, _ in enumerate(selected_directions):
-            sinogram = WavesSinogram(radon_transform_array[:, index])
+            sinogram = WavesSinogram(radon_transform[:, index])
             sinograms.append(sinogram)
-        return sinograms
+
+        self.insert_sinograms(sinograms, selected_directions)
