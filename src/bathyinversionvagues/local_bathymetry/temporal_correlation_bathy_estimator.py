@@ -96,7 +96,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ Run the local bathy estimator using correlation method
         """
         try:
-            self.correlation_image.apply_filters(self.correlation_image_filters)
+            filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
+            self.correlation_image.pixels = filtered_image.pixels
             radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
             filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
             direction_propagation, variances = filtered_radon.get_direction_maximum_variance()

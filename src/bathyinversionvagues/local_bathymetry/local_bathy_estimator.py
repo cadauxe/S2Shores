@@ -99,7 +99,8 @@ class LocalBathyEstimator(ABC):
         image processing filters.
         """
         for image in self.images_sequence:
-            image.apply_filters(self.preprocessing_filters)
+            filtered_image = image.apply_filters(self.preprocessing_filters)
+            image.pixels = filtered_image.pixels
 
     @property
     def gravity(self) -> float:
