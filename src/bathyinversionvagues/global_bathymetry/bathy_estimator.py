@@ -28,6 +28,7 @@ from .bathy_estimator_parameters import BathyEstimatorParameters
 from .ortho_bathy_estimator import OrthoBathyEstimator
 
 
+# TODO: create an abstract BathyEstimatorProviders class to host the different providers
 class BathyEstimator(ABC, BathyEstimatorParameters):
     """ Management of bathymetry computation and parameters on a single product. Computation
     is split in several cartographic tiles, which must be run separately, either in parallel or
@@ -262,6 +263,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
         :param limit_to_roi: if True, the produced bathymetry will be limited to a bounding box
                              enclosing the Roi with some margins.
         """
+        roi_provider: Optional[RoiProvider]
         if isinstance(provider_info, RoiProvider):
             roi_provider = provider_info
         elif isinstance(provider_info, Path):

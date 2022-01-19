@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from .bathy_estimator import BathyEstimator  # @UnusedImport
 
 
+# TODO: create a WavesImageSequence class holding a list of WavesImage
 # TODO: Make this class inherit from BathyEstimator ?
 class OrthoBathyEstimator:
     """ This class implements the computation of bathymetry over a sampled orthorectifed image.
