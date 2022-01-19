@@ -83,8 +83,8 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)
-        result += f'\ndelta phase: {self.delta_phase:5.2f} (rd)'
+        result += f'\n    delta phase: {self.delta_phase:5.2f} (rd)'
         result += f'  delta phase ratio: {self.delta_phase_ratio:5.2f} '
-        result += f'\nenergy: {self.energy:5.2f} (???)'
+        result += f'\n    energy: {self.energy:5.2f} (???)'
         result += f'  energy ratio: {self.energy_ratio:5.2f} '
         return result

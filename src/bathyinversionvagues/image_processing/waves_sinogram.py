@@ -12,6 +12,9 @@
 from typing import Optional, List, Tuple, Callable, Any  # @NoMove
 import numpy as np
 
+from ..generic_utils.numpy_utils import HashableNdArray
+from ..generic_utils.signal_utils import get_unity_roots
+
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
@@ -33,7 +36,9 @@ class WavesSinogram:
             raise TypeError('WavesSinogram accepts only a 1D numpy array as argument')
         self.values = values
         self.size = values.size
-        self._dft: Optional[np.ndarray] = None
+        self._dft = np.array([])
+        self._interpolated_dft = np.array([])
+        self._interpolated_dft_frequencies = np.array([])
 
     def interpolate(self, factor: float) -> 'WavesSinogram':
         """ Compute an augmented version of the sinogram, by interpolation with some factor.
@@ -46,19 +51,35 @@ class WavesSinogram:
         current_axis = np.linspace(0, self.size - 1, self.size)
         return WavesSinogram(np.interp(new_axis, current_axis, self.values))
 
-    # TODO: introduce different DFT properties based on the frequencies used (standard or not)
     @property
     def dft(self) -> np.ndarray:
         """ :returns: the current DFT of the sinogram. If it does not exists, it is computed
         from the sinogram using standard frequencies.
         """
-        if self._dft is None:
-            self._dft = self.compute_dft()
+        if self._dft.size == 0:
+            self.compute_dft()
         return self._dft
 
-    @dft.setter
-    def dft(self, dft_values: np.ndarray) -> None:
-        self._dft = dft_values
+    @property
+    def interpolated_dft(self) -> np.ndarray:
+        """ :returns: the current DFT of the sinogram. If it does not exists, an exception is raised
+
+        :raises ValueError: if the interpolated DFT does not exist
+        """
+        if self._interpolated_dft.size == 0:
+            raise ValueError('Interpolated DFT does not exist')
+        return self._interpolated_dft
+
+    @property
+    def interpolated_dft_frequencies(self) -> np.ndarray:
+        """ :returns: the frequencies of the current interpolated DFT of the sinogram.
+        If this DFT does not exists, an exception is raised
+
+        :raises ValueError: if the interpolated DFT does not exist
+        """
+        if self._interpolated_dft_frequencies.size == 0:
+            raise ValueError('Interpolated DFT does not exist')
+        return self._interpolated_dft_frequencies
 
     def symmeterize(self) -> 'WavesSinogram':
         """ :returns: a new WavesSinogram which is the symmetric version of this one.
@@ -67,19 +88,20 @@ class WavesSinogram:
         # TODO: fill in the sinogram properties based on the current values
         return symmetric_sinogram
 
-    def compute_dft(self, unity_roots: Optional[np.ndarray] = None) -> np.ndarray:
+    def compute_dft(self, frequencies: Optional[HashableNdArray] = None) -> None:
         """ Computes the DFT of the sinogram
 
-        :param unity_roots: a set of unity roots at which the DFT must be computed
-        :returns: the DFT of the sinogram
+        :param frequencies: a set of frequencies at which the DFT must be computed. If None standard
+        frequencies are computed.
         """
-        if unity_roots is None:
+        if frequencies is None:
             nb_positive_coeffs = int(np.ceil(self.size / 2))
-            result = np.fft.fft(self.values)[0:nb_positive_coeffs]
+            self._dft = np.fft.fft(self.values)[0:nb_positive_coeffs]
         else:
             # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
-            result = np.dot(unity_roots, self.values)
-        return result
+            unity_roots = None if frequencies is None else get_unity_roots(frequencies, self.size)
+            self._interpolated_dft = np.dot(unity_roots, self.values)
+            self._interpolated_dft_frequencies = frequencies.unwrap()
 
     @property
     def energy(self) -> float:

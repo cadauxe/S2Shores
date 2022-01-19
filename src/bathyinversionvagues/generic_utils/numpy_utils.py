@@ -5,6 +5,8 @@
 :author: Alain Giros
 """
 from functools import lru_cache
+from hashlib import sha1
+
 from typing import List
 
 import numpy as np
@@ -12,8 +14,8 @@ import numpy.typing as npt
 
 
 def sc_all(array: np.ndarray) -> bool:
-    for x in array.flat:
-        if not x:
+    for value in array.flat:
+        if not value:
             return False
     return True
 
@@ -79,3 +81,27 @@ def dump_numpy_variable(variable: np.ndarray, variable_name: str) -> None:
     if variable is not None:
         print(f'{variable_name} {variable.shape} {variable.dtype}')
     print(variable)
+
+
+class HashableNdArray:
+    """ Hashable wrapper for ndarray objects.
+    """
+
+    def __init__(self, array: np.ndarray) -> None:
+        """ Creates a new hashable object encapsulating an ndarray.
+
+        :param array: The ndarray to encapsulate.
+        """
+        self.__encapsulated_array = array
+        self.__hash = int(sha1(array.view()).hexdigest(), 16)
+
+    def __eq__(self, other: object) -> bool:
+        return all(self.__encapsulated_array == other.__encapsulated_array)
+
+    def __hash__(self) -> int:
+        return self.__hash
+
+    def unwrap(self) -> np.ndarray:
+        """ Returns the encapsulated ndarray.
+        """
+        return self.__encapsulated_array

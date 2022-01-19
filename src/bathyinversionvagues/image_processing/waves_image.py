@@ -19,8 +19,6 @@ from ..generic_utils.numpy_utils import circular_mask
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 
 
-# TODO: add the management of the image position
-# TODO: add the azimuth of the image, if known
 class WavesImage:
     def __init__(self, pixels: np.ndarray, resolution: float) -> None:
         """ Constructor
@@ -29,20 +27,25 @@ class WavesImage:
         :param resolution: Image resolution in meters
         """
         self.resolution = resolution
+
+        # FIXME: introduced until there is a true image versions management
+        self.original_pixels = pixels.copy()
         self.pixels = pixels
 
         # #FIXME: Disk masking
         # self.pixels = self.pixels * self.circle_image
 
-    def apply_filters(self, processing_filters: ImageProcessingFilters) -> None:
-        """ Apply filters on the image pixels in place
+    def apply_filters(self, processing_filters: ImageProcessingFilters) -> 'WavesImage':
+        """ Apply filters on the image pixels and return a new WavesImage
 
         :param processing_filters: A list of functions together with their parameters to apply
                                    sequentially to the image pixels.
+        :returns: a WavesImage with the result of the filters application
         """
-
+        result = self.original_pixels.copy()
         for processing_filter, filter_parameters in processing_filters:
-            self.pixels = processing_filter(self.pixels, *filter_parameters)
+            result = processing_filter(result, *filter_parameters)
+        return WavesImage(result, self.resolution)
 
     @property
     def sampling_frequency(self) -> float:

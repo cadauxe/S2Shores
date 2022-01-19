@@ -11,13 +11,16 @@ from typing import List, Dict, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
+from ..bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstimatorDebug
+from ..bathy_debug.temporal_correlation_bathy_estimator_debug import \
+    TemporalCorrelationBathyEstimatorDebug
 from ..image_processing.waves_image import WavesImage
+
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
-from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator, SpatialDFTBathyEstimatorDebug
-from .temporal_correlation_bathy_estimator import (TemporalCorrelationBathyEstimator,
-                                                   TemporalCorrelationBathyEstimatorDebug)
+from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
+from .temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
 from .waves_fields_estimations import WavesFieldsEstimations
 
 

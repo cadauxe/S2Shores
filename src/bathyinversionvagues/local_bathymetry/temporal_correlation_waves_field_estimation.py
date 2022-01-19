@@ -10,9 +10,9 @@
 from .waves_field_estimation import WavesFieldEstimation
 
 
-class CorrelationWavesFieldEstimation(WavesFieldEstimation):
+class TemporalCorrelationWavesFieldEstimation(WavesFieldEstimation):
     """ This class encapsulates the information estimated in a waves field sample by a
-    CorrelationBathyEstimator.
+    TemporalCorrelationBathyEstimator.
 
     At the moment there is no estimation attributes specific to this estimator.
     """
