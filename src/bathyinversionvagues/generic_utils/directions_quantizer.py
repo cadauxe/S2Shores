@@ -7,29 +7,29 @@
 :license: see LICENSE file
 :created: 12 Oct 2021
 """
-from typing import Union, cast  # @NoMove
+from typing import Optional, Union, cast  # @NoMove
 
 import numpy as np
 
-# TODO: use 0.1 degrees as default
-DEFAULT_DIRECTIONS_STEP = 1.
+DEFAULT_QUANTIZATION_STEP = .1
 
 
 class DirectionsQuantizer:
-    def __init__(self, directions_step: float = DEFAULT_DIRECTIONS_STEP) -> None:
+    def __init__(self, quantization_step: Optional[float] = None) -> None:
         """ Constructor
 
-        :param directions_step: the step to use for quantizing direction angles, for indexing
-                                purposes. Direction quantization is such that the 0 degree direction
-                                is used as the origin, and any direction angle is transformed to the
-                                nearest quantized angle for indexing purposes
+        :param quantization_step: the step to use for quantizing direction angles.
+                                  Direction quantization is such that the 0 degree
+                                  direction is used as the origin, and any direction angle is
+                                  transformed to the nearest quantized angle for indexing purposes
         """
-        self._directions_step = directions_step
+        self._quantization_step = \
+            DEFAULT_QUANTIZATION_STEP if quantization_step is None else quantization_step
 
     @property
-    def directions_step(self) -> float:
+    def quantization_step(self) -> float:
         """ :returns: the step used to quantize directions """
-        return self._directions_step
+        return self._quantization_step
 
     def quantize(self, direction: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         if isinstance(direction, float):
@@ -37,8 +37,8 @@ class DirectionsQuantizer:
         # Firstly, normalize direction between -180 and +180 degrees
         normalized_direction = self.normalize(direction)
 
-        index_direction = np.around(normalized_direction / self._directions_step)
-        quantized_direction = index_direction * self._directions_step
+        index_direction = np.around(normalized_direction / self._quantization_step)
+        quantized_direction = index_direction * self._quantization_step
         # TODO: raise an exception if duplicate directions found after quantization.
 
         return quantized_direction
@@ -46,15 +46,15 @@ class DirectionsQuantizer:
     def quantize_float(self, direction: float) -> float:
         # direction between 0 and 360 degrees
         normalized_direction = cast(float, self.normalize(direction))
-        index_direction = round(normalized_direction / self._directions_step)
-        quantized_direction = index_direction * self._directions_step
+        index_direction = round(normalized_direction / self._quantization_step)
+        quantized_direction = index_direction * self._quantization_step
         return quantized_direction
 
     @staticmethod
     def normalize(directions: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """ Normalize angle(s) expressed in degrees to the interval [-180°, 180°[
 
-        :param angles: the real valued angle(s) expressed in degrees
+        :param directions: the real valued angle(s) expressed in degrees
         :returns: multiple(s) of quantization_step such that for each angle:
                   quantized_angle - quantization_step/2 < angle <=
                   quantized_angle + quantization_step/2

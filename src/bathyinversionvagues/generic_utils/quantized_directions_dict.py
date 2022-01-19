@@ -12,7 +12,7 @@ from typing import Any, Optional, List
 import numpy as np
 
 from .constrained_dict import ConstrainedDict
-from .directions_quantizer import DirectionsQuantizer, DEFAULT_DIRECTIONS_STEP
+from .directions_quantizer import DirectionsQuantizer
 
 
 class QuantizedDirectionsDict(ConstrainedDict):
@@ -20,27 +20,28 @@ class QuantizedDirectionsDict(ConstrainedDict):
     some quantization step. The directions are expressed between -180 and +180 degrees.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, directions_quantization: Optional[float] = None) -> None:
+        """ Constructor
+
+        :param directions_quantization: the step to use for quantizing direction angles, for
+                                        indexing purposes. Direction quantization is such that the
+                                        0 degree direction is used as the origin, and any direction
+                                        angle is transformed to the nearest quantized angle for
+                                        indexing that direction in the radon transform.
+        """
+        super().__init__()
         self._sorted_directions: Optional[List[float]] = None
-        self._quantizer: Optional[DirectionsQuantizer] = None
-        self._quantization_step = DEFAULT_DIRECTIONS_STEP
+        self._quantizer = DirectionsQuantizer(directions_quantization)
 
     @property
     def quantizer(self) -> DirectionsQuantizer:
         """ :return: the quantizer to be applied to the directions defined in this dictionary """
-        if self._quantizer is None:
-            self._quantizer = DirectionsQuantizer(self._quantization_step)
         return self._quantizer
 
     @property
     def quantization_step(self) -> float:
         """ :return: the directions quantization step for this dictionary """
-        return self._quantization_step
-
-    @quantization_step.setter
-    def quantization_step(self, step: float) -> None:
-        self._quantization_step = step
+        return self._quantizer.quantization_step
 
     def constrained_key(self, key: float) -> float:
         # First check if key already accepted
