@@ -95,22 +95,28 @@ def build_directional_curve_display(axes: Axes, title: str,
 
 def display_initial_data(local_estimator):
     plt.close('all')
-    fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 8))
+    fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.waves_fields_estimations]
-    build_image_display(axs[0, 0], 'first image',
+    build_image_display(axs[0, 0], 'first image original',
+                        local_estimator.images_sequence[0].original_pixels,
+                        directions=arrows, cmap='gray')
+    build_image_display(axs[1, 0], 'second image original',
+                        local_estimator.images_sequence[1].original_pixels,
+                        directions=arrows, cmap='gray')
+    build_image_display(axs[0, 1], 'first image filtered',
                         local_estimator.images_sequence[0].pixels,
                         directions=arrows, cmap='gray')
-    build_image_display(axs[1, 0], 'second image',
+    build_image_display(axs[1, 1], 'second image filtered',
                         local_estimator.images_sequence[1].pixels,
                         directions=arrows, cmap='gray')
     first_radon_transform = local_estimator.radon_transforms[0]
     second_radon_transform = local_estimator.radon_transforms[1]
 
     values, directions = first_radon_transform.get_as_arrays()
-    build_directional_2d_display(axs[0, 1], 'first radon transform', values, directions)
+    build_directional_2d_display(axs[0, 2], 'first radon transform', values, directions)
     values, directions = second_radon_transform.get_as_arrays()
-    build_directional_2d_display(axs[1, 1], 'second radon transform', values, directions)
+    build_directional_2d_display(axs[1, 2], 'second radon transform', values, directions)
     plt.show()
 
 

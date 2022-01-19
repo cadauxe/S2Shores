@@ -27,6 +27,9 @@ class WavesImage:
         :param resolution: Image resolution in meters
         """
         self.resolution = resolution
+
+        # FIXME: introduced until there is a true image versions management
+        self.original_pixels = pixels.copy()
         self.pixels = pixels
 
         # #FIXME: Disk masking
@@ -39,7 +42,7 @@ class WavesImage:
                                    sequentially to the image pixels.
         :returns: a WavesImage with the result of the filters application
         """
-        result = self.pixels.copy()
+        result = self.original_pixels.copy()
         for processing_filter, filter_parameters in processing_filters:
             result = processing_filter(result, *filter_parameters)
         return WavesImage(result, self.resolution)

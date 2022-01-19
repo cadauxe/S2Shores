@@ -66,14 +66,14 @@ class WavesRadon(Sinograms):
         :param weighted: a flag specifying if the radon transform must be weighted by a 1/cos(d)
                          weighting function
         """
-        self.pixels = image.pixels
+        self.pixels = image.pixels.copy()
 
         # TODO: Quantize directions when selected_directions is provided?
         if selected_directions is None:
             selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
                                                     DEFAULT_ANGLE_STEP)
 
-        radon_transform_list = self._compute(image.pixels, weighted, selected_directions)
+        radon_transform_list = self._compute(self.pixels, weighted, selected_directions)
 
         super().__init__(image.sampling_frequency, directions_quantization)
         self.insert_sinograms(radon_transform_list, selected_directions)
