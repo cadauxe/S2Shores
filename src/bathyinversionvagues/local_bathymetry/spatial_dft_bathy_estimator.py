@@ -19,9 +19,9 @@ from ..generic_utils.image_filters import detrend, desmooth
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
-
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_waves_field_estimation import SpatialDFTWavesFieldEstimation
+from .waves_field_estimation import WavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
 
 
@@ -90,7 +90,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """
         self.waves_fields_estimations.sort(key=lambda x: x.energy, reverse=True)
 
-    def is_waves_field_valid(self, waves_field_estimation: SpatialDFTWavesFieldEstimation) -> bool:
+    def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
+        if not isinstance(waves_field_estimation, self.waves_field_estimation_cls):
+            raise TypeError(f'Unable to process estimation type {type(waves_field_estimation)}')
         phi_min, phi_max = self.get_phi_limits(waves_field_estimation.wavenumber)
         phase_shift = waves_field_estimation.delta_phase
         return (((phi_min < phase_shift) & (phase_shift < phi_max)) |
@@ -212,12 +214,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """ Find refined directions from the resampled cross correlation spectrum of the radon
         transforms of the 2 images and identify wavenumbers of the peaks along these directions.
         """
-        # Detailed analysis of the signal for positive phase shifts
-
         kfft = self.get_kfft()
-        # phi_min: minimum acceptable values of delta phi for each wavenumber to explore
         # phi_max: maximum acceptable values of delta phi for each wavenumber to explore
-        phi_min, phi_max = self.get_phi_limits(kfft)
+        _, phi_max = self.get_phi_limits(kfft)
 
         self.radon_transforms[0].interpolate_sinograms_dfts(kfft, self.directions)
         self.radon_transforms[1].interpolate_sinograms_dfts(kfft, self.directions)
@@ -228,8 +227,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                 prominence=self.local_estimator_params['PROMINENCE_MULTIPLE_PEAKS'])
         peaks_freq = peaks_freq[0]
         peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
-
-        phase_shift_thresholded = self.process_phase(phase_shift, phi_min, phi_max)
 
         for index, peak_freq_index in enumerate(peaks_freq):
             peak_wavenumber_index = peaks_wavenumbers_ind[index]
