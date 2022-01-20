@@ -66,8 +66,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.propagation_duration = np.sum(
             self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
         self.create_sequence_time_series()
-        # TODO: stop using random points
-        np.random.seed(0)
 
         if self.debug_sample:
             self.metrics['propagation_duration'] = self.propagation_duration
@@ -83,6 +81,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         merge_array = np.dstack([image.pixels for image in self.images_sequence])
         shape_x, shape_y = self.images_sequence[0].pixels.shape
         time_series = np.reshape(merge_array, (shape_x * shape_y, -1))
+        # A seed is used here to reproduce same results
+        np.random.seed(0)
         nb_random_points = round(shape_x * shape_y * percentage_points / 100)
         random_indexes = np.random.randint(0, shape_x * shape_y, size=nb_random_points)
         positions_y, positions_x = np.meshgrid(np.linspace(1, shape_x, shape_x),
