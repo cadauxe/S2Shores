@@ -133,12 +133,20 @@ class LocalBathyEstimator(ABC):
         """  Sorts the waves fields on whatever criteria.
         """
 
+    @abstractmethod
+    def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
+        """  validate a waves field estimation based on local estimator specific criteria.
+
+        :param waves_field_estimation: a waves field estimation to validate
+        :returns: True is the waves field is valid, False otherwise
+        """
+
     def validate_waves_fields(self) -> None:
         """  Remove non physical waves fields
         """
         # Filter non physical waves fields and bathy estimations
         # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
-        # on its specific attributes
+        # on its specific attributes inside the loops.
         for estimation in list(self.waves_fields_estimations):
             if (estimation.period < self.global_estimator.waves_period_min or
                     estimation.period > self.global_estimator.waves_period_max):
@@ -146,6 +154,9 @@ class LocalBathyEstimator(ABC):
         for estimation in list(self.waves_fields_estimations):
             if (estimation.linearity < self.global_estimator.waves_linearity_min or
                     estimation.linearity > self.global_estimator.waves_linearity_max):
+                self.waves_fields_estimations.remove(estimation)
+        for estimation in list(self.waves_fields_estimations):
+            if not self.is_waves_field_valid(estimation):
                 self.waves_fields_estimations.remove(estimation)
 
     def create_waves_field_estimation(self, direction: float, wavelength: float

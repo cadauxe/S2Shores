@@ -90,6 +90,12 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """
         self.waves_fields_estimations.sort(key=lambda x: x.energy, reverse=True)
 
+    def is_waves_field_valid(self, waves_field_estimation: SpatialDFTWavesFieldEstimation) -> bool:
+        phi_min, phi_max = self.get_phi_limits(waves_field_estimation.wavenumber)
+        phase_shift = waves_field_estimation.delta_phase
+        return (((phi_min < phase_shift) & (phase_shift < phi_max)) |
+                ((phi_max < phase_shift) & (phase_shift < phi_min)))
+
     def find_directions(self) -> None:
         """ Find an initial set of directions from the cross correlation spectrum of the radon
         transforms of the 2 images.
@@ -227,8 +233,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         for index, peak_freq_index in enumerate(peaks_freq):
             peak_wavenumber_index = peaks_wavenumbers_ind[index]
-            if np.isnan(phase_shift_thresholded[peak_wavenumber_index, peak_freq_index]):
-                continue
             estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
             direction_index = self.directions[peak_freq_index]
             estimated_direction = \
