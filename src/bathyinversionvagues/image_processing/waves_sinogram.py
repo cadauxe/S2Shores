@@ -37,6 +37,7 @@ class WavesSinogram:
         self.values = values
         self.size = values.size
         self._dft = np.array([])
+        self._dft_frequencies = np.array([])
         self._interpolated_dft = np.array([])
         self._interpolated_dft_frequencies = np.array([])
 
@@ -59,7 +60,19 @@ class WavesSinogram:
         if self._dft.size == 0:
             nb_positive_coeffs = int(np.ceil(self.size / 2))
             self._dft = np.fft.fft(self.values)[0:nb_positive_coeffs]
+            self._dft_frequencies = np.linspace(0., 0.5, nb_positive_coeffs)
         return self._dft
+
+    @property
+    def dft_frequencies(self) -> np.ndarray:
+        """ :returns: the normalized frequencies of the standard DFT of the sinogram.
+        If this DFT does not exists, an exception is raised
+
+        :raises ValueError: if the standard DFT does not exist
+        """
+        if self._dft_frequencies.size == 0:
+            raise ValueError('Standard DFT does not exist')
+        return self._dft_frequencies
 
     @property
     def interpolated_dft(self) -> np.ndarray:
@@ -73,7 +86,7 @@ class WavesSinogram:
 
     @property
     def interpolated_dft_frequencies(self) -> np.ndarray:
-        """ :returns: the frequencies of the current interpolated DFT of the sinogram.
+        """ :returns: the normalized frequencies of the current interpolated DFT of the sinogram.
         If this DFT does not exists, an exception is raised
 
         :raises ValueError: if the interpolated DFT does not exist
