@@ -76,6 +76,7 @@ class Sinograms(SinogramsDict):
         """
         # If no selected directions, DFT is interpolated on all directions
         self.directions_interpolated_dft = self.directions if directions is None else directions
+        # Normalize frequencies and make them hashable
         frequencies = HashableNdArray(kfft / self.sampling_frequency)
         for direction in self.directions_interpolated_dft:
             self[direction].interpolate_dft(frequencies)

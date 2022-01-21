@@ -21,7 +21,6 @@ SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
 # TODO: make this class derive from a "1D_signal" class which would implement signal processing ?
 # This class would gather several functions from signal_utils.
-# TODO: introduce sampling_frequency/resolution inside the sinogram itself ?
 class WavesSinogram:
     """ Class handling a sinogram (the component of a Radon transform in some direction)
     """
@@ -36,10 +35,15 @@ class WavesSinogram:
             raise TypeError('WavesSinogram accepts only a 1D numpy array as argument')
         self.values = values
         self.size = values.size
+
+        # Normalized frequencies available in the standard DFT when it exists
+        nb_positive_coeffs_dft = int(np.ceil(self.size / 2))
+        self._dft_frequencies = np.linspace(0., 0.5, nb_positive_coeffs_dft)
         self._dft = np.array([])
-        self._dft_frequencies = np.array([])
-        self._interpolated_dft = np.array([])
+
+        # Normalized frequencies available in the interpolated DFT when it exists
         self._interpolated_dft_frequencies = np.array([])
+        self._interpolated_dft = np.array([])
 
     def interpolate(self, factor: float) -> 'WavesSinogram':
         """ Compute an augmented version of the sinogram, by interpolation with some factor.
@@ -58,20 +62,13 @@ class WavesSinogram:
         from the sinogram using standard frequencies.
         """
         if self._dft.size == 0:
-            nb_positive_coeffs = int(np.ceil(self.size / 2))
-            self._dft = np.fft.fft(self.values)[0:nb_positive_coeffs]
-            self._dft_frequencies = np.linspace(0., 0.5, nb_positive_coeffs)
+            self._dft = np.fft.fft(self.values)[0:self.dft_frequencies.size]
         return self._dft
 
     @property
     def dft_frequencies(self) -> np.ndarray:
         """ :returns: the normalized frequencies of the standard DFT of the sinogram.
-        If this DFT does not exists, an exception is raised
-
-        :raises ValueError: if the standard DFT does not exist
         """
-        if self._dft_frequencies.size == 0:
-            raise ValueError('Standard DFT does not exist')
         return self._dft_frequencies
 
     @property

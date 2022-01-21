@@ -233,25 +233,24 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         for index, peak_freq_index in enumerate(peaks_freq):
             direction_index = self.directions[peak_freq_index]
-            peak_wavenumber_index = peaks_wavenumbers_ind[index]
-            estimated_phase_shift = phase_shift[peak_wavenumber_index, peak_freq_index]
-            estimated_direction = \
-                self.radon_transforms[0].directions[direction_index]
+            wavenumber_index = peaks_wavenumbers_ind[index]
+            estimated_phase_shift = phase_shift[wavenumber_index, peak_freq_index]
+            estimated_direction = self.radon_transforms[0].directions[direction_index]
+            peak_sinogram = self.radon_transforms[0][direction_index]
 
             # TODO: get wavelength from DFT frequencies
-            # peak_sinogram = self.radon_transforms[0][direction_index]
-            # print(peak_sinogram.interpolated_dft_frequencies)
-            wavelength = 1 / kfft[peak_wavenumber_index]
+            normalized_frequency = peak_sinogram.interpolated_dft_frequencies[wavenumber_index]
+            wavelength = 1 / (normalized_frequency * self.radon_transforms[0].sampling_frequency)
             waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
                                           self.create_waves_field_estimation(estimated_direction,
                                                                              wavelength))
 
             waves_field_estimation.delta_time = self.sequential_delta_times[0]
             waves_field_estimation.delta_phase = estimated_phase_shift
-            waves_field_estimation.delta_phase_ratio = abs(waves_field_estimation.delta_phase) / \
-                phi_max[peak_wavenumber_index]
+            waves_field_estimation.delta_phase_ratio = \
+                abs(waves_field_estimation.delta_phase) / phi_max[wavenumber_index]
 
-            waves_field_estimation.energy = total_spectrum[peak_wavenumber_index, peak_freq_index]
+            waves_field_estimation.energy = total_spectrum[wavenumber_index, peak_freq_index]
             self.store_estimation(waves_field_estimation)
 
         if self.debug_sample:
