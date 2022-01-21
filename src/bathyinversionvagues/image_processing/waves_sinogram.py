@@ -53,11 +53,12 @@ class WavesSinogram:
 
     @property
     def dft(self) -> np.ndarray:
-        """ :returns: the current DFT of the sinogram. If it does not exists, it is computed
+        """ :returns: the standard DFT of the sinogram. If it does not exists, it is computed
         from the sinogram using standard frequencies.
         """
         if self._dft.size == 0:
-            self.compute_dft()
+            nb_positive_coeffs = int(np.ceil(self.size / 2))
+            self._dft = np.fft.fft(self.values)[0:nb_positive_coeffs]
         return self._dft
 
     @property
@@ -81,27 +82,22 @@ class WavesSinogram:
             raise ValueError('Interpolated DFT does not exist')
         return self._interpolated_dft_frequencies
 
+    def interpolate_dft(self, frequencies: HashableNdArray) -> None:
+        """ Computes the DFT of the sinogram
+
+        :param frequencies: a set of normalized frequencies at which the DFT must be computed.
+        """
+        # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
+        unity_roots = None if frequencies is None else get_unity_roots(frequencies, self.size)
+        self._interpolated_dft = np.dot(unity_roots, self.values)
+        self._interpolated_dft_frequencies = frequencies.unwrap()
+
     def symmeterize(self) -> 'WavesSinogram':
         """ :returns: a new WavesSinogram which is the symmetric version of this one.
         """
         symmetric_sinogram = WavesSinogram(np.flip(self.values))
-        # TODO: fill in the sinogram properties based on the current values
+        # TODO: fill in the sinogram properties (DFT, etc.) based on the current values
         return symmetric_sinogram
-
-    def compute_dft(self, frequencies: Optional[HashableNdArray] = None) -> None:
-        """ Computes the DFT of the sinogram
-
-        :param frequencies: a set of frequencies at which the DFT must be computed. If None standard
-        frequencies are computed.
-        """
-        if frequencies is None:
-            nb_positive_coeffs = int(np.ceil(self.size / 2))
-            self._dft = np.fft.fft(self.values)[0:nb_positive_coeffs]
-        else:
-            # FIXME: used to interpolate spectrum, but seems incorrect. Use zero padding instead ?
-            unity_roots = None if frequencies is None else get_unity_roots(frequencies, self.size)
-            self._interpolated_dft = np.dot(unity_roots, self.values)
-            self._interpolated_dft_frequencies = frequencies.unwrap()
 
     @property
     def energy(self) -> float:

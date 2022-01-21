@@ -78,7 +78,7 @@ class Sinograms(SinogramsDict):
         self.directions_interpolated_dft = self.directions if directions is None else directions
         frequencies = HashableNdArray(kfft / self.sampling_frequency)
         for direction in self.directions_interpolated_dft:
-            self[direction].compute_dft(frequencies)
+            self[direction].interpolate_dft(frequencies)
 
     def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None,
                            interpolated_dft: bool = False) -> np.ndarray:
