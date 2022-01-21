@@ -23,13 +23,13 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
     def explore_results(self) -> None:
         metrics = self.metrics
 
-        initial_sino1_fft = self.radon_transforms[0].get_sinograms_dfts()
-        initial_sino2_fft = self.radon_transforms[1].get_sinograms_dfts()
+        initial_sino1_fft = self.radon_transforms[0].get_sinograms_standard_dfts()
+        initial_sino2_fft = self.radon_transforms[1].get_sinograms_standard_dfts()
         initial_total_spectrum_normalized = metrics['standard_dft']['total_spectrum_normalized']
         initial_phase_shift = np.angle(metrics['standard_dft']['sinograms_correlation_fft'])
 
-        sino1_fft = self.radon_transforms[0].get_sinograms_dfts(interpolated_dft=True)
-        sino2_fft = self.radon_transforms[1].get_sinograms_dfts(interpolated_dft=True)
+        sino1_fft = self.radon_transforms[0].get_sinograms_interpolated_dfts()
+        sino2_fft = self.radon_transforms[1].get_sinograms_interpolated_dfts()
         phase_shift = np.angle(metrics['interpolated_dft']['sinograms_correlation_fft'])
         phase_shift_thresholded = metrics['interpolated_dft']['phase_shift_thresholded']
         total_spectrum_normalized = metrics['interpolated_dft']['total_spectrum_normalized']

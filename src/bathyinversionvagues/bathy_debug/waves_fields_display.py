@@ -135,7 +135,7 @@ def display_radon_transforms(local_estimator, refinement_phase=False):
 
 def build_radon_transform_display(axs, transform, title, refinement_phase=False):
     values, directions = transform.get_as_arrays()
-    sino_fft = transform.get_sinograms_dfts()
+    sino_fft = transform.get_sinograms_standard_dfts()
     dft_amplitudes = np.abs(sino_fft)
     dft_phases = np.angle(sino_fft)
     variances = transform.get_sinograms_variances()
