@@ -47,7 +47,8 @@ class Sinograms(SinogramsDict):
     def spectrum_wave_numbers(self) -> np.ndarray:
         """ :returns: wave numbers for each sample of the positive part of the FFT of a direction.
         """
-        return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
+        nb_positive_coefs = int(np.ceil(self.nb_samples / 2))
+        return np.fft.fftfreq(self.nb_samples)[0:nb_positive_coefs] * self.sampling_frequency
 
     # +++++++++++++++++++ Sinograms processing part +++++++++++++++++++
 

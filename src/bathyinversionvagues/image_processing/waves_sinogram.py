@@ -9,7 +9,7 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, List, Tuple, Callable, Any  # @NoMove
+from typing import List, Tuple, Callable, Any  # @NoMove
 import numpy as np
 
 from ..generic_utils.numpy_utils import HashableNdArray
@@ -38,7 +38,7 @@ class WavesSinogram:
 
         # Normalized frequencies available in the standard DFT when it exists
         nb_positive_coeffs_dft = int(np.ceil(self.size / 2))
-        self._dft_frequencies = np.linspace(0., 0.5, nb_positive_coeffs_dft)
+        self._dft_frequencies = np.fft.fftfreq(self.size)[0:nb_positive_coeffs_dft]
         self._dft = np.array([])
 
         # Normalized frequencies available in the interpolated DFT when it exists
