@@ -104,7 +104,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         _, total_spectrum, metrics = self._cross_correl_spectrum(sino1_fft, sino2_fft,
                                                                  phi_min, phi_max)
         total_spectrum_normalized = self.process_cross_correl_spectrum(total_spectrum, metrics)
-        self.optimized_curve = total_spectrum_normalized
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
         peaks, values = find_peaks(total_spectrum_normalized,
                                    prominence=self.local_estimator_params['PROMINENCE_MAX_PEAK'])
@@ -177,14 +176,15 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         for index, radon_transform in enumerate(self.radon_transforms):
             display_curve(sinograms_powers_normalized_list[index],
                           f'Power sinograms image {index+1}')
+        # FIXME: find a way to access total_spectrum_normalized
         display_3curves(
-            self.optimized_curve,
+            sinograms_powers_normalized_list[0],
             sinograms_powers_normalized_list[0],
             sinograms_powers_normalized_list[1])
         derived_metric = sinograms_powers_normalized_list[0] * sinograms_powers_normalized_list[1]
         peaks_derived_metric = find_peaks(derived_metric, prominence=0.05)
         print(peaks_derived_metric)
-        display_4curves(self.optimized_curve,
+        display_4curves(derived_metric,
                         derived_metric,
                         sinograms_powers_normalized[0][::5],
                         sinograms_powers_normalized[1][::5])
