@@ -57,11 +57,6 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
 
         dump_numpy_variable(total_spectrum_normalized, 'refined total_spectrum_normalized')
 
-        if self.peaks_dir is not None:
-            dump_numpy_variable(self.peaks_dir, 'found directions')
-        else:
-            print('No directions found !!!')
-
         print(f'estimations after direction refinement :')
         print(self.waves_fields_estimations)
 
