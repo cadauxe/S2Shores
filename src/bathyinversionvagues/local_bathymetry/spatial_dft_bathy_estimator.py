@@ -45,7 +45,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.radon_transforms: List[WavesRadon] = []
 
-        self.directions = None
+        self.directions_ranges = []
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -102,8 +102,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         transforms of the 2 images.
         """
         # TODO: modify directions finding such that only one radon transform is computed (50% gain)
-        sino1_fft = self.radon_transforms[0].get_sinograms_standard_dfts(self.directions)
-        sino2_fft = self.radon_transforms[1].get_sinograms_standard_dfts(self.directions)
+        sino1_fft = self.radon_transforms[0].get_sinograms_standard_dfts()
+        sino2_fft = self.radon_transforms[1].get_sinograms_standard_dfts()
         _, total_spectrum, metrics = self._cross_correl_spectrum(sino1_fft, sino2_fft)
         total_spectrum_normalized = self.process_cross_correl_spectrum(total_spectrum, metrics)
         # TODO: possibly apply symmetry to totalSpecMax_ref in find directions
@@ -194,7 +194,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def prepare_refinement(self, peaks_dir_indices: np.ndarray) -> None:
         """ Prepare the directions along which direction and wavenumber finding will be done.
         """
-        refined_directions: List[np.ndarray] = []
         if peaks_dir_indices.size > 0:
             for peak_index in range(0, peaks_dir_indices.size):
                 angles_half_range = self.local_estimator_params['ANGLE_AROUND_PEAK_DIR']
@@ -202,15 +201,11 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 tmp = np.arange(max(direction_index - angles_half_range, 0),
                                 min(direction_index + angles_half_range + 1, 360)
                                 )
-                if peak_index == 0:
-                    refined_directions = tmp
-                else:
-                    refined_directions = np.append(refined_directions, tmp)
-        # delete double directions
-        # FIXME: this reorders the directions which is not always desired
-        directions_indices = np.unique(refined_directions)
-        self.directions = np.zeros_like(directions_indices)
-        self.directions[:] = self.radon_transforms[0].directions[directions_indices]
+                directions_range = np.zeros_like(tmp)
+                directions_range[:] = self.radon_transforms[0].directions[tmp]
+                self.directions_ranges.append(directions_range)
+
+        # FIXME: what to do with opposite directions
 
     def find_spectral_peaks(self) -> None:
         """ Find refined directions from the resampled cross correlation spectrum of the radon
@@ -220,11 +215,21 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # phi_max: maximum acceptable values of delta phi for each wavenumber to explore
         _, phi_max = self.get_phi_limits(kfft)
 
-        self.radon_transforms[0].interpolate_sinograms_dfts(kfft, self.directions)
-        self.radon_transforms[1].interpolate_sinograms_dfts(kfft, self.directions)
-        sino1_fft = self.radon_transforms[0].get_sinograms_interpolated_dfts(self.directions)
-        sino2_fft = self.radon_transforms[1].get_sinograms_interpolated_dfts(self.directions)
+        for directions_range in self.directions_ranges:
+            self._find_peaks_on_directions_range(kfft, phi_max, directions_range)
 
+        if self.debug_sample:
+            self._metrics['kfft'] = kfft
+
+    def _find_peaks_on_directions_range(self, kfft, phi_max, directions) -> None:
+        """ Find refined directions from the resampled cross correlation spectrum of the radon
+        transforms of the 2 images and identify wavenumbers of the peaks along these directions.
+        """
+        # Detailed analysis of the signal for positive phase shifts
+        self.radon_transforms[0].interpolate_sinograms_dfts(kfft, directions)
+        self.radon_transforms[1].interpolate_sinograms_dfts(kfft, directions)
+        sino1_fft = self.radon_transforms[0].get_sinograms_interpolated_dfts(directions)
+        sino2_fft = self.radon_transforms[1].get_sinograms_interpolated_dfts(directions)
         phase_shift, total_spectrum, metrics = self._cross_correl_spectrum(sino1_fft, sino2_fft)
         total_spectrum_normalized = self.process_cross_correl_spectrum(total_spectrum, metrics)
         peaks_freq = find_peaks(total_spectrum_normalized,
@@ -232,12 +237,12 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         peaks_freq = peaks_freq[0]
         peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
 
-        for index, peak_freq_index in enumerate(peaks_freq):
-            direction_index = self.directions[peak_freq_index]
+        for index, direction_index in enumerate(peaks_freq):
             wavenumber_index = peaks_wavenumbers_ind[index]
-            estimated_phase_shift = phase_shift[wavenumber_index, peak_freq_index]
-            estimated_direction = self.radon_transforms[0].directions[direction_index]
-            peak_sinogram = self.radon_transforms[0][direction_index]
+            estimated_phase_shift = phase_shift[wavenumber_index, direction_index]
+            estimated_direction = \
+                self.radon_transforms[0].directions[directions[direction_index]]
+            peak_sinogram = self.radon_transforms[0][directions[direction_index]]
 
             # TODO: get wavelength from DFT frequencies
             normalized_frequency = peak_sinogram.interpolated_dft_frequencies[wavenumber_index]
@@ -248,10 +253,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
             waves_field_estimation.delta_time = self.sequential_delta_times[0]
             waves_field_estimation.delta_phase = estimated_phase_shift
-            waves_field_estimation.delta_phase_ratio = \
-                abs(waves_field_estimation.delta_phase) / phi_max[wavenumber_index]
+            waves_field_estimation.delta_phase_ratio = abs(waves_field_estimation.delta_phase) / \
+                phi_max[wavenumber_index]
 
-            waves_field_estimation.energy = total_spectrum[wavenumber_index, peak_freq_index]
+            waves_field_estimation.energy = total_spectrum[wavenumber_index, direction_index]
             self.store_estimation(waves_field_estimation)
 
         if self.debug_sample:
