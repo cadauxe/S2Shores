@@ -309,36 +309,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         return total_spectrum_normalized
 
-    def process_phase(self, phase_shift: np.ndarray, phi_min: np.ndarray, phi_max: np.ndarray
-                      ) -> np.ndarray:
-        """ Thresholding of the phase shifts, possibly with phase unwraping (not implemented)
-
-        :param phase_shift: the phase shifts coming from the cross correlation spectrum
-        :param phi_min: minimum acceptable values of delta phi for each wavenumber
-        :param phi_max: maximum acceptable values of delta phi for each wavenumber
-        :returns: the thresholded phase shifts
-        """
-
-        if not self.local_estimator_params['UNWRAP_PHASE_SHIFT']:
-            # currently deactivated but we want this functionality:
-            result = np.copy(phase_shift)
-        else:
-            result = (phase_shift + 2 * np.pi) % (2 * np.pi)
-
-        nb_directions = phase_shift.shape[1]
-
-        # Deep water limitation [if the wave travels faster than the deep-water
-        # limit we consider it non-physical]
-        phi_max = np.tile(phi_max[:, np.newaxis], (1, nb_directions))
-        # Minimal propagation speed; this depends on the Satellite; Venus or Sentinel 2
-        phi_min = np.tile(phi_min[:, np.newaxis], (1, nb_directions))
-
-        phase_shift_valid = (((phi_min < phase_shift) & (phase_shift < phi_max)) |
-                             ((phi_max < phase_shift) & (phase_shift < phi_min)))
-        result[np.logical_not(phase_shift_valid)] = np.nan
-
-        return result
-
     def get_kfft(self) -> np.ndarray:
         """  :returns: the requested sampling of the sinogram FFT
         """
