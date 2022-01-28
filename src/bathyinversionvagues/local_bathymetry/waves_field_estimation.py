@@ -35,5 +35,5 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
 
     def __str__(self) -> str:
         result = WavesFieldSampleBathymetry.__str__(self)
-        result += f'\ndelta time: {self.delta_time:5.2f} (s)'
+        result += f'\nEstimation: delta time: {self.delta_time:5.2f} (s)'
         return result

@@ -99,7 +99,8 @@ class LocalBathyEstimator(ABC):
         image processing filters.
         """
         for image in self.images_sequence:
-            image.apply_filters(self.preprocessing_filters)
+            filtered_image = image.apply_filters(self.preprocessing_filters)
+            image.pixels = filtered_image.pixels
 
     @property
     def gravity(self) -> float:
@@ -183,21 +184,8 @@ class LocalBathyEstimator(ABC):
         """ :returns: a copy of the dictionary of metrics recorded by this estimator.
                       Used for freeing references to memory expensive data (images, transform, ...)
         """
-        return deepcopy(self._metrics)
+        return self._metrics
 
-
-class LocalBathyEstimatorDebug(LocalBathyEstimator):
-    """ Abstract class handling debug mode for LocalBathyEstimator
-    """
-
-    def run(self) -> None:
-        super().run()
-        try:
-            self.explore_results()
-        except Exception as excp:
-            print(f'Bathymetry debug failed: {str(excp)}')
-
-    @abstractmethod
-    def explore_results(self) -> None:
-        """ Method called when estimator has run to allow results exploration for debugging purposes
-        """
+    @metrics.setter
+    def metrics(self, values: Dict[str, Any]) -> None:
+        self._metrics = deepcopy(values)

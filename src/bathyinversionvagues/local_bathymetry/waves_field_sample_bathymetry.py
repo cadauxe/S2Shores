@@ -68,6 +68,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
 
     def __str__(self) -> str:
         result = WavesFieldSampleDynamics.__str__(self)
-        result += f'\ndepth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.2f}  '
+        result += f'\nBathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.2f}  '
         result += f' offshore period: {self.period_offshore:5.2f} (s)'
         return result

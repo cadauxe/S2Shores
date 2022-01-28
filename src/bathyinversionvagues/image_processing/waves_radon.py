@@ -22,6 +22,7 @@ from .waves_sinogram import WavesSinogram
 
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 180.
+DEFAULT_ANGLE_STEP = 1.
 
 
 def linear_directions(angle_min: float, angle_max: float, directions_step: float) -> np.ndarray:
@@ -50,53 +51,35 @@ class WavesRadon(Sinograms):
     """
 
     def __init__(self, image: WavesImage, selected_directions: Optional[np.ndarray] = None,
-                 directions_step: float = 1., weighted: bool = False) -> None:
+                 directions_quantization: Optional[float] = None, weighted: bool = False) -> None:
         """ Constructor
 
         :param image: a 2D array containing an image
         :param selected_directions: a set of directions onto which the radon transform must be
                                     provided. If unspecified, all integre angles between -180° and
                                     +180° are considered.
-        :param directions_step: the step to use for quantizing direction angles, for indexing
-                                purposes. Direction quantization is such that the 0 degree direction
-                                is used as the origin, and any direction angle is transformed to the
-                                nearest quantized angle for indexing that direction in the radon
-                                transform.
+        :param directions_quantization: the step to use for quantizing direction angles, for
+                                        indexing purposes. Direction quantization is such that the
+                                        0 degree direction is used as the origin, and any direction
+                                        angle is transformed to the nearest quantized angle for
+                                        indexing that direction in the radon transform.
         :param weighted: a flag specifying if the radon transform must be weighted by a 1/cos(d)
                          weighting function
         """
-        self.pixels = image.pixels
+        super().__init__(image.sampling_frequency, directions_quantization)
+
+        self.pixels = image.pixels.copy()
 
         # TODO: Quantize directions when selected_directions is provided?
         if selected_directions is None:
             selected_directions = linear_directions(DEFAULT_ANGLE_MIN, DEFAULT_ANGLE_MAX,
-                                                    directions_step)
+                                                    DEFAULT_ANGLE_STEP)
 
-        radon_transform_list = self._compute(image.pixels, weighted, selected_directions)
-
-        super().__init__()
-        self.quantization_step = directions_step
-        self.sampling_frequency = image.sampling_frequency
-        self.insert_sinograms(radon_transform_list, selected_directions)
-
-    @staticmethod
-    def _compute(pixels: np.ndarray, weighted: bool, selected_directions: np.ndarray) -> List[WavesSinogram]:
-        """ Compute the radon transform of the image over a set of directions
-        """
-        # FIXME: quantization may imply that radon transform is not computed on stored directions
-        # TODO: make tests with circle=False, circled image and with weights
-        # radon_transform_array = symmetric_radon(pixels, theta=selected_directions, circle=False)
-        radon_transform_array = symmetric_radon(pixels, theta=selected_directions)
-
-        if weighted:
-            weights = sinogram_weights(radon_transform_array.shape[0])
-            # TODO: replace by enumerate(selected_directions)
-            for direction_index in range(radon_transform_array.shape[1]):
-                radon_transform_array[:, direction_index] = (
-                    radon_transform_array[:, direction_index] / weights)
+        radon_transform = symmetric_radon(self.pixels, theta=selected_directions)
 
         sinograms: List[WavesSinogram] = []
         for index, _ in enumerate(selected_directions):
-            sinogram = WavesSinogram(radon_transform_array[:, index])
+            sinogram = WavesSinogram(radon_transform[:, index])
             sinograms.append(sinogram)
-        return sinograms
+
+        self.insert_sinograms(sinograms, selected_directions)

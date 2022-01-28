@@ -29,13 +29,12 @@ def phi_limits(wavenumbers: np.ndarray, delta_t: float,
                min_depth: float, gravity: float) -> Tuple[NdArrayOrFloat, NdArrayOrFloat]:
 
     delta_phi = 2 * np.pi * delta_t
-    squeezed_wavenumbers = wavenumbers.squeeze()
     # shallow water limits:
     min_celerity = np.sqrt(gravity * min_depth)
-    phi_min = delta_phi * min_celerity * squeezed_wavenumbers
+    phi_min = delta_phi * min_celerity * wavenumbers
 
     # deep water limits:
-    phi_max = delta_phi / period_offshore(squeezed_wavenumbers, gravity)
+    phi_max = delta_phi / period_offshore(wavenumbers, gravity)
 
     return phi_min, phi_max
 

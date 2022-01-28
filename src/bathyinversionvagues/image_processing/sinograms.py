@@ -7,12 +7,13 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, Any, List, Tuple  # @NoMove
+from typing import Optional, Any, List, Tuple  # @NoMove @UnusedImport
 
 import numpy as np  # @NoMove
 
 
-from ..generic_utils.signal_utils import get_unity_roots
+from ..generic_utils.numpy_utils import HashableNdArray
+
 from .sinograms_dict import SinogramsDict
 from .waves_sinogram import WavesSinogram, SignalProcessingFilters
 
@@ -21,25 +22,33 @@ class Sinograms(SinogramsDict):
     """ Class handling a set of sinograms coming from some Radon transform of some image.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, sampling_frequency: float,
+                 directions_quantization: Optional[float] = None) -> None:
+        """ Constructor
 
-        self._sampling_frequency = 0.
+        :param sampling_frequency: the sampling frequency of the sinograms
+        :param directions_quantization: the step to use for quantizing direction angles, for
+                                        indexing purposes. Direction quantization is such that the
+                                        0 degree direction is used as the origin, and any direction
+                                        angle is transformed to the nearest quantized angle for
+                                        indexing that direction in the radon transform.
+        """
+        super().__init__(directions_quantization)
+
+        self._sampling_frequency = sampling_frequency
+        self.directions_interpolated_dft: Optional[np.ndarray] = None
 
     @property
     def sampling_frequency(self) -> float:
         """ :return: the sampling frequency of the sinograms """
         return self._sampling_frequency
 
-    @sampling_frequency.setter
-    def sampling_frequency(self, frequency: float) -> None:
-        self._sampling_frequency = frequency
-
     @property
     def spectrum_wave_numbers(self) -> np.ndarray:
         """ :returns: wave numbers for each sample of the positive part of the FFT of a direction.
         """
-        return np.arange(0, self.sampling_frequency / 2, self.sampling_frequency / self.nb_samples)
+        nb_positive_coefs = int(np.ceil(self.nb_samples / 2))
+        return np.fft.fftfreq(self.nb_samples)[0:nb_positive_coefs] * self.sampling_frequency
 
     # +++++++++++++++++++ Sinograms processing part +++++++++++++++++++
 
@@ -54,42 +63,59 @@ class Sinograms(SinogramsDict):
         :returns: the filtered sinograms
         """
         directions = self.directions if directions is None else directions
-        filtered_sinograms = Sinograms()
+        filtered_sinograms = Sinograms(self.sampling_frequency, self.quantization_step)
         for direction in self:
             filtered_sinograms[direction] = self[direction].apply_filters(processing_filters)
         return filtered_sinograms
 
-    def compute_sinograms_dfts(self,
-                               directions: Optional[np.ndarray] = None,
-                               kfft: Optional[np.ndarray] = None) -> None:
-        """ Computes the fft of the radon transform along the projection directions
+    def interpolate_sinograms_dfts(self, kfft: np.ndarray,
+                                   directions: Optional[np.ndarray] = None) -> None:
+        """ Interpolates the dft of the radon transform along the projection directions
 
-        :param directions: the set of directions for which the sinograms DFT must be computed
-        :param kfft: the set of wavenumbers to use for sampling the DFT. If None, standard DFT
-                     sampling is done.
+        :param kfft: the set of wavenumbers to use for interpolating the DFT.
+        :param directions: the set of directions for which the sinograms DFT must be interpolated
         """
-        frequencies = None if kfft is None else kfft / self.sampling_frequency
-        unity_roots = None if frequencies is None else get_unity_roots(frequencies, self.nb_samples)
-        # If no selected directions, DFT is computed on all directions
-        directions = self.directions if directions is None else directions
+        # If no selected directions, DFT is interpolated on all directions
+        self.directions_interpolated_dft = self.directions if directions is None else directions
+        # Normalize frequencies and make them hashable
+        frequencies = HashableNdArray(kfft / self.sampling_frequency)
+        for direction in self.directions_interpolated_dft:
+            self[direction].interpolate_dft(frequencies)
 
-        for direction in directions:
-            self[direction].dft = self[direction].compute_dft(unity_roots)
-
-    def get_sinograms_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
+    def get_sinograms_standard_dfts(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
         """ Retrieve the current DFT of the sinograms in some directions. If DFTs does not exist
         they are computed using standard frequencies.
 
         :param directions: the directions of the requested sinograms.
                            Defaults to all the Radon transform directions if unspecified.
         :return: the sinograms DFTs for the specified directions or for all directions
+        :raises AttributeError: when an interpolated DFT is requested but has not been computed yet.
         """
         directions = self.directions if directions is None else directions
-        fft_sino_length = self[directions[0]].dft.shape[0]
+        fft_sino_length = self[directions[0]].dft.size
         result = np.empty((fft_sino_length, len(directions)), dtype=np.complex128)
         for result_index, direction in enumerate(directions):
             sinogram = self[direction]
             result[:, result_index] = sinogram.dft
+        return result
+
+    def get_sinograms_interpolated_dfts(self,
+                                        directions: Optional[np.ndarray] = None) -> np.ndarray:
+        """ Retrieve the interpolated DFTs of the sinograms in some directions.
+
+        :param directions: the directions of the requested sinograms.
+                           Defaults to all the Radon transform directions if unspecified.
+        :return: the interpolated sinograms DFTs for the specified directions or for all directions
+        :raises AttributeError: when an interpolated DFT is requested but has not been computed yet.
+        """
+        if self.directions_interpolated_dft is None:
+            raise AttributeError('no interpolated DFTs available')
+        directions = self.directions_interpolated_dft if directions is None else directions
+        fft_sino_length = self[directions[0]].interpolated_dft.size
+        result = np.empty((fft_sino_length, len(directions)), dtype=np.complex128)
+        for result_index, direction in enumerate(directions):
+            sinogram = self[direction]
+            result[:, result_index] = sinogram.interpolated_dft
         return result
 
     def get_sinograms_mean_power(self, directions: Optional[np.ndarray] = None) -> np.ndarray:
@@ -156,8 +182,7 @@ class Sinograms(SinogramsDict):
         for direction in self.directions:
             interpolated_sinogram = self[direction].interpolate(factor_augmented_radon)
             radon_transform_augmented_list.append(interpolated_sinogram)
-        radon_augmented = Sinograms()
-        radon_augmented.quantization_step = self.quantization_step
-        radon_augmented.sampling_frequency = self.sampling_frequency / factor_augmented_radon
+        radon_augmented = Sinograms(self.sampling_frequency / factor_augmented_radon,
+                                    self.quantization_step)
         radon_augmented.insert_sinograms(radon_transform_augmented_list, self.directions)
         return radon_augmented
