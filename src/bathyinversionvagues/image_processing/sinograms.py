@@ -68,17 +68,20 @@ class Sinograms(SinogramsDict):
             filtered_sinograms[direction] = self[direction].apply_filters(processing_filters)
         return filtered_sinograms
 
-    def interpolate_sinograms_dfts(self, kfft: np.ndarray,
+    def interpolate_sinograms_dfts(self, frequencies: np.ndarray,
                                    directions: Optional[np.ndarray] = None) -> None:
         """ Interpolates the dft of the radon transform along the projection directions
 
         :param kfft: the set of wavenumbers to use for interpolating the DFT.
         :param directions: the set of directions for which the sinograms DFT must be interpolated
         """
+        # Interpolation can be done only if at least one frequency is requested
+        if frequencies.size == 0:
+            raise ValueError('DFT interpolation requires at least 1 frequency')
         # If no selected directions, DFT is interpolated on all directions
         self.directions_interpolated_dft = self.directions if directions is None else directions
         # Normalize frequencies and make them hashable
-        frequencies = HashableNdArray(kfft / self.sampling_frequency)
+        frequencies = HashableNdArray(frequencies / self.sampling_frequency)
         for direction in self.directions_interpolated_dft:
             self[direction].interpolate_dft(frequencies)
 
