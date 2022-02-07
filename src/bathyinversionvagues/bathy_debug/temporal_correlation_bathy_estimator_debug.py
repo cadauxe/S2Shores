@@ -109,10 +109,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Fifth  diagram
         ax5 = fig.add_subplot(gs[3, :2])
         ax5.axis('off')
-        dephasings = metrics['dephasings']
+        distances = metrics['distances']
         celerities = metrics['celerities']
         celerities_from_periods = metrics['celerities_from_periods']
-        chain_dx = ' '.join([f'{dephasing:.2f} | ' for dephasing in dephasings])
+        chain_dx = ' '.join([f'{distance:.2f} | ' for distance in distances])
         chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
         chain_celerities_from_period = ' '.join(
             [f'{celerity_from_period:.2f} | ' for celerity_from_period in celerities_from_periods])
@@ -127,7 +127,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         for i in range(hops_number):
             temporal_signal = metrics['temporal_signals'][i]
             arg_peak_max = metrics['arg_peaks_max'][i]
-            dephasing = metrics['dephasings'][i]
+            distance = metrics['distances'][i]
             temporal_period = metrics['periods'][i]
             celerities_from_periods = metrics['celerities_from_periods'][i]
             ax = fig_temporal_signals.add_subplot(gs[i, :])
