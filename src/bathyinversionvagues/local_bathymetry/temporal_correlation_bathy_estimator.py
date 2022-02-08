@@ -52,7 +52,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_transform: Optional[WavesRadon] = None
         self._angles: Optional[np.ndarray] = None
         self._distances: Optional[np.ndarray] = None
-        self._direction_propagation = None
         # Filters
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
             clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
@@ -60,15 +59,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             (remove_median,
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
             (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+        self.create_sequence_time_series()
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
             raise WavesEstimationError(
                 'The chosen number of lag frames is bigger than the number of available frames')
-        self.propagation_duration = np.sum(
-            self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
-        self.create_sequence_time_series()
-
-        if self.debug_sample:
-            self.metrics['propagation_duration'] = self.propagation_duration
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
@@ -101,31 +95,34 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self.correlation_image.pixels = filtered_image.pixels
             radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
             filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
-            self._direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
-            sinogram_max_var = radon_transform[self._direction_propagation]
+            direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
+            sinogram_max_var = radon_transform[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
             wave_length = self.compute_wave_length(sinogram_max_var_values)
             distances = self.compute_distances(
                 sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
 
-            if (self.propagation_duration >= 0 and distances[0] >= 0) or (
-                    self.propagation_duration <= 0 and distances[0] <= 0):
-                celerities = distances / self.propagation_duration
+            propagation_duration = np.sum(
+                self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
+
+            if (propagation_duration >= 0 and distances[0] >= 0) or (
+                    propagation_duration <= 0 and distances[0] <= 0):
+                celerities = distances / propagation_duration
             else:
                 # Progation distance and delta time do not have same sign so opposite
                 # direction is taken
-                if self._direction_propagation < 0:
-                    self._direction_propagation += 180
+                if direction_propagation < 0:
+                    direction_propagation += 180
                 else:
-                    self._direction_propagation -= 180
-                celerities = np.abs(distances) / np.abs(self.propagation_duration)
+                    direction_propagation -= 180
+                celerities = np.abs(distances) / np.abs(propagation_duration)
 
             temporal_signals = []
             periods = []
             arg_peaks_max = []
             for celerity in celerities:
                 temporal_signal = self.temporal_reconstruction(
-                    celerity, self._direction_propagation)
+                    celerity, direction_propagation)
                 try:
                     temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
                 except ValueError:
@@ -142,7 +139,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             # TODO : store distances[index_min] as travelled_distance and compute celerity from it
             celerity = celerities[index_min]
             waves_field_estimation = cast(self.waves_field_estimation_cls,
-                                          self.create_waves_field_estimation(self._direction_propagation,
+                                          self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
             waves_field_estimation.celerity = celerity
             self.store_estimation(waves_field_estimation)
@@ -155,6 +152,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self.metrics['temporal_signals'] = temporal_signals
                 self.metrics['arg_peaks_max'] = arg_peaks_max
                 self.metrics['periods'] = periods
+                self.metrics['propagation_duration'] = propagation_duration
                 self.metrics['celerities'] = celerities
                 self.metrics['celerities_from_periods'] = celerities_from_periods
         except Exception as excp:
@@ -321,7 +319,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self.metrics['x'] = x
             self.metrics['max_indices'] = max_indices
             self.metrics['distances'] = distances
-            self.metrics['propagation_duration'] = self.propagation_duration
         return distances
 
     def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> np.ndarray:
