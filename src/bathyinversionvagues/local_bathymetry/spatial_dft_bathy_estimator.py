@@ -210,7 +210,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # delete double directions
         # FIXME: this reorders the directions which is not always desired
         directions_indices = np.unique(refined_directions)
-        self.directions = np.zeros_like(directions_indices)
+        self.directions = np.zeros_like(directions_indices, dtype=np.float64)
         self.directions[:] = self.radon_transforms[0].directions[directions_indices]
 
     def find_spectral_peaks(self) -> None:
@@ -218,6 +218,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         transforms of the 2 images and identify wavenumbers of the peaks along these directions.
         """
         # Detailed analysis of the signal for positive phase shifts
+        if self.directions.size == 0:
+            return
 
         kfft = self.get_kfft()
         phi_min, phi_max = self.get_phi_limits(kfft)
@@ -236,13 +238,11 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         peaks_wavenumbers_ind = np.argmax(total_spectrum[:, peaks_freq], axis=0)
 
         for index, peak_freq_index in enumerate(peaks_freq):
-            direction_index = self.directions[peak_freq_index]
+            estimated_direction = self.directions[peak_freq_index]
             wavenumber_index = peaks_wavenumbers_ind[index]
             estimated_phase_shift = phase_shift[wavenumber_index, peak_freq_index]
-            estimated_direction = self.radon_transforms[0].directions[direction_index]
-            peak_sinogram = self.radon_transforms[0][direction_index]
 
-            # TODO: get wavelength from DFT frequencies
+            peak_sinogram = self.radon_transforms[0][estimated_direction]
             normalized_frequency = peak_sinogram.interpolated_dft_frequencies[wavenumber_index]
             wavelength = 1 / (normalized_frequency * self.radon_transforms[0].sampling_frequency)
 
