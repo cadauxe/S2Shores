@@ -60,15 +60,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             (remove_median,
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
             (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+        self.create_sequence_time_series()
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
             raise WavesEstimationError(
                 'The chosen number of lag frames is bigger than the number of available frames')
-        self.propagation_duration = np.sum(
-            self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
-        self.create_sequence_time_series()
-
-        if self.debug_sample:
-            self.metrics['propagation_duration'] = self.propagation_duration
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
@@ -105,13 +100,30 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             sinogram_max_var = radon_transform[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
             wave_length = self.compute_wave_length(sinogram_max_var_values)
-            celerities = self.compute_celerities(
+            distances = self.compute_distances(
                 sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
+
+            propagation_duration = np.sum(
+                self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
+
+            if (propagation_duration >= 0 and distances[0] >= 0) or (
+                    propagation_duration <= 0 and distances[0] <= 0):
+                celerities = distances / propagation_duration
+            else:
+                # Progation distance and delta time do not have same sign so opposite
+                # direction is taken
+                if direction_propagation < 0:
+                    direction_propagation += 180
+                else:
+                    direction_propagation -= 180
+                celerities = np.abs(distances) / np.abs(propagation_duration)
+
             temporal_signals = []
             periods = []
             arg_peaks_max = []
             for celerity in celerities:
-                temporal_signal = self.temporal_reconstruction(celerity, direction_propagation)
+                temporal_signal = self.temporal_reconstruction(
+                    celerity, direction_propagation)
                 try:
                     temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
                 except ValueError:
@@ -125,6 +137,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             celerities_from_periods = [wave_length / period for period in periods]
             errors_celerities = np.abs(celerities_from_periods - celerities)
             index_min = np.nanargmin(errors_celerities)
+            # TODO : store distances[index_min] as travelled_distance and compute celerity from it
             celerity = celerities[index_min]
             waves_field_estimation = cast(self.waves_field_estimation_cls,
                                           self.create_waves_field_estimation(direction_propagation,
@@ -140,6 +153,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self.metrics['temporal_signals'] = temporal_signals
                 self.metrics['arg_peaks_max'] = arg_peaks_max
                 self.metrics['periods'] = periods
+                self.metrics['propagation_duration'] = propagation_duration
                 self.metrics['celerities'] = celerities
                 self.metrics['celerities_from_periods'] = celerities_from_periods
         except Exception as excp:
@@ -275,7 +289,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self.metrics['wave_length_zeros'] = wave_length_zeros
         return wave_length
 
-    def compute_celerities(self, sinogram: np.ndarray, wave_length: float, nb_hops: int) -> np.ndarray:
+    def compute_distances(self, sinogram: np.ndarray, wave_length: float,
+                          nb_hops: int) -> np.ndarray:
         """ Propagated distance computation (in meter)
         - 1) sinogram maximum is determined on interval [-wave_length, wave_length]
         - 2) nb_max_hops propagated distances are computed from the position of the maximum using following formula :
@@ -283,7 +298,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         :param sinogram: sinogram having maximum variance
         :param wave_length: wave_length computed on sinogram
         :param nb_hops: number of propagated distances computed
-        :returns: np.ndarray of size nb_hops containing computed celerities
+        :returns: np.ndarray of size nb_hops containing computed distances
         """
         x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
         interval = np.logical_and(x * self.spatial_resolution > -wave_length,
@@ -293,27 +308,22 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         max_indice = np.argmax(sinogram[peaks])
         dx = x[peaks[max_indice]]
         if dx > 0:
-            dephasings = dx * self.spatial_resolution + wave_length * np.arange(nb_hops)
+            distances = dx * self.spatial_resolution + wave_length * np.arange(nb_hops)
             max_indices = np.array(peaks[max_indice] +
                                    np.arange(nb_hops) * wave_length / self.spatial_resolution,
                                    dtype=int)
         else:
-            dephasings = dx * self.spatial_resolution - wave_length * np.arange(nb_hops)
-            dephasings = np.abs(dephasings)
+            distances = dx * self.spatial_resolution - wave_length * np.arange(nb_hops)
             max_indices = np.array(peaks[max_indice] -
                                    np.arange(nb_hops) * wave_length / self.spatial_resolution,
                                    dtype=int)
         max_indices = max_indices[np.logical_and(max_indices > 0, max_indices < len(sinogram))]
-
-        celerities = dephasings / self.propagation_duration
-
         if self.debug_sample:
             self.metrics['interval'] = interval
             self.metrics['x'] = x
             self.metrics['max_indices'] = max_indices
-            self.metrics['dephasings'] = dephasings
-            self.metrics['propagation_duration'] = self.propagation_duration
-        return celerities
+            self.metrics['distances'] = distances
+        return distances
 
     def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> np.ndarray:
         """ Temporal reconstruction of the correlation signal following propagation direction
