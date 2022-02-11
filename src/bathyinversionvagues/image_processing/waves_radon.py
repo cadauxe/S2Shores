@@ -14,6 +14,8 @@ from typing import Optional, List  # @NoMove
 import numpy as np  # @NoMove
 
 
+from ..generic_utils.image_filters import circular_masking
+from ..generic_utils.numpy_utils import HashableNdArray
 from ..generic_utils.symmetric_radon import symmetric_radon
 from .sinograms import Sinograms
 from .waves_image import WavesImage
@@ -25,25 +27,50 @@ DEFAULT_ANGLE_MAX = 180.
 DEFAULT_ANGLE_STEP = 1.
 
 
-def linear_directions(angle_min: float, angle_max: float, directions_step: float) -> np.ndarray:
+def linear_directions(angle_min: float, angle_max: float, angles_step: float) -> np.ndarray:
+    """ Computes a sampling of a range of directions suitable for a Radon transform.
+
+    :param angle_min: the lowest direction angle of the range
+    :param angle_max: the highest direction angle of the range
+    :param angles_step: the step between the directions
+    :returns: An array with angles evenly spaced between angle_min and angle_max (excluded)
+    """
     return np.linspace(angle_min, angle_max,
-                       int((angle_max - angle_min) / directions_step),
+                       int((angle_max - angle_min) / angles_step),
                        endpoint=False)
 
 
 @lru_cache()
 def sinogram_weights(nb_samples: int) -> np.ndarray:
-    """ Computes a cosine weighting function to account for less energy at the extremities of a
-    sinogram.
+    """ Computes weighting function to account for less energy at the extremities of a sinogram.
 
     :param nb_samples: the number of samples in the sinogram (its length)
-    :return: half period of cosine with extremities modified to be non-zero
+    :return: weighting function with extremities modified to be non-zero
 
     """
-    weights = np.cos(np.linspace(-np.pi / 2., (np.pi / 2.), nb_samples))
+    samples = np.linspace(-1., 1., nb_samples)
+    weights = 1. / np.sqrt(1. - samples**2)
     weights[0] = weights[1]
     weights[-1] = weights[-2]
     return weights
+
+
+@lru_cache()
+def directional_circle_factors(nb_samples: int, directions: HashableNdArray) -> np.ndarray:
+    """ Computes a set of correction factors which can be applied to each direction of a Radon
+    transform to take into account the quantization of the circle boundary which leads to
+    different lengths of integration along each direction.
+
+    :param nb_samples: the size of the Radon transform along one dimension
+    :param directions: a set of angles for which the correction factors must be computed
+    :returns: an array providing the relative length of the intersection of a direction with the
+              quantized circle onto which the Radon transform is computed.
+    """
+    ones_square = np.ones((nb_samples, nb_samples))
+    ones_disk = circular_masking(ones_square)
+    ones_disk_radon_transform = symmetric_radon(ones_disk, theta=directions.unwrap())
+    ones_disk_directions_sums = np.sum(ones_disk_radon_transform, axis=0)
+    return ones_disk_directions_sums / ones_disk_directions_sums[0]
 
 
 class WavesRadon(Sinograms):
@@ -51,7 +78,7 @@ class WavesRadon(Sinograms):
     """
 
     def __init__(self, image: WavesImage, selected_directions: Optional[np.ndarray] = None,
-                 directions_quantization: Optional[float] = None, weighted: bool = False) -> None:
+                 directions_quantization: Optional[float] = None) -> None:
         """ Constructor
 
         :param image: a 2D array containing an image
@@ -63,12 +90,10 @@ class WavesRadon(Sinograms):
                                         0 degree direction is used as the origin, and any direction
                                         angle is transformed to the nearest quantized angle for
                                         indexing that direction in the radon transform.
-        :param weighted: a flag specifying if the radon transform must be weighted by a 1/cos(d)
-                         weighting function
         """
         super().__init__(image.sampling_frequency, directions_quantization)
 
-        self.pixels = image.pixels.copy()
+        self.pixels = circular_masking(image.pixels.copy())
 
         # TODO: Quantize directions when selected_directions is provided?
         if selected_directions is None:

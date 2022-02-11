@@ -48,15 +48,16 @@ def circular_mask(nb_lines: int, nb_columns: int, dtype: npt.DTypeLike) -> np.nd
     """
     inscribed_diameter = min(nb_lines, nb_columns)
     radius = inscribed_diameter // 2
-    image = np.zeros((nb_lines, nb_columns), dtype=dtype)
+    circle_in_rect = np.zeros((nb_lines, nb_columns), dtype=dtype)
     center_line = nb_lines // 2
     center_column = nb_columns // 2
     for line in range(nb_lines):
         for column in range(nb_columns):
             dist_to_center = (line - center_line)**2 + (column - center_column)**2
             if dist_to_center <= radius**2:
-                image[line][column] = 1  # used integral 1 to allow casting to the desired dtype
-    return image
+                # used integral 1 to allow casting to the desired dtype
+                circle_in_rect[line][column] = 1
+    return circle_in_rect
 
 
 def split_samples(samples: np.ndarray, nb_parts: int) -> List[np.ndarray]:
