@@ -157,7 +157,6 @@ def build_correl_spectrum_display(axs, local_estimator, title, refinement_phase)
     metrics = local_estimator.metrics
     key = 'interpolated_dft' if refinement_phase else 'standard_dft'
     sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
-    phase_shift_thresholded = metrics[key]['phase_shift_thresholded']
     total_spectrum = metrics[key]['total_spectrum']
     total_spectrum_normalized = metrics[key]['total_spectrum_normalized']
     max_heta = metrics[key]['max_heta']
@@ -166,8 +165,6 @@ def build_correl_spectrum_display(axs, local_estimator, title, refinement_phase)
                                  np.abs(sinograms_correlation_fft), directions)
     build_directional_2d_display(axs[2], 'Sinograms correlation DFT Phase',
                                  np.angle(sinograms_correlation_fft), directions)
-    build_directional_2d_display(axs[3], 'Sinograms correlation DFT Phase thresholded',
-                                 phase_shift_thresholded, directions)
     build_directional_2d_display(axs[4], 'Sinograms correlation total spectrum',
                                  total_spectrum, directions)
     build_directional_curve_display(axs[5], 'Sinograms correlation total spectrum normalized',

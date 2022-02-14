@@ -24,6 +24,7 @@ from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
+from .waves_field_estimation import WavesFieldEstimation
 from .waves_fields_estimations import WavesFieldsEstimations
 
 
@@ -192,6 +193,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         self.store_estimation(waves_field_estimation)
 
     def sort_waves_fields(self) -> None:
-        """ Sort the waves fields estimations based on some criterion.
-        """
-        # FIXME: (GREGOIRE) decide if some specific sorting is needed
+        pass
+
+    def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
+        if not isinstance(waves_field_estimation, self.waves_field_estimation_cls):
+            raise TypeError(f'Unable to process estimation type {type(waves_field_estimation)}')
+        return True
