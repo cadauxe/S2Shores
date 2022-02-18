@@ -23,6 +23,7 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
 
         super().__init__(gravity, depth_estimation_method)
         self._delta_time = np.nan
+        self._delta_phase = np.nan
 
     @property
     def delta_time(self) -> float:
@@ -32,6 +33,30 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
     @delta_time.setter
     def delta_time(self, value: float) -> None:
         self._delta_time = value
+
+    @property
+    def delta_phase(self) -> float:
+        """ :returns: the measured phase difference between both observations (rd) """
+        return self._delta_phase
+
+    @delta_phase.setter
+    def delta_phase(self, value: float) -> None:
+        self._delta_phase = value
+        if np.isnan(self._delta_phase) or self._delta_phase == 0:
+            self.period = np.nan
+        else:
+            period = self.delta_time * (2 * np.pi / self._delta_phase)
+            if period < 0.:
+                # delta_phase and delta_time have opposite signs, nothing to correct.
+                # period must be positive
+                period = abs(period)
+            else:
+                # delta_phase and delta_time have same signs, propagation direction must be inverted
+                if self.direction < 0:
+                    self.direction += 180
+                else:
+                    self.direction -= 180
+            self.period = period
 
     def __str__(self) -> str:
         result = WavesFieldSampleBathymetry.__str__(self)
