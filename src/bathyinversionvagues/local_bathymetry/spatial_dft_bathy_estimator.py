@@ -15,14 +15,14 @@ import numpy as np
 
 from ..bathy_debug.waves_fields_display import display_curve, display_4curves, display_3curves
 from ..bathy_physics import wavenumber_offshore, phi_limits
+from ..data_model.waves_field_estimation import WavesFieldEstimation
+from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, desmooth
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_waves_field_estimation import SpatialDFTWavesFieldEstimation
-from .waves_field_estimation import WavesFieldEstimation
-from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:

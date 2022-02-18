@@ -7,12 +7,12 @@
 from datetime import datetime
 from typing import Mapping, Hashable, Any, Dict, List
 
+from ..waves_exceptions import WavesEstimationIndexingError, WavesEstimationAttributeError
+from .waves_fields_estimations import WavesFieldsEstimations
+
+
 import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
-
-
-from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
-from ..waves_exceptions import WavesEstimationIndexingError, WavesEstimationAttributeError
 
 
 DEBUG_LAYER = ['DEBUG']

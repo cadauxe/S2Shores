@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 10 sep 2021
 """
-from .waves_field_estimation import WavesFieldEstimation
+from ..data_model.waves_field_estimation import WavesFieldEstimation
 
 
 class TemporalCorrelationWavesFieldEstimation(WavesFieldEstimation):

@@ -11,15 +11,16 @@ time intervals.
 from abc import abstractmethod, ABC
 from copy import deepcopy
 
-from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
-
 import numpy as np
 
+from ..data_model.waves_field_estimation import WavesFieldEstimation
+from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
-from .waves_field_estimation import WavesFieldEstimation
-from .waves_fields_estimations import WavesFieldsEstimations
+
+
+from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 
 if TYPE_CHECKING:

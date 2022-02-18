@@ -8,7 +8,6 @@
 :created: 18/06/2021
 """
 import warnings
-from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 import pandas
 from scipy.interpolate import interp1d
@@ -17,6 +16,8 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
+from ..data_model.waves_field_estimation import WavesFieldEstimation
+from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
@@ -27,8 +28,7 @@ from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
-from .waves_field_estimation import WavesFieldEstimation
-from .waves_fields_estimations import WavesFieldsEstimations
+from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 
 if TYPE_CHECKING:

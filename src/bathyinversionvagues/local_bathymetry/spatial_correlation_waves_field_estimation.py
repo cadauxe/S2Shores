@@ -9,7 +9,7 @@
 """
 import numpy as np
 
-from .waves_field_estimation import WavesFieldEstimation
+from ..data_model.waves_field_estimation import WavesFieldEstimation
 
 
 class SpatialCorrelationWavesFieldEstimation(WavesFieldEstimation):

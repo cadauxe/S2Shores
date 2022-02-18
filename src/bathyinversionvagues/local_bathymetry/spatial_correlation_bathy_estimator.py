@@ -14,6 +14,8 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_physics import period_offshore, celerity_offshore, wavelength_offshore
+from ..data_model.waves_field_estimation import WavesFieldEstimation
+from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
@@ -24,8 +26,6 @@ from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
-from .waves_field_estimation import WavesFieldEstimation
-from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
