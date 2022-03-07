@@ -108,7 +108,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
             if (propagation_duration >= 0 and dx >= 0) or (
                     propagation_duration <= 0 and dx <= 0):
-                celerities = distances / propagation_duration
+                celerities = np.abs(distances) / propagation_duration
             else:
                 # Progation distance and delta time do not have same sign so opposite
                 # direction is taken
