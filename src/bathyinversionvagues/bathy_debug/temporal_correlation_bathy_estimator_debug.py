@@ -111,33 +111,12 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         ax5.axis('off')
         distances = metrics['distances']
         celerities = metrics['celerities']
-        celerities_from_periods = metrics['celerities_from_periods']
         chain_dx = ' '.join([f'{distance:.2f} | ' for distance in distances])
         chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
-        chain_celerities_from_period = ' '.join(
-            [f'{celerity_from_period:.2f} | ' for celerity_from_period in celerities_from_periods])
+        chain_coefficients = ' '.join(
+            [f'{coefficient:.2f} | ' for coefficient in metrics['linearity_coefficients']])
         ax5.annotate(f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n c = {chain_celerities} \n'
-                     f' c_from_period = {chain_celerities_from_period}\n'
+                     f' ckg = {chain_coefficients}\n'
                      f' chosen_celerity = {wave_celerity}', (0, 0), color='g')
-
-        # sixth  diagram : Temporal reconstruction
-        fig_temporal_signals = plt.figure('Signaux temporal', constrained_layout=True)
-        hops_number = len(metrics['temporal_signals'])
-        gs = gridspec.GridSpec(hops_number, 1, figure=fig_temporal_signals)
-        for i in range(hops_number):
-            temporal_signal = metrics['temporal_signals'][i]
-            arg_peak_max = metrics['arg_peaks_max'][i]
-            distance = metrics['distances'][i]
-            temporal_period = metrics['periods'][i]
-            celerities_from_periods = metrics['celerities_from_periods'][i]
-            ax = fig_temporal_signals.add_subplot(gs[i, :])
-            ax.plot(temporal_signal)
-            ax.plot(arg_peak_max, temporal_signal[arg_peak_max], 'ro')
-            ax.annotate('T={:.2f} s  | c = L/T = {:.2f}/{:.2f} = {:.2f}'.format(temporal_period, wave_wavelength, temporal_period, celerities_from_periods),
-                        (0, np.min(temporal_signal)), color='r')
-
-        fig_temporal_signals.savefig(os.path.join(
-            debug_path, f'Temporal_signals_{self.location[0]}_{self.location[1]}.png'), dpi=300)
-        plt.close(fig_temporal_signals)
         fig.savefig(os.path.join(
             debug_path, f'Infos_point_{self.location[0]}_{self.location[1]}.png'), dpi=300)
