@@ -247,39 +247,39 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
             peak_sinogram = self.radon_transforms[0][estimated_direction]
             normalized_frequency = peak_sinogram.interpolated_dft_frequencies[wavenumber_index]
-            wavelength = 1 / (normalized_frequency * self.radon_transforms[0].sampling_frequency)
+            wavenumber = normalized_frequency * self.radon_transforms[0].sampling_frequency
 
-            phase_shift_ratio = abs(estimated_phase_shift) / phi_max[wavenumber_index]
             energy = total_spectrum[wavenumber_index, direction_index]
-            self.save_waves_field_estimation(estimated_direction, wavelength,
-                                             estimated_phase_shift, phase_shift_ratio, energy)
+            estimation = self.save_waves_field_estimation(estimated_direction, wavenumber,
+                                                          estimated_phase_shift, energy)
+            self.store_estimation(estimation)
 
         if self.debug_sample:
             self.metrics['kfft'] = kfft
             self.metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
             self.metrics['interpolated_dft'] = metrics
 
-    def save_waves_field_estimation(self, direction: float, wavelength: float,
-                                    phase_shift: float, phase_shift_ratio: float,
-                                    energy: float) -> None:
+    def save_waves_field_estimation(self, direction: float, wavenumber: float, phase_shift: float,
+                                    energy: float) -> SpatialDFTWavesFieldEstimation:
         """ Saves estimated parameters in a new estimation.
 
         :param direction: direction of the waves field (°)
-        :param wavelength: wavelength of the waves field (m)
+        :param wavenumber: wavenumber of the waves field (m-1)
         :param phase_shift: phase difference estimated between the 2 images (rd)
-        :param phase_shift_ratio: fraction of the maximum phase shift allowable in deep waters
         :param energy: energy of the waves field (definition TBD)
+        :returns: a bathy estimation
         """
         waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
-                                      self.create_waves_field_estimation(direction, wavelength))
+                                      self.create_waves_field_estimation(direction, 1 / wavenumber))
 
         # FIXME: index delta times by the index of the pair of images
         waves_field_estimation.delta_time = self.sequential_delta_times[0]
         waves_field_estimation.delta_phase = phase_shift
         # TODO: compute this property inside WavesFieldEstimation
-        waves_field_estimation.delta_phase_ratio = phase_shift_ratio
+        _, phi_max = cast(Tuple[float, float], self.get_phi_limits(wavenumber))
+        waves_field_estimation.delta_phase_ratio = abs(phase_shift) / phi_max
         waves_field_estimation.energy = energy
-        self.store_estimation(waves_field_estimation)
+        return waves_field_estimation
 
     def _cross_correl_spectrum(self, sino1_fft: np.ndarray, sino2_fft: np.ndarray,
                                ) -> Tuple[np.ndarray, np.ndarray, dict]:
