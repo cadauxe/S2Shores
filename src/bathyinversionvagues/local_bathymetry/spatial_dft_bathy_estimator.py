@@ -45,6 +45,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.radon_transforms: List[WavesRadon] = []
 
+        self.full_linear_wavenumbers = self.get_full_linear_wavenumbers()
         self.directions_ranges = []
 
     @property
@@ -213,15 +214,15 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """ Find refined directions from the resampled cross correlation spectrum of the radon
         transforms of the 2 images and identify wavenumbers of the peaks along these directions.
         """
-        kfft = self.get_kfft()
         # phi_max: maximum acceptable values of delta phi for each wavenumber to explore
-        _, phi_max = self.get_phi_limits(kfft)
+        _, phi_max = self.get_phi_limits(self.full_linear_wavenumbers)
 
         for directions_range in self.directions_ranges:
-            self._find_peaks_on_directions_range(kfft, phi_max, directions_range)
+            self._find_peaks_on_directions_range(self.full_linear_wavenumbers,
+                                                 phi_max, directions_range)
 
         if self.debug_sample:
-            self._metrics['kfft'] = kfft
+            self._metrics['kfft'] = self.full_linear_wavenumbers
 
     def _find_peaks_on_directions_range(self, kfft, phi_max, directions) -> None:
         """ Find refined directions from the resampled cross correlation spectrum of the radon
@@ -325,16 +326,14 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         return total_spectrum_normalized
 
-    def get_kfft(self) -> np.ndarray:
+    def get_full_linear_wavenumbers(self) -> np.ndarray:
         """  :returns: the requested sampling of the sinogram FFT
         """
         # frequencies based on wave characteristics:
-        period_samples = np.arange(self.global_estimator.waves_period_min,
-                                   self.global_estimator.waves_period_max,
-                                   self.local_estimator_params['STEP_T'])
-        k_forced = cast(np.ndarray, wavenumber_offshore(period_samples, self.gravity))
-
-        return k_forced
+        period_samples = np.arange(self.global_estimator.waves_period_max,
+                                   self.global_estimator.waves_period_min,
+                                   -self.local_estimator_params['STEP_T'])
+        return cast(np.ndarray, wavenumber_offshore(period_samples, self.gravity))
 
     def get_phi_limits(self, wavenumber: NdArrayOrFloat) -> Tuple[NdArrayOrFloat, NdArrayOrFloat]:
         """  Get the delta phase limits for deep and swallow waters
