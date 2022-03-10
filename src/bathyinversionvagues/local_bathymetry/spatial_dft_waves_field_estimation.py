@@ -47,12 +47,13 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
             period = self.delta_time * (2 * np.pi / self._delta_phase)
             if period < 0.:
                 # delta_phase and delta_time have opposite signs,
-                # propagation direction must be inverted and delta_phase negated
+                # propagation direction must be inverted
                 if self.direction < 0:
                     self.direction += 180
                 else:
                     self.direction -= 180
-                self._delta_phase = -self._delta_phase
+                # FIXME: should delta_phase be negated ?
+                # self._delta_phase = -self._delta_phase
                 # Ensure period always positive.
                 period = abs(period)
             self.period = period
