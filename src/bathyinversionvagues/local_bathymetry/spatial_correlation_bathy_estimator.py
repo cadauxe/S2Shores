@@ -144,8 +144,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         """
         argmax_ac = len(correlation_signal) / 2
         delta_time = self.sequential_delta_times[0]
-        celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
-                                                  self.gravity)
+        celerity_offshore_max = \
+            celerity_offshore(self.gravity, period=self.global_estimator.waves_period_max)
         spatial_shift_offshore_min = -celerity_offshore_max * abs(delta_time)
         propagation_factor = delta_time / period_offshore(1. / wavelength, self.gravity)
         if propagation_factor < 1:

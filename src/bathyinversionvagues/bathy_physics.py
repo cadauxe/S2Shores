@@ -7,7 +7,7 @@
 
 # Imports
 import math
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 import numpy as np
 
@@ -69,14 +69,26 @@ def wavelength_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloa
     return 1. / wavenumber_offshore(period, gravity)
 
 
-def celerity_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
-    """ Computes the celerity from the period max under the offshore hypothesis
+def celerity_offshore(gravity: float,
+                      period: Optional[NdArrayOrFloat] = None,
+                      wavenumber: Optional[NdArrayOrFloat] = None,) -> NdArrayOrFloat:
+    """ Computes the offshore celerity either from the period or from the wavenumber.
+    period and wavenumber are mutually exclusive.
 
-    :param period: period of the waves (s)
     :param gravity: acceleration of the gravity (m/s2)
+    :param period: period of the waves (s).
+    :param wavenumber: wavenumber of the waves (m-1)
     :returns: the celerity according to the linear dispersive relation (m.s-1)
+    :raises ValueError: when period and wevenumber are both specified or when none are specified.
     """
-    return (gravity / 2. * np.pi) * period
+    if period is None:
+        if wavenumber is not None:
+            return np.sqrt(gravity / (2. * np.pi * wavenumber))
+        raise ValueError('pediod or wavenumber must be specified')
+    else:
+        if wavenumber is None:
+            return (gravity / 2. * np.pi) * period
+        raise ValueError('pediod and wavenumber cannot be specified at the same time')
 
 
 def linearity_indicator(
