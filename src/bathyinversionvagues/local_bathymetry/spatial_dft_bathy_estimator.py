@@ -82,7 +82,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.compute_radon_transforms()
 
         peaks_dir_indices = self.find_directions()
-        # self.find_directions_bis()
 
         self.prepare_refinement(peaks_dir_indices)
 
@@ -165,35 +164,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             print('final peaks after adding isolated peaks: ', sorted(filtered_peaks_dir))
 
         return np.array(sorted(filtered_peaks_dir))
-
-    def find_directions_bis(self) -> None:
-        """ Find an initial set of directions from the the radon transform of a single image.
-        Exploratory test.
-        """
-
-        sinograms_powers_normalized_list: List[np.ndarray] = []
-        for radon_transform in self.radon_transforms:
-            sinograms_powers = radon_transform.get_sinograms_mean_power()
-            sinograms_powers_normalized = sinograms_powers / np.max(sinograms_powers)
-            sinograms_powers_normalized_list.append(sinograms_powers_normalized)
-            peaks_direction_radon = find_peaks(sinograms_powers_normalized, prominence=0.1)
-            print(peaks_direction_radon)
-
-        for index, radon_transform in enumerate(self.radon_transforms):
-            display_curve(sinograms_powers_normalized_list[index],
-                          f'Power sinograms image {index+1}')
-        # FIXME: find a way to access total_spectrum_normalized
-        display_3curves(
-            sinograms_powers_normalized_list[0],
-            sinograms_powers_normalized_list[0],
-            sinograms_powers_normalized_list[1])
-        derived_metric = sinograms_powers_normalized_list[0] * sinograms_powers_normalized_list[1]
-        peaks_derived_metric = find_peaks(derived_metric, prominence=0.05)
-        print(peaks_derived_metric)
-        display_4curves(derived_metric,
-                        derived_metric,
-                        sinograms_powers_normalized[0][::5],
-                        sinograms_powers_normalized[1][::5])
 
     def prepare_refinement(self, peaks_dir_indices: np.ndarray) -> None:
         """ Prepare the directions along which direction and wavenumber finding will be done.
