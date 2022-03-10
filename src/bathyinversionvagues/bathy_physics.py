@@ -25,18 +25,35 @@ def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) ->
     return depth
 
 
-def phi_limits(wavenumbers: np.ndarray, delta_t: float,
+def phi_limits(wavenumber: NdArrayOrFloat, delta_t: float,
                min_depth: float, gravity: float) -> Tuple[NdArrayOrFloat, NdArrayOrFloat]:
 
     delta_phi = 2 * np.pi * delta_t
-    # shallow water limits:
-    min_celerity = np.sqrt(gravity * min_depth)
-    phi_min = delta_phi * min_celerity * wavenumbers
 
-    # deep water limits:
-    phi_max = delta_phi / period_offshore(wavenumbers, gravity)
+    celerity_min, celerity_max = celerity_limits(min_depth, gravity, wavenumber=wavenumber)
+    phi_min = delta_phi * celerity_min * wavenumber
+    phi_max = delta_phi * celerity_max * wavenumber
 
     return phi_min, phi_max
+
+
+def celerity_limits(min_depth: float, gravity: float,
+                    period: Optional[NdArrayOrFloat] = None,
+                    wavenumber: Optional[NdArrayOrFloat] = None) -> Tuple[float, NdArrayOrFloat]:
+    """ Computes the celerity limits either from the period or from the wavenumber
+
+    :param min_depth: the minimum depth under which celerity does not depend on wavenumber (m)
+    :param gravity: acceleration of the gravity (m/s2)
+    :param period: period(s) of the waves (s)
+    :param wavenumber: wavenumber(s) of the waves (1/m)
+    :returns: the minimum and maximum celerities for the requested period(s) or wavenumber(s)
+    """
+    # celerity is minimal in shallow water an does not depend on the period nor on the wavenumber:
+    celerity_min = np.sqrt(gravity * min_depth)
+
+    # celerity is maximal in deep water depending on the period or wavenumber:
+    celerity_max = celerity_offshore(gravity, period=period, wavenumber=wavenumber)
+    return celerity_min, celerity_max
 
 
 def period_offshore(wavenumber: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
@@ -62,7 +79,7 @@ def wavenumber_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloa
 def wavelength_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the wavelength from the period under the offshore hypothesis
 
-    :param period: period of the waves (s)
+    :param period: period(s) of the waves (s)
     :param gravity: acceleration of the gravity (m/s2)
     :returns: the wavelength according to the linear dispersive relation (m)
     """
@@ -76,8 +93,8 @@ def celerity_offshore(gravity: float,
     period and wavenumber are mutually exclusive.
 
     :param gravity: acceleration of the gravity (m/s2)
-    :param period: period of the waves (s).
-    :param wavenumber: wavenumber of the waves (m-1)
+    :param period: period(s) of the waves (s).
+    :param wavenumber: wavenumber(s) of the waves (m-1)
     :returns: the celerity according to the linear dispersive relation (m.s-1)
     :raises ValueError: when period and wevenumber are both specified or when none are specified.
     """
