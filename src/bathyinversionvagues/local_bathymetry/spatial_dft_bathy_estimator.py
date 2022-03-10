@@ -14,7 +14,7 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_debug.waves_fields_display import display_curve, display_4curves, display_3curves
-from ..bathy_physics import wavenumber_offshore, phi_limits
+from ..bathy_physics import wavenumber_offshore, phi_limits, NdArrayOrFloat
 from ..generic_utils.image_filters import detrend, desmooth
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
@@ -336,15 +336,13 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         return k_forced
 
-    def get_phi_limits(self, wavenumbers: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """  Get the delta phase limits form deep and swallow waters
+    def get_phi_limits(self, wavenumber: NdArrayOrFloat) -> Tuple[NdArrayOrFloat, NdArrayOrFloat]:
+        """  Get the delta phase limits for deep and swallow waters
 
-        :param wavenumbers: the wavenumbers for which limits on phase are requested
-        :returns: the minimum and maximum phase shifts for swallow and deep water at different
-                  wavenumbers
+        :param wavenumber: the wavenumber(s) for which limits on phase are requested
+        :returns: the minimum and maximum phase shifts for swallow and deep water
         """
-        return cast(Tuple[np.ndarray, np.ndarray],
-                    phi_limits(wavenumbers,
-                               self.sequential_delta_times[0],
-                               self.global_estimator.depth_min,
-                               self.gravity))
+        return phi_limits(wavenumber,
+                          self.sequential_delta_times[0],
+                          self.global_estimator.depth_min,
+                          self.gravity)
