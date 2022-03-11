@@ -35,7 +35,6 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         wave_direction = wave_estimation.direction
         wave_wavelength = wave_estimation.wavelength
         wave_celerity = wave_estimation.celerity
-        wave_period = wave_estimation.period
 
         metrics = self.metrics
         # Note that wave direction is clockwise origin east
@@ -90,7 +89,6 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Fourth diagram : Sinogram & wave length computation
         ax4 = fig.add_subplot(gs[2, :2])
 
-        length_signal = len(sinogram_max_var)
         ax4.plot(x, sinogram_max_var)
         ax4.scatter(x[interval], sinogram_max_var[interval], s=4 *
                     mpl.rcParams['lines.markersize'], c='orange')

@@ -106,23 +106,23 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
             celerities = np.abs(distances) / np.abs(propagation_duration)
             linearity_coefficients = (2 * np.pi * celerities**2) / (wave_length * self.gravity)
-            errors = np.abs(linearity_coefficients - 1)
+            possible_values = np.logical_and(
+                linearity_coefficients >= 0,
+                linearity_coefficients < 1)
+            errors = np.abs(
+                linearity_coefficients[possible_values] - self.global_estimator.waves_linearity_max)
             index = np.argmin(errors)
-            celerity = celerities[index]
+            celerity = celerities[possible_values][index]
 
-            if (propagation_duration >= 0 and distances[index] >= 0) or (
-                    propagation_duration <= 0 and distances[index] <= 0):
-                celerities = np.abs(distances) / propagation_duration
-            else:
+            if not (propagation_duration >= 0 and distances[possible_values][index] >= 0) or (
+                    propagation_duration <= 0 and distances[possible_values][index] <= 0):
                 # Progation distance and delta time do not have same sign so opposite
                 # direction is taken
                 if direction_propagation < 0:
                     direction_propagation += 180
                 else:
                     direction_propagation -= 180
-                celerities = np.abs(distances) / np.abs(propagation_duration)
 
-            # TODO : store distances[index_min] as travelled_distance and compute celerity from it
             waves_field_estimation = cast(self.waves_field_estimation_cls,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
@@ -279,6 +279,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             [dx , dx + wave_length, ..., dx + (nb_max_hops)*wave_length] (an adaptation to negative values is also made if needed)
         :param sinogram: sinogram having maximum variance
         :param wave_length: wave_length computed on sinogram
+        :param nb_hops : number of peaks to consider to compute distances
         :returns: np.ndarray of size nb_hops containing computed distances
         """
         x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
