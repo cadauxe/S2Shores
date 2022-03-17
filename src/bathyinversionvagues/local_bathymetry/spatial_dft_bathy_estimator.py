@@ -107,8 +107,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         sino1_fft = self.radon_transforms[0].get_sinograms_standard_dfts()
         sino2_fft = self.radon_transforms[1].get_sinograms_standard_dfts()
 
-        _, total_spectrum, sinograms_correlation_fft = \
+        phase_shift, spectrum_amplitude, sinograms_correlation_fft = \
             self._cross_correl_spectrum(sino1_fft, sino2_fft)
+        total_spectrum = np.abs(phase_shift) * spectrum_amplitude
 
         max_heta = np.max(total_spectrum, axis=0)
         total_spectrum_normalized = max_heta / np.max(max_heta)
@@ -211,8 +212,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.radon_transforms[1].interpolate_sinograms_dfts(wavenumbers, directions)
         sino1_fft = self.radon_transforms[0].get_sinograms_interpolated_dfts(directions)
         sino2_fft = self.radon_transforms[1].get_sinograms_interpolated_dfts(directions)
-        phase_shift, total_spectrum, sinograms_correlation_fft = \
+        phase_shift, spectrum_amplitude, sinograms_correlation_fft = \
             self._cross_correl_spectrum(sino1_fft, sino2_fft)
+        total_spectrum = np.abs(phase_shift) * spectrum_amplitude
         max_heta = np.max(total_spectrum, axis=0)
         total_spectrum_normalized = max_heta / np.max(max_heta)
 
@@ -276,7 +278,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         :param sino2_fft: the DFT of the second sinogram, either standard or interpolated
         :returns: A tuple of 2 numpy arrays and a dictionary with:
                   - the phase shifts
-                  - the total spectrum
+                  - the spectrum amplitude
                   - a dictionary containing intermediate results for debugging purposes
         """
         nb_wavenumbers = sino1_fft.shape[0]
@@ -289,9 +291,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         combined_amplitude = (amplitude_sino1 + amplitude_sino2)
 
         # Find maximum total energy per direction theta and normalize by the greater one
-        total_spectrum = np.abs(combined_amplitude * phase_shift) / (nb_wavenumbers**3)
+        spectrum_amplitude = np.abs(combined_amplitude) / (nb_wavenumbers**4)
 
-        return phase_shift, total_spectrum, sinograms_correlation_fft
+        return phase_shift, spectrum_amplitude, sinograms_correlation_fft
 
     def get_full_linear_wavenumbers(self) -> np.ndarray:
         """  :returns: the requested sampling of the sinogram FFT
