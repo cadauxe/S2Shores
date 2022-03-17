@@ -45,7 +45,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.radon_transforms: List[WavesRadon] = []
 
         self.full_linear_wavenumbers = self.get_full_linear_wavenumbers()
-        self.directions_ranges = []
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -81,9 +80,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         peaks_dir_indices = self.find_directions()
 
-        self.prepare_refinement(peaks_dir_indices)
+        directions_ranges = self.prepare_refinement(peaks_dir_indices)
 
-        self.find_spectral_peaks()
+        self.find_spectral_peaks(directions_ranges)
 
     def sort_waves_fields(self) -> None:
         """ Sort the waves fields estimations based on their energy max.
@@ -175,9 +174,11 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         return np.array(sorted(filtered_peaks_dir))
 
-    def prepare_refinement(self, peaks_dir_indices: np.ndarray) -> None:
+    def prepare_refinement(self, peaks_dir_indices: np.ndarray) \
+            -> List[np.ndarray]:
         """ Prepare the directions along which direction and wavenumber finding will be done.
         """
+        directions_ranges = []
         if peaks_dir_indices.size > 0:
             for peak_index in range(0, peaks_dir_indices.size):
                 angles_half_range = self.local_estimator_params['ANGLE_AROUND_PEAK_DIR']
@@ -186,16 +187,18 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                 min(direction_index + angles_half_range + 1, 360)
                                 )
                 directions_range = self.radon_transforms[0].directions[tmp]
-                self.directions_ranges.append(directions_range)
+                directions_ranges.append(directions_range)
 
         # FIXME: what to do with opposite directions
+        return directions_ranges
 
-    def find_spectral_peaks(self) -> None:
+    def find_spectral_peaks(self,
+                            directions_ranges: List[np.ndarray]) -> None:
         """ Find refined directions from the resampled cross correlation spectrum of the radon
         transforms of the 2 images and identify wavenumbers of the peaks along these directions.
         """
 
-        for directions_range in self.directions_ranges:
+        for directions_range in directions_ranges:
             self._find_peaks_on_directions_range(self.full_linear_wavenumbers, directions_range)
 
         if self.debug_sample:
