@@ -74,9 +74,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         estimated_direction = self.find_direction()
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
-        celerity = self.compute_celerity(correlation_signal, wavelength)
+        propagated_distance = self.compute_propagated_distance(correlation_signal, wavelength)
         self.save_waves_field_estimation(correlation_signal, estimated_direction,
-                                         wavelength, celerity)
+                                         wavelength, propagated_distance)
 
     def compute_radon_transforms(self) -> None:
 
@@ -135,12 +135,13 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             self.local_estimator_params['AUGMENTED_RADON_FACTOR']
         return wavelength
 
-    def compute_celerity(self, correlation_signal: np.ndarray, wavelength: float) -> float:
-        """ Compute the celerity of the waves
+    def compute_propagated_distance(
+            self, correlation_signal: np.ndarray, wavelength: float) -> float:
+        """ Compute the distance propagated over time of the waves
 
         :param correlation_signal: spatial cross correlated signal
         :param wavelength: the wave length (m)
-        :returns: the celerity (m/s)
+        :returns: the distance propagated by the waves over time (m)
         """
         argmax_ac = len(correlation_signal) / 2
         delta_time = self.sequential_delta_times[0]
@@ -155,7 +156,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             spatial_shift_offshore_max = -self.local_estimator_params['PEAK_POSITION_MAX_FACTOR'] \
                 * propagation_factor * wavelength
         peaks_pos, _ = find_peaks(correlation_signal)
-        celerity = np.nan
+        propagated_distance = np.nan
         if peaks_pos.size != 0:
             relative_distance = peaks_pos - argmax_ac
             pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_offshore_min) & (
@@ -163,32 +164,31 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             if pt_in_range.size != 0:
                 argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
                 # TODO: add variable to adapt to be in meters
-                dx = argmax - argmax_ac  # supposed to be in meters,
-                celerity = abs(dx) / abs(delta_time)
+                propagated_distance = argmax - argmax_ac  # supposed to be in meters,
             else:
                 raise WavesEstimationError('Unable to find any directional peak')
         else:
             raise WavesEstimationError('Unable to find any directional peak')
 
-        return celerity
+        return propagated_distance
 
     def save_waves_field_estimation(self,
                                     correlation_signal: np.ndarray,
                                     estimated_direction: float,
                                     wavelength: float,
-                                    celerity: float) -> None:
+                                    propagated_distance: float) -> None:
         """ Saves the waves_field_estimation
 
         :param correlation_signal: spatial cross correlated signal
         :param estimated_direction: the waves estimated propagation direction
         :param wavelength: the wave length of the waves
-        :param celerity: the celerity of the waves
+        :param propagated_distance: the distance propagated by the waves over time
         """
         waves_field_estimation = cast(SpatialCorrelationWavesFieldEstimation,
                                       self.create_waves_field_estimation(estimated_direction,
                                                                          wavelength))
-        waves_field_estimation.celerity = celerity
         waves_field_estimation.delta_time = self.sequential_delta_times[0]
+        waves_field_estimation.propagated_distance = propagated_distance
         waves_field_estimation.correlation_signal = correlation_signal
         self.store_estimation(waves_field_estimation)
 

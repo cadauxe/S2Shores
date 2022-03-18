@@ -23,6 +23,7 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
 
         super().__init__(gravity, depth_estimation_method)
         self._delta_time = np.nan
+        self._propagated_distance = np.nan
         self._delta_phase = np.nan
 
     @property
@@ -33,6 +34,17 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
     @delta_time.setter
     def delta_time(self, value: float) -> None:
         self._delta_time = value
+
+    @property
+    def propagated_distance(self) -> float:
+        """ :returns: the propagating distance over time """
+        return self._propagated_distance
+
+    @propagated_distance.setter
+    def propagated_distance(self, value: float) -> None:
+        # FIXME: ensure propagated distance positive ?
+        self._propagated_distance = value
+        self.celerity = abs(value / self.delta_time)  # Must be positive in all cases
 
     @property
     def delta_phase(self) -> float:
