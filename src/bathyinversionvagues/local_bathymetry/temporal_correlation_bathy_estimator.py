@@ -138,11 +138,13 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             errors_celerities = np.abs(celerities_from_periods - celerities)
             index_min = np.nanargmin(errors_celerities)
             # TODO : store distances[index_min] as travelled_distance and compute celerity from it
+            
             celerity = celerities[index_min]
             waves_field_estimation = cast(self.waves_field_estimation_cls,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
             waves_field_estimation.celerity = celerity
+            waves_field_estimation.travelled_distance = distances[index_min]
             self.store_estimation(waves_field_estimation)
 
             if self.debug_sample:
