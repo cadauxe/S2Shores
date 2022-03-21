@@ -57,11 +57,8 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
         if np.isnan(self._delta_phase) or self._delta_phase == 0:
             self.period = np.nan
         else:
-            period = self.delta_time * (2 * np.pi / self._delta_phase)
-            if period > 0.:
-                # delta_phase and delta_time have same signs, propagation direction must be inverted
-                self.invert_direction()
-            self.period = abs(period)
+            # FIXME: the presence of a minus sign is not clear. Explain it.
+            self.period = - self.delta_time * (2 * np.pi / self._delta_phase)
 
     def __str__(self) -> str:
         result = WavesFieldSampleBathymetry.__str__(self)
