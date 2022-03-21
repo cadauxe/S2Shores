@@ -79,7 +79,9 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
     @celerity.setter
     def celerity(self, value: float) -> None:
         if value != self.celerity:
-            self._celerity = value
+            if value < 0.:
+                self.invert_direction()
+            self._celerity = abs(value)
             if not np.isnan(self.period) and not np.isnan(self.wavelength):
                 self._period = np.nan
                 self.wavelength = np.nan
