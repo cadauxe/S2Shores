@@ -107,10 +107,22 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             celerities = np.abs(distances) / np.abs(propagation_duration)
             linearity_coefficients = (2 * np.pi * celerities**2) / (wave_length * self.gravity)
             possible_values = np.logical_and(
-                linearity_coefficients >= 0,
-                linearity_coefficients < 1)
+                linearity_coefficients >= self.global_estimator.waves_linearity_min,
+                linearity_coefficients < self.global_estimator.waves_linearity_max)
+            if len(possible_values) < 1:
+                raise ValueError('No correct linearity coefficient found')
+            if self.local_estimator_params['LINEARITY_CRITERIA'] == 'MAX':
+                linearity_criteria = self.global_estimator.waves_linearity_max
+            elif self.local_estimator_params['LINEARITY_CRITERIA'] == 'MIN':
+                linearity_criteria = self.global_estimator.waves_linearity_min
+            elif isinstance(self.local_estimator_params['LINEARITY_CRITERIA'], float):
+                linearity_criteria = self.local_estimator_params['LINEARITY_CRITERIA']
+                if (linearity_criteria < self.global_estimator.waves_linearity_min) or (
+                        linearity_criteria > self.global_estimator.waves_linearity_max):
+                    raise ValueError(
+                        'Linearity criteria must be between linearity min and linearity max')
             errors = np.abs(
-                linearity_coefficients[possible_values] - self.global_estimator.waves_linearity_max)
+                linearity_coefficients[possible_values] - linearity_criteria)
             index = np.argmin(errors)
             celerity = celerities[possible_values][index]
 

@@ -44,6 +44,7 @@ TEMPORAL_CORRELATION:
   TEMPORAL_LAG: 1  # number of frames to let wave propagation happen (example 3 for a 1Hz sequence)
   PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation
   HOPS_NUMBER: 3 # number of correlation peaks used to determine celerity
+  LINEARITY_CRITERIA: "MIN" # among (min,max,<number between 0 and 1>)
   TUNING:
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
     MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
