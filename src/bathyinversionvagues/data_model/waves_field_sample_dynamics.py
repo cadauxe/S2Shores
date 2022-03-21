@@ -35,11 +35,12 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
         if not np.isnan(self.period) and not np.isnan(self.celerity):
             self._period = np.nan
             self._celerity = np.nan
-        self.set_missing_attribute()
+        self._solve_movement_equation()
 
-    def set_missing_attribute(self) -> None:
-        """Set the missing attribute among wavelength, celerity and period when 2 of them are
-        defined.
+    def _solve_movement_equation(self) -> None:
+        """ Solves the movement equation ( L=c*T ) when one of the 3 variables is not set and the 2
+        other are set. In other cases (all 3 variables set or more than 1 variable not set)
+        do not change anything.
         """
         wavelength_set = not np.isnan(self.wavelength)
         period_set = not np.isnan(self.period)
@@ -67,7 +68,7 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
             if not np.isnan(self.celerity) and not np.isnan(self.wavelength):
                 self._celerity = np.nan
                 self.wavelength = np.nan
-            self.set_missing_attribute()
+            self._solve_movement_equation()
 
     @property
     def celerity(self) -> float:
@@ -85,7 +86,7 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
             if not np.isnan(self.period) and not np.isnan(self.wavelength):
                 self._period = np.nan
                 self.wavelength = np.nan
-            self.set_missing_attribute()
+            self._solve_movement_equation()
 
     def __str__(self) -> str:
         result = WavesFieldSampleGeometry.__str__(self)
