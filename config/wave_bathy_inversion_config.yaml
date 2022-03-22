@@ -46,6 +46,8 @@ TEMPORAL_CORRELATION:
   HOPS_NUMBER: 3 # number of correlation peaks used to determine celerity
   LINEARITY_CRITERIA: "MIN" # among (min,max,<number between 0 and 1>)
   TUNING:
+    PEAK_DETECTION_HEIGHT_RATIO: 0.3
+    PEAK_DETECTION_DISTANCE_RATIO: 0.5
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
     MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram

@@ -299,7 +299,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                                   x * self.spatial_resolution < wave_length)
         period = int(wave_length / self.spatial_resolution)
         max_sinogram = np.max(sinogram)
-        peaks, _ = find_peaks(sinogram, height=0.3 * max_sinogram, distance=0.5 * period)
+        peaks, _ = find_peaks(sinogram, height=self.local_estimator_params['TUNING']['PEAK_DETECTION_HEIGHT_RATIO']
+                              * max_sinogram, distance=self.local_estimator_params['TUNING']['PEAK_DETECTION_DISTANCE_RATIO'] * period)
         distances = x[peaks]
         index = np.argsort(np.abs(distances))
         if self.debug_sample:
