@@ -31,11 +31,14 @@ class WavesFieldSampleGeometry:
     @property
     def direction(self) -> float:
         """ :returns: The propagation direction relative to the X axis (counterclockwise) (degrees)
+        :raises ValueError: when the direction is not between -180° and +180° (inclusive)
         """
         return self._direction
 
     @direction.setter
     def direction(self, value: float) -> None:
+        if value < -180. or value > 180.:
+            raise ValueError('Direction must be between -180° and +180°')
         self._direction = value
 
     def invert_direction(self) -> None:
@@ -55,12 +58,16 @@ class WavesFieldSampleGeometry:
 
     @property
     def wavelength(self) -> float:
-        """ :returns: The waves field wavelength (m)"""
+        """ :returns: The waves field wavelength (m)
+        :raises ValueError: when the wavelength is not positive.
+        """
         return self._wavelength
 
     @wavelength.setter
     def wavelength(self, value: float) -> None:
         if value != self._wavelength:
+            if value < 0:
+                raise ValueError('Wavelength must be positive')
             self._wavelength = value
             for notify in self._wavelength_change_observers:
                 notify()

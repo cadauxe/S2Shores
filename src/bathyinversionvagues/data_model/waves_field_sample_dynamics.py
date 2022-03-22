@@ -59,7 +59,8 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
     @property
     def period(self) -> float:
         """ :returns: The waves field period (s), which was either externally provided or computed
-        from the wavelength and the celerity
+                      from the wavelength and the celerity
+        :raises ValueError: when the period is not positive.
         """
         return self._period
 
@@ -67,8 +68,8 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
     def period(self, value: float) -> None:
         if value != self._period:
             if value < 0.:
-                self.invert_direction()
-            self._period = abs(value)
+                raise ValueError('Period must be positive')
+            self._period = value
             if not np.isnan(self.celerity) and not np.isnan(self.wavelength):
                 self._celerity = np.nan
                 self.wavelength = np.nan
@@ -77,16 +78,17 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
     @property
     def celerity(self) -> float:
         """ :returns: The waves field velocity (m/s), which was either externally provided or
-        computed from the wavelength and the period
+                      computed from the wavelength and the period
+        :raises ValueError: when the celerity is not positive.
         """
         return self._celerity
 
     @celerity.setter
     def celerity(self, value: float) -> None:
         if value != self.celerity:
-            if value < 0.:
-                self.invert_direction()
-            self._celerity = abs(value)
+            if value < 0:
+                raise ValueError('Celerity must be positive')
+            self._celerity = value
             if not np.isnan(self.period) and not np.isnan(self.wavelength):
                 self._period = np.nan
                 self.wavelength = np.nan
