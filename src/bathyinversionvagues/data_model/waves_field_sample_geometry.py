@@ -75,6 +75,11 @@ class WavesFieldSampleGeometry:
         self.wavelength = 1. / value
 
     def register_wavelength_change(self, notify: Callable) -> None:
+        """ Register the functions to be called whenever a change of the wavelength value occurs.
+
+        :param notify: a function without argument which must be called when the wavelength value
+                       is changed
+        """
         self._wavelength_change_observers.append(notify)
 
     def __str__(self) -> str:
