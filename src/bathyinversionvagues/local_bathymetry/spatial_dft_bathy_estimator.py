@@ -298,7 +298,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """
         nb_samples = sino1_fft.shape[0]
 
-        sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
+        sinograms_correlation_fft = sino1_fft * np.conj(sino2_fft)
         phase_shift = np.angle(sinograms_correlation_fft)
 
         amplitude_sino1 = np.abs(sino1_fft) ** 2
