@@ -7,6 +7,8 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
+from typing import List, Callable
+
 import numpy as np
 
 from .waves_field_sample_geometry import WavesFieldSampleGeometry
@@ -26,6 +28,9 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
         super().__init__()
         self._period = np.nan
         self._celerity = np.nan
+        self._period_change_observers: List[Callable] = []
+        self._celerity_change_observers: List[Callable] = []
+
         self.register_wavelength_change(self.wavelength_has_changed)
 
     def wavelength_has_changed(self) -> None:
@@ -38,9 +43,8 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
         self._solve_movement_equation()
 
     def _solve_movement_equation(self) -> None:
-        """ Solves the movement equation ( L=c*T ) when one of the 3 variables is not set and the 2
-        other are set. In other cases (all 3 variables set or more than 1 variable not set)
-        do not change anything.
+        """ Solves the movement equation ( L=c*T ) when exactly one of the 3 variables is not set.
+        In other cases does not change anything.
         """
         wavelength_set = not np.isnan(self.wavelength)
         period_set = not np.isnan(self.period)
@@ -87,6 +91,22 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
                 self._period = np.nan
                 self.wavelength = np.nan
             self._solve_movement_equation()
+
+    def register_period_change(self, notify: Callable) -> None:
+        """ Register the functions to be called whenever a change of the period value occurs.
+
+        :param notify: a function without argument which must be called when the period value
+                       is changed
+        """
+        self._period_change_observers.append(notify)
+
+    def register_celerity_change(self, notify: Callable) -> None:
+        """ Register the functions to be called whenever a change of the celerity value occurs.
+
+        :param notify: a function without argument which must be called when the celerity value
+                       is changed
+        """
+        self._celerity_change_observers.append(notify)
 
     def __str__(self) -> str:
         result = WavesFieldSampleGeometry.__str__(self)
