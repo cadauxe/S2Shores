@@ -53,12 +53,17 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
 
     @delta_phase.setter
     def delta_phase(self, value: float) -> None:
-        self._delta_phase = value
-        if np.isnan(self._delta_phase) or self._delta_phase == 0:
-            self.period = np.nan
+        if np.isnan(value) or value == 0:
+            period = np.nan
+            value = np.nan
         else:
-            # FIXME: the presence of a minus sign is not clear. Explain it.
-            self.period = - self.delta_time * (2 * np.pi / self._delta_phase)
+            period = self.delta_time * (2 * np.pi / value)
+            if period < 0:
+                self.invert_direction()
+                value = -value
+                period = -period
+        self.period = period
+        self._delta_phase = value
 
     def __str__(self) -> str:
         result = WavesFieldSampleBathymetry.__str__(self)
