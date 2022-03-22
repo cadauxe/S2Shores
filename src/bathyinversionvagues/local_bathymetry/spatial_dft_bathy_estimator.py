@@ -96,9 +96,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         if not isinstance(waves_field_estimation, self.waves_field_estimation_cls):
             raise TypeError(f'Unable to process estimation type {type(waves_field_estimation)}')
         phi_min, phi_max = self.get_phi_limits(waves_field_estimation.wavenumber)
+        if phi_min > phi_max:
+            phi_min, phi_max = phi_max, phi_min
         phase_shift = waves_field_estimation.delta_phase
-        return (((phi_min < phase_shift) & (phase_shift < phi_max)) |
-                ((phi_max < phase_shift) & (phase_shift < phi_min)))
+        return (phi_min < phase_shift) & (phase_shift < phi_max)
 
     def find_directions(self) -> np.ndarray:
         """ Find an initial set of directions from the cross correlation spectrum of the radon
