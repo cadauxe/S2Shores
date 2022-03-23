@@ -16,7 +16,6 @@ from matplotlib.colors import Normalize
 import matplotlib as mpl
 import numpy as np
 
-from ..bathy_physics import depth_from_dispersion
 from ..local_bathymetry.temporal_correlation_bathy_estimator import \
     TemporalCorrelationBathyEstimator
 
@@ -35,7 +34,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         wave_direction = wave_estimation.direction
         wave_wavelength = wave_estimation.wavelength
         wave_celerity = wave_estimation.celerity
-        wave_period = wave_estimation.period
+        wave_depth = wave_estimation.depth
 
         metrics = self.metrics
         # Note that wave direction is clockwise origin east
@@ -80,7 +79,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         d2 = np.max(directions)
         ax3.imshow(radon_array, interpolation='nearest', aspect='auto',
                    origin='lower', extent=[d1, d2, 0, s1])
-        (l1, l2) = np.shape(radon_array)
+        l1, _ = np.shape(radon_array)
         plt.plot(self.selected_directions, l1 * metrics['variances'] /
                  np.max(metrics['variances']), 'r')
         ax3.arrow(wave_direction, 0, 0, l1)
@@ -90,7 +89,6 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Fourth diagram : Sinogram & wave length computation
         ax4 = fig.add_subplot(gs[2, :2])
 
-        length_signal = len(sinogram_max_var)
         ax4.plot(x, sinogram_max_var)
         ax4.scatter(x[interval], sinogram_max_var[interval], s=4 *
                     mpl.rcParams['lines.markersize'], c='orange')
@@ -101,9 +99,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         ax4.plot(x[metrics['max_indices']],
                  sinogram_max_var[metrics['max_indices']], 'go')
 
-        bathy = depth_from_dispersion(1 / wave_estimation.wavelength,
-                                      wave_estimation.celerity, self.gravity)
-        ax4.annotate('depth = {:.2f}'.format(bathy), (min_limit_x, min_limit_y), color='orange')
+        ax4.annotate('depth = {:.2f}'.format(wave_depth),
+                     (min_limit_x, min_limit_y), color='orange')
         plt.title('Sinogram')
 
         # Fifth  diagram
@@ -116,7 +113,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
         chain_celerities_from_period = ' '.join(
             [f'{celerity_from_period:.2f} | ' for celerity_from_period in celerities_from_periods])
-        ax5.annotate(f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n c = {chain_celerities} \n'
+        ax5.annotate(f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n '
+                     f'c = {chain_celerities} \n'
                      f' c_from_period = {chain_celerities_from_period}\n'
                      f' chosen_celerity = {wave_celerity}', (0, 0), color='g')
 
@@ -127,14 +125,14 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         for i in range(hops_number):
             temporal_signal = metrics['temporal_signals'][i]
             arg_peak_max = metrics['arg_peaks_max'][i]
-            distance = metrics['distances'][i]
             temporal_period = metrics['periods'][i]
             celerities_from_periods = metrics['celerities_from_periods'][i]
             ax = fig_temporal_signals.add_subplot(gs[i, :])
             ax.plot(temporal_signal)
             ax.plot(arg_peak_max, temporal_signal[arg_peak_max], 'ro')
-            ax.annotate('T={:.2f} s  | c = L/T = {:.2f}/{:.2f} = {:.2f}'.format(temporal_period, wave_wavelength, temporal_period, celerities_from_periods),
-                        (0, np.min(temporal_signal)), color='r')
+            ax.annotate('T={:.2f} s  | c = L/T = {:.2f}/{:.2f} = {:.2f}'.format(
+                temporal_period, wave_wavelength, temporal_period, celerities_from_periods),
+                (0, np.min(temporal_signal)), color='r')
 
         fig_temporal_signals.savefig(os.path.join(
             debug_path, f'Temporal_signals_{self.location[0]}_{self.location[1]}.png'), dpi=300)
