@@ -29,7 +29,6 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
         self._period = np.nan
         self._celerity = np.nan
         self._period_change_observers: List[Callable] = []
-        self._celerity_change_observers: List[Callable] = []
 
         self.register_wavelength_change(self.wavelength_has_changed)
 
@@ -101,14 +100,6 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
                        is changed
         """
         self._period_change_observers.append(notify)
-
-    def register_celerity_change(self, notify: Callable) -> None:
-        """ Register the functions to be called whenever a change of the celerity value occurs.
-
-        :param notify: a function without argument which must be called when the celerity value
-                       is changed
-        """
-        self._celerity_change_observers.append(notify)
 
     def __str__(self) -> str:
         result = WavesFieldSampleGeometry.__str__(self)
