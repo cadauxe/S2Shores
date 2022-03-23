@@ -30,9 +30,9 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
         self._celerity = np.nan
         self._period_change_observers: List[Callable] = []
 
-        self.register_wavelength_change(self.wavelength_has_changed)
+        self.register_wavelength_change(self.wavelength_change_in_dynamics)
 
-    def wavelength_has_changed(self) -> None:
+    def wavelength_change_in_dynamics(self) -> None:
         """ When wavelength has changed (new value is ensured to be different from the previous one)
         either reset period and celerity if both were set, or update one of them if the other is set
         """
@@ -103,5 +103,6 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
     def __str__(self) -> str:
         result = WavesFieldSampleGeometry.__str__(self)
-        result += f'\nDynamics:   period: {self.period:5.2f} (s)  celerity: {self.celerity:5.2f}'
+        result += f'\nDynamics:   period: {self.period:5.2f} (s)  '
+        result += f'celerity: {self.celerity:5.2f} (m/s)'
         return result
