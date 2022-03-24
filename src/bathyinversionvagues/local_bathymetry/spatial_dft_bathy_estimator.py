@@ -252,7 +252,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             normalized_frequency = peak_sinogram.interpolated_dft_frequencies[wavenumber_index]
             wavelength = 1 / (normalized_frequency * self.radon_transforms[0].sampling_frequency)
 
-            phase_shift_ratio = abs(estimated_phase_shift) / phi_max[wavenumber_index]
+            phase_shift_ratio = estimated_phase_shift / phi_max[wavenumber_index]
             energy = total_spectrum[wavenumber_index, direction_index]
             self.save_waves_field_estimation(estimated_direction, wavelength,
                                              estimated_phase_shift, phase_shift_ratio, energy)
