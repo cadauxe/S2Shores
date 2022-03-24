@@ -59,7 +59,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def linearity(self) -> float:
         """ :returns: a linearity indicator for depth estimation (unitless) """
-        return cast(float, linearity_indicator(self.wavelength, self.celerity, self._gravity))
+        return linearity_indicator(self.wavelength, self.celerity, self._gravity)
 
     @property
     def period_offshore(self) -> float:
