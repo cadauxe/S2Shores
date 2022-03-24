@@ -15,13 +15,23 @@ import numpy as np
 NdArrayOrFloat = Union[np.ndarray, float]
 
 
+def linearity_indicator(wavelength: float, celerity: float, gravity: float) -> float:
+    """ Computes a linearity indicator of the depth estimation using the linear dispersive relation
+
+    :param wavelength: wavelength of the waves (m)
+    :param celerity: the celerity of the waves field (m.s-1)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: an indicator of the linearity between celerity and wavelength (unitless, positive)
+    """
+    return 2 * np.pi * (celerity ** 2) / (gravity * wavelength)
+
+
 def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) -> float:
-    angular_wavenumber = 2 * np.pi * wavenumber
-    factor = celerity**2 * angular_wavenumber / gravity
+    factor = linearity_indicator(1. / wavenumber, celerity, gravity)
     if abs(factor) > 1.:
         depth = np.Infinity
     else:
-        depth = math.atanh(factor) / angular_wavenumber
+        depth = math.atanh(factor) / (2 * np.pi * wavenumber)
     return depth
 
 
@@ -99,15 +109,3 @@ def celerity_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     :returns: the celerity according to the linear dispersive relation (m.s-1)
     """
     return (gravity / 2. * np.pi) * period
-
-
-def linearity_indicator(
-        wavelength: NdArrayOrFloat, celerity: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
-    """ Computes a linearity indicator of the depth estimation using the linear dispersive relation
-
-    :param wavelength: wavelength of the waves (m)
-    :param celerity: the celerity of the waves field (m.s-1)
-    :param gravity: acceleration of the gravity (m/s2)
-    :returns: an indicator of the linearity between celerity and wavelength (unitless - [0, 1])
-    """
-    return 2 * np.pi * (celerity ** 2) / (gravity * wavelength)
