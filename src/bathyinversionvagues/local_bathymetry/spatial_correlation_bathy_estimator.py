@@ -147,6 +147,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         delta_time = self.sequential_delta_times[0]
         celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
                                                   self.gravity)
+        # TODO: revisit signs management
         spatial_shift_offshore_min = -celerity_offshore_max * abs(delta_time)
         propagation_factor = delta_time / period_offshore(1. / wavelength, self.gravity)
         if propagation_factor < 1:
@@ -164,7 +165,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             if pt_in_range.size != 0:
                 argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
                 # TODO: add variable to adapt to be in meters
-                propagated_distance = argmax - argmax_ac  # supposed to be in meters,
+                propagated_distance = argmax_ac - argmax  # supposed to be in meters,
             else:
                 raise WavesEstimationError('Unable to find any directional peak')
         else:
