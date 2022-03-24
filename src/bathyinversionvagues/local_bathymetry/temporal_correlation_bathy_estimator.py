@@ -8,6 +8,7 @@
 :created: 18/06/2021
 """
 import warnings
+from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 import pandas
 from scipy.interpolate import interp1d
@@ -28,7 +29,6 @@ from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
-from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 
 if TYPE_CHECKING:
@@ -106,17 +106,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             propagation_duration = np.sum(
                 self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
 
-            if (propagation_duration >= 0 and distances[0] >= 0) or (
-                    propagation_duration <= 0 and distances[0] <= 0):
-                celerities = distances / propagation_duration
-            else:
-                # Progation distance and delta time do not have same sign so opposite
-                # direction is taken
-                if direction_propagation < 0:
-                    direction_propagation += 180
-                else:
-                    direction_propagation -= 180
-                celerities = np.abs(distances) / np.abs(propagation_duration)
+            celerities = np.abs(distances / propagation_duration)
 
             temporal_signals = []
             periods = []
@@ -126,8 +116,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                     celerity, direction_propagation)
                 try:
                     temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
-                except ValueError:
-                    warnings.warn('Temporal signal is too short to be filtered')
+                except ValueError as excp:
+                    warnings.warn(str(excp))
                 temporal_signals.append(temporal_signal)
                 period, arg_peak_max = find_period_from_peaks(
                     temporal_signal, min_period=int(self.global_estimator.waves_period_min))
@@ -281,8 +271,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: wave length
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
-        period, wave_length_zeros = find_period_from_zeros(sinogram,
-                                                           int(min_wavelength / self.spatial_resolution))
+        period, wave_length_zeros = find_period_from_zeros(
+            sinogram, int(min_wavelength / self.spatial_resolution))
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
@@ -307,21 +297,18 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         peaks = peaks[interval[peaks]]
         max_indice = np.argmax(sinogram[peaks])
         dx = x[peaks[max_indice]]
-        if dx > 0:
-            distances = dx * self.spatial_resolution + wave_length * np.arange(nb_hops)
-            max_indices = np.array(peaks[max_indice] +
-                                   np.arange(nb_hops) * wave_length / self.spatial_resolution,
-                                   dtype=int)
-        else:
-            distances = dx * self.spatial_resolution - wave_length * np.arange(nb_hops)
-            max_indices = np.array(peaks[max_indice] -
-                                   np.arange(nb_hops) * wave_length / self.spatial_resolution,
-                                   dtype=int)
-        max_indices = max_indices[np.logical_and(max_indices > 0, max_indices < len(sinogram))]
+        wavelength_hops = wave_length * np.arange(nb_hops)
+        if dx <= 0:
+            wavelength_hops = -wavelength_hops
+        distances = dx * self.spatial_resolution + wavelength_hops
+
         if self.debug_sample:
             self.metrics['interval'] = interval
             self.metrics['x'] = x
-            self.metrics['max_indices'] = max_indices
+            max_indices = np.array(peaks[max_indice] + wavelength_hops / self.spatial_resolution,
+                                   dtype=int)
+            self.metrics['max_indices'] = max_indices[np.logical_and(max_indices > 0,
+                                                                     max_indices < len(sinogram))]
             self.metrics['distances'] = distances
         return distances
 
