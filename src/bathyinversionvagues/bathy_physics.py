@@ -25,24 +25,46 @@ def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) ->
     return depth
 
 
-def phi_limits(wavenumbers: np.ndarray, delta_t: float,
+def phi_limits(wavenumber: np.ndarray, delta_t: float,
                min_depth: float, gravity: float) -> Tuple[NdArrayOrFloat, NdArrayOrFloat]:
 
-    delta_phi = 2 * np.pi * delta_t
-    # shallow water limits:
-    min_celerity = np.sqrt(gravity * min_depth)
-    phi_min = delta_phi * min_celerity * wavenumbers
-
-    # deep water limits:
-    phi_max = delta_phi / period_offshore(wavenumbers, gravity)
-
+    phi_min = 2 * np.pi * time_sampling_factor_low_depth(wavenumber, delta_t, min_depth, gravity)
+    phi_max = 2 * np.pi * time_sampling_factor_offshore(wavenumber, delta_t, gravity)
     return phi_min, phi_max
+
+
+def time_sampling_factor_low_depth(wavenumber: NdArrayOrFloat, delta_t: float, min_depth: float,
+                                   gravity: float) -> NdArrayOrFloat:
+    """ Computes the time sampling factor relative to the period limit in shallow water
+
+    :param wavenumber: wavenumber(s) of the waves (1/m)
+    :param delta_t: acquisition times difference (s)
+    :param min_depth: minimum depth limit (m)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: the time sampling factor relative to the period limit in shallow water (unitless)
+    """
+    celerity_low_depth_limit = np.sqrt(gravity * min_depth)
+    period_low_depth_limit = 1. / (celerity_low_depth_limit * wavenumber)
+    return delta_t / period_low_depth_limit
+
+
+def time_sampling_factor_offshore(wavenumber: NdArrayOrFloat, delta_t: float,
+                                  gravity: float) -> NdArrayOrFloat:
+    """ Computes the time sampling factor relative to the period offshore
+
+    :param wavenumber: wavenumber(s) of the waves (1/m)
+    :param delta_t: acquisition times difference (s)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: the time sampling factor relative to the period offshore (unitless)
+    """
+
+    return delta_t / period_offshore(wavenumber, gravity)
 
 
 def period_offshore(wavenumber: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the period from the wavenumber under the offshore hypothesis
 
-    :param wavenumber: wavenumber of the waves (1/m)
+    :param wavenumber: wavenumber(s) of the waves (1/m)
     :param gravity: acceleration of the gravity (m/s2)
     :returns: the period according to the linear dispersive relation (s)
     """
@@ -52,7 +74,7 @@ def period_offshore(wavenumber: NdArrayOrFloat, gravity: float) -> NdArrayOrFloa
 def wavenumber_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the wavenumber from the period under the offshore hypothesis
 
-    :param period: period of the waves (s)
+    :param period: period(s) of the waves (s)
     :param gravity: acceleration of the gravity (m/s2)
     :returns: the wavenumber according to the linear dispersive relation (1/m)
     """
