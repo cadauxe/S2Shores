@@ -32,29 +32,6 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
         self.register_wavelength_change(self.wavelength_change_in_dynamics)
 
-    def wavelength_change_in_dynamics(self) -> None:
-        """ When wavelength has changed (new value is ensured to be different from the previous one)
-        either reset period and celerity if both were set, or update one of them if the other is set
-        """
-        if not np.isnan(self.period) and not np.isnan(self.celerity):
-            self._period = np.nan
-            self._celerity = np.nan
-        self._solve_movement_equation()
-
-    def _solve_movement_equation(self) -> None:
-        """ Solves the movement equation ( L=c*T ) when exactly one of the 3 variables is not set.
-        In other cases does not change anything.
-        """
-        wavelength_set = not np.isnan(self.wavelength)
-        period_set = not np.isnan(self.period)
-        celerity_set = not np.isnan(self.celerity)
-        if wavelength_set and period_set and not celerity_set:
-            self._celerity = self.wavelength / self.period
-        elif wavelength_set and not period_set and celerity_set:
-            self._period = self.wavelength / self.celerity
-        elif not wavelength_set and period_set and celerity_set:
-            self.wavelength = self.celerity * self.period
-
     @property
     def period(self) -> float:
         """ :returns: The waves field period (s), which was either externally provided or computed
@@ -73,6 +50,8 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
                 self._celerity = np.nan
                 self.wavelength = np.nan
             self._solve_movement_equation()
+            for notify in self._period_change_observers:
+                notify()
 
     @property
     def celerity(self) -> float:
@@ -100,6 +79,29 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
                        is changed
         """
         self._period_change_observers.append(notify)
+
+    def wavelength_change_in_dynamics(self) -> None:
+        """ When wavelength has changed (new value is ensured to be different from the previous one)
+        either reset period and celerity if both were set, or update one of them if the other is set
+        """
+        if not np.isnan(self.period) and not np.isnan(self.celerity):
+            self._period = np.nan
+            self._celerity = np.nan
+        self._solve_movement_equation()
+
+    def _solve_movement_equation(self) -> None:
+        """ Solves the movement equation ( L=c*T ) when exactly one of the 3 variables is not set.
+        In other cases does not change anything.
+        """
+        wavelength_set = not np.isnan(self.wavelength)
+        period_set = not np.isnan(self.period)
+        celerity_set = not np.isnan(self.celerity)
+        if wavelength_set and period_set and not celerity_set:
+            self._celerity = self.wavelength / self.period
+        elif wavelength_set and not period_set and celerity_set:
+            self._period = self.wavelength / self.celerity
+        elif not wavelength_set and period_set and celerity_set:
+            self.wavelength = self.celerity * self.period
 
     def __str__(self) -> str:
         result = WavesFieldSampleGeometry.__str__(self)
