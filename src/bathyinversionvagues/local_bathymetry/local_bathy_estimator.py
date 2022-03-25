@@ -149,12 +149,12 @@ class LocalBathyEstimator(ABC):
         # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
         # on its specific attributes inside the loops.
         for estimation in list(self.waves_fields_estimations):
-            if (estimation.period < self.global_estimator.waves_period_min or
-                    estimation.period > self.global_estimator.waves_period_max):
+            if not estimation.is_period_valid(self.global_estimator.waves_period_min,
+                                              self.global_estimator.waves_period_max):
                 self.waves_fields_estimations.remove(estimation)
         for estimation in list(self.waves_fields_estimations):
-            if (estimation.linearity < self.global_estimator.waves_linearity_min or
-                    estimation.linearity > self.global_estimator.waves_linearity_max):
+            if not estimation.is_linearity_valid(self.global_estimator.waves_linearity_min,
+                                                 self.global_estimator.waves_linearity_max):
                 self.waves_fields_estimations.remove(estimation)
         for estimation in list(self.waves_fields_estimations):
             if not self.is_waves_field_valid(estimation):

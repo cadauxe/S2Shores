@@ -61,6 +61,16 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         """ :returns: a linearity indicator for depth estimation (unitless) """
         return linearity_indicator(self.wavelength, self.celerity, self._gravity)
 
+    def is_linearity_valid(self, linearity_min: float, linearity_max: float) -> bool:
+        """ Check if the linearity indicator is valid.
+
+        :param linearity_min: minimum value allowed for the linearity indicator
+        :param linearity_max: maximum value allowed for the linearity indicator
+        :returns: True if the linearity indicator is between the minimum and maximum values, False
+                  otherwise
+        """
+        return self.linearity >= linearity_min and self.linearity <= linearity_max
+
     @property
     def period_offshore(self) -> float:
         """ :returns: The offshore period (s) """

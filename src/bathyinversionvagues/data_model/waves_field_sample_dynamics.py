@@ -53,6 +53,15 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
             for notify in self._period_change_observers:
                 notify()
 
+    def is_period_valid(self, period_min: float, period_max: float) -> bool:
+        """ Check if the waves field period is valid.
+
+        :param period_min: minimum value allowed for the period
+        :param period_max: maximum value allowed for the period
+        :returns: True if the period is between the minimum and maximum values, False otherwise
+        """
+        return self.period >= period_min and self.period <= period_max
+
     @property
     def celerity(self) -> float:
         """ :returns: The waves field velocity (m/s), which was either externally provided or
