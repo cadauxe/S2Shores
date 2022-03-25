@@ -35,14 +35,6 @@ def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) ->
     return depth
 
 
-def phi_limits(wavenumber: np.ndarray, delta_t: float,
-               min_depth: float, gravity: float) -> Tuple[NdArrayOrFloat, NdArrayOrFloat]:
-
-    phi_min = 2 * np.pi * time_sampling_factor_low_depth(wavenumber, delta_t, min_depth, gravity)
-    phi_max = 2 * np.pi * time_sampling_factor_offshore(wavenumber, delta_t, gravity)
-    return phi_min, phi_max
-
-
 def time_sampling_factor_low_depth(wavenumber: NdArrayOrFloat, delta_t: float, min_depth: float,
                                    gravity: float) -> NdArrayOrFloat:
     """ Computes the time sampling factor relative to the period limit in shallow water

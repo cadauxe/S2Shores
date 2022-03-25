@@ -14,7 +14,8 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_debug.waves_fields_display import display_curve, display_4curves, display_3curves
-from ..bathy_physics import wavenumber_offshore, phi_limits
+from ..bathy_physics import (wavenumber_offshore, time_sampling_factor_offshore,
+                             time_sampling_factor_low_depth)
 from ..data_model.waves_field_estimation import WavesFieldEstimation
 from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, desmooth
@@ -95,7 +96,13 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
         if not isinstance(waves_field_estimation, self.waves_field_estimation_cls):
             raise TypeError(f'Unable to process estimation type {type(waves_field_estimation)}')
-        phi_min, phi_max = self.get_phi_limits(waves_field_estimation.wavenumber)
+        phi_min = 2 * np.pi * time_sampling_factor_low_depth(waves_field_estimation.wavenumber,
+                                                             waves_field_estimation.delta_time,
+                                                             self.global_estimator.depth_min,
+                                                             waves_field_estimation._gravity)
+        phi_max = 2 * np.pi * time_sampling_factor_offshore(waves_field_estimation.wavenumber,
+                                                            waves_field_estimation.delta_time,
+                                                            waves_field_estimation._gravity)
         if phi_min > phi_max:
             phi_min, phi_max = phi_max, phi_min
         phase_shift = waves_field_estimation.delta_phase
@@ -217,7 +224,8 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """
         kfft = self.get_kfft()
         # phi_max: maximum acceptable values of delta phi for each wavenumber to explore
-        _, phi_max = self.get_phi_limits(kfft)
+        phi_max = 2 * np.pi * time_sampling_factor_offshore(kfft, self.sequential_delta_times[0],
+                                                            self.gravity)
 
         for directions_range in self.directions_ranges:
             self._find_peaks_on_directions_range(kfft, phi_max, directions_range)
@@ -339,16 +347,3 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         k_forced = cast(np.ndarray, wavenumber_offshore(period_samples, self.gravity))
 
         return k_forced
-
-    def get_phi_limits(self, wavenumbers: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """  Get the delta phase limits form deep and swallow waters
-
-        :param wavenumbers: the wavenumbers for which limits on phase are requested
-        :returns: the minimum and maximum phase shifts for swallow and deep water at different
-                  wavenumbers
-        """
-        return cast(Tuple[np.ndarray, np.ndarray],
-                    phi_limits(wavenumbers,
-                               self.sequential_delta_times[0],
-                               self.global_estimator.depth_min,
-                               self.gravity))
