@@ -13,7 +13,7 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
-from ..bathy_physics import period_offshore, celerity_offshore, wavelength_offshore
+from ..bathy_physics import celerity_offshore, wavelength_offshore, time_sampling_factor_offshore
 from ..data_model.waves_field_estimation import WavesFieldEstimation
 from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, desmooth
@@ -149,7 +149,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                                                   self.gravity)
         # TODO: revisit signs management
         spatial_shift_offshore_min = -celerity_offshore_max * abs(delta_time)
-        propagation_factor = delta_time / period_offshore(1. / wavelength, self.gravity)
+        propagation_factor = time_sampling_factor_offshore(
+            1. / wavelength, delta_time, self.gravity)
         if propagation_factor < 1:
             spatial_shift_offshore_max = -spatial_shift_offshore_min
         else:
@@ -195,8 +196,3 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     def sort_waves_fields(self) -> None:
         pass
-
-    def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
-        if not isinstance(waves_field_estimation, self.waves_field_estimation_cls):
-            raise TypeError(f'Unable to process estimation type {type(waves_field_estimation)}')
-        return True

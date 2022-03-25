@@ -10,6 +10,7 @@ time intervals.
 """
 from abc import abstractmethod, ABC
 from copy import deepcopy
+from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
@@ -18,9 +19,6 @@ from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
-
-
-from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 
 if TYPE_CHECKING:
@@ -134,13 +132,17 @@ class LocalBathyEstimator(ABC):
         """  Sorts the waves fields on whatever criteria.
         """
 
-    @abstractmethod
-    def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
+    def is_waves_field_valid(self, estimation: WavesFieldEstimation) -> bool:
         """  validate a waves field estimation based on local estimator specific criteria.
 
-        :param waves_field_estimation: a waves field estimation to validate
+        :param estimation: a waves field estimation to validate
         :returns: True is the waves field is valid, False otherwise
         """
+        return (estimation.is_period_valid(self.global_estimator.waves_period_min,
+                                           self.global_estimator.waves_period_max) and
+                estimation.is_linearity_valid(self.global_estimator.waves_linearity_min,
+                                              self.global_estimator.waves_linearity_max) and
+                estimation.is_time_sampling_factor_valid(self.global_estimator.depth_min))
 
     def validate_waves_fields(self) -> None:
         """  Remove non physical waves fields
@@ -148,14 +150,6 @@ class LocalBathyEstimator(ABC):
         # Filter non physical waves fields and bathy estimations
         # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
         # on its specific attributes inside the loops.
-        for estimation in list(self.waves_fields_estimations):
-            if not estimation.is_period_valid(self.global_estimator.waves_period_min,
-                                              self.global_estimator.waves_period_max):
-                self.waves_fields_estimations.remove(estimation)
-        for estimation in list(self.waves_fields_estimations):
-            if not estimation.is_linearity_valid(self.global_estimator.waves_linearity_min,
-                                                 self.global_estimator.waves_linearity_max):
-                self.waves_fields_estimations.remove(estimation)
         for estimation in list(self.waves_fields_estimations):
             if not self.is_waves_field_valid(estimation):
                 self.waves_fields_estimations.remove(estimation)

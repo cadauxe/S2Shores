@@ -93,21 +93,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """
         self.waves_fields_estimations.sort(key=lambda x: x.energy, reverse=True)
 
-    def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
-        if not isinstance(waves_field_estimation, self.waves_field_estimation_cls):
-            raise TypeError(f'Unable to process estimation type {type(waves_field_estimation)}')
-        phi_min = 2 * np.pi * time_sampling_factor_low_depth(waves_field_estimation.wavenumber,
-                                                             waves_field_estimation.delta_time,
-                                                             self.global_estimator.depth_min,
-                                                             waves_field_estimation._gravity)
-        phi_max = 2 * np.pi * time_sampling_factor_offshore(waves_field_estimation.wavenumber,
-                                                            waves_field_estimation.delta_time,
-                                                            waves_field_estimation._gravity)
-        if phi_min > phi_max:
-            phi_min, phi_max = phi_max, phi_min
-        phase_shift = waves_field_estimation.delta_phase
-        return (phi_min < phase_shift) & (phase_shift < phi_max)
-
     def find_directions(self) -> np.ndarray:
         """ Find an initial set of directions from the cross correlation spectrum of the radon
         transforms of the 2 images.

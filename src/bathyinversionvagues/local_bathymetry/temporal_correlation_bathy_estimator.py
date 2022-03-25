@@ -152,11 +152,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def sort_waves_fields(self) -> None:
         pass
 
-    def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
-        if not isinstance(waves_field_estimation, self.waves_field_estimation_cls):
-            raise TypeError(f'Unable to process estimation type {type(waves_field_estimation)}')
-        return True
-
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
         """ :return: tuple of sampling positions

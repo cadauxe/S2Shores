@@ -7,8 +7,10 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
+from typing import cast
 import numpy as np
 
+from ..bathy_physics import time_sampling_factor_offshore, time_sampling_factor_low_depth
 from .waves_field_sample_bathymetry import WavesFieldSampleBathymetry
 
 
@@ -42,6 +44,37 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
         if value != self._delta_time:
             self._delta_time = value
             self._solve_shift_equations()
+
+    @property
+    def time_sampling_factor(self) -> float:
+        """ :returns: the ratio of delta_time over the waves period. When its absolute value is
+                      greater than 1, there is a possible ambiguity in detecting the waves.
+        """
+        return self.delta_time / self.period
+
+    def is_time_sampling_factor_valid(self, shallow_water_limit: float) -> bool:
+        """ Check if the time sampling factor is valid.
+
+        :param shallow_water_limit: depth limit between intermediate and shallow water (m).
+        :returns: True if the time_sampling_factor is between a minimum and a maximum values, False
+                  otherwise. The minimum correspond to the limit between intermediate and shallow
+                  water, the maximum correspond to the factor allowed for offshore water.
+        """
+        time_sampling_factor_min = cast(float,
+                                        time_sampling_factor_low_depth(self.wavenumber,
+                                                                       self.delta_time,
+                                                                       shallow_water_limit,
+                                                                       self._gravity))
+        time_sampling_factor_max = cast(float,
+                                        time_sampling_factor_offshore(self.wavenumber,
+                                                                      self.delta_time,
+                                                                      self._gravity))
+        if time_sampling_factor_min > time_sampling_factor_max:
+            time_sampling_factor_min, time_sampling_factor_max = \
+                time_sampling_factor_max, time_sampling_factor_min
+        time_sampling_factor = self.time_sampling_factor
+        return ((time_sampling_factor_min < time_sampling_factor) &
+                (time_sampling_factor < time_sampling_factor_max))
 
     @property
     def propagated_distance(self) -> float:
