@@ -14,9 +14,7 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_debug.waves_fields_display import display_curve, display_4curves, display_3curves
-from ..bathy_physics import (wavenumber_offshore, time_sampling_factor_offshore,
-                             time_sampling_factor_low_depth)
-from ..data_model.waves_field_estimation import WavesFieldEstimation
+from ..bathy_physics import wavenumber_offshore
 from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, desmooth
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
@@ -208,17 +206,14 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         transforms of the 2 images and identify wavenumbers of the peaks along these directions.
         """
         kfft = self.get_kfft()
-        # phi_max: maximum acceptable values of delta phi for each wavenumber to explore
-        phi_max = 2 * np.pi * time_sampling_factor_offshore(kfft, self.sequential_delta_times[0],
-                                                            self.gravity)
 
         for directions_range in self.directions_ranges:
-            self._find_peaks_on_directions_range(kfft, phi_max, directions_range)
+            self._find_peaks_on_directions_range(kfft, directions_range)
 
         if self.debug_sample:
             self._metrics['kfft'] = kfft
 
-    def _find_peaks_on_directions_range(self, kfft, phi_max, directions) -> None:
+    def _find_peaks_on_directions_range(self, kfft, directions) -> None:
         """ Find refined directions from the resampled cross correlation spectrum of the radon
         transforms of the 2 images and identify wavenumbers of the peaks along these directions.
         """
@@ -245,10 +240,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             normalized_frequency = peak_sinogram.interpolated_dft_frequencies[wavenumber_index]
             wavelength = 1 / (normalized_frequency * self.radon_transforms[0].sampling_frequency)
 
-            phase_shift_ratio = estimated_phase_shift / phi_max[wavenumber_index]
             energy = total_spectrum[wavenumber_index, direction_index]
             self.save_waves_field_estimation(estimated_direction, wavelength,
-                                             estimated_phase_shift, phase_shift_ratio, energy)
+                                             estimated_phase_shift, energy)
 
         if self.debug_sample:
             self.metrics['kfft'] = kfft
@@ -256,14 +250,12 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self.metrics['interpolated_dft'] = metrics
 
     def save_waves_field_estimation(self, direction: float, wavelength: float,
-                                    phase_shift: float, phase_shift_ratio: float,
-                                    energy: float) -> None:
+                                    phase_shift: float, energy: float) -> None:
         """ Saves estimated parameters in a new estimation.
 
         :param direction: direction of the waves field (°)
         :param wavelength: wavelength of the waves field (m)
         :param phase_shift: phase difference estimated between the 2 images (rd)
-        :param phase_shift_ratio: fraction of the maximum phase shift allowable in deep waters
         :param energy: energy of the waves field (definition TBD)
         """
         waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
@@ -272,8 +264,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         # FIXME: index delta times by the index of the pair of images
         waves_field_estimation.delta_time = self.sequential_delta_times[0]
         waves_field_estimation.delta_phase = phase_shift
-        # TODO: compute this property inside WavesFieldEstimation
-        waves_field_estimation.delta_phase_ratio = phase_shift_ratio
         waves_field_estimation.energy = energy
         self.store_estimation(waves_field_estimation)
 

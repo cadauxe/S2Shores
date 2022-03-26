@@ -111,6 +111,15 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
             self._delta_phase = value
             self._solve_shift_equations()
 
+    @property
+    def delta_phase_ratio(self) -> float:
+        """ :returns: the fraction of the maximum phase shift allowable in deep waters """
+        time_sampling_offshore = cast(float,
+                                      time_sampling_factor_offshore(self.wavenumber,
+                                                                    self.delta_time,
+                                                                    self._gravity))
+        return self.delta_phase / (2 * np.pi * time_sampling_offshore)
+
     def wavelength_change_in_estimation(self) -> None:
         """ When wavelength has changed (new value is ensured to be different from the previous one)
         either reset delta_phase and propagated_distance if both were set, or update one of them if
@@ -177,4 +186,7 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
     def __str__(self) -> str:
         result = WavesFieldSampleBathymetry.__str__(self)
         result += f'\nEstimation: delta time: {self.delta_time:5.2f} (s)'
+        result += f'\n propagated distance: {self.propagated_distance:5.2f} (rd)'
+        result += f'\n         delta phase: {self.delta_phase:5.2f} (rd)'
+        result += f'  delta phase ratio: {self.delta_phase_ratio:5.2f} '
         return result
