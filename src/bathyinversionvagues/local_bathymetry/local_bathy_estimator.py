@@ -132,26 +132,26 @@ class LocalBathyEstimator(ABC):
         """  Sorts the waves fields on whatever criteria.
         """
 
-    def is_waves_field_valid(self, estimation: WavesFieldEstimation) -> bool:
+    def is_waves_field_physical(self, estimation: WavesFieldEstimation) -> bool:
         """  validate a waves field estimation based on local estimator specific criteria.
 
         :param estimation: a waves field estimation to validate
         :returns: True is the waves field is valid, False otherwise
         """
-        return estimation.is_valid(self.global_estimator.waves_period_min,
-                                   self.global_estimator.waves_period_max,
-                                   self.global_estimator.waves_linearity_min,
-                                   self.global_estimator.waves_linearity_max,
-                                   self.global_estimator.depth_min)
+        return estimation.is_physical(self.global_estimator.waves_period_min,
+                                      self.global_estimator.waves_period_max,
+                                      self.global_estimator.waves_linearity_min,
+                                      self.global_estimator.waves_linearity_max,
+                                      self.global_estimator.depth_min)
 
-    def validate_waves_fields(self) -> None:
-        """  Remove non physical waves fields
+    def remove_unphysical_waves_fields(self) -> None:
+        """  Remove unphysical waves fields
         """
         # Filter non physical waves fields and bathy estimations
         # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
         # on its specific attributes inside the loops.
         for estimation in list(self.waves_fields_estimations):
-            if not self.is_waves_field_valid(estimation):
+            if not self.is_waves_field_physical(estimation):
                 self.waves_fields_estimations.remove(estimation)
 
     def create_waves_field_estimation(self, direction: float, wavelength: float

@@ -34,11 +34,11 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
         self._updating_period = False
         self.register_period_change(self.period_change_in_estimation)
 
-    def is_valid(self,
-                 period_min: float, period_max: float,
-                 linearity_min: float, linearity_max: float,
-                 depth_min: float) -> bool:
-        """  Validate a waves field estimation based on specific criteria.
+    def is_physical(self,
+                    period_min: float, period_max: float,
+                    linearity_min: float, linearity_max: float,
+                    depth_min: float) -> bool:
+        """  Check if a waves field estimation satisfies physical constraints.
 
         :param period_min: the minimum waves period allowed (s)
         :param period_max: the maximum waves period allowed (s)
