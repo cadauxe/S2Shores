@@ -7,8 +7,6 @@
 :license: see LICENSE file
 :created: 20 sep 2021
 """
-import numpy as np
-
 from ..data_model.waves_field_estimation import WavesFieldEstimation
 
 
@@ -18,21 +16,3 @@ class SpatialCorrelationWavesFieldEstimation(WavesFieldEstimation):
 
     It defines the estimation attributes specific to this estimator.
     """
-
-    def __init__(self, gravity: float, depth_estimation_method: str) -> None:
-        super().__init__(gravity, depth_estimation_method)
-
-        self._correlation_signal = None  # TODO: set to a matrix of nan
-
-    @property
-    def correlation_signal(self) -> np.ndarray:
-        """ :returns: the spatial correlation between the 2 radon transform images"""
-        return self._correlation_signal
-
-    @correlation_signal.setter
-    def correlation_signal(self, value: np.ndarray) -> None:
-        self._correlation_signal = value
-
-    def __str__(self) -> str:
-        result = WavesFieldEstimation.__str__(self)
-        return result

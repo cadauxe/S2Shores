@@ -14,7 +14,6 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_physics import celerity_offshore, wavelength_offshore, time_sampling_factor_offshore
-from ..data_model.waves_field_estimation import WavesFieldEstimation
 from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
@@ -75,8 +74,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
         propagated_distance = self.compute_propagated_distance(correlation_signal, wavelength)
-        self.save_waves_field_estimation(correlation_signal, estimated_direction,
-                                         wavelength, propagated_distance)
+        self.save_waves_field_estimation(estimated_direction, wavelength, propagated_distance)
 
     def compute_radon_transforms(self) -> None:
 
@@ -175,13 +173,11 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         return propagated_distance
 
     def save_waves_field_estimation(self,
-                                    correlation_signal: np.ndarray,
                                     estimated_direction: float,
                                     wavelength: float,
                                     propagated_distance: float) -> None:
         """ Saves the waves_field_estimation
 
-        :param correlation_signal: spatial cross correlated signal
         :param estimated_direction: the waves estimated propagation direction
         :param wavelength: the wave length of the waves
         :param propagated_distance: the distance propagated over time by the waves
@@ -191,7 +187,6 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                                                                          wavelength))
         waves_field_estimation.delta_time = self.sequential_delta_times[0]
         waves_field_estimation.propagated_distance = propagated_distance
-        waves_field_estimation.correlation_signal = correlation_signal
         self.store_estimation(waves_field_estimation)
 
     def sort_waves_fields(self) -> None:
