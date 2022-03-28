@@ -17,7 +17,6 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
-from ..data_model.waves_field_estimation import WavesFieldEstimation
 from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.image_utils import cross_correlation
@@ -128,7 +127,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             errors_celerities = np.abs(celerities_from_periods - celerities)
             index_min = np.nanargmin(errors_celerities)
 
-            waves_field_estimation = cast(self.waves_field_estimation_cls,
+            waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
             waves_field_estimation.delta_time = propagation_duration
@@ -244,8 +243,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def angles(self) -> np.ndarray:
-        """
-        :return: angles in radian
+        """ :return: angles in radian
         """
         if self._angles is None:
             self._angles = self.get_angles()
@@ -253,8 +251,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def distances(self) -> np.ndarray:
-        """
-        :return: distances
+        """ :return: distances
         """
         if self._distances is None:
             self._distances = self.get_distances()
