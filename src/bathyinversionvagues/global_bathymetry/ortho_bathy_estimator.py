@@ -72,7 +72,7 @@ class OrthoBathyEstimator:
                     computed_points += 1
 
                 # Store bathymetry sample estimations
-                estimated_bathy.store_estimations(x_sample, y_sample, bathy_estimations)
+                estimated_bathy.store_estimations(bathy_estimations)
 
         total_points = self.sampled_ortho.nb_samples
         comput_time = time.time() - start

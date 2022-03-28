@@ -196,16 +196,13 @@ class EstimatedBathy:
         self.x_samples = x_samples
         self.y_samples = y_samples
 
-    # TODO: retrieve X and Y from WavesFieldsEstimations location attribute or remove attribute
-    def store_estimations(self, x_sample: float, y_sample: float,
-                          bathy_estimations: WavesFieldsEstimations) -> None:
+    def store_estimations(self, bathy_estimations: WavesFieldsEstimations) -> None:
         """ Store a set of bathymetry estimations at some location
 
-        :param x_sample: coordinate of the sample along the X axis
-        :param y_sample: coordinate of the sample along the Y axis
         :param bathy_estimations: the whole set of bathy estimations data at one point.
         :raises WavesEstimationIndexingError: when the x, y sample coordinates cannot be retrieved
         """
+        x_sample, y_sample = bathy_estimations.location
         x_index = np.where(self.x_samples == x_sample)
         y_index = np.where(self.y_samples == y_sample)
         if len(x_index[0]) == 0 or len(y_index[0]) == 0:
