@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import List, Callable
+from typing import List, Callable, Tuple
 
 import numpy as np
 
@@ -53,14 +53,13 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
             for notify in self._period_change_observers:
                 notify()
 
-    def is_period_valid(self, period_min: float, period_max: float) -> bool:
+    def is_period_valid(self, period_range: Tuple[float, float]) -> bool:
         """ Check if the waves field period is valid.
 
-        :param period_min: minimum value allowed for the period
-        :param period_max: maximum value allowed for the period
+        :param period_range: minimum and maximum values allowed for the period
         :returns: True if the period is between the minimum and maximum values, False otherwise
         """
-        return self.period >= period_min and self.period <= period_max
+        return self.period >= period_range[0] and self.period <= period_range[1]
 
     @property
     def celerity(self) -> float:

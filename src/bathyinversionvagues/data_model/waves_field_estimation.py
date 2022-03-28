@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import cast
+from typing import cast, Tuple
 import numpy as np
 
 from ..bathy_physics import time_sampling_factor_offshore, time_sampling_factor_low_depth
@@ -34,21 +34,17 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
         self._updating_period = False
         self.register_period_change(self.period_change_in_estimation)
 
-    def is_physical(self,
-                    period_min: float, period_max: float,
-                    linearity_min: float, linearity_max: float,
+    def is_physical(self, period_range: Tuple[float, float], linearity_range: Tuple[float, float],
                     depth_min: float) -> bool:
         """  Check if a waves field estimation satisfies physical constraints.
 
-        :param period_min: the minimum waves period allowed (s)
-        :param period_max: the maximum waves period allowed (s)
-        :param linearity_min: the minimum value allowed for the linearity indicator (unitless)
-        :param linearity_max: the maximum value allowed for the linearity indicator (unitless)
+        :param period_range: the minimum and maximum periods allowed for the waves (s)
+        :param linearity_range: the minimum and maximum allowed for the waves linearity (unitless)
         :param depth_min: the depth limit between intermediate and shallow water (m)
         :returns: True is the waves field is valid, False otherwise
         """
-        return (self.is_period_valid(period_min, period_max) and
-                self.is_linearity_valid(linearity_min, linearity_max) and
+        return (self.is_period_valid(period_range) and
+                self.is_linearity_valid(linearity_range) and
                 self.is_time_sampling_factor_valid(depth_min))
 
     @property

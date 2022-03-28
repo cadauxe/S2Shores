@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import cast
+from typing import cast, Tuple
 
 from ..bathy_physics import period_offshore, depth_from_dispersion, linearity_indicator
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
@@ -61,15 +61,14 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         """ :returns: a linearity indicator for depth estimation (unitless) """
         return linearity_indicator(self.wavelength, self.celerity, self._gravity)
 
-    def is_linearity_valid(self, linearity_min: float, linearity_max: float) -> bool:
-        """ Check if the linearity indicator is valid.
+    def is_linearity_valid(self, linearity_range: Tuple[float, float]) -> bool:
+        """ Check if the linearity indicator is physical.
 
-        :param linearity_min: minimum value allowed for the linearity indicator
-        :param linearity_max: maximum value allowed for the linearity indicator
+        :param linearity_range: minimum and maximum values allowed for the linearity indicator
         :returns: True if the linearity indicator is between the minimum and maximum values, False
                   otherwise
         """
-        return self.linearity >= linearity_min and self.linearity <= linearity_max
+        return self.linearity >= linearity_range[0] and self.linearity <= linearity_range[1]
 
     @property
     def period_offshore(self) -> float:

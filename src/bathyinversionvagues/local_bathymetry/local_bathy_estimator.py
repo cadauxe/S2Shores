@@ -138,10 +138,8 @@ class LocalBathyEstimator(ABC):
         :param estimation: a waves field estimation to validate
         :returns: True is the waves field is valid, False otherwise
         """
-        return estimation.is_physical(self.global_estimator.waves_period_min,
-                                      self.global_estimator.waves_period_max,
-                                      self.global_estimator.waves_linearity_min,
-                                      self.global_estimator.waves_linearity_max,
+        return estimation.is_physical(self.global_estimator.waves_period_range,
+                                      self.global_estimator.waves_linearity_range,
                                       self.global_estimator.depth_min)
 
     def remove_unphysical_waves_fields(self) -> None:
