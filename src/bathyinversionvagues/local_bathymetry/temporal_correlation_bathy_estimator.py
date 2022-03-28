@@ -286,9 +286,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def compute_distances(self, sinogram: np.ndarray, wave_length: float,
                           nb_hops: int) -> np.ndarray:
         """ Propagated distance computation (in meter)
-        - 1) sinogram maximum is determined on interval [-wave_length, wave_length]
-        - 2) nb_max_hops propagated distances are computed from the position of the maximum using following formula :
-            [dx , dx + wave_length, ..., dx + (nb_max_hops)*wave_length] (an adaptation to negative values is also made if needed)
+        Maxima are computed using peaks detection and the smallest nb_hops distances are selected
         :param sinogram: sinogram having maximum variance
         :param wave_length: wave_length computed on sinogram
         :param nb_hops : number of peaks to consider to compute distances
