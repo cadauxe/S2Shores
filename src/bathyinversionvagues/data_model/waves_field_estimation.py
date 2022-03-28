@@ -34,6 +34,23 @@ class WavesFieldEstimation(WavesFieldSampleBathymetry):
         self._updating_period = False
         self.register_period_change(self.period_change_in_estimation)
 
+    def is_valid(self,
+                 period_min: float, period_max: float,
+                 linearity_min: float, linearity_max: float,
+                 depth_min: float) -> bool:
+        """  Validate a waves field estimation based on specific criteria.
+
+        :param period_min: the minimum waves period allowed (s)
+        :param period_max: the maximum waves period allowed (s)
+        :param linearity_min: the minimum value allowed for the linearity indicator (unitless)
+        :param linearity_max: the maximum value allowed for the linearity indicator (unitless)
+        :param depth_min: the depth limit between intermediate and shallow water (m)
+        :returns: True is the waves field is valid, False otherwise
+        """
+        return (self.is_period_valid(period_min, period_max) and
+                self.is_linearity_valid(linearity_min, linearity_max) and
+                self.is_time_sampling_factor_valid(depth_min))
+
     @property
     def delta_time(self) -> float:
         """ :returns: the time difference between the images used for this estimation """
