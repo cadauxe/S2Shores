@@ -37,7 +37,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
 
         super().__init__()
 
-        # FIXME: make those attributes abstract ?
         self._gravity = gravity
         self._depth_estimation_method = depth_estimation_method
 
@@ -48,7 +47,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         :returns: The depth (m)
         :raises AttributeError: when the depth estimation method is not supported
         """
-        # FIXME: is it necessary to handle a depth_estimation_method ?
         if self._depth_estimation_method == 'LINEAR':
             estimated_depth = depth_from_dispersion(self.wavenumber, self.celerity, self._gravity)
         else:
@@ -76,7 +74,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         return cast(float, period_offshore(self.wavenumber, self._gravity))
 
     def __str__(self) -> str:
-        result = WavesFieldSampleDynamics.__str__(self)
-        result += f'\nBathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.2f}  '
+        result = f'Bathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.2f}  '
         result += f' offshore period: {self.period_offshore:5.2f} (s)'
         return result
