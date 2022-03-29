@@ -39,12 +39,9 @@ SPATIAL_DFT:
 
 #temporal_correlation
 TEMPORAL_CORRELATION:
-  RESOLUTION:
-    TIME_INTERPOLATION: 0.5 # resolution in second for temporal signal
   TEMPORAL_LAG: 1  # number of frames to let wave propagation happen (example 3 for a 1Hz sequence)
   PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation
   HOPS_NUMBER: 3 # number of correlation peaks used to determine celerity
-  LINEARITY_CRITERIA: "MIN" # among (min,max,<number between 0 and 1>)
   TUNING:
     PEAK_DETECTION_HEIGHT_RATIO: 0.3
     PEAK_DETECTION_DISTANCE_RATIO: 0.5

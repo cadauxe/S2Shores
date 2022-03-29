@@ -196,7 +196,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         possible_values = np.logical_and(
             linearity_coefficients > self.global_estimator.waves_linearity_min,
             linearity_coefficients < self.global_estimator.waves_linearity_max)
-        if len(possible_values) < 1:
+        if len(linearity_coefficients[possible_values]) < 1:
             raise ValueError('No correct linearity coefficient found')
         index_linearity_criteria = np.argmin(linearity_coefficients[possible_values])
         travelled_distance = distances[possible_values][index_linearity_criteria]
