@@ -7,7 +7,7 @@
 
 # Imports
 import math
-from typing import Tuple, Union
+from typing import Union
 
 import numpy as np
 
@@ -94,7 +94,7 @@ def wavelength_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloa
 
 
 def celerity_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
-    """ Computes the celerity from the period max under the offshore hypothesis
+    """ Computes the celerity from the period under the offshore hypothesis
 
     :param period: period of the waves (s)
     :param gravity: acceleration of the gravity (m/s2)
