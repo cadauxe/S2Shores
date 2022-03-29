@@ -102,38 +102,17 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 sinogram_max_var_values,
                 wave_length,
                 nb_hops=self.local_estimator_params['HOPS_NUMBER'])
+
             propagation_duration = np.sum(
                 self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
-            celerities = np.abs(distances) / np.abs(propagation_duration)
-            linearity_coefficients = (2 * np.pi * celerities**2) / (wave_length * self.gravity)
-            possible_values = np.logical_and(
-                linearity_coefficients >= self.global_estimator.waves_linearity_min,
-                linearity_coefficients < self.global_estimator.waves_linearity_max)
-            if len(possible_values) < 1:
-                raise ValueError('No correct linearity coefficient found')
-            if self.local_estimator_params['LINEARITY_CRITERIA'] == 'MAX':
-                linearity_criteria = self.global_estimator.waves_linearity_max
-            elif self.local_estimator_params['LINEARITY_CRITERIA'] == 'MIN':
-                linearity_criteria = self.global_estimator.waves_linearity_min
-            elif isinstance(self.local_estimator_params['LINEARITY_CRITERIA'], float):
-                linearity_criteria = self.local_estimator_params['LINEARITY_CRITERIA']
-                if (linearity_criteria < self.global_estimator.waves_linearity_min) or (
-                        linearity_criteria > self.global_estimator.waves_linearity_max):
-                    raise ValueError(
-                        'Linearity criteria must be between linearity min and linearity max')
-            errors = np.abs(
-                linearity_coefficients[possible_values] - linearity_criteria)
-            index = np.argmin(errors)
-            celerity = celerities[possible_values][index]
-
-            if not (propagation_duration >= 0 and distances[possible_values][index] >= 0) or (
-                    propagation_duration <= 0 and distances[possible_values][index] <= 0):
-                # Progation distance and delta time do not have same sign so opposite
-                # direction is taken
-                if direction_propagation < 0:
-                    direction_propagation += 180
-                else:
-                    direction_propagation -= 180
+            travelled_distance = self.compute_travelled_distance(
+                distances, propagation_duration, wave_length)
+            # celerity will be automaticaly be computed in
+            # temporal_correlation_waves_field_estimation class where sign will be
+            # correctly handled
+            celerity = np.abs(travelled_distance / propagation_duration)
+            direction_propagation = self.check_propagation_direction(
+                direction_propagation, propagation_duration, travelled_distance)
 
             waves_field_estimation = cast(self.waves_field_estimation_cls,
                                           self.create_waves_field_estimation(direction_propagation,
@@ -142,13 +121,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self.store_estimation(waves_field_estimation)
 
             if self.debug_sample:
-                self.metrics['linearity_coefficients'] = linearity_coefficients
                 self.metrics['radon_transform'] = radon_transform
                 self.metrics['variances'] = variances
                 self.metrics['sinogram_max_var'] = sinogram_max_var_values
                 # TODO: use objects in debug
                 self.metrics['propagation_duration'] = propagation_duration
-                self.metrics['celerities'] = celerities
                 self.metrics['distances'] = distances
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
@@ -203,6 +180,48 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         return np.sqrt(
             np.square((self.sampling_positions[0] - self.sampling_positions[0].T)) +
             np.square((self.sampling_positions[1] - self.sampling_positions[1].T)))
+
+    def compute_travelled_distance(self, distances: np.ndarray,
+                                   propagation_duration: float, wave_length: float) -> float:
+        """ This function selects the travelled_distance among entry distances according to the linerity coefficient closest to minimal value
+
+        :param distances: all candidates for travelled distances
+        :param propagation_duration: the duration used to propagate waves
+        :param wave_length: wave_length of selected wave
+        :returns: travelled distances by the selected wave during propagation_duration
+        :raises ValueError: when there is no linearity coefficient between min and max values
+        """
+        celerities = np.abs(distances / propagation_duration)
+        linearity_coefficients = (2 * np.pi * celerities**2) / (wave_length * self.gravity)
+        possible_values = np.logical_and(
+            linearity_coefficients > self.global_estimator.waves_linearity_min,
+            linearity_coefficients < self.global_estimator.waves_linearity_max)
+        if len(possible_values) < 1:
+            raise ValueError('No correct linearity coefficient found')
+        index_linearity_criteria = np.argmin(linearity_coefficients[possible_values])
+        travelled_distance = distances[possible_values][index_linearity_criteria]
+        self.metrics['linearity_coefficients'] = linearity_coefficients
+        self.metrics['celerities'] = celerities
+        return travelled_distance
+
+    def check_propagation_direction(self, direction_propagation: float,
+                                    propagation_duration: float, travelled_distance: float) -> float:
+        """ This function ensure direction propagation coherence with propagation duration and travelled_distance
+
+        :param direction_propagation: direction propagation to invert if needed
+        :param propagation_duration: propagation duration of the wave (can be negative)
+        :param travelled_distance: travelled distance by the wave (can be negative)
+        :returns: propagation_direction
+        """
+        if not (propagation_duration >= 0 and travelled_distance >= 0) or (
+                propagation_duration <= 0 and travelled_distance <= 0):
+                # travelled_distance and propagation_duration do not have same sign so
+                # opposite direction is taken
+            if direction_propagation < 0:
+                direction_propagation += 180
+            else:
+                direction_propagation -= 180
+        return direction_propagation
 
     def get_correlation_image(self) -> WavesImage:
         """ This function computes the correlation image by projecting the the correlation matrix
