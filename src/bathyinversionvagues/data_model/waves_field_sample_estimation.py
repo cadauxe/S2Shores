@@ -179,7 +179,7 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
     def __str__(self) -> str:
         result = WavesFieldSampleDynamics.__str__(self)
         result += f'\nWaves Field Estimation: \n  delta time: {self.delta_time:5.3f} (s)'
-        result += f'time sampling factor: {self.time_sampling_factor:5.4f} (s)'
+        result += f' time sampling factor: {self.time_sampling_factor:5.4f} (unitless)'
         result += f'\n  propagated distance: {self.propagated_distance:5.2f} (m)'
         result += f'  delta phase: {self.delta_phase:5.2f} (rd)'
         return result

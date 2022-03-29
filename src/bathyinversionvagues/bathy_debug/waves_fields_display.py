@@ -206,13 +206,13 @@ def animate_sinograms(local_estimator, radon1_obj, radon2_obj):
         sinogram2 = radon2_obj[direction]
         line1.set_ydata(sinogram1.values)  # update the data.
         line2.set_ydata(sinogram2.values)  # update the data.
-        dir_text.set_text(f'direction: {direction:3.0f}, '
-                          f' normalized energy1: {sinogram1.energy/image1_energy:2.1f}, '
-                          f'normalized energy2: {sinogram2.energy/image2_energy:2.1f}')
+        dir_text.set_text(f'direction: {direction:4.1f}, '
+                          f' energy1: {sinogram1.energy/image1_energy:3.1f}, '
+                          f'energy2: {sinogram2.energy/image2_energy:3.1f}')
         return line1, line2, dir_text
 
     ani = animation.FuncAnimation(
-        fig, animate, frames=radon1_obj.directions, interval=200, blit=True, save_count=50)
+        fig, animate, frames=radon1_obj.directions, interval=100, blit=True, save_count=50)
     plt.show()
 
 

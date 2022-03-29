@@ -4,8 +4,6 @@
 :authors: erwinbergsma, gregoirethoumyre
 :created: Mon Mar 23 2020
 """
-
-# Imports
 import math
 from typing import Union
 
@@ -86,7 +84,7 @@ def wavenumber_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloa
 def wavelength_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the wavelength from the period under the offshore hypothesis
 
-    :param period: period of the waves (s)
+    :param period: period(s) of the waves (s)
     :param gravity: acceleration of the gravity (m/s2)
     :returns: the wavelength according to the linear dispersive relation (m)
     """
@@ -96,8 +94,8 @@ def wavelength_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloa
 def celerity_offshore(period: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
     """ Computes the celerity from the period under the offshore hypothesis
 
-    :param period: period of the waves (s)
     :param gravity: acceleration of the gravity (m/s2)
+    :param period: period(s) of the waves (s).
     :returns: the celerity according to the linear dispersive relation (m.s-1)
     """
     return (gravity / 2. * np.pi) * period
