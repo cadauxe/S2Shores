@@ -57,7 +57,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_image_filters: SignalProcessingFilters = [
             (remove_median,
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
-            (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+            (filter_mean,
+             [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
         self.create_sequence_time_series()
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
             raise WavesEstimationError(
@@ -183,7 +184,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     def compute_travelled_distance(self, distances: np.ndarray,
                                    propagation_duration: float, wave_length: float) -> float:
-        """ This function selects the travelled_distance among entry distances according to the linerity coefficient closest to minimal value
+        """ This function selects the travelled_distance among entry distances according to
+        the linerity coefficient closest to minimal value
 
         :param distances: all candidates for travelled distances
         :param propagation_duration: the duration used to propagate waves
@@ -205,8 +207,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         return travelled_distance
 
     def check_propagation_direction(self, direction_propagation: float,
-                                    propagation_duration: float, travelled_distance: float) -> float:
-        """ This function ensure direction propagation coherence with propagation duration and travelled_distance
+                                    propagation_duration: float,
+                                    travelled_distance: float) -> float:
+        """ This function ensure direction propagation coherence with
+        propagation duration and travelled_distance
 
         :param direction_propagation: direction propagation to invert if needed
         :param propagation_duration: propagation duration of the wave (can be negative)
@@ -253,7 +257,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def correlation_image(self) -> WavesImage:
-        """ :return: correlation image used to perform radon transformation
+        """ Correlation image
+        :return: correlation image used to perform radon transformation
         """
         if self._correlation_image is None:
             self._correlation_image = self.get_correlation_image()
@@ -272,7 +277,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def angles(self) -> np.ndarray:
-        """
+        """ Angles
         :return: angles in radian
         """
         if self._angles is None:
@@ -281,7 +286,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def distances(self) -> np.ndarray:
-        """
+        """ Distances
         :return: distances
         """
         if self._distances is None:
@@ -295,7 +300,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         period, wave_length_zeros = find_period_from_zeros(sinogram,
-                                                           int(min_wavelength / self.spatial_resolution))
+                                                           int(min_wavelength /
+                                                               self.spatial_resolution))
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
@@ -311,17 +317,20 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         :param nb_hops : number of peaks to consider to compute distances
         :returns: np.ndarray of size nb_hops containing computed distances
         """
-        x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
-        interval = np.logical_and(x * self.spatial_resolution > -wave_length,
-                                  x * self.spatial_resolution < wave_length)
+        x_axis = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
+        interval = np.logical_and(x_axis * self.spatial_resolution > -wave_length,
+                                  x_axis * self.spatial_resolution < wave_length)
         period = int(wave_length / self.spatial_resolution)
         max_sinogram = np.max(sinogram)
-        peaks, _ = find_peaks(sinogram, height=self.local_estimator_params['TUNING']['PEAK_DETECTION_HEIGHT_RATIO']
-                              * max_sinogram, distance=self.local_estimator_params['TUNING']['PEAK_DETECTION_DISTANCE_RATIO'] * period)
-        distances = x[peaks] * self.spatial_resolution
+        tuning_parameters = self.local_estimator_params['TUNING']
+        peaks, _ = find_peaks(sinogram, height=tuning_parameters['PEAK_DETECTION_HEIGHT_RATIO']
+                              * max_sinogram,
+                              distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']
+                              * period)
+        distances = x_axis[peaks] * self.spatial_resolution
         index = np.argsort(np.abs(distances))
         if self.debug_sample:
             self.metrics['interval'] = interval
-            self.metrics['x'] = x
+            self.metrics['x_axis'] = x_axis
             self.metrics['max_indices'] = peaks[index][:nb_hops]
         return distances[index][:nb_hops]

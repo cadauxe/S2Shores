@@ -43,7 +43,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         first_image = self.images_sequence[0].pixels
         correlation_matrix = self.correlation_image.pixels
         sinogram_max_var = metrics['sinogram_max_var']
-        x = metrics['x']
+        x = metrics['x_axis']
         interval = metrics['interval']
         debug_path = self.global_estimator.debug_path
 
