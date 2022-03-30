@@ -12,6 +12,8 @@ import warnings
 
 from typing import Union, List, Optional
 
+import numpy as np
+
 from ..image.image_geometry_types import PointType
 from ..waves_exceptions import WavesEstimationAttributeError
 
@@ -67,6 +69,24 @@ class WavesFieldsEstimations(list):
         """
         if attribute_name is not None:
             self.sort(key=lambda x: getattr(x, attribute_name), reverse=reverse)
+
+    def argsort_on_attribute(self, attribute_name: Optional[str] = None,
+                             reverse: bool = True) -> List[int]:
+        """ Return the indices of the waves fields estimations which would sort them based
+        on one of their attributes.
+
+        :param attribute_name: name of an attribute present in all estimations to use for sorting
+        :param reverse: When True sorting is in descending order, when False in ascending order
+        :returns: either en empty list if attribute_name is None or the list of indices which would
+                  sort this WavesFieldsEstimations according to one of the attributes.
+        """
+        if attribute_name is not None:
+            attr_list = [getattr(estimation, attribute_name) for estimation in self]
+            arg_sorted = np.argsort(attr_list).tolist()
+            if reverse:
+                arg_sorted.reverse()
+            return arg_sorted
+        return []
 
     def get_property(self, property_name: str) -> Union[float, List[float]]:
         """ Retrieve the values of a property either at the level of WavesFieldsEstimations or
