@@ -8,13 +8,15 @@ from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Optional, Any
 
-import xarray as xr  # @NoMove
+from osgeo import gdal
+
 import numpy as np
-import rioxarray as rio
 
 from ..image.image_geometry_types import PointType
-
 from .localized_data_provider import LocalizedDataProvider
+
+
+import xarray as xr  # @NoMove
 
 
 class DisToShoreProvider(ABC, LocalizedDataProvider):
@@ -118,7 +120,7 @@ class GeotiffDisToShoreProvider(DisToShoreProvider):
         :returns: the distance to the nearest shore (km)
         """
         if self._distoshore_xarray is None:
-            self._distoshore_xarray = rio.open_rasterio(self._distoshore_file_path)
+            self._distoshore_xarray = gdal.Open(self._distoshore_file_path, gdal.GA_ReadOnly)
         provider_point = self.transform_point(point, 0.)
         kw_sel = {self._x_axis_label: provider_point[0],
                   self._y_axis_label: provider_point[1],
