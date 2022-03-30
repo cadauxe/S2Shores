@@ -94,14 +94,14 @@ class GeotiffDisToShoreProvider(DisToShoreProvider):
     'disToShore' layer of a Geotiff file.
     """
 
-    # FIXME: EPSG code needed because no SRS retrieved from the NetCDF file at this time.
+    # FIXME: EPSG code needed because no SRS retrieved from the GEOTIFF file at this time.
     def __init__(self, distoshore_file_path: Path, distoshore_epsg_code: int,
                  x_axis_label: str, y_axis_label: str) -> None:
         """ Create a GeotiffDisToShoreProvider object and set necessary informations
 
-        :param distoshore_file_path: full path of a geotiff file containing the distance to shore
+        :param distoshore_file_path: full path of a GEOTIFF file containing the distance to shore
                                      to be used by this provider.
-        :param distoshore_epsg_code: the EPSG code of the SRS used in the Geotiff file.
+        :param distoshore_epsg_code: the EPSG code of the SRS used in the GEOTIFF file.
         :param x_axis_label: Label of the x axis of the dataset ('x' or 'lon' for instance)
         :param y_axis_label: Label of the y axis of the dataset ('y' or 'lat' for instance)
         """
