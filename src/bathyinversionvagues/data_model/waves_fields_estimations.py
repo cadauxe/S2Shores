@@ -57,16 +57,23 @@ class WavesFieldsEstimations(list):
             if not self:
                 err_msg = f'Attribute {property_name} undefined (no estimations)'
                 raise WavesEstimationAttributeError(err_msg)
-            # retrieve property in the list of estimations
-            waves_field_property = []
-            try:
-                for waves_field_estimation in self:
-                    waves_field_property.append(getattr(waves_field_estimation, property_name))
-            except AttributeError:
-                err_msg = f'Attribute {property_name} undefined for {type(waves_field_estimation)}'
-                raise WavesEstimationAttributeError(err_msg)
-
+            waves_field_property = self.get_estimations_attribute(property_name)
         return waves_field_property
+
+    def get_estimations_attribute(self, attribute_name: str) -> List[float]:
+        """ Retrieve the values of some attribute in the stored waves field estimations.
+
+        :param attribute_name: name of the attribute to retrieve
+        :returns: the values of the attribute in the order where the estimations are stored
+        :raises WavesEstimationAttributeError: when the property does not exist in at least
+                                               one estimation
+        """
+        # retrieve property in the list of estimations
+        try:
+            return [getattr(estimation, attribute_name) for estimation in self]
+        except AttributeError:
+            err_msg = f'Attribute {attribute_name} undefined for some waves field estimation'
+            raise WavesEstimationAttributeError(err_msg)
 
     @property
     def location(self) -> PointType:
