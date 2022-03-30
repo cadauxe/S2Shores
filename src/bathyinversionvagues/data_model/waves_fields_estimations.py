@@ -10,7 +10,7 @@
 from enum import IntEnum
 import warnings
 
-from typing import Union, List
+from typing import Union, List, Optional
 
 from ..image.image_geometry_types import PointType
 from ..waves_exceptions import WavesEstimationAttributeError
@@ -58,6 +58,15 @@ class WavesFieldsEstimations(list):
             warnings.warn(f'Trying to store a duplicate estimation:\n {str(estimation)} ')
             return
         super().append(estimation)
+
+    def sort_on_attribute(self, attribute_name: Optional[str] = None, reverse: bool = True) -> None:
+        """ Sort in place the waves fields estimations based on one of their attributes.
+
+        :param attribute_name: name of an attribute present in all estimations to use for sorting
+        :param reverse: When True sorting is in descending order, when False in ascending order
+        """
+        if attribute_name is not None:
+            self.sort(key=lambda x: getattr(x, attribute_name), reverse=reverse)
 
     def get_property(self, property_name: str) -> Union[float, List[float]]:
         """ Retrieve the values of a property either at the level of WavesFieldsEstimations or

@@ -32,6 +32,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     radon transforms.
     """
 
+    final_estimations_sorting = 'energy'
     waves_field_estimation_cls = SpatialDFTWavesFieldEstimation
 
     def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
@@ -82,11 +83,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         directions_ranges = self.prepare_refinement(peaks_dir_indices)
 
         self.find_spectral_peaks(directions_ranges)
-
-    def sort_waves_fields(self) -> None:
-        """ Sort the waves fields estimations based on their energy max.
-        """
-        self.waves_fields_estimations.sort(key=lambda x: x.energy, reverse=True)
 
     def find_directions(self) -> np.ndarray:
         """ Find an initial set of directions from the cross correlation spectrum of the radon

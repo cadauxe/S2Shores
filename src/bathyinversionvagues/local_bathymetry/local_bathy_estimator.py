@@ -29,6 +29,8 @@ class LocalBathyEstimator(ABC):
     """ Abstract base class of all local bathymetry estimators.
     """
 
+    final_estimations_sorting: Optional[str] = None
+
     @property
     @classmethod
     @abstractmethod
@@ -125,11 +127,6 @@ class LocalBathyEstimator(ABC):
 
         This method stores its results in the waves_fields_estimations list and
         its metrics in _metrics attribute.
-        """
-
-    @abstractmethod
-    def sort_waves_fields(self) -> None:
-        """  Sorts the waves fields on whatever criteria.
         """
 
     def is_waves_field_physical(self, estimation: WavesFieldEstimation) -> bool:

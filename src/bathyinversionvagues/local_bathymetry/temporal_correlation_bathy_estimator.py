@@ -148,9 +148,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
-    def sort_waves_fields(self) -> None:
-        pass
-
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
         """ :return: tuple of sampling positions
