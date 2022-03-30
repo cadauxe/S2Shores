@@ -10,11 +10,12 @@
 from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 import pandas
-
-import numpy as np
 from scipy.signal import find_peaks
 
+import numpy as np
+
 from ..bathy_physics import wavelength_offshore
+from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
@@ -23,10 +24,9 @@ from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
+
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
-from .waves_field_estimation import WavesFieldEstimation
-from .waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -108,17 +108,12 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
             travelled_distance = self.compute_travelled_distance(
                 distances, propagation_duration, wave_length)
-            # celerity will be automaticaly be computed in
-            # temporal_correlation_waves_field_estimation class where sign will be
-            # correctly handled
-            celerity = np.abs(travelled_distance / propagation_duration)
-            direction_propagation = self.check_propagation_direction(
-                direction_propagation, propagation_duration, travelled_distance)
 
-            waves_field_estimation = cast(self.waves_field_estimation_cls,
+            waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
-            waves_field_estimation.celerity = celerity
+            waves_field_estimation.delta_time = propagation_duration
+            waves_field_estimation.propagated_distance = travelled_distance
             self.store_estimation(waves_field_estimation)
 
             if self.debug_sample:
@@ -133,11 +128,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     def sort_waves_fields(self) -> None:
         pass
-
-    def is_waves_field_valid(self, waves_field_estimation: WavesFieldEstimation) -> bool:
-        if not isinstance(waves_field_estimation, self.waves_field_estimation_cls):
-            raise TypeError(f'Unable to process estimation type {type(waves_field_estimation)}')
-        return True
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -206,27 +196,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.metrics['celerities'] = celerities
         return travelled_distance
 
-    def check_propagation_direction(self, direction_propagation: float,
-                                    propagation_duration: float,
-                                    travelled_distance: float) -> float:
-        """ This function ensure direction propagation coherence with
-        propagation duration and travelled_distance
-
-        :param direction_propagation: direction propagation to invert if needed
-        :param propagation_duration: propagation duration of the wave (can be negative)
-        :param travelled_distance: travelled distance by the wave (can be negative)
-        :returns: propagation_direction
-        """
-        if not (propagation_duration >= 0 and travelled_distance >= 0) or (
-                propagation_duration <= 0 and travelled_distance <= 0):
-                # travelled_distance and propagation_duration do not have same sign so
-                # opposite direction is taken
-            if direction_propagation < 0:
-                direction_propagation += 180
-            else:
-                direction_propagation -= 180
-        return direction_propagation
-
     def get_correlation_image(self) -> WavesImage:
         """ This function computes the correlation image by projecting the the correlation matrix
         on an array where axis are distances and center is the point where distance is 0.
@@ -277,8 +246,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def angles(self) -> np.ndarray:
-        """ Angles
-        :return: angles in radian
+        """ :return: angles in radian
         """
         if self._angles is None:
             self._angles = self.get_angles()
@@ -286,8 +254,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def distances(self) -> np.ndarray:
-        """ Distances
-        :return: distances
+        """ :return: distances
         """
         if self._distances is None:
             self._distances = self.get_distances()
@@ -299,9 +266,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: wave length
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
-        period, wave_length_zeros = find_period_from_zeros(sinogram,
-                                                           int(min_wavelength /
-                                                               self.spatial_resolution))
+        period, wave_length_zeros = find_period_from_zeros(
+            sinogram, int(min_wavelength / self.spatial_resolution))
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:

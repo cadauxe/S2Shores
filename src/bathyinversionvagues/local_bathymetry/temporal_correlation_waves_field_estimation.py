@@ -7,12 +7,10 @@
 :license: see LICENSE file
 :created: 10 sep 2021
 """
-from .waves_field_estimation import WavesFieldEstimation
+from ..data_model.waves_field_estimation import WavesFieldEstimation
 
 
 class TemporalCorrelationWavesFieldEstimation(WavesFieldEstimation):
     """ This class encapsulates the information estimated in a waves field sample by a
     TemporalCorrelationBathyEstimator.
-
-    At the moment there is no estimation attributes specific to this estimator.
     """

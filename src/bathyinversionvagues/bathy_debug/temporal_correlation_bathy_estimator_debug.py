@@ -16,7 +16,6 @@ from matplotlib.colors import Normalize
 import matplotlib as mpl
 import numpy as np
 
-from ..bathy_physics import depth_from_dispersion
 from ..local_bathymetry.temporal_correlation_bathy_estimator import \
     TemporalCorrelationBathyEstimator
 
@@ -35,6 +34,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         wave_direction = wave_estimation.direction
         wave_wavelength = wave_estimation.wavelength
         wave_celerity = wave_estimation.celerity
+        wave_depth = wave_estimation.depth
 
         metrics = self.metrics
         # Note that wave direction is clockwise origin east
@@ -79,7 +79,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         d2 = np.max(directions)
         ax3.imshow(radon_array, interpolation='nearest', aspect='auto',
                    origin='lower', extent=[d1, d2, 0, s1])
-        (l1, l2) = np.shape(radon_array)
+        l1, _ = np.shape(radon_array)
         plt.plot(self.selected_directions, l1 * metrics['variances'] /
                  np.max(metrics['variances']), 'r')
         ax3.arrow(wave_direction, 0, 0, l1)
@@ -99,9 +99,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         ax4.plot(x[metrics['max_indices']],
                  sinogram_max_var[metrics['max_indices']], 'go')
 
-        bathy = depth_from_dispersion(1 / wave_estimation.wavelength,
-                                      wave_estimation.celerity, self.gravity)
-        ax4.annotate('depth = {:.2f}'.format(bathy), (min_limit_x, min_limit_y), color='orange')
+        ax4.annotate('depth = {:.2f}'.format(wave_depth),
+                     (min_limit_x, min_limit_y), color='orange')
         plt.title('Sinogram')
 
         # Fifth  diagram
@@ -113,8 +112,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
         chain_coefficients = ' '.join(
             [f'{coefficient:.2f} | ' for coefficient in metrics['linearity_coefficients']])
-        ax5.annotate(f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n c = {chain_celerities} \n'
-                     f' ckg = {chain_coefficients}\n'
+        ax5.annotate(f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n'
+                     f' c = {chain_celerities} \n ckg = {chain_coefficients}\n'
                      f' chosen_celerity = {wave_celerity}', (0, 0), color='g')
         fig.savefig(os.path.join(
             debug_path, f'Infos_point_{self.location[0]}_{self.location[1]}.png'), dpi=300)

@@ -7,20 +7,19 @@
 import time
 import warnings
 
-from typing import List, TYPE_CHECKING  # @NoMove
-
-from xarray import Dataset  # @NoMove
-
-
+from ..data_model.estimated_bathy import EstimatedBathy
+from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..data_providers.delta_time_provider import NoDeltaTimeValueError
 from ..image.image_geometry_types import PointType
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
-from ..local_bathymetry.waves_fields_estimations import WavesFieldsEstimations
 from ..waves_exceptions import WavesException
 
-from .estimated_bathy import EstimatedBathy
+
+from typing import List, TYPE_CHECKING  # @NoMove
+
+from xarray import Dataset  # @NoMove
 
 
 if TYPE_CHECKING:
@@ -73,7 +72,7 @@ class OrthoBathyEstimator:
                     computed_points += 1
 
                 # Store bathymetry sample estimations
-                estimated_bathy.store_estimations(x_sample, y_sample, bathy_estimations)
+                estimated_bathy.store_estimations(bathy_estimations)
 
         total_points = self.sampled_ortho.nb_samples
         comput_time = time.time() - start
@@ -99,7 +98,7 @@ class OrthoBathyEstimator:
                                                                       self.parent_estimator,
                                                                       bathy_estimations)
                 local_bathy_estimator.run()
-                local_bathy_estimator.validate_waves_fields()
+                local_bathy_estimator.remove_unphysical_waves_fields()
                 local_bathy_estimator.sort_waves_fields()
                 if self.parent_estimator.debug_sample:
                     print(f'estimations after sorting :')

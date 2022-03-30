@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import List, Any, Callable
+from typing import List, Callable
 
 import numpy as np
 
@@ -26,17 +26,29 @@ class WavesFieldSampleGeometry:
     def __init__(self) -> None:
         self._direction = np.nan
         self._wavelength = np.nan
-        self._wavelength_change_observers: List[Any] = []
+        self._wavelength_change_observers: List[Callable] = []
 
     @property
     def direction(self) -> float:
         """ :returns: The propagation direction relative to the X axis (counterclockwise) (degrees)
-        (degrees)"""
+        :raises ValueError: when the direction is not between -180° and +180° (inclusive)
+        """
         return self._direction
 
     @direction.setter
     def direction(self, value: float) -> None:
+        if value < -180. or value > 180.:
+            raise ValueError('Direction must be between -180° and +180°')
         self._direction = value
+
+    def invert_direction(self) -> None:
+        """ Invert the current direction by adding or subtracting 180°
+        """
+        if not np.isnan(self.direction):
+            if self.direction < 0:
+                self.direction += 180
+            else:
+                self.direction -= 180
 
     @property
     def direction_from_north(self) -> float:
@@ -46,12 +58,16 @@ class WavesFieldSampleGeometry:
 
     @property
     def wavelength(self) -> float:
-        """ :returns: The waves field wavelength (m)"""
+        """ :returns: The waves field wavelength (m)
+        :raises ValueError: when the wavelength is not positive.
+        """
         return self._wavelength
 
     @wavelength.setter
     def wavelength(self, value: float) -> None:
         if value != self._wavelength:
+            if value < 0:
+                raise ValueError('Wavelength must be positive')
             self._wavelength = value
             for notify in self._wavelength_change_observers:
                 notify()
@@ -66,6 +82,11 @@ class WavesFieldSampleGeometry:
         self.wavelength = 1. / value
 
     def register_wavelength_change(self, notify: Callable) -> None:
+        """ Register the functions to be called whenever a change of the wavelength value occurs.
+
+        :param notify: a function without argument which must be called when the wavelength value
+                       is changed
+        """
         self._wavelength_change_observers.append(notify)
 
     def __str__(self) -> str:

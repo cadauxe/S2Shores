@@ -9,7 +9,7 @@
 """
 import numpy as np
 
-from .waves_field_estimation import WavesFieldEstimation
+from ..data_model.waves_field_estimation import WavesFieldEstimation
 
 
 class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
@@ -23,8 +23,6 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
         super().__init__(gravity, depth_estimation_method)
 
-        self._delta_phase = np.nan
-        self._delta_phase_ratio = np.nan
         self._energy = np.nan
 
     @property
@@ -32,40 +30,6 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         # FIXME: define this quantity
         """ :returns: TBD """
         return np.nan
-
-    @property
-    def delta_phase(self) -> float:
-        """ :returns: the measured phase difference between both observations (rd) """
-        return self._delta_phase
-
-    @delta_phase.setter
-    def delta_phase(self, value: float) -> None:
-        self._delta_phase = value
-        if np.isnan(self._delta_phase) or self._delta_phase == 0:
-            self.period = np.nan
-        else:
-            period = self.delta_time * (2 * np.pi / self._delta_phase)
-            if period < 0.:
-                # delta_phase and delta_time have opposite signs, nothing to correct.
-                # period must be positive
-                period = abs(period)
-            else:
-                # delta_phase and delta_time have same signs, propagation direction must be inverted
-                if self.direction < 0:
-                    self.direction += 180
-                else:
-                    self.direction -= 180
-            self.period = period
-
-    @property
-    def delta_phase_ratio(self) -> float:
-        # FIXME: define this quantity
-        """ :returns: the ratio of the phase difference compared to TBD """
-        return self._delta_phase_ratio
-
-    @delta_phase_ratio.setter
-    def delta_phase_ratio(self, value: float) -> None:
-        self._delta_phase_ratio = value
 
     @property
     def energy(self) -> float:
@@ -83,8 +47,6 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
 
     def __str__(self) -> str:
         result = WavesFieldEstimation.__str__(self)
-        result += f'\n    delta phase: {self.delta_phase:5.2f} (rd)'
-        result += f'  delta phase ratio: {self.delta_phase_ratio:5.2f} '
         result += f'\n    energy: {self.energy:5.2f} (???)'
         result += f'  energy ratio: {self.energy_ratio:5.2f} '
         return result

@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import cast
+from typing import cast, Tuple
 
 from ..bathy_physics import period_offshore, depth_from_dispersion, linearity_indicator
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
@@ -37,7 +37,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
 
         super().__init__()
 
-        # FIXME: make those attributes abstract ?
         self._gravity = gravity
         self._depth_estimation_method = depth_estimation_method
 
@@ -48,7 +47,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         :returns: The depth (m)
         :raises AttributeError: when the depth estimation method is not supported
         """
-        # FIXME: is it necessary to handle a depth_estimation_method ?
         if self._depth_estimation_method == 'LINEAR':
             estimated_depth = depth_from_dispersion(self.wavenumber, self.celerity, self._gravity)
         else:
@@ -59,7 +57,16 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def linearity(self) -> float:
         """ :returns: a linearity indicator for depth estimation (unitless) """
-        return cast(float, linearity_indicator(self.wavelength, self.celerity, self._gravity))
+        return linearity_indicator(self.wavelength, self.celerity, self._gravity)
+
+    def is_linearity_valid(self, linearity_range: Tuple[float, float]) -> bool:
+        """ Check if the linearity indicator is physical.
+
+        :param linearity_range: minimum and maximum values allowed for the linearity indicator
+        :returns: True if the linearity indicator is between the minimum and maximum values, False
+                  otherwise
+        """
+        return self.linearity >= linearity_range[0] and self.linearity <= linearity_range[1]
 
     @property
     def period_offshore(self) -> float:
@@ -67,7 +74,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         return cast(float, period_offshore(self.wavenumber, self._gravity))
 
     def __str__(self) -> str:
-        result = WavesFieldSampleDynamics.__str__(self)
-        result += f'\nBathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.2f}  '
+        result = f'Bathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.2f}  '
         result += f' offshore period: {self.period_offshore:5.2f} (s)'
         return result
