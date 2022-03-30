@@ -132,7 +132,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                                                                              wave_length))
             waves_field_estimation.delta_time = propagation_duration
             waves_field_estimation.propagated_distance = distances[index_min]
-            self.store_estimation(waves_field_estimation)
+            self.waves_fields_estimations.append(waves_field_estimation)
 
             if self.debug_sample:
                 self.metrics['radon_transform'] = radon_transform

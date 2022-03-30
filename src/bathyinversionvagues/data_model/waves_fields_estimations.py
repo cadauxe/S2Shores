@@ -8,10 +8,14 @@
 :created: 11 sep 2021
 """
 from enum import IntEnum
+import warnings
+
 from typing import Union, List
 
 from ..image.image_geometry_types import PointType
 from ..waves_exceptions import WavesEstimationAttributeError
+
+from .waves_field_estimation import WavesFieldEstimation
 
 
 class SampleStatus(IntEnum):
@@ -41,6 +45,20 @@ class WavesFieldsEstimations(list):
         self._data_available = True
         self._delta_time_available = True
 
+    def append(self, estimation: WavesFieldEstimation) -> None:
+        """ Store a single estimation into the estimations list, ensuring that there are no
+        duplicate estimations for the same (direction, wavelength) pair.
+
+        :param estimation: a new estimation to store inside this localized list of estimations
+        """
+        stored_wavelengths_directions = [(estimation.wavelength, estimation.direction)
+                                         for estimation in self]
+        # Do not store duplicate estimations for the same direction/wavelength
+        if (estimation.wavelength, estimation.direction) in stored_wavelengths_directions:
+            warnings.warn(f'Trying to store a duplicate estimation:\n {str(estimation)} ')
+            return
+        super().append(estimation)
+
     def get_property(self, property_name: str) -> Union[float, List[float]]:
         """ Retrieve the values of a property either at the level of WavesFieldsEstimations or
         in the list of WavesFieldEstimation
@@ -61,14 +79,13 @@ class WavesFieldsEstimations(list):
         return waves_field_property
 
     def get_estimations_attribute(self, attribute_name: str) -> List[float]:
-        """ Retrieve the values of some attribute in the stored waves field estimations.
+        """ Retrieve the values of some attribute in the list of stored waves field estimations.
 
         :param attribute_name: name of the attribute to retrieve
         :returns: the values of the attribute in the order where the estimations are stored
         :raises WavesEstimationAttributeError: when the property does not exist in at least
                                                one estimation
         """
-        # retrieve property in the list of estimations
         try:
             return [getattr(estimation, attribute_name) for estimation in self]
         except AttributeError:

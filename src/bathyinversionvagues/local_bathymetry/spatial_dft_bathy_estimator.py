@@ -227,7 +227,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             energy = total_spectrum[wavenumber_index, direction_index]
             estimation = self.save_waves_field_estimation(estimated_direction, wavenumber,
                                                           estimated_phase_shift, energy)
-            self.store_estimation(estimation)
+            self.waves_fields_estimations.append(estimation)
 
         if self.debug_sample:
 

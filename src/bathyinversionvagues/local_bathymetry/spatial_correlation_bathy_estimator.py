@@ -187,7 +187,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                                                                          wavelength))
         waves_field_estimation.delta_time = self.sequential_delta_times[0]
         waves_field_estimation.propagated_distance = propagated_distance
-        self.store_estimation(waves_field_estimation)
+        self.waves_fields_estimations.append(waves_field_estimation)
 
     def sort_waves_fields(self) -> None:
         pass

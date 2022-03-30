@@ -123,7 +123,7 @@ class LocalBathyEstimator(ABC):
         """  Run the local bathymetry estimation, using some method specific to the inheriting
         class.
 
-        This method stores its results using the store_estimation() method and
+        This method stores its results in the waves_fields_estimations list and
         its metrics in _metrics attribute.
         """
 
@@ -155,10 +155,10 @@ class LocalBathyEstimator(ABC):
     def create_waves_field_estimation(self, direction: float, wavelength: float
                                       ) -> WavesFieldEstimation:
         """ Creates the WavesFieldEstimation instance where the local estimator will store its
-        estimations.
+        estimation.
 
-        :param direction: the propagation direction of the waves field (degrees measured clockwise
-                          from the North).
+        :param direction: the propagation direction of the waves field (degrees measured
+                          counterclockwise from the East).
         :param wavelength: the wavelength of the waves field
         :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
         """
@@ -169,18 +169,6 @@ class LocalBathyEstimator(ABC):
         waves_field_estimation.wavelength = wavelength
 
         return waves_field_estimation
-
-    def store_estimation(self, waves_field_estimation: WavesFieldEstimation) -> None:
-        """ Store a single estimation into the estimations list
-
-        :param waves_field_estimation: a new estimation to store for this local bathy estimator
-        """
-        stored_wavelengths = [estimation.wavelength for estimation in self.waves_fields_estimations]
-        stored_directions = [estimation.direction for estimation in self.waves_fields_estimations]
-        # Remove duplicates: store estimation only if it is not already stored
-        if (waves_field_estimation.wavelength not in stored_wavelengths or
-                waves_field_estimation.direction not in stored_directions):
-            self.waves_fields_estimations.append(waves_field_estimation)
 
     @property
     def waves_fields_estimations(self) -> WavesFieldsEstimations:
