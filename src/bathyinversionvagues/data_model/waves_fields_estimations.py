@@ -88,31 +88,31 @@ class WavesFieldsEstimations(list):
             return arg_sorted
         return []
 
-    def get_property(self, property_name: str) -> Union[float, List[float]]:
-        """ Retrieve the values of a property either at the level of WavesFieldsEstimations or
+    def get_attribute(self, attribute_name: str) -> Union[float, List[float]]:
+        """ Retrieve the values of an attribute either at the level of WavesFieldsEstimations or
         in the list of WavesFieldEstimation
 
-        :param property_name: name of the estimation property to retrieve
-        :returns: the values of the property either as a scalar or a list of values
-        :raises WavesEstimationAttributeError: when the property does not exist
+        :param attribute_name: name of the estimation attribute to retrieve
+        :returns: the values of the attribute either as a scalar or a list of values
+        :raises WavesEstimationAttributeError: when the attribute does not exist
         """
-        # Firstly try to find the property from the estimations common properties
-        if hasattr(self, property_name):
-            # retrieve property from the estimations header
-            waves_field_property = getattr(self, property_name)
+        # Firstly try to find the attribute from the estimations common attributes
+        if hasattr(self, attribute_name):
+            # retrieve attribute from the estimations header
+            waves_field_attribute = getattr(self, attribute_name)
         else:
             if not self:
-                err_msg = f'Attribute {property_name} undefined (no estimations)'
+                err_msg = f'Attribute {attribute_name} undefined (no estimations)'
                 raise WavesEstimationAttributeError(err_msg)
-            waves_field_property = self.get_estimations_attribute(property_name)
-        return waves_field_property
+            waves_field_attribute = self.get_estimations_attribute(attribute_name)
+        return waves_field_attribute
 
     def get_estimations_attribute(self, attribute_name: str) -> List[float]:
         """ Retrieve the values of some attribute in the list of stored waves field estimations.
 
         :param attribute_name: name of the attribute to retrieve
         :returns: the values of the attribute in the order where the estimations are stored
-        :raises WavesEstimationAttributeError: when the property does not exist in at least
+        :raises WavesEstimationAttributeError: when the attribute does not exist in at least
                                                one estimation
         """
         try:
