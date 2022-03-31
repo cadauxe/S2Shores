@@ -60,7 +60,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
             (filter_mean,
              [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
-        self.create_sequence_time_series()
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
             raise WavesEstimationError(
                 'The chosen number of lag frames is bigger than the number of available frames')
@@ -92,6 +91,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ Run the local bathy estimator using correlation method
         """
         try:
+            self.create_sequence_time_series()
             filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
             self.correlation_image.pixels = filtered_image.pixels
             radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
