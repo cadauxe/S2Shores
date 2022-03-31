@@ -121,6 +121,16 @@ class WavesFieldsEstimations(list):
             err_msg = f'Attribute {attribute_name} undefined for some waves field estimation'
             raise WavesEstimationAttributeError(err_msg)
 
+    def remove_unphysical_waves_fields(self) -> None:
+        """  Remove unphysical waves fields
+        """
+        # Filter non physical waves fields in bathy estimations
+        # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
+        # on its specific attributes inside the loops.
+        for estimation in list(self):
+            if not estimation.is_physical():
+                self.remove(estimation)
+
     @property
     def location(self) -> PointType:
         """ :returns: The (X, Y) coordinates of this estimation location"""

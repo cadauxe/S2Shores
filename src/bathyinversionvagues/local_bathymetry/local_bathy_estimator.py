@@ -129,16 +129,6 @@ class LocalBathyEstimator(ABC):
         its metrics in _metrics attribute.
         """
 
-    def remove_unphysical_waves_fields(self) -> None:
-        """  Remove unphysical waves fields
-        """
-        # Filter non physical waves fields and bathy estimations
-        # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
-        # on its specific attributes inside the loops.
-        for estimation in list(self.waves_fields_estimations):
-            if not estimation.is_physical():
-                self.waves_fields_estimations.remove(estimation)
-
     def create_waves_field_estimation(self, direction: float, wavelength: float
                                       ) -> WavesFieldEstimation:
         """ Creates the WavesFieldEstimation instance where the local estimator will store its

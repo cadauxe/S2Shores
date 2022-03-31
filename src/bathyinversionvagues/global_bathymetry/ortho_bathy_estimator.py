@@ -98,7 +98,7 @@ class OrthoBathyEstimator:
                                                                       self.parent_estimator,
                                                                       bathy_estimations)
                 local_bathy_estimator.run()
-                local_bathy_estimator.remove_unphysical_waves_fields()
+                bathy_estimations.remove_unphysical_waves_fields()
                 bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)
                 if self.parent_estimator.debug_sample:
                     print(f'estimations after sorting :')
