@@ -78,6 +78,10 @@ class LocalBathyEstimator(ABC):
 
         self._metrics: Dict[str, Any] = {}
 
+    def can_estimate_bathy(self):
+        return (self.waves_fields_estimations.distance_to_shore > 0 and
+                self.waves_fields_estimations.inside_roi)
+
     def set_images_sequence(self, images_sequence: List[WavesImage]) -> None:
         """ initialize the image_sequence to use with this estimator
 
