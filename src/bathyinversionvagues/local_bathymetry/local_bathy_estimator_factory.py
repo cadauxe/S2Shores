@@ -7,15 +7,15 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-from typing import List, Dict, Optional, Type, TYPE_CHECKING  # @NoMove
+from typing import Dict, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
 from ..bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstimatorDebug
 from ..bathy_debug.temporal_correlation_bathy_estimator_debug import \
     TemporalCorrelationBathyEstimatorDebug
-from ..data_model.waves_fields_estimations import WavesFieldsEstimations
-from ..image_processing.waves_image import WavesImage
+from ..image.image_geometry_types import PointType
+
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
@@ -37,9 +37,8 @@ LOCAL_BATHY_ESTIMATION_CLS_DEBUG = {'SPATIAL_DFT': SpatialDFTBathyEstimatorDebug
                                     'SPATIAL_CORRELATION': SpatialCorrelationBathyEstimator}
 
 
-def local_bathy_estimator_factory(images_sequence: List[WavesImage],
+def local_bathy_estimator_factory(location: PointType,
                                   global_estimator: 'BathyEstimator',
-                                  waves_fields_estimations: WavesFieldsEstimations,
                                   selected_directions: Optional[np.ndarray] = None) \
         -> LocalBathyEstimator:
     """ Build an instance of a local bathymetry estimator from its code, with potential debug
@@ -49,8 +48,7 @@ def local_bathy_estimator_factory(images_sequence: List[WavesImage],
     """
     local_bathy_estimator_cls = get_local_bathy_estimator_cls(global_estimator.local_estimator_code,
                                                               global_estimator.debug_sample)
-    return local_bathy_estimator_cls(images_sequence, global_estimator, waves_fields_estimations,
-                                     selected_directions)
+    return local_bathy_estimator_cls(location, global_estimator, selected_directions)
 
 
 def get_local_bathy_estimator_cls(local_estimator_code: str,

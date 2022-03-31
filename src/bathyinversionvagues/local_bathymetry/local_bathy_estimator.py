@@ -10,6 +10,7 @@ time intervals.
 """
 from abc import abstractmethod, ABC
 from copy import deepcopy
+
 from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
@@ -38,24 +39,19 @@ class LocalBathyEstimator(ABC):
         """ :returns: a class inheriting from WavesFieldEstimation to use for storing an estimation.
         """
 
-    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
-                 waves_fields_estimations: WavesFieldsEstimations,
+    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
-        :param images_sequence: a list of superimposed local images centered around the position
-                                where the estimator is working.
+        :param location: The (X, Y) coordinates of the location where this estimator is acting
         :param global_estimator: a global bathymetry estimator able to provide the services needed
                                  by this local bathymetry estimator (access to parameters,
                                  data providers, debugging, ...)
-        :param waves_fields_estimations: the waves fields estimations set in which the local
-                                         bathymetry estimator will store its estimations.
         :param selected_directions: the set of directions onto which the sinogram must be computed
         :raise SequenceImagesError: when sequence can no be exploited
         """
         self.images_sequence: List[WavesImage] = []
         self.spatial_resolution = 0.
-        self.set_images_sequence(images_sequence)
 
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
@@ -63,7 +59,12 @@ class LocalBathyEstimator(ABC):
 
         self.selected_directions = selected_directions
 
-        self._waves_fields_estimations = waves_fields_estimations
+        # FIXME: distance to shore test should take into account windows sizes
+        distance = self.global_estimator.get_distoshore(location)
+        gravity = self.global_estimator.get_gravity(location, 0.)
+        inside_roi = self.global_estimator.is_inside_roi(location)
+        self._waves_fields_estimations = WavesFieldsEstimations(location, gravity,
+                                                                distance, inside_roi)
 
         sequential_delta_times = np.array([])
         for frame_index in range(len(self.global_estimator.selected_frames) - 1):

@@ -8,7 +8,8 @@
 :created: 18/06/2021
 """
 import warnings
-from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
+
+from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 import pandas
 from scipy.interpolate import interp1d
@@ -17,15 +18,16 @@ from scipy.signal import butter, find_peaks, sosfiltfilt
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
-from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period_from_peaks, find_period_from_zeros
+from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
+
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
 
@@ -39,11 +41,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """
     waves_field_estimation_cls = TemporalCorrelationWavesFieldEstimation
 
-    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
-                 waves_fields_estimations: WavesFieldsEstimations,
+    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        super().__init__(images_sequence, global_estimator,
-                         waves_fields_estimations, selected_directions)
+        super().__init__(location, global_estimator, selected_directions)
         if self.selected_directions is None:
             self.selected_directions = linear_directions(-180., 0., 1.)
         # Processing attributes
@@ -58,7 +58,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_image_filters: SignalProcessingFilters = [
             (remove_median,
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
-            (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+            (filter_mean,
+             [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
         self.create_sequence_time_series()
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
             raise WavesEstimationError(
@@ -272,8 +273,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                           nb_hops: int) -> np.ndarray:
         """ Propagated distance computation (in meter)
         - 1) sinogram maximum is determined on interval [-wave_length, wave_length]
-        - 2) nb_max_hops propagated distances are computed from the position of the maximum using following formula :
-            [dx , dx + wave_length, ..., dx + (nb_max_hops)*wave_length] (an adaptation to negative values is also made if needed)
+        - 2) nb_max_hops propagated distances are computed from the position of the maximum using
+             following formula :
+            [dx , dx + wave_length, ..., dx + (nb_max_hops)*wave_length] (an adaptation to negative
+            values is also made if needed)
+
         :param sinogram: sinogram having maximum variance
         :param wave_length: wave_length computed on sinogram
         :param nb_hops: number of propagated distances computed
