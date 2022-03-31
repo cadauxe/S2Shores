@@ -53,25 +53,14 @@ class LocalBathyEstimator(ABC):
         :param selected_directions: the set of directions onto which the sinogram must be computed
         :raise SequenceImagesError: when sequence can no be exploited
         """
-        if not images_sequence:
-            raise SequenceImagesError('Sequence images is empty')
-        spatial_resolution = images_sequence[0].resolution
-        shape = images_sequence[0].pixels.shape
-        for wave_image in images_sequence[1:]:
-            if wave_image.resolution != spatial_resolution:
-                raise SequenceImagesError(
-                    'Images in sequence do not have same resolution')
-            if wave_image.pixels.shape != shape:
-                raise SequenceImagesError(
-                    'Images in sequence do not have same size')
-
-        self.spatial_resolution = spatial_resolution
+        self.images_sequence: List[WavesImage] = []
+        self.spatial_resolution = 0.
+        self.set_images_sequence(images_sequence)
 
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.local_estimator_params
 
-        self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
         self._waves_fields_estimations = waves_fields_estimations
@@ -87,6 +76,26 @@ class LocalBathyEstimator(ABC):
         self._sequential_delta_times = sequential_delta_times
 
         self._metrics: Dict[str, Any] = {}
+
+    def set_images_sequence(self, images_sequence: List[WavesImage]) -> None:
+        """ initialize the image_sequence to use with this estimator
+
+        :param images_sequence: a list of superimposed local images centered around the position
+                                where the estimator is working.
+        :raise SequenceImagesError: when sequence can no be exploited
+        """
+        if self.spatial_resolution != 0.:
+            raise SequenceImagesError('Cannot redefine the sequence of images for this estimator')
+        if not images_sequence:
+            raise SequenceImagesError('Sequence images is empty')
+        self.spatial_resolution = images_sequence[0].resolution
+        shape = images_sequence[0].pixels.shape
+        for wave_image in images_sequence[1:]:
+            if wave_image.resolution != self.spatial_resolution:
+                raise SequenceImagesError('Images in sequence do not have same resolution')
+            if wave_image.pixels.shape != shape:
+                raise SequenceImagesError('Images in sequence do not have same size')
+        self.images_sequence = images_sequence
 
     @property
     @abstractmethod
