@@ -90,7 +90,8 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         if time_sampling_factor_min > time_sampling_factor_max:
             time_sampling_factor_min, time_sampling_factor_max = \
                 time_sampling_factor_max, time_sampling_factor_min
-        return ((time_sampling_factor_min < self.time_sampling_factor) &
+        return (not np.isnan(self.time_sampling_factor) and
+                (time_sampling_factor_min < self.time_sampling_factor) and
                 (self.time_sampling_factor < time_sampling_factor_max))
 
     @property

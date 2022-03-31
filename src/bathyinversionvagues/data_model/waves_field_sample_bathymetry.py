@@ -9,6 +9,8 @@
 """
 from typing import cast, Tuple
 
+import numpy as np
+
 from ..bathy_physics import period_offshore, depth_from_dispersion, linearity_indicator
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
@@ -68,7 +70,8 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         :returns: True if the linearity indicator is between the minimum and maximum values, False
                   otherwise
         """
-        return (self.linearity >= self._linearity_range[0] and
+        return (not np.isnan(self.linearity) and
+                self.linearity >= self._linearity_range[0] and
                 self.linearity <= self._linearity_range[1])
 
     @property

@@ -73,7 +73,9 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
         :returns: True if the period is between the minimum and maximum values, False otherwise
         """
-        return self.period >= self._period_range[0] and self.period <= self._period_range[1]
+        return (not np.isnan(self.period) and
+                self.period >= self._period_range[0] and
+                self.period <= self._period_range[1])
 
     @property
     def celerity(self) -> float:
