@@ -129,16 +129,6 @@ class LocalBathyEstimator(ABC):
         its metrics in _metrics attribute.
         """
 
-    def is_waves_field_physical(self, estimation: WavesFieldEstimation) -> bool:
-        """  validate a waves field estimation based on local estimator specific criteria.
-
-        :param estimation: a waves field estimation to validate
-        :returns: True is the waves field is valid, False otherwise
-        """
-        return estimation.is_physical(self.global_estimator.waves_period_range,
-                                      self.global_estimator.waves_linearity_range,
-                                      self.global_estimator.depth_min)
-
     def remove_unphysical_waves_fields(self) -> None:
         """  Remove unphysical waves fields
         """
@@ -146,7 +136,7 @@ class LocalBathyEstimator(ABC):
         # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
         # on its specific attributes inside the loops.
         for estimation in list(self.waves_fields_estimations):
-            if not self.is_waves_field_physical(estimation):
+            if not estimation.is_physical():
                 self.waves_fields_estimations.remove(estimation)
 
     def create_waves_field_estimation(self, direction: float, wavelength: float
@@ -161,7 +151,10 @@ class LocalBathyEstimator(ABC):
         """
         waves_field_estimation = self.waves_field_estimation_cls(
             self.gravity,
-            self.global_estimator.depth_estimation_method)
+            self.global_estimator.depth_estimation_method,
+            self.global_estimator.waves_period_range,
+            self.global_estimator.waves_linearity_range,
+            self.global_estimator.depth_min)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 

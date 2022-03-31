@@ -7,6 +7,8 @@
 :license: see LICENSE file
 :created: 10 sep 2021
 """
+from typing import Tuple
+
 import numpy as np
 
 from ..data_model.waves_field_estimation import WavesFieldEstimation
@@ -19,9 +21,11 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
     It defines the estimation attributes specific to this estimator.
     """
 
-    def __init__(self, gravity: float, depth_estimation_method: str) -> None:
+    def __init__(self, gravity: float, depth_estimation_method: str,
+                 period_range: Tuple[float, float], linearity_range: Tuple[float, float],
+                 shallow_water_limit: float) -> None:
 
-        super().__init__(gravity, depth_estimation_method)
+        super().__init__(gravity, depth_estimation_method, period_range, linearity_range, shallow_water_limit)
 
         self._energy = np.nan
 
