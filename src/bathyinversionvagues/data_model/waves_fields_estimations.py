@@ -53,13 +53,12 @@ class WavesFieldsEstimations(list):
 
         :param estimation: a new estimation to store inside this localized list of estimations
         """
-        stored_wavelengths_directions = [(estimation.wavelength, estimation.direction)
-                                         for estimation in self]
+        stored_wavelengths_directions = [(estim.wavelength, estim.direction) for estim in self]
         # Do not store duplicate estimations for the same direction/wavelength
         if (estimation.wavelength, estimation.direction) in stored_wavelengths_directions:
-            warnings.warn(f'Trying to store a duplicate estimation:\n {str(estimation)} ')
-            return
-        super().append(estimation)
+            warnings.warn(f'\nTrying to store a duplicate estimation:\n{str(estimation)} ')
+        else:
+            super().append(estimation)
 
     def sort_on_attribute(self, attribute_name: Optional[str] = None, reverse: bool = True) -> None:
         """ Sort in place the waves fields estimations based on one of their attributes.
