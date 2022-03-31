@@ -65,7 +65,6 @@ class OrthoBathyEstimator:
         for x_sample in self.sampled_ortho.x_samples:
             for y_sample in self.sampled_ortho.y_samples:
                 estimation_point = (x_sample, y_sample)
-                self.parent_estimator.set_debug_flag(estimation_point)
                 bathy_estimations = self._run_local_bathy_estimator(sub_tile_images,
                                                                     estimation_point)
                 if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
@@ -82,34 +81,33 @@ class OrthoBathyEstimator:
 
     def _run_local_bathy_estimator(self, sub_tile_images: List[WavesImage],
                                    estimation_point: PointType) -> WavesFieldsEstimations:
-        distance = self.parent_estimator.get_distoshore(estimation_point)
-        gravity = self.parent_estimator.get_gravity(estimation_point, 0.)
-        inside_roi = self.parent_estimator.is_inside_roi(estimation_point)
-        bathy_estimations = WavesFieldsEstimations(estimation_point, gravity, distance, inside_roi)
-        # do not compute on land
-        # FIXME: distance to shore test should take into account windows sizes
-        if distance > 0 and inside_roi:
-            # computes the bathymetry at the specified position
-            try:
-                images_sequence = self._create_images_sequence(sub_tile_images,
-                                                               estimation_point)
-                # TODO: use selected_directions argument
-                local_bathy_estimator = local_bathy_estimator_factory(images_sequence,
-                                                                      self.parent_estimator,
-                                                                      bathy_estimations)
+
+        self.parent_estimator.set_debug_flag(estimation_point)
+
+        # computes the bathymetry at the specified position
+        try:
+            # TODO: use selected_directions argument
+            local_bathy_estimator = local_bathy_estimator_factory(estimation_point,
+                                                                  self.parent_estimator)
+            bathy_estimations = local_bathy_estimator.waves_fields_estimations
+            images_sequence = self._create_images_sequence(sub_tile_images, estimation_point)
+            local_bathy_estimator.set_images_sequence(images_sequence)
+            if local_bathy_estimator.can_estimate_bathy():
                 local_bathy_estimator.run()
-                local_bathy_estimator.remove_unphysical_waves_fields()
-                local_bathy_estimator.sort_waves_fields()
+                bathy_estimations.remove_unphysical_waves_fields()
+                bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)
                 if self.parent_estimator.debug_sample:
                     print(f'estimations after sorting :')
-                    print(local_bathy_estimator.waves_fields_estimations)
-            except NoDeltaTimeValueError:
-                bathy_estimations.delta_time_available = False
-                bathy_estimations.clear()
-            except WavesException as excp:
-                warn_msg = f'Unable to estimate bathymetry: {str(excp)}'
-                warnings.warn(warn_msg)
-                bathy_estimations.clear()
+                    print(bathy_estimations)
+        except NoDeltaTimeValueError:
+            bathy_estimations = local_bathy_estimator.waves_fields_estimations
+            bathy_estimations.delta_time_available = False
+            bathy_estimations.clear()
+        except WavesException as excp:
+            warn_msg = f'Unable to estimate bathymetry: {str(excp)}'
+            warnings.warn(warn_msg)
+            bathy_estimations = local_bathy_estimator.waves_fields_estimations
+            bathy_estimations.clear()
         return bathy_estimations
 
     def _create_images_sequence(self, sub_tile_images: List[WavesImage],

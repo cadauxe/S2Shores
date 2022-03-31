@@ -10,6 +10,7 @@ time intervals.
 """
 from abc import abstractmethod, ABC
 from copy import deepcopy
+
 from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
@@ -29,6 +30,8 @@ class LocalBathyEstimator(ABC):
     """ Abstract base class of all local bathymetry estimators.
     """
 
+    final_estimations_sorting: Optional[str] = None
+
     @property
     @classmethod
     @abstractmethod
@@ -36,43 +39,32 @@ class LocalBathyEstimator(ABC):
         """ :returns: a class inheriting from WavesFieldEstimation to use for storing an estimation.
         """
 
-    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
-                 waves_fields_estimations: WavesFieldsEstimations,
+    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
-        :param images_sequence: a list of superimposed local images centered around the position
-                                where the estimator is working.
+        :param location: The (X, Y) coordinates of the location where this estimator is acting
         :param global_estimator: a global bathymetry estimator able to provide the services needed
                                  by this local bathymetry estimator (access to parameters,
                                  data providers, debugging, ...)
-        :param waves_fields_estimations: the waves fields estimations set in which the local
-                                         bathymetry estimator will store its estimations.
         :param selected_directions: the set of directions onto which the sinogram must be computed
         :raise SequenceImagesError: when sequence can no be exploited
         """
-        if not images_sequence:
-            raise SequenceImagesError('Sequence images is empty')
-        spatial_resolution = images_sequence[0].resolution
-        shape = images_sequence[0].pixels.shape
-        for wave_image in images_sequence[1:]:
-            if wave_image.resolution != spatial_resolution:
-                raise SequenceImagesError(
-                    'Images in sequence do not have same resolution')
-            if wave_image.pixels.shape != shape:
-                raise SequenceImagesError(
-                    'Images in sequence do not have same size')
-
-        self.spatial_resolution = spatial_resolution
+        self.images_sequence: List[WavesImage] = []
+        self.spatial_resolution = 0.
 
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.local_estimator_params
 
-        self.images_sequence = images_sequence
         self.selected_directions = selected_directions
 
-        self._waves_fields_estimations = waves_fields_estimations
+        # FIXME: distance to shore test should take into account windows sizes
+        distance = self.global_estimator.get_distoshore(location)
+        gravity = self.global_estimator.get_gravity(location, 0.)
+        inside_roi = self.global_estimator.is_inside_roi(location)
+        self._waves_fields_estimations = WavesFieldsEstimations(location, gravity,
+                                                                distance, inside_roi)
 
         sequential_delta_times = np.array([])
         for frame_index in range(len(self.global_estimator.selected_frames) - 1):
@@ -85,6 +77,30 @@ class LocalBathyEstimator(ABC):
         self._sequential_delta_times = sequential_delta_times
 
         self._metrics: Dict[str, Any] = {}
+
+    def can_estimate_bathy(self):
+        return (self.waves_fields_estimations.distance_to_shore > 0 and
+                self.waves_fields_estimations.inside_roi)
+
+    def set_images_sequence(self, images_sequence: List[WavesImage]) -> None:
+        """ initialize the image_sequence to use with this estimator
+
+        :param images_sequence: a list of superimposed local images centered around the position
+                                where the estimator is working.
+        :raise SequenceImagesError: when sequence can no be exploited
+        """
+        if self.spatial_resolution != 0.:
+            raise SequenceImagesError('Cannot redefine the sequence of images for this estimator')
+        if not images_sequence:
+            raise SequenceImagesError('Sequence images is empty')
+        self.spatial_resolution = images_sequence[0].resolution
+        shape = images_sequence[0].pixels.shape
+        for wave_image in images_sequence[1:]:
+            if wave_image.resolution != self.spatial_resolution:
+                raise SequenceImagesError('Images in sequence do not have same resolution')
+            if wave_image.pixels.shape != shape:
+                raise SequenceImagesError('Images in sequence do not have same size')
+        self.images_sequence = images_sequence
 
     @property
     @abstractmethod
@@ -123,64 +139,30 @@ class LocalBathyEstimator(ABC):
         """  Run the local bathymetry estimation, using some method specific to the inheriting
         class.
 
-        This method stores its results using the store_estimation() method and
+        This method stores its results in the waves_fields_estimations list and
         its metrics in _metrics attribute.
         """
-
-    @abstractmethod
-    def sort_waves_fields(self) -> None:
-        """  Sorts the waves fields on whatever criteria.
-        """
-
-    def is_waves_field_physical(self, estimation: WavesFieldEstimation) -> bool:
-        """  validate a waves field estimation based on local estimator specific criteria.
-
-        :param estimation: a waves field estimation to validate
-        :returns: True is the waves field is valid, False otherwise
-        """
-        return estimation.is_physical(self.global_estimator.waves_period_range,
-                                      self.global_estimator.waves_linearity_range,
-                                      self.global_estimator.depth_min)
-
-    def remove_unphysical_waves_fields(self) -> None:
-        """  Remove unphysical waves fields
-        """
-        # Filter non physical waves fields and bathy estimations
-        # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
-        # on its specific attributes inside the loops.
-        for estimation in list(self.waves_fields_estimations):
-            if not self.is_waves_field_physical(estimation):
-                self.waves_fields_estimations.remove(estimation)
 
     def create_waves_field_estimation(self, direction: float, wavelength: float
                                       ) -> WavesFieldEstimation:
         """ Creates the WavesFieldEstimation instance where the local estimator will store its
-        estimations.
+        estimation.
 
-        :param direction: the propagation direction of the waves field (degrees measured clockwise
-                          from the North).
+        :param direction: the propagation direction of the waves field (degrees measured
+                          counterclockwise from the East).
         :param wavelength: the wavelength of the waves field
         :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
         """
         waves_field_estimation = self.waves_field_estimation_cls(
             self.gravity,
-            self.global_estimator.depth_estimation_method)
+            self.global_estimator.depth_estimation_method,
+            self.global_estimator.waves_period_range,
+            self.global_estimator.waves_linearity_range,
+            self.global_estimator.depth_min)
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 
         return waves_field_estimation
-
-    def store_estimation(self, waves_field_estimation: WavesFieldEstimation) -> None:
-        """ Store a single estimation into the estimations list
-
-        :param waves_field_estimation: a new estimation to store for this local bathy estimator
-        """
-        stored_wavelengths = [estimation.wavelength for estimation in self.waves_fields_estimations]
-        stored_directions = [estimation.direction for estimation in self.waves_fields_estimations]
-        # Remove duplicates: store estimation only if it is not already stored
-        if (waves_field_estimation.wavelength not in stored_wavelengths or
-                waves_field_estimation.direction not in stored_directions):
-            self.waves_fields_estimations.append(waves_field_estimation)
 
     @property
     def waves_fields_estimations(self) -> WavesFieldsEstimations:

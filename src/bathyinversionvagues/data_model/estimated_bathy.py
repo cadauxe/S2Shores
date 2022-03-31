@@ -280,7 +280,7 @@ class EstimatedBathy:
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
                     y_index: int, x_index: int) -> None:
         waves_fields_estimations = self.estimated_bathy[y_index, x_index]
-        bathy_property = waves_fields_estimations.get_property(sample_property)
+        bathy_property = waves_fields_estimations.get_attribute(sample_property)
 
         if layer_data.ndim == 2:
             layer_data[y_index, x_index] = np.array(bathy_property)

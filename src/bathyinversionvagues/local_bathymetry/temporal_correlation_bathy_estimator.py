@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-from typing import Optional, List, Tuple, TYPE_CHECKING, cast  # @NoMove
+from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 import pandas
 from scipy.signal import find_peaks
@@ -15,16 +15,15 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
-from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period_from_zeros
+from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
-
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
 
@@ -38,11 +37,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """
     waves_field_estimation_cls = TemporalCorrelationWavesFieldEstimation
 
-    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
-                 waves_fields_estimations: WavesFieldsEstimations,
+    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        super().__init__(images_sequence, global_estimator,
-                         waves_fields_estimations, selected_directions)
+        super().__init__(location, global_estimator, selected_directions)
         if self.selected_directions is None:
             self.selected_directions = linear_directions(-180., 0., 1.)
         # Processing attributes
@@ -114,7 +111,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                                                                              wave_length))
             waves_field_estimation.delta_time = propagation_duration
             waves_field_estimation.propagated_distance = travelled_distance
-            self.store_estimation(waves_field_estimation)
+            self.waves_fields_estimations.append(waves_field_estimation)
 
             if self.debug_sample:
                 self.metrics['radon_transform'] = radon_transform
@@ -125,9 +122,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self.metrics['distances'] = distances
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
-
-    def sort_waves_fields(self) -> None:
-        pass
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -278,6 +272,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                           nb_hops: int) -> np.ndarray:
         """ Propagated distance computation (in meter)
         Maxima are computed using peaks detection and the smallest nb_hops distances are selected
+
         :param sinogram: sinogram having maximum variance
         :param wave_length: wave_length computed on sinogram
         :param nb_hops : number of peaks to consider to compute distances

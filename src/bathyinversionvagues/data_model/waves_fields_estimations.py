@@ -8,10 +8,16 @@
 :created: 11 sep 2021
 """
 from enum import IntEnum
-from typing import Union, List
+import warnings
+
+from typing import Union, List, Optional
+
+import numpy as np
 
 from ..image.image_geometry_types import PointType
 from ..waves_exceptions import WavesEstimationAttributeError
+
+from .waves_field_estimation import WavesFieldEstimation
 
 
 class SampleStatus(IntEnum):
@@ -41,32 +47,88 @@ class WavesFieldsEstimations(list):
         self._data_available = True
         self._delta_time_available = True
 
-    def get_property(self, property_name: str) -> Union[float, List[float]]:
-        """ Retrieve the values of a property either at the level of WavesFieldsEstimations or
+    def append(self, estimation: WavesFieldEstimation) -> None:
+        """ Store a single estimation into the estimations list, ensuring that there are no
+        duplicate estimations for the same (direction, wavelength) pair.
+
+        :param estimation: a new estimation to store inside this localized list of estimations
+        """
+        stored_wavelengths_directions = [(estim.wavelength, estim.direction) for estim in self]
+        # Do not store duplicate estimations for the same direction/wavelength
+        if (estimation.wavelength, estimation.direction) in stored_wavelengths_directions:
+            warnings.warn(f'\nTrying to store a duplicate estimation:\n{str(estimation)} ')
+        else:
+            super().append(estimation)
+
+    def sort_on_attribute(self, attribute_name: Optional[str] = None, reverse: bool = True) -> None:
+        """ Sort in place the waves fields estimations based on one of their attributes.
+
+        :param attribute_name: name of an attribute present in all estimations to use for sorting
+        :param reverse: When True sorting is in descending order, when False in ascending order
+        """
+        if attribute_name is not None:
+            self.sort(key=lambda x: getattr(x, attribute_name), reverse=reverse)
+
+    def argsort_on_attribute(self, attribute_name: Optional[str] = None,
+                             reverse: bool = True) -> List[int]:
+        """ Return the indices of the waves fields estimations which would sort them based
+        on one of their attributes.
+
+        :param attribute_name: name of an attribute present in all estimations to use for sorting
+        :param reverse: When True sorting is in descending order, when False in ascending order
+        :returns: either en empty list if attribute_name is None or the list of indices which would
+                  sort this WavesFieldsEstimations according to one of the attributes.
+        """
+        if attribute_name is not None:
+            attr_list = [getattr(estimation, attribute_name) for estimation in self]
+            arg_sorted = np.argsort(attr_list).tolist()
+            if reverse:
+                arg_sorted.reverse()
+            return arg_sorted
+        return []
+
+    def get_attribute(self, attribute_name: str) -> Union[float, List[float]]:
+        """ Retrieve the values of an attribute either at the level of WavesFieldsEstimations or
         in the list of WavesFieldEstimation
 
-        :param property_name: name of the estimation property to retrieve
-        :returns: the values of the property either as a scalar or a list of values
-        :raises WavesEstimationAttributeError: when the property does not exist
+        :param attribute_name: name of the estimation attribute to retrieve
+        :returns: the values of the attribute either as a scalar or a list of values
+        :raises WavesEstimationAttributeError: when the attribute does not exist
         """
-        # Firstly try to find the property from the estimations common properties
-        if hasattr(self, property_name):
-            # retrieve property from the estimations header
-            waves_field_property = getattr(self, property_name)
+        # Firstly try to find the attribute from the estimations common attributes
+        if hasattr(self, attribute_name):
+            # retrieve attribute from the estimations header
+            waves_field_attribute = getattr(self, attribute_name)
         else:
             if not self:
-                err_msg = f'Attribute {property_name} undefined (no estimations)'
+                err_msg = f'Attribute {attribute_name} undefined (no estimations)'
                 raise WavesEstimationAttributeError(err_msg)
-            # retrieve property in the list of estimations
-            waves_field_property = []
-            try:
-                for waves_field_estimation in self:
-                    waves_field_property.append(getattr(waves_field_estimation, property_name))
-            except AttributeError:
-                err_msg = f'Attribute {property_name} undefined for {type(waves_field_estimation)}'
-                raise WavesEstimationAttributeError(err_msg)
+            waves_field_attribute = self.get_estimations_attribute(attribute_name)
+        return waves_field_attribute
 
-        return waves_field_property
+    def get_estimations_attribute(self, attribute_name: str) -> List[float]:
+        """ Retrieve the values of some attribute in the list of stored waves field estimations.
+
+        :param attribute_name: name of the attribute to retrieve
+        :returns: the values of the attribute in the order where the estimations are stored
+        :raises WavesEstimationAttributeError: when the attribute does not exist in at least
+                                               one estimation
+        """
+        try:
+            return [getattr(estimation, attribute_name) for estimation in self]
+        except AttributeError:
+            err_msg = f'Attribute {attribute_name} undefined for some waves field estimation'
+            raise WavesEstimationAttributeError(err_msg)
+
+    def remove_unphysical_waves_fields(self) -> None:
+        """  Remove unphysical waves fields
+        """
+        # Filter non physical waves fields in bathy estimations
+        # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
+        # on its specific attributes inside the loops.
+        for estimation in list(self):
+            if not estimation.is_physical():
+                self.remove(estimation)
 
     @property
     def location(self) -> PointType:

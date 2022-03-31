@@ -14,11 +14,12 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_physics import wavenumber_offshore
-from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, desmooth
-from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image.image_geometry_types import PointType
+from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
+
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_waves_field_estimation import SpatialDFTWavesFieldEstimation
 
@@ -32,14 +33,13 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     radon transforms.
     """
 
+    final_estimations_sorting = 'energy'
     waves_field_estimation_cls = SpatialDFTWavesFieldEstimation
 
-    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
-                 waves_fields_estimations: WavesFieldsEstimations,
+    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
-        super().__init__(images_sequence, global_estimator, waves_fields_estimations,
-                         selected_directions)
+        super().__init__(location, global_estimator, selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []
 
@@ -83,11 +83,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         self.find_spectral_peaks(directions_ranges)
 
-    def sort_waves_fields(self) -> None:
-        """ Sort the waves fields estimations based on their energy max.
-        """
-        self.waves_fields_estimations.sort(key=lambda x: x.energy, reverse=True)
-
     def find_directions(self) -> np.ndarray:
         """ Find an initial set of directions from the cross correlation spectrum of the radon
         transforms of the 2 images.
@@ -109,7 +104,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         prominences = values['prominences']
 
         # TODO: use symmetric peaks removal method (uncomment and delete next line.
-#        peaks = self._process_peaks(peaks, prominences)
+        peaks = self._process_peaks(peaks, prominences)
         if peaks.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
 
@@ -227,7 +222,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             energy = total_spectrum[wavenumber_index, direction_index]
             estimation = self.save_waves_field_estimation(estimated_direction, wavenumber,
                                                           estimated_phase_shift, energy)
-            self.store_estimation(estimation)
+            self.waves_fields_estimations.append(estimation)
 
         if self.debug_sample:
 

@@ -14,15 +14,16 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from ..bathy_physics import celerity_offshore, wavelength_offshore, time_sampling_factor_offshore
-from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
+from ..image.image_geometry_types import PointType
 from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError
+
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
 
@@ -37,12 +38,10 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     waves_field_estimation_cls = SpatialCorrelationWavesFieldEstimation
 
-    def __init__(self, images_sequence: List[WavesImage], global_estimator: 'BathyEstimator',
-                 waves_fields_estimations: WavesFieldsEstimations,
+    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
-        super().__init__(images_sequence, global_estimator,
-                         waves_fields_estimations, selected_directions)
+        super().__init__(location, global_estimator, selected_directions)
         self._number_frames = len(self.images_sequence)
         if self.selected_directions is None:
             self.selected_directions = linear_directions(-180., 0., 1.)
@@ -187,7 +186,4 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                                                                          wavelength))
         waves_field_estimation.delta_time = self.sequential_delta_times[0]
         waves_field_estimation.propagated_distance = propagated_distance
-        self.store_estimation(waves_field_estimation)
-
-    def sort_waves_fields(self) -> None:
-        pass
+        self.waves_fields_estimations.append(waves_field_estimation)
