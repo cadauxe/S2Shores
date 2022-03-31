@@ -104,7 +104,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         prominences = values['prominences']
 
         # TODO: use symmetric peaks removal method (uncomment and delete next line.
-#        peaks = self._process_peaks(peaks, prominences)
+        peaks = self._process_peaks(peaks, prominences)
         if peaks.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
 

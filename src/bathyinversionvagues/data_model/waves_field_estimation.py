@@ -10,7 +10,7 @@
 from typing import cast, Tuple
 import numpy as np
 
-from ..bathy_physics import time_sampling_factor_offshore, time_sampling_factor_low_depth
+from ..bathy_physics import time_sampling_factor_offshore
 from .waves_field_sample_bathymetry import WavesFieldSampleBathymetry
 from .waves_field_sample_estimation import WavesFieldSampleEstimation
 
