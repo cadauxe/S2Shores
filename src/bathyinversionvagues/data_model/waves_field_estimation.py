@@ -35,9 +35,7 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, WavesFieldSampleBathymetr
 
         :returns: True is the waves field is valid, False otherwise
         """
-        return (self.is_period_valid() and
-                self.is_time_sampling_factor_valid() and
-                self.is_linearity_valid())
+        return self.is_waves_field_valid() and self.is_linearity_valid()
 
     @property
     def delta_phase_ratio(self) -> float:

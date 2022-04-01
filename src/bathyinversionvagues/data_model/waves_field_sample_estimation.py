@@ -43,6 +43,13 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         self._updating_period = False
         self.register_period_change(self.period_change_in_estimation)
 
+    def is_waves_field_valid(self) -> bool:
+        """  Check if a waves field estimation satisfies physical constraints.
+
+        :returns: True is the waves field is valid, False otherwise
+        """
+        return self.is_period_valid() and self.is_time_sampling_factor_valid()
+
     @property
     def delta_time(self) -> float:
         """ :returns: the time difference between the images used for this estimation """
