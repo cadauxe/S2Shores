@@ -239,9 +239,7 @@ class BathyEstimator(ABC, BathyEstimatorParameters):
                                                                x_axis_label='lon',
                                                                y_axis_label='lat')
             elif (Path(provider_info).suffix.lower() == '.tif'):
-                distoshore_provider = GeotiffDisToShoreProvider(provider_info, 4326,
-                                                                x_axis_label='lon',
-                                                                y_axis_label='lat')
+                distoshore_provider = GeotiffDisToShoreProvider(provider_info)
         else:
             # None or some other type, keep the current provider
             distoshore_provider = self._distoshore_provider

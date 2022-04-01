@@ -9,14 +9,14 @@ from pathlib import Path
 from typing import Optional, Any
 
 from osgeo import gdal
+import xarray as xr  # @NoMove
 
 import numpy as np
 
+from ..image.geo_transform import GeoTransform
 from ..image.image_geometry_types import PointType
+
 from .localized_data_provider import LocalizedDataProvider
-
-
-import xarray as xr  # @NoMove
 
 
 class DisToShoreProvider(ABC, LocalizedDataProvider):
@@ -90,28 +90,21 @@ class NetCDFDisToShoreProvider(DisToShoreProvider):
 
 
 class GeotiffDisToShoreProvider(DisToShoreProvider):
-    """ A DistToShoreProvider which provides the distance to shore when it is stored in a
-    'disToShore' layer of a Geotiff file.
+    """ A DistToShoreProvider which provides the distance to shore when it is in a Geotiff file.
     """
 
-    # FIXME: EPSG code needed because no SRS retrieved from the GEOTIFF file at this time.
-    def __init__(self, distoshore_file_path: Path, distoshore_epsg_code: int,
-                 x_axis_label: str, y_axis_label: str) -> None:
+    def __init__(self, distoshore_file_path: Path) -> None:
         """ Create a GeotiffDisToShoreProvider object and set necessary informations
 
         :param distoshore_file_path: full path of a GEOTIFF file containing the distance to shore
                                      to be used by this provider.
-        :param distoshore_epsg_code: the EPSG code of the SRS used in the GEOTIFF file.
-        :param x_axis_label: Label of the x axis of the dataset ('x' or 'lon' for instance)
-        :param y_axis_label: Label of the y axis of the dataset ('y' or 'lat' for instance)
+
         """
         super().__init__()
-        self.provider_epsg_code = distoshore_epsg_code
-        self._x_axis_label = x_axis_label
-        self._y_axis_label = y_axis_label
 
         self._distoshore_file_path = distoshore_file_path
-        self._distoshore_xarray: Optional[Any] = None
+        self._distoshore: Optional[Any] = None
+        self._geotransform: Optional[GeoTransform] = None
 
     def get_distoshore(self, point: PointType) -> float:
         """ Provides the distance to shore of a point in kilometers.
@@ -119,11 +112,20 @@ class GeotiffDisToShoreProvider(DisToShoreProvider):
         :param point: a tuple containing the X and Y coordinates in the SRS of the client
         :returns: the distance to the nearest shore (km)
         """
-        if self._distoshore_xarray is None:
-            self._distoshore_xarray = gdal.Open(self._distoshore_file_path, gdal.GA_ReadOnly)
+        if self._distoshore is None:
+            distoshore_dataset = gdal.Open(str(self._distoshore_file_path), gdal.GA_ReadOnly)
+            xsize = distoshore_dataset.RasterXSize
+            ysize = distoshore_dataset.RasterYSize
+            projection = distoshore_dataset.GetProjection()
+            self.provider_epsg_code = int(projection.split(',')[-1][1:-3])
+
+            self._geotransform = GeoTransform(distoshore_dataset.GetGeoTransform())
+
+            image = distoshore_dataset.GetRasterBand(1)
+            self._distoshore = image.ReadAsArray(0, 0, xsize, ysize)
+
         provider_point = self.transform_point(point, 0.)
-        kw_sel = {self._x_axis_label: provider_point[0],
-                  self._y_axis_label: provider_point[1],
-                  'method': 'nearest'}
-        distance_xr_dataset = self._distoshore_xarray.sel(**kw_sel)
-        return float(distance_xr_dataset['disToShore'].values)
+        image_point = self._geotransform.image_coordinates(*provider_point[0:2])
+        result = self._distoshore[round(image_point[1])][round(image_point[0])]
+
+        return result
