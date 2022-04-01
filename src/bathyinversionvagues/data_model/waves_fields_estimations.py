@@ -170,11 +170,6 @@ class WavesFieldsEstimations(list):
         self._delta_time_available = value
 
     @property
-    def success(self) -> bool:
-        """ :returns: True if estimations were run successfully, False otherwise """
-        return len(self) > 0
-
-    @property
     def status(self) -> int:
         """ :returns: a synthetic value giving the final estimation status
         """
@@ -187,7 +182,7 @@ class WavesFieldsEstimations(list):
             status = SampleStatus.NO_DATA
         elif not self.delta_time_available:
             status = SampleStatus.NO_DELTA_TIME
-        elif not self.success:
+        elif not self:
             status = SampleStatus.FAIL
         return status.value
 
