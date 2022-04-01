@@ -41,7 +41,7 @@ class WavesFieldSampleGeometry:
             raise ValueError('Direction must be between -180° and +180°')
         self._direction = value
 
-    def invert_direction(self) -> None:
+    def _invert_direction(self) -> None:
         """ Invert the current direction by adding or subtracting 180°
         """
         if not np.isnan(self.direction):

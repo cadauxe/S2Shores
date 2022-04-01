@@ -107,7 +107,7 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
             else:
                 if self.delta_time * value < 0:
                     # delta_time and propagated distance have opposite signs
-                    self.invert_direction()
+                    self._invert_direction()
                     value = -value
             self._propagated_distance = value
             self._solve_shift_equations()
@@ -129,7 +129,7 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
                 value = np.nan
             else:
                 if self.delta_time * value < 0:  # delta_time and delta_phase have opposite signs
-                    self.invert_direction()
+                    self._invert_direction()
                     value = -value
             self._delta_phase = value
             self._solve_shift_equations()
