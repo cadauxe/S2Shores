@@ -26,16 +26,16 @@ DIMS_Y_X_TIME = ['y', 'x', 'time']
 
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
 BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
-    'sample_status': {'layer_type': NOMINAL_LAYER,
-                      'layer_name': 'Status',
-                      'dimensions': DIMS_Y_X_TIME,
-                      'data_type': np.ushort,
-                      'fill_value': 0,
-                      'precision': 0,
-                      'attrs': {'Dimension': 'Flags',
-                                'name': 'Bathymetry estimation status',
-                                'comment': '0: SUCCESS, 1: FAIL, 2: ON_GROUND,'
-                                ' 3: NO_DATA, 4: NO_DELTA_TIME , 5: OUTSIDE_ROI'}},
+    'status': {'layer_type': NOMINAL_LAYER,
+               'layer_name': 'Status',
+               'dimensions': DIMS_Y_X_TIME,
+               'data_type': np.ushort,
+               'fill_value': 0,
+               'precision': 0,
+               'attrs': {'Dimension': 'Flags',
+                         'name': 'Bathymetry estimation status',
+                         'comment': '0: SUCCESS, 1: FAIL, 2: ON_GROUND,'
+                         ' 3: NO_DATA, 4: NO_DELTA_TIME , 5: OUTSIDE_ROI'}},
     'depth': {'layer_type': NOMINAL_LAYER,
               'layer_name': 'Depth',
               'dimensions': DIMS_Y_X_NKEEP_TIME,

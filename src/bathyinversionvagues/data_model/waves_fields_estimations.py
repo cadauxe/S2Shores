@@ -175,7 +175,7 @@ class WavesFieldsEstimations(list):
         return len(self) > 0
 
     @property
-    def sample_status(self) -> int:
+    def status(self) -> int:
         """ :returns: a synthetic value giving the final estimation status
         """
         status = SampleStatus.SUCCESS
@@ -196,7 +196,7 @@ class WavesFieldsEstimations(list):
         result += f'  distance to shore: {self.distance_to_shore}   gravity: {self.gravity}\n'
         result += f'  availability: '
         result += f' (data: {self.data_available}, delta time: {self.delta_time_available})\n'
-        result += f'  STATUS: {self.sample_status}'
+        result += f'  STATUS: {self.status}'
         result += f' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME,'
         result += f' 5: OUTSIDE_ROI)\n'
         result += f'{len(self)} estimations available:\n'
