@@ -40,10 +40,17 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
             msg += f' Must be one of {KNOWN_DEPTH_ESTIMATION_METHODS}'
             raise NotImplementedError(msg)
 
-        super().__init__(gravity, period_range)
+        super().__init__(period_range)
 
+        self._gravity = gravity
         self._depth_estimation_method = depth_estimation_method
         self._linearity_range = linearity_range
+
+    @property
+    def gravity(self) -> float:
+        """ :returns: the acceleration of the gravity for this waves field sample
+        """
+        return self._gravity
 
     @property
     def depth(self) -> float:

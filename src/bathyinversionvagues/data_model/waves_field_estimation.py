@@ -26,7 +26,7 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, WavesFieldSampleBathymetr
                  period_range: Tuple[float, float], linearity_range: Tuple[float, float],
                  shallow_water_limit: float) -> None:
 
-        WavesFieldSampleEstimation.__init__(self, gravity, period_range)
+        WavesFieldSampleEstimation.__init__(self, period_range)
         WavesFieldSampleBathymetry.__init__(self, gravity, period_range, depth_estimation_method,
                                             linearity_range)
         self._shallow_water_limit = shallow_water_limit

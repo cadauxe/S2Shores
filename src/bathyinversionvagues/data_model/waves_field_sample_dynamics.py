@@ -24,28 +24,20 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
     """
 
-    def __init__(self, gravity: float, period_range: Tuple[float, float]) -> None:
+    def __init__(self, period_range: Tuple[float, float]) -> None:
         """ Encapsulates the information related to the dynamics of a waves field sample, namely
         the waves field period and its celerity.
 
-        :param gravity: the acceleration of gravity to use (m.s-2)
         :param period_range: minimum and maximum values allowed for the period
         """
 
         super().__init__()
-        self._gravity = gravity
         self._period = np.nan
         self._celerity = np.nan
         self._period_range = period_range
         self._period_change_observers: List[Callable] = []
 
         self.register_wavelength_change(self.wavelength_change_in_dynamics)
-
-    @property
-    def gravity(self) -> float:
-        """ :returns: the acceleration of the gravity for this waves field sample
-        """
-        return self._gravity
 
     @property
     def period(self) -> float:

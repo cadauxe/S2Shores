@@ -21,14 +21,13 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
     estimation based on physical bathymetry.
     """
 
-    def __init__(self, gravity: float, period_range: Tuple[float, float]) -> None:
+    def __init__(self, period_range: Tuple[float, float]) -> None:
         """ Encapsulates the information related to the estimation of a waves field.
 
-        :param gravity: the acceleration of gravity to use (m.s-2)
         :param period_range: minimum and maximum values allowed for the period
         """
 
-        WavesFieldSampleDynamics.__init__(self, gravity, period_range)
+        WavesFieldSampleDynamics.__init__(self, period_range)
         self._delta_time = np.nan
         self._propagated_distance = np.nan
         self._delta_phase = np.nan
