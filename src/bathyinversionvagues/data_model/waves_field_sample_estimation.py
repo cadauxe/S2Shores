@@ -7,10 +7,9 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import Tuple, cast
+from typing import Tuple
 import numpy as np
 
-from ..bathy_physics import time_sampling_factor_offshore, time_sampling_factor_low_depth
 
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
@@ -22,20 +21,17 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
     estimation based on physical bathymetry.
     """
 
-    def __init__(self, gravity: float, period_range: Tuple[float, float],
-                 shallow_water_limit: float) -> None:
+    def __init__(self, gravity: float, period_range: Tuple[float, float]) -> None:
         """ Encapsulates the information related to the estimation of a waves field.
 
         :param gravity: the acceleration of gravity to use (m.s-2)
         :param period_range: minimum and maximum values allowed for the period
-        :param shallow_water_limit: the depth limit between intermediate and shallow water (m)
         """
 
         WavesFieldSampleDynamics.__init__(self, gravity, period_range)
         self._delta_time = np.nan
         self._propagated_distance = np.nan
         self._delta_phase = np.nan
-        self._shallow_water_limit = shallow_water_limit
 
         self._updating_wavelength = False
         self.register_wavelength_change(self.wavelength_change_in_estimation)
@@ -48,7 +44,7 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
 
         :returns: True is the waves field is valid, False otherwise
         """
-        return self.is_period_valid() and self.is_time_sampling_factor_valid()
+        return self.is_period_valid()
 
     @property
     def delta_time(self) -> float:
@@ -68,32 +64,14 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         """
         return self.delta_time / self.period
 
-    @property
-    def time_sampling_factor_low_depth(self) -> float:
-        """ :returns: The minimum value of the ratio of delta_time over the waves period.
-                    It corresponds to the limit between intermediate and shallow water.
-        """
-        return cast(float, time_sampling_factor_low_depth(self.wavenumber, self.delta_time,
-                                                          self._shallow_water_limit, self.gravity))
-
-    @property
-    def time_sampling_factor_offshore(self) -> float:
-        """ :returns: The maximum value of the ratio of delta_time over the waves period.
-                    It corresponds to the factor allowed for offshore water.
-        """
-        return cast(float,
-                    time_sampling_factor_offshore(self.wavenumber, self.delta_time, self.gravity))
-
-    def is_time_sampling_factor_valid(self) -> bool:
+    def is_time_sampling_factor_valid(self,
+                                      time_sampling_factor_range: Tuple[float, float]) -> bool:
         """ Check if the time sampling factor is valid.
 
         :returns: True if the time_sampling_factor is between a minimum and a maximum values, False
                   otherwise.
         """
-        # minimum and maximum values for the time sampling factor.
-        time_sampling_factor_min, time_sampling_factor_max = (self.time_sampling_factor_low_depth,
-                                                              self.time_sampling_factor_offshore)
-        # the maximum correspond to the factor allowed for offshore water.
+        time_sampling_factor_min, time_sampling_factor_max = time_sampling_factor_range
         if time_sampling_factor_min > time_sampling_factor_max:
             time_sampling_factor_min, time_sampling_factor_max = \
                 time_sampling_factor_max, time_sampling_factor_min
