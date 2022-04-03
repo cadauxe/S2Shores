@@ -88,9 +88,16 @@ class BathymetrySampleInversion(WavesFieldSampleDynamics):
                                             self._shallow_water_limit,
                                             self._gravity))
 
+    @property
+    def period_ratio(self) -> float:
+        """ :returns: the ratio of the period offshore over the period"""
+        return self.period_offshore / self.period
+
     def __str__(self) -> str:
-        result = f'Bathymetry inversion: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.3f}  '
-        result += f' offshore period: {self.period_offshore:5.2f} (s)'
-        result += f' shallow water period: {self.period_low_depth:5.2f} (s)'
-        result += f' gravity: {self._gravity:5.3f} (s)'
+        result = f'Bathymetry inversion: depth: {self.depth:5.2f} (m) '
+        result += f' gamma: {self.linearity:5.3f} '
+        result += f' offshore period: {self.period_offshore:5.2f} (s) '
+        result += f' shallow water period: {self.period_low_depth:5.2f} (s) '
+        result += f' period ratio: {self.period_ratio:5.2f} '
+        result += f' gravity: {self._gravity:5.3f} (s) '
         return result

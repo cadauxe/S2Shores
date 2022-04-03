@@ -61,11 +61,6 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
         return self.delta_phase / (2 * np.pi * self.ambiguity_offshore)
 
     @property
-    def period_ratio(self) -> float:
-        """ :returns: the ratio of the period offshore over the period"""
-        return self.period_offshore / self.period
-
-    @property
     def ambiguity_low_depth(self) -> float:
         """ :returns: the ambiguity relative to the period limit in shallow water
     """
@@ -81,7 +76,6 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
         result = WavesFieldSampleEstimation.__str__(self)
         result += '\n' + BathymetrySampleInversion.__str__(self)
         result += f'\nBathymetry Estimation:  delta phase ratio: {self.delta_phase_ratio:5.2f} '
-        result += f' period ratio: {self.period_ratio:5.2f} '
         result += f' ambiguity low depth: {self.ambiguity_low_depth:5.2f} '
         result += f' ambiguity offshore: {self.ambiguity_offshore:5.2f} '
         return result
