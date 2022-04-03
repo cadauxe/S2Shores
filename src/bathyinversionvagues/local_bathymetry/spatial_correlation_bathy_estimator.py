@@ -13,7 +13,7 @@ from scipy.signal import find_peaks
 
 import numpy as np
 
-from ..bathy_physics import celerity_offshore, wavelength_offshore, time_sampling_factor_offshore
+from ..bathy_physics import celerity_offshore, wavelength_offshore, ambiguity_offshore
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
@@ -146,8 +146,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                                                   self.gravity)
         # TODO: revisit signs management
         spatial_shift_offshore_min = -celerity_offshore_max * abs(delta_time)
-        propagation_factor = time_sampling_factor_offshore(
-            1. / wavelength, delta_time, self.gravity)
+        propagation_factor = ambiguity_offshore(1. / wavelength, delta_time, self.gravity)
         if propagation_factor < 1:
             spatial_shift_offshore_max = -spatial_shift_offshore_min
         else:

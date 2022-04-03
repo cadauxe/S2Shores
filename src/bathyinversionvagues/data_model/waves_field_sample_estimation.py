@@ -57,26 +57,24 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
             self._solve_shift_equations()
 
     @property
-    def time_sampling_factor(self) -> float:
+    def ambiguity(self) -> float:
         """ :returns: the ratio of delta_time over the waves period. When its absolute value is
-                      greater than 1, there is a possible ambiguity in detecting the waves.
+                      greater than 1, there is an  ambiguity in detecting the waves.
         """
         return self.delta_time / self.period
 
-    def is_time_sampling_factor_valid(self,
-                                      time_sampling_factor_range: Tuple[float, float]) -> bool:
-        """ Check if the time sampling factor is valid.
+    def is_ambiguity_valid(self, ambiguity_range: Tuple[float, float]) -> bool:
+        """ Check if the ambiguity is valid.
 
-        :returns: True if the time_sampling_factor is between a minimum and a maximum values, False
-                  otherwise.
+        :param ambiguity_range: the minimum and maximum values allowed for the ambiguity
+        :returns: True if the ambiguity is between a minimum and a maximum values, False otherwise.
         """
-        time_sampling_factor_min, time_sampling_factor_max = time_sampling_factor_range
-        if time_sampling_factor_min > time_sampling_factor_max:
-            time_sampling_factor_min, time_sampling_factor_max = \
-                time_sampling_factor_max, time_sampling_factor_min
-        return (not np.isnan(self.time_sampling_factor) and
-                (time_sampling_factor_min < self.time_sampling_factor) and
-                (self.time_sampling_factor < time_sampling_factor_max))
+        ambiguity_min, ambiguity_max = ambiguity_range
+        if ambiguity_min > ambiguity_max:
+            ambiguity_min, ambiguity_max = ambiguity_max, ambiguity_min
+        return (not np.isnan(self.ambiguity) and
+                (ambiguity_min < self.ambiguity) and
+                (self.ambiguity < ambiguity_max))
 
     @property
     def propagated_distance(self) -> float:
@@ -189,7 +187,7 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
     def __str__(self) -> str:
         result = WavesFieldSampleDynamics.__str__(self)
         result += f'\nWaves Field Estimation: \n  delta time: {self.delta_time:5.3f} (s)'
-        result += f' time sampling factor: {self.time_sampling_factor:5.4f} (unitless)'
+        result += f' ambiguity: {self.ambiguity:5.4f} (unitless)'
         result += f'\n  propagated distance: {self.propagated_distance:5.2f} (m)'
         result += f'  delta phase: {self.delta_phase:5.2f} (rd)'
         return result

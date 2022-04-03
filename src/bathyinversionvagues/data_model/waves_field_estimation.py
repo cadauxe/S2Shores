@@ -10,7 +10,8 @@
 from typing import cast, Tuple
 import numpy as np
 
-from ..bathy_physics import time_sampling_factor_offshore, time_sampling_factor_low_depth
+from ..bathy_physics import ambiguity_offshore, ambiguity_low_depth
+
 from .waves_field_sample_bathymetry import WavesFieldSampleBathymetry
 from .waves_field_sample_estimation import WavesFieldSampleEstimation
 
@@ -41,33 +42,25 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, WavesFieldSampleBathymetr
         #   - maximum correspond to the factor allowed for offshore water.
         return (self.is_waves_field_valid() and
                 self.is_linearity_valid() and
-                self.is_time_sampling_factor_valid((self.time_sampling_factor_low_depth,
-                                                    self.time_sampling_factor_offshore)))
+                self.is_ambiguity_valid((self.ambiguity_low_depth, self.ambiguity_offshore)))
 
     @property
     def delta_phase_ratio(self) -> float:
         """ :returns: the fraction of the maximum phase shift allowable in deep waters """
-        time_sampling_offshore = cast(float,
-                                      time_sampling_factor_offshore(self.wavenumber,
-                                                                    self.delta_time,
-                                                                    self.gravity))
-        return self.delta_phase / (2 * np.pi * time_sampling_offshore)
+        return self.delta_phase / (2 * np.pi * self.ambiguity_offshore)
 
     @property
-    def time_sampling_factor_low_depth(self) -> float:
-        """ :returns: The minimum value of the ratio of delta_time over the waves period.
-                    It corresponds to the limit between intermediate and shallow water.
+    def ambiguity_low_depth(self) -> float:
+        """ :returns: The minimum value of the ambiguity which is obtained for shallow water.
         """
-        return cast(float, time_sampling_factor_low_depth(self.wavenumber, self.delta_time,
-                                                          self._shallow_water_limit, self.gravity))
+        return cast(float, ambiguity_low_depth(self.wavenumber, self.delta_time,
+                                               self._shallow_water_limit, self.gravity))
 
     @property
-    def time_sampling_factor_offshore(self) -> float:
-        """ :returns: The maximum value of the ratio of delta_time over the waves period.
-                    It corresponds to the factor allowed for offshore water.
+    def ambiguity_offshore(self) -> float:
+        """ :returns: The maximum value of the ambiguity which is obtained for offshore water.
         """
-        return cast(float,
-                    time_sampling_factor_offshore(self.wavenumber, self.delta_time, self.gravity))
+        return cast(float, ambiguity_offshore(self.wavenumber, self.delta_time, self.gravity))
 
     def __str__(self) -> str:
         result = WavesFieldSampleEstimation.__str__(self)
