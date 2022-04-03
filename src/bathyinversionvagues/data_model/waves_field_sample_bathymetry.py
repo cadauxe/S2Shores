@@ -47,12 +47,6 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         self._depth_estimation_method = depth_estimation_method
 
     @property
-    def gravity(self) -> float:
-        """ :returns: the acceleration of the gravity for this waves field sample
-        """
-        return self._gravity
-
-    @property
     def depth(self) -> float:
         """ The estimated depth
 
@@ -60,7 +54,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         :raises AttributeError: when the depth estimation method is not supported
         """
         if self._depth_estimation_method == 'LINEAR':
-            estimated_depth = depth_from_dispersion(self.wavenumber, self.celerity, self.gravity)
+            estimated_depth = depth_from_dispersion(self.wavenumber, self.celerity, self._gravity)
         else:
             msg = 'depth attribute undefined when depth estimation method is not supported'
             raise AttributeError(msg)
@@ -69,7 +63,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def linearity(self) -> float:
         """ :returns: a linearity indicator for depth estimation (unitless) """
-        return linearity_indicator(self.wavelength, self.celerity, self.gravity)
+        return linearity_indicator(self.wavelength, self.celerity, self._gravity)
 
     def is_linearity_inside(self, linearity_range: Tuple[float, float]) -> bool:
         """ Check if the linearity indicator is within a given range of values.
@@ -84,7 +78,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     @property
     def period_offshore(self) -> float:
         """ :returns: The offshore period (s) """
-        return cast(float, period_offshore(self.wavenumber, self.gravity))
+        return cast(float, period_offshore(self.wavenumber, self._gravity))
 
     @property
     def period_low_depth(self) -> float:
@@ -92,10 +86,11 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         """
         return cast(float, period_low_depth(self.wavenumber,
                                             self._shallow_water_limit,
-                                            self.gravity))
+                                            self._gravity))
 
     def __str__(self) -> str:
-        result = f'Bathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.2f}  '
+        result = f'Bathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.3f}  '
         result += f' offshore period: {self.period_offshore:5.2f} (s)'
         result += f' shallow water period: {self.period_low_depth:5.2f} (s)'
+        result += f' gravity: {self._gravity:5.3f} (s)'
         return result
