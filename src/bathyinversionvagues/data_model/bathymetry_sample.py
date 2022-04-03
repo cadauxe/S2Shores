@@ -19,8 +19,8 @@ from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
 
 
-class BathymetrySample(WavesFieldSampleDynamics):
-    """ This class encapsulates the bathymetric information for a given sample.
+class BathymetrySampleInversion(WavesFieldSampleDynamics):
+    """ This class encapsulates the bathymetric inversion for a given sample.
 
     It inherits from WavesFieldSampleDynamics and defines specific attributes related to the
     bathymetry for that sample..
@@ -89,7 +89,7 @@ class BathymetrySample(WavesFieldSampleDynamics):
                                             self._gravity))
 
     def __str__(self) -> str:
-        result = f'Bathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.3f}  '
+        result = f'Bathymetry inversion: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.3f}  '
         result += f' offshore period: {self.period_offshore:5.2f} (s)'
         result += f' shallow water period: {self.period_low_depth:5.2f} (s)'
         result += f' gravity: {self._gravity:5.3f} (s)'
