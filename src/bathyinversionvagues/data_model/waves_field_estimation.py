@@ -11,14 +11,14 @@ from typing import Tuple
 import numpy as np
 
 
-from .bathymetry_sample import BathymetrySample
+from .bathymetry_sample_inversion import BathymetrySampleInversion
 from .waves_field_sample_estimation import WavesFieldSampleEstimation
 
 
-class WavesFieldEstimation(WavesFieldSampleEstimation, BathymetrySample):
-    """ This class encapsulates the information estimating a waves field sample.
+class WavesFieldEstimation(WavesFieldSampleEstimation, BathymetrySampleInversion):
+    """ This class encapsulates the information estimating a bathymetry sample.
 
-    It inherits from WavesFieldSampleEstimation and BathymetrySample and defines specific
+    It inherits from WavesFieldSampleEstimation and BathymetrySampleInversion and defines specific
     attributes related to the sample estimation based on physical bathymetry.
     """
 
@@ -36,7 +36,8 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, BathymetrySample):
         """
 
         WavesFieldSampleEstimation.__init__(self, period_range)
-        BathymetrySample.__init__(self, gravity, shallow_water_limit, depth_estimation_method)
+        BathymetrySampleInversion.__init__(
+            self, gravity, shallow_water_limit, depth_estimation_method)
 
         self._linearity_range = linearity_range
 
@@ -78,7 +79,7 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, BathymetrySample):
 
     def __str__(self) -> str:
         result = WavesFieldSampleEstimation.__str__(self)
-        result += '\n' + BathymetrySample.__str__(self)
+        result += '\n' + BathymetrySampleInversion.__str__(self)
         result += f'\nBathymetry Estimation:  delta phase ratio: {self.delta_phase_ratio:5.2f} '
         result += f' period ratio: {self.period_ratio:5.2f} '
         result += f' ambiguity low depth: {self.ambiguity_low_depth:5.2f} '
