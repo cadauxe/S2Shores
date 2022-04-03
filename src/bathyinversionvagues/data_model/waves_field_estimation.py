@@ -7,10 +7,8 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import cast, Tuple
+from typing import Tuple
 import numpy as np
-
-from ..bathy_physics import period_low_depth
 
 from .waves_field_sample_bathymetry import WavesFieldSampleBathymetry
 from .waves_field_sample_estimation import WavesFieldSampleEstimation
@@ -28,9 +26,8 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, WavesFieldSampleBathymetr
                  shallow_water_limit: float) -> None:
 
         WavesFieldSampleEstimation.__init__(self, period_range)
-        WavesFieldSampleBathymetry.__init__(self, gravity, period_range, depth_estimation_method,
-                                            linearity_range)
-        self._shallow_water_limit = shallow_water_limit
+        WavesFieldSampleBathymetry.__init__(self, gravity, shallow_water_limit,
+                                            depth_estimation_method, period_range, linearity_range)
 
     def is_physical(self) -> bool:
         """  Check if a waves field estimation satisfies physical constraints.
@@ -53,9 +50,7 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, WavesFieldSampleBathymetr
     def ambiguity_low_depth(self) -> float:
         """ :returns:  the ambiguity relative to the period limit in shallow water
     """
-        return self.delta_time / cast(float, period_low_depth(self.wavenumber,
-                                                              self._shallow_water_limit,
-                                                              self.gravity))
+        return self.delta_time / self.period_low_depth
 
     @property
     def ambiguity_offshore(self) -> float:

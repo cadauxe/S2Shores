@@ -11,7 +11,8 @@ from typing import cast, Tuple
 
 import numpy as np
 
-from ..bathy_physics import period_offshore, depth_from_dispersion, linearity_indicator
+from ..bathy_physics import (period_offshore, period_low_depth,
+                             depth_from_dispersion, linearity_indicator)
 from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 
 
@@ -25,11 +26,12 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     bathymetry for that sample..
     """
 
-    def __init__(self, gravity: float, period_range: Tuple[float, float],
-                 depth_estimation_method: str, linearity_range: Tuple[float, float]) -> None:
+    def __init__(self, gravity: float, shallow_water_limit: float, depth_estimation_method: str,
+                 period_range: Tuple[float, float], linearity_range: Tuple[float, float]) -> None:
         """ Constructor
 
         :param gravity: the acceleration of gravity to use (m.s-2)
+        :param shallow_water_limit: the depth limit between intermediate and shallow water (m)
         :param depth_estimation_method: the name of the depth estimation method to use
         :param period_range: minimum and maximum values allowed for the period
         :param linearity_range: minimum and maximum values allowed for the linearity indicator
@@ -43,6 +45,7 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         super().__init__(period_range)
 
         self._gravity = gravity
+        self._shallow_water_limit = shallow_water_limit
         self._depth_estimation_method = depth_estimation_method
         self._linearity_range = linearity_range
 
@@ -86,7 +89,16 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         """ :returns: The offshore period (s) """
         return cast(float, period_offshore(self.wavenumber, self.gravity))
 
+    @property
+    def period_low_depth(self) -> float:
+        """ :returns:  the period in shallow water (s)
+        """
+        return cast(float, period_low_depth(self.wavenumber,
+                                            self._shallow_water_limit,
+                                            self.gravity))
+
     def __str__(self) -> str:
         result = f'Bathymetry: depth: {self.depth:5.2f} (m)   gamma: {self.linearity:5.2f}  '
         result += f' offshore period: {self.period_offshore:5.2f} (s)'
+        result += f' shallow water period: {self.period_low_depth:5.2f} (s)'
         return result
