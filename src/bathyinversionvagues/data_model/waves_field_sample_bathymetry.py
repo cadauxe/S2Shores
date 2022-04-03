@@ -19,7 +19,7 @@ from .waves_field_sample_dynamics import WavesFieldSampleDynamics
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
 
 
-class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
+class BathymetrySample(WavesFieldSampleDynamics):
     """ This class encapsulates the bathymetric information for a given sample.
 
     It inherits from WavesFieldSampleDynamics and defines specific attributes related to the
