@@ -15,11 +15,11 @@ from .bathymetry_sample_inversion import BathymetrySampleInversion
 from .waves_field_sample_estimation import WavesFieldSampleEstimation
 
 
-class WavesFieldEstimation(WavesFieldSampleEstimation, BathymetrySampleInversion):
-    """ This class encapsulates the information estimating a bathymetry sample.
+class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInversion):
+    """ This class encapsulates the information estimating bathymetry on a sample.
 
     It inherits from WavesFieldSampleEstimation and BathymetrySampleInversion and defines specific
-    attributes related to the sample estimation based on physical bathymetry.
+    attributes related to the sample bathymetry estimation.
     """
 
     def __init__(self, gravity: float, depth_estimation_method: str,
@@ -42,7 +42,7 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, BathymetrySampleInversion
         self._linearity_range = linearity_range
 
     def is_physical(self) -> bool:
-        """  Check if a waves field estimation satisfies physical constraints.
+        """  Check if a bathymetry estimationon a sample satisfies physical constraints.
 
         :returns: True is the waves field is valid, False otherwise
         """

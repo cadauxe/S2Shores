@@ -17,7 +17,7 @@ import numpy as np
 from ..image.image_geometry_types import PointType
 from ..waves_exceptions import WavesEstimationAttributeError
 
-from .waves_field_estimation import WavesFieldEstimation
+from .bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
 class SampleStatus(IntEnum):
@@ -47,7 +47,7 @@ class WavesFieldsEstimations(list):
         self._data_available = True
         self._delta_time_available = True
 
-    def append(self, estimation: WavesFieldEstimation) -> None:
+    def append(self, estimation: BathymetrySampleEstimation) -> None:
         """ Store a single estimation into the estimations list, ensuring that there are no
         duplicate estimations for the same (direction, wavelength) pair.
 
@@ -89,7 +89,7 @@ class WavesFieldsEstimations(list):
 
     def get_attribute(self, attribute_name: str) -> Union[float, List[float]]:
         """ Retrieve the values of an attribute either at the level of WavesFieldsEstimations or
-        in the list of WavesFieldEstimation
+        in the list of BathymetrySampleEstimation
 
         :param attribute_name: name of the estimation attribute to retrieve
         :returns: the values of the attribute either as a scalar or a list of values

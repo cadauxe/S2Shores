@@ -15,7 +15,7 @@ from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
-from ..data_model.waves_field_estimation import WavesFieldEstimation
+from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
@@ -35,8 +35,9 @@ class LocalBathyEstimator(ABC):
     @property
     @classmethod
     @abstractmethod
-    def waves_field_estimation_cls(cls) -> Type[WavesFieldEstimation]:
-        """ :returns: a class inheriting from WavesFieldEstimation to use for storing an estimation.
+    def waves_field_estimation_cls(cls) -> Type[BathymetrySampleEstimation]:
+        """ :returns: a class inheriting from BathymetrySampleEstimation to use for storing an
+                      estimation.
         """
 
     def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
@@ -144,8 +145,8 @@ class LocalBathyEstimator(ABC):
         """
 
     def create_waves_field_estimation(self, direction: float, wavelength: float
-                                      ) -> WavesFieldEstimation:
-        """ Creates the WavesFieldEstimation instance where the local estimator will store its
+                                      ) -> BathymetrySampleEstimation:
+        """ Creates the BathymetrySampleEstimation instance where the local estimator will store its
         estimation.
 
         :param direction: the propagation direction of the waves field (degrees measured

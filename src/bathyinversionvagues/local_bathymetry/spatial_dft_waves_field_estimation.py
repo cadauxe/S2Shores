@@ -11,10 +11,10 @@ from typing import Tuple
 
 import numpy as np
 
-from ..data_model.waves_field_estimation import WavesFieldEstimation
+from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
-class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
+class SpatialDFTWavesFieldEstimation(BathymetrySampleEstimation):
     """ This class encapsulates the information estimated in a waves field sample by a
     SpatialDFTBathyEstimator.
 
@@ -25,7 +25,8 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
                  period_range: Tuple[float, float], linearity_range: Tuple[float, float],
                  shallow_water_limit: float) -> None:
 
-        super().__init__(gravity, depth_estimation_method, period_range, linearity_range, shallow_water_limit)
+        super().__init__(gravity, depth_estimation_method, period_range, linearity_range,
+                         shallow_water_limit)
 
         self._energy = np.nan
 
@@ -50,7 +51,7 @@ class SpatialDFTWavesFieldEstimation(WavesFieldEstimation):
         return (self.delta_phase_ratio ** 2) * self.energy
 
     def __str__(self) -> str:
-        result = WavesFieldEstimation.__str__(self)
+        result = super().__str__()
         result += f'\n    energy: {self.energy:5.2f} (???)'
         result += f'  energy ratio: {self.energy_ratio:5.2f} '
         return result
