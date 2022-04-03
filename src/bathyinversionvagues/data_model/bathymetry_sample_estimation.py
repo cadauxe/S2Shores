@@ -76,6 +76,6 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
         result = WavesFieldSampleEstimation.__str__(self)
         result += '\n' + BathymetrySampleInversion.__str__(self)
         result += f'\nBathymetry Estimation:  delta phase ratio: {self.delta_phase_ratio:5.2f} '
-        result += f' ambiguity low depth: {self.ambiguity_low_depth:5.2f} '
-        result += f' ambiguity offshore: {self.ambiguity_offshore:5.2f} '
+        result += f' ambiguity low depth: {self.ambiguity_low_depth:5.3f} '
+        result += f' ambiguity offshore: {self.ambiguity_offshore:5.3f} '
         return result

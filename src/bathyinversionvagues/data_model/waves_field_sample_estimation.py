@@ -26,7 +26,7 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
 
         :param period_range: minimum and maximum values allowed for the period
         """
-        super().__init__()
+        WavesFieldSampleDynamics.__init__(self)
         self._delta_time = np.nan
         self._propagated_distance = np.nan
         self._delta_phase = np.nan
@@ -195,7 +195,7 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
     def __str__(self) -> str:
         result = WavesFieldSampleDynamics.__str__(self)
         result += f'\nWaves Field Estimation: \n  delta time: {self.delta_time:5.3f} (s)'
-        result += f' ambiguity: {self.ambiguity:5.4f} (unitless)'
+        result += f' ambiguity: {self.ambiguity:5.3f} (unitless)'
         result += f'\n  propagated distance: {self.propagated_distance:5.2f} (m)'
         result += f'  delta phase: {self.delta_phase:5.2f} (rd)'
         return result
