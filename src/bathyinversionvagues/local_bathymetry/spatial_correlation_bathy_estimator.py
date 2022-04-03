@@ -52,6 +52,10 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         self.directions = None
 
     @property
+    def propagation_duration(self) -> float:
+        return self.sequential_delta_times[0]
+
+    @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
         preprocessing_filters: ImageProcessingFilters = []
         preprocessing_filters.append((detrend, []))
@@ -141,7 +145,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the distance propagated over time by the waves (m)
         """
         argmax_ac = len(correlation_signal) / 2
-        delta_time = self.sequential_delta_times[0]
+        delta_time = self.propagation_duration
         celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
                                                   self.gravity)
         # TODO: revisit signs management
@@ -183,6 +187,6 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         waves_field_estimation = cast(SpatialCorrelationWavesFieldEstimation,
                                       self.create_waves_field_estimation(estimated_direction,
                                                                          wavelength))
-        waves_field_estimation.delta_time = self.sequential_delta_times[0]
+        waves_field_estimation.delta_time = self.propagation_duration
         waves_field_estimation.propagated_distance = propagated_distance
         self.waves_fields_estimations.append(waves_field_estimation)

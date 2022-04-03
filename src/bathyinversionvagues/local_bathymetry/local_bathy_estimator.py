@@ -105,6 +105,13 @@ class LocalBathyEstimator(ABC):
 
     @property
     @abstractmethod
+    def propagation_duration(self) -> float:
+        """ :returns: The time length of the sequence of images used for the estimation. May be
+                      positive or negative to account for chronology of start and stop images.
+        """
+
+    @property
+    @abstractmethod
     def preprocessing_filters(self) -> ImageProcessingFilters:
         """ :returns: A list of functions together with their parameters to be applied
         sequentially to all the images of the sequence before subsequent bathymetry estimation.

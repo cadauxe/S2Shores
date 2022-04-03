@@ -46,6 +46,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.full_linear_wavenumbers = self.get_full_linear_wavenumbers()
 
     @property
+    def propagation_duration(self) -> float:
+        return self.sequential_delta_times[0]
+
+    @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
         preprocessing_filters: ImageProcessingFilters = []
         preprocessing_filters.append((detrend, []))
@@ -248,7 +252,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                                       self.create_waves_field_estimation(direction, 1 / wavenumber))
 
         # FIXME: index delta times by the index of the pair of images
-        waves_field_estimation.delta_time = self.sequential_delta_times[0]
+        waves_field_estimation.delta_time = self.propagation_duration
         waves_field_estimation.delta_phase = phase_shift
         waves_field_estimation.energy = energy
         return waves_field_estimation

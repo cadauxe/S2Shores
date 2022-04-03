@@ -60,9 +60,13 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
             (filter_mean,
              [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+
+    @property
+    def propagation_duration(self) -> float:
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.sequential_delta_times):
             raise WavesEstimationError(
                 'The chosen number of lag frames is bigger than the number of available frames')
+        return np.sum(self.sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
@@ -103,10 +107,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             distances = self.compute_distances(
                 sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
 
-            propagation_duration = np.sum(
-                self.sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
-
-            celerities = np.abs(distances / propagation_duration)
+            celerities = np.abs(distances / self.propagation_duration)
 
             temporal_signals = []
             periods = []
@@ -131,7 +132,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
-            waves_field_estimation.delta_time = propagation_duration
+            waves_field_estimation.delta_time = self.propagation_duration
             waves_field_estimation.propagated_distance = distances[index_min]
             self.waves_fields_estimations.append(waves_field_estimation)
 
@@ -143,7 +144,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self.metrics['temporal_signals'] = temporal_signals
                 self.metrics['arg_peaks_max'] = arg_peaks_max
                 self.metrics['periods'] = periods
-                self.metrics['propagation_duration'] = propagation_duration
+                self.metrics['propagation_duration'] = self.propagation_duration
                 self.metrics['celerities'] = celerities
                 self.metrics['celerities_from_periods'] = celerities_from_periods
         except Exception as excp:
