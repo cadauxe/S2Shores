@@ -12,7 +12,7 @@ from xarray import Dataset, DataArray  # @NoMove
 
 
 from ..waves_exceptions import WavesEstimationIndexingError, WavesEstimationAttributeError
-from .waves_fields_estimations import WavesFieldsEstimations
+from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
 
 DEBUG_LAYER = ['DEBUG']
@@ -34,8 +34,8 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'precision': 0,
                'attrs': {'Dimension': 'Flags',
                          'name': 'Bathymetry estimation status',
-                         'comment': '0: SUCCESS, 1: FAIL, 2: ON_GROUND,'
-                         ' 3: NO_DATA, 4: NO_DELTA_TIME , 5: OUTSIDE_ROI'}},
+                         'comment': '0: SUCCESS, 1: FAIL, 2: ON_GROUND, '
+                                    '3: NO_DATA, 4: NO_DELTA_TIME , 5: OUTSIDE_ROI'}},
     'depth': {'layer_type': NOMINAL_LAYER,
               'layer_name': 'Depth',
               'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -68,6 +68,14 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                             'precision': 2,
                             'attrs': {'Dimension': 'Meters [m]',
                                       'name': 'Propagated_distance'}},
+    'absolute_propagated_distance': {'layer_type': EXPERT_LAYER,
+                                     'layer_name': 'Propagated distance (Absolute)',
+                                     'dimensions': DIMS_Y_X_NKEEP_TIME,
+                                     'data_type': np.float32,
+                                     'fill_value': np.nan,
+                                     'precision': 2,
+                                     'attrs': {'Dimension': 'Meters [m]',
+                                               'name': 'Propagated_distance (Absolute)'}},
     'wavelength': {'layer_type': NOMINAL_LAYER,
                    'layer_name': 'Wavelength',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -116,6 +124,14 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                     'precision': 8,
                     'attrs': {'Dimension': 'Radians [rd]',
                               'name': 'Phase shift'}},
+    'absolute_delta_phase': {'layer_type': EXPERT_LAYER,
+                             'layer_name': 'Phase Shift (Absolute)',
+                             'dimensions': DIMS_Y_X_NKEEP_TIME,
+                             'data_type': np.float32,
+                             'fill_value': np.nan,
+                             'precision': 8,
+                             'attrs': {'Dimension': 'Radians [rd]',
+                                       'name': 'Phase shift (Absolute)'}},
     'gravity': {'layer_type': EXPERT_LAYER,
                 'layer_name': 'Gravity',
                 'dimensions': DIMS_Y_X_TIME,
@@ -132,6 +148,22 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'precision': 4,
                    'attrs': {'Dimension': 'Duration (s)',
                              'name': 'DeltaTime'}},
+    'ambiguity': {'layer_type': EXPERT_LAYER,
+                  'layer_name': 'Ambiguity',
+                  'dimensions': DIMS_Y_X_NKEEP_TIME,
+                  'data_type': np.float32,
+                  'fill_value': np.nan,
+                  'precision': 4,
+                  'attrs': {'Dimension': 'Unitless',
+                            'name': 'Ambiguity'}},
+    'absolute_ambiguity': {'layer_type': EXPERT_LAYER,
+                           'layer_name': 'Ambiguity (absolute)',
+                           'dimensions': DIMS_Y_X_NKEEP_TIME,
+                           'data_type': np.float32,
+                           'fill_value': np.nan,
+                           'precision': 4,
+                           'attrs': {'Dimension': 'Unitless',
+                                     'name': 'Ambiguity (absolute)'}},
     'linearity': {'layer_type': EXPERT_LAYER,
                   'layer_name': 'Waves Linearity',
                   'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -155,7 +187,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'fill_value': np.nan,
                'precision': 1,
                'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
-                             'name': 'Energy'}},
+                         'name': 'Energy'}},
     'delta_phase_ratio': {'layer_type': DEBUG_LAYER,
                           'layer_name': 'Delta Phase Ratio',
                           'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -164,6 +196,14 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                           'precision': 3,
                           'attrs': {'Dimension': 'Unitless',
                                     'name': 'delta_phase_ratio'}},
+    'period_ratio': {'layer_type': DEBUG_LAYER,
+                     'layer_name': 'Period Ratio',
+                     'dimensions': DIMS_Y_X_NKEEP_TIME,
+                     'data_type': np.float32,
+                     'fill_value': np.nan,
+                     'precision': 3,
+                     'attrs': {'Dimension': 'Unitless',
+                               'name': 'period_ratio'}},
     'energy_ratio': {'layer_type': DEBUG_LAYER,
                      'layer_name': 'Energy Ratio',
                      'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -196,7 +236,7 @@ class EstimatedBathy:
         self.x_samples = x_samples
         self.y_samples = y_samples
 
-    def store_estimations(self, bathy_estimations: WavesFieldsEstimations) -> None:
+    def store_estimations(self, bathy_estimations: BathymetrySampleEstimations) -> None:
         """ Store a set of bathymetry estimations at some location
 
         :param bathy_estimations: the whole set of bathy estimations data at one point.

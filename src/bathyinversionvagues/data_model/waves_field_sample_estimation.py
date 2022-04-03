@@ -65,6 +65,12 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         """
         return self.delta_time / self.period
 
+    @property
+    def absolute_ambiguity(self) -> float:
+        """ :returns: the ambiguity as a positive value.
+        """
+        return abs(self.ambiguity)
+
     def is_ambiguity_inside(self, ambiguity_range: Tuple[float, float]) -> bool:
         """ Check if the ambiguity is inside a given range of values.
 
