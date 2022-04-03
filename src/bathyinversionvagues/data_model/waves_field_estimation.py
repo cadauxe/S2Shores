@@ -10,7 +10,7 @@
 from typing import cast, Tuple
 import numpy as np
 
-from ..bathy_physics import ambiguity_offshore, ambiguity_low_depth
+from ..bathy_physics import period_low_depth
 
 from .waves_field_sample_bathymetry import WavesFieldSampleBathymetry
 from .waves_field_sample_estimation import WavesFieldSampleEstimation
@@ -51,16 +51,17 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, WavesFieldSampleBathymetr
 
     @property
     def ambiguity_low_depth(self) -> float:
-        """ :returns: The minimum value of the ambiguity which is obtained for shallow water.
-        """
-        return cast(float, ambiguity_low_depth(self.wavenumber, self.delta_time,
-                                               self._shallow_water_limit, self.gravity))
+        """ :returns:  the ambiguity relative to the period limit in shallow water
+    """
+        return self.delta_time / cast(float, period_low_depth(self.wavenumber,
+                                                              self._shallow_water_limit,
+                                                              self.gravity))
 
     @property
     def ambiguity_offshore(self) -> float:
-        """ :returns: The maximum value of the ambiguity which is obtained for offshore water.
+        """ :returns: the ambiguity relative to the period offshore.
         """
-        return cast(float, ambiguity_offshore(self.wavenumber, self.delta_time, self.gravity))
+        return self.delta_time / self.period_offshore
 
     def __str__(self) -> str:
         result = WavesFieldSampleEstimation.__str__(self)

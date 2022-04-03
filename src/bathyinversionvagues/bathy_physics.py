@@ -33,19 +33,6 @@ def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) ->
     return depth
 
 
-def ambiguity_low_depth(wavenumber: NdArrayOrFloat, delta_t: float, min_depth: float,
-                        gravity: float) -> NdArrayOrFloat:
-    """ Computes the ambiguity relative to the period limit in shallow water
-
-    :param wavenumber: wavenumber(s) of the waves (1/m)
-    :param delta_t: acquisition times difference (s)
-    :param min_depth: minimum depth limit (m)
-    :param gravity: acceleration of the gravity (m/s2)
-    :returns: the time sampling factor relative to the period limit in shallow water (unitless)
-    """
-    return delta_t / period_low_depth(wavenumber, min_depth, gravity)
-
-
 def period_low_depth(wavenumber: NdArrayOrFloat, min_depth: float,
                      gravity: float) -> NdArrayOrFloat:
     """ Computes the waves period limit in shallow water
@@ -66,19 +53,6 @@ def celerity_low_depth(shallow_water_depth: float, gravity: float) -> float:
     :returns: the celerity in shallow water (m/s)
     """
     return np.sqrt(gravity * shallow_water_depth)
-
-
-def ambiguity_offshore(wavenumber: NdArrayOrFloat, delta_t: float,
-                       gravity: float) -> NdArrayOrFloat:
-    """ Computes the ambiguity relative to the period offshore
-
-    :param wavenumber: wavenumber(s) of the waves (1/m)
-    :param delta_t: acquisition times difference (s)
-    :param gravity: acceleration of the gravity (m/s2)
-    :returns: the time sampling factor relative to the period offshore (unitless)
-    """
-
-    return delta_t / period_offshore(wavenumber, gravity)
 
 
 def period_offshore(wavenumber: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:
