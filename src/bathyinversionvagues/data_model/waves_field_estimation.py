@@ -11,7 +11,7 @@ from typing import Tuple
 import numpy as np
 
 
-from .waves_field_sample_bathymetry import BathymetrySample
+from .bathymetry_sample import BathymetrySample
 from .waves_field_sample_estimation import WavesFieldSampleEstimation
 
 
