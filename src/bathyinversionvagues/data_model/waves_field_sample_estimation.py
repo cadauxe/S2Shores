@@ -26,11 +26,11 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
 
         :param period_range: minimum and maximum values allowed for the period
         """
-
-        WavesFieldSampleDynamics.__init__(self, period_range)
+        super().__init__()
         self._delta_time = np.nan
         self._propagated_distance = np.nan
         self._delta_phase = np.nan
+        self._period_range = period_range
 
         self._updating_wavelength = False
         self.register_wavelength_change(self.wavelength_change_in_estimation)
@@ -38,12 +38,14 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         self._updating_period = False
         self.register_period_change(self.period_change_in_estimation)
 
-    def is_waves_field_valid(self) -> bool:
+    def is_waves_field_valid(self, ambiguity_range: Tuple[float, float]) -> bool:
         """  Check if a waves field estimation satisfies physical constraints.
 
+        :param ambiguity_range: the minimum and maximum values allowed for the ambiguity
         :returns: True is the waves field is valid, False otherwise
         """
-        return self.is_period_valid()
+        return (self.is_period_inside(self._period_range) and
+                self.is_ambiguity_inside(ambiguity_range))
 
     @property
     def delta_time(self) -> float:
@@ -63,8 +65,8 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         """
         return self.delta_time / self.period
 
-    def is_ambiguity_valid(self, ambiguity_range: Tuple[float, float]) -> bool:
-        """ Check if the ambiguity is valid.
+    def is_ambiguity_inside(self, ambiguity_range: Tuple[float, float]) -> bool:
+        """ Check if the ambiguity is inside a given range of values.
 
         :param ambiguity_range: the minimum and maximum values allowed for the ambiguity
         :returns: True if the ambiguity is between a minimum and a maximum values, False otherwise.

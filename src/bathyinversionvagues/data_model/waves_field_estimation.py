@@ -24,22 +24,33 @@ class WavesFieldEstimation(WavesFieldSampleEstimation, WavesFieldSampleBathymetr
     def __init__(self, gravity: float, depth_estimation_method: str,
                  period_range: Tuple[float, float], linearity_range: Tuple[float, float],
                  shallow_water_limit: float) -> None:
+        """ Constructor
+
+        :param gravity: the acceleration of gravity to use (m.s-2)
+        :param shallow_water_limit: the depth limit between intermediate and shallow water (m)
+        :param depth_estimation_method: the name of the depth estimation method to use
+        :param period_range: minimum and maximum values allowed for the period
+        :param linearity_range: minimum and maximum values allowed for the linearity indicator
+        :raises NotImplementedError: when the depth estimation method is unsupported
+        """
 
         WavesFieldSampleEstimation.__init__(self, period_range)
         WavesFieldSampleBathymetry.__init__(self, gravity, shallow_water_limit,
-                                            depth_estimation_method, period_range, linearity_range)
+                                            depth_estimation_method)
+
+        self._linearity_range = linearity_range
 
     def is_physical(self) -> bool:
         """  Check if a waves field estimation satisfies physical constraints.
 
         :returns: True is the waves field is valid, False otherwise
         """
-        # minimum and maximum values for the time sampling factor:
-        #   - minimum correspond to the factor allowed for shallow water.
-        #   - maximum correspond to the factor allowed for offshore water.
-        return (self.is_waves_field_valid() and
-                self.is_linearity_valid() and
-                self.is_ambiguity_valid((self.ambiguity_low_depth, self.ambiguity_offshore)))
+        # minimum and maximum values for the ambiguity:
+        #   - minimum correspond to the ambiguity for shallow water.
+        #   - maximum correspond to the ambiguity for offshore water.
+        ambiguity_range = (self.ambiguity_low_depth, self.ambiguity_offshore)
+        return (self.is_waves_field_valid(ambiguity_range) and
+                self.is_linearity_inside(self._linearity_range))
 
     # FIXME: delta_phase_ratio should be removed. It is equal to period_ratio which has a more
     # generic meaning.

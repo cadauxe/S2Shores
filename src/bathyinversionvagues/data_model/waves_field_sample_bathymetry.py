@@ -26,15 +26,13 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
     bathymetry for that sample..
     """
 
-    def __init__(self, gravity: float, shallow_water_limit: float, depth_estimation_method: str,
-                 period_range: Tuple[float, float], linearity_range: Tuple[float, float]) -> None:
+    def __init__(self, gravity: float, shallow_water_limit: float,
+                 depth_estimation_method: str) -> None:
         """ Constructor
 
         :param gravity: the acceleration of gravity to use (m.s-2)
         :param shallow_water_limit: the depth limit between intermediate and shallow water (m)
         :param depth_estimation_method: the name of the depth estimation method to use
-        :param period_range: minimum and maximum values allowed for the period
-        :param linearity_range: minimum and maximum values allowed for the linearity indicator
         :raises NotImplementedError: when the depth estimation method is unsupported
         """
         if depth_estimation_method not in KNOWN_DEPTH_ESTIMATION_METHODS:
@@ -42,12 +40,11 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
             msg += f' Must be one of {KNOWN_DEPTH_ESTIMATION_METHODS}'
             raise NotImplementedError(msg)
 
-        super().__init__(period_range)
+        super().__init__()
 
         self._gravity = gravity
         self._shallow_water_limit = shallow_water_limit
         self._depth_estimation_method = depth_estimation_method
-        self._linearity_range = linearity_range
 
     @property
     def gravity(self) -> float:
@@ -74,15 +71,15 @@ class WavesFieldSampleBathymetry(WavesFieldSampleDynamics):
         """ :returns: a linearity indicator for depth estimation (unitless) """
         return linearity_indicator(self.wavelength, self.celerity, self.gravity)
 
-    def is_linearity_valid(self) -> bool:
-        """ Check if the linearity indicator is physical.
+    def is_linearity_inside(self, linearity_range: Tuple[float, float]) -> bool:
+        """ Check if the linearity indicator is within a given range of values.
 
+        :param linearity_range: minimum and maximum values allowed for the linearity indicator
         :returns: True if the linearity indicator is between the minimum and maximum values, False
                   otherwise
         """
         return (not np.isnan(self.linearity) and
-                self.linearity >= self._linearity_range[0] and
-                self.linearity <= self._linearity_range[1])
+                self.linearity >= linearity_range[0] and self.linearity <= linearity_range[1])
 
     @property
     def period_offshore(self) -> float:

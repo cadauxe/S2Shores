@@ -24,17 +24,14 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
     """
 
-    def __init__(self, period_range: Tuple[float, float]) -> None:
+    def __init__(self) -> None:
         """ Encapsulates the information related to the dynamics of a waves field sample, namely
         the waves field period and its celerity.
-
-        :param period_range: minimum and maximum values allowed for the period
         """
 
         super().__init__()
         self._period = np.nan
         self._celerity = np.nan
-        self._period_range = period_range
         self._period_change_observers: List[Callable] = []
 
         self.register_wavelength_change(self.wavelength_change_in_dynamics)
@@ -60,14 +57,14 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
             for notify in self._period_change_observers:
                 notify()
 
-    def is_period_valid(self) -> bool:
-        """ Check if the waves field period is valid.
+    def is_period_inside(self, period_range: Tuple[float, float]) -> bool:
+        """ Check if the waves field period is inside some range of values.
 
+        :param period_range: minimum and maximum values allowed for the period
         :returns: True if the period is between the minimum and maximum values, False otherwise
         """
         return (not np.isnan(self.period) and
-                self.period >= self._period_range[0] and
-                self.period <= self._period_range[1])
+                self.period >= period_range[0] and self.period <= period_range[1])
 
     @property
     def celerity(self) -> float:
