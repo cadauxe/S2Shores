@@ -30,7 +30,7 @@ class SampleStatus(IntEnum):
     OUTSIDE_ROI = 5
 
 
-class WavesFieldsEstimations(list):
+class BathymetrySampleEstimations(list):
     """ This class gathers information relevant to some location, whatever the bathymetry
     estimators, as well as a list of bathymetry estimations made at this location.
     """
@@ -77,7 +77,7 @@ class WavesFieldsEstimations(list):
         :param attribute_name: name of an attribute present in all estimations to use for sorting
         :param reverse: When True sorting is in descending order, when False in ascending order
         :returns: either en empty list if attribute_name is None or the list of indices which would
-                  sort this WavesFieldsEstimations according to one of the attributes.
+                  sort this BathymetrySampleEstimations according to one of the attributes.
         """
         if attribute_name is not None:
             attr_list = [getattr(estimation, attribute_name) for estimation in self]
@@ -88,8 +88,8 @@ class WavesFieldsEstimations(list):
         return []
 
     def get_attribute(self, attribute_name: str) -> Union[float, List[float]]:
-        """ Retrieve the values of an attribute either at the level of WavesFieldsEstimations or
-        in the list of BathymetrySampleEstimation
+        """ Retrieve the values of an attribute either at the level of BathymetrySampleEstimations
+        or in the list of BathymetrySampleEstimation instances
 
         :param attribute_name: name of the estimation attribute to retrieve
         :returns: the values of the attribute either as a scalar or a list of values

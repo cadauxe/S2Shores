@@ -16,7 +16,7 @@ from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
 import numpy as np
 
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
-from ..data_model.waves_fields_estimations import WavesFieldsEstimations
+from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
@@ -64,8 +64,8 @@ class LocalBathyEstimator(ABC):
         distance = self.global_estimator.get_distoshore(location)
         gravity = self.global_estimator.get_gravity(location, 0.)
         inside_roi = self.global_estimator.is_inside_roi(location)
-        self._waves_fields_estimations = WavesFieldsEstimations(location, gravity,
-                                                                distance, inside_roi)
+        self._waves_fields_estimations = BathymetrySampleEstimations(location, gravity,
+                                                                     distance, inside_roi)
 
         sequential_delta_times = np.array([])
         for frame_index in range(len(self.global_estimator.selected_frames) - 1):
@@ -79,7 +79,7 @@ class LocalBathyEstimator(ABC):
 
         self._metrics: Dict[str, Any] = {}
 
-    def can_estimate_bathy(self):
+    def can_estimate_bathy(self) -> bool:
         return (self.waves_fields_estimations.distance_to_shore > 0 and
                 self.waves_fields_estimations.inside_roi)
 
@@ -166,7 +166,7 @@ class LocalBathyEstimator(ABC):
         return waves_field_estimation
 
     @property
-    def waves_fields_estimations(self) -> WavesFieldsEstimations:
+    def waves_fields_estimations(self) -> BathymetrySampleEstimations:
         """ :returns: the estimations recorded by this estimator.
         """
         return self._waves_fields_estimations
