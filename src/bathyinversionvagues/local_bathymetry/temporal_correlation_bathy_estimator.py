@@ -60,7 +60,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
             (filter_mean,
              [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
-        if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
+        if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.sequential_delta_times):
             raise WavesEstimationError(
                 'The chosen number of lag frames is bigger than the number of available frames')
 
@@ -104,7 +104,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
 
             propagation_duration = np.sum(
-                self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
+                self.sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
 
             celerities = np.abs(distances / propagation_duration)
 
