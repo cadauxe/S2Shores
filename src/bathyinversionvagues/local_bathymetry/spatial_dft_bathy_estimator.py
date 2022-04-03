@@ -47,6 +47,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
     @property
     def propagation_duration(self) -> float:
+        # FIXME: index delta times by the index of the pair of images
         return self.sequential_delta_times[0]
 
     @property
@@ -251,8 +252,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
                                       self.create_waves_field_estimation(direction, 1 / wavenumber))
 
-        # FIXME: index delta times by the index of the pair of images
-        waves_field_estimation.delta_time = self.propagation_duration
         waves_field_estimation.delta_phase = phase_shift
         waves_field_estimation.energy = energy
         return waves_field_estimation

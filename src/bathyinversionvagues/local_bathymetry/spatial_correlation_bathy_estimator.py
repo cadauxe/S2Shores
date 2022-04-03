@@ -187,6 +187,5 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         waves_field_estimation = cast(SpatialCorrelationWavesFieldEstimation,
                                       self.create_waves_field_estimation(estimated_direction,
                                                                          wavelength))
-        waves_field_estimation.delta_time = self.propagation_duration
         waves_field_estimation.propagated_distance = propagated_distance
         self.waves_fields_estimations.append(waves_field_estimation)

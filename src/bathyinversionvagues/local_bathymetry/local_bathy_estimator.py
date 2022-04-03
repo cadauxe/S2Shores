@@ -167,6 +167,7 @@ class LocalBathyEstimator(ABC):
             self.global_estimator.waves_period_range,
             self.global_estimator.waves_linearity_range,
             self.global_estimator.depth_min)
+        waves_field_estimation.delta_time = self.propagation_duration
         waves_field_estimation.direction = direction
         waves_field_estimation.wavelength = wavelength
 
