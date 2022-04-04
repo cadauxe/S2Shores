@@ -132,7 +132,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation,
                                           self.create_waves_field_estimation(direction_propagation,
                                                                              wave_length))
-            waves_field_estimation.propagated_distance = distances[index_min]
+            waves_field_estimation.delta_position = distances[index_min]
             self.waves_fields_estimations.append(waves_field_estimation)
 
             if self.debug_sample:

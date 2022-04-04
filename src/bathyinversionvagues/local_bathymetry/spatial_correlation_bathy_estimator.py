@@ -76,8 +76,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         estimated_direction = self.find_direction()
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
-        propagated_distance = self.compute_propagated_distance(correlation_signal, wavelength)
-        self.save_waves_field_estimation(estimated_direction, wavelength, propagated_distance)
+        delta_position = self.compute_delta_position(correlation_signal, wavelength)
+        self.save_waves_field_estimation(estimated_direction, wavelength, delta_position)
 
     def compute_radon_transforms(self) -> None:
 
@@ -136,8 +136,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             self.local_estimator_params['AUGMENTED_RADON_FACTOR']
         return wavelength
 
-    def compute_propagated_distance(self, correlation_signal: np.ndarray,
-                                    wavelength: float) -> float:
+    def compute_delta_position(self, correlation_signal: np.ndarray,
+                               wavelength: float) -> float:
         """ Compute the distance propagated over time by the waves
 
         :param correlation_signal: spatial cross correlated signal
@@ -158,7 +158,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             spatial_shift_offshore_max = -self.local_estimator_params['PEAK_POSITION_MAX_FACTOR'] \
                 * ambiguity_offshore * wavelength
         peaks_pos, _ = find_peaks(correlation_signal)
-        propagated_distance = np.nan
+        delta_position = np.nan
         if peaks_pos.size != 0:
             relative_distance = peaks_pos - argmax_ac
             pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_offshore_min) & (
@@ -166,26 +166,26 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             if pt_in_range.size != 0:
                 argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
                 # TODO: add variable to adapt to be in meters
-                propagated_distance = argmax_ac - argmax  # supposed to be in meters,
+                delta_position = argmax_ac - argmax  # supposed to be in meters,
             else:
                 raise WavesEstimationError('Unable to find any directional peak')
         else:
             raise WavesEstimationError('Unable to find any directional peak')
 
-        return propagated_distance
+        return delta_position
 
     def save_waves_field_estimation(self,
                                     estimated_direction: float,
                                     wavelength: float,
-                                    propagated_distance: float) -> None:
+                                    delta_position: float) -> None:
         """ Saves the waves_field_estimation
 
         :param estimated_direction: the waves estimated propagation direction
         :param wavelength: the wave length of the waves
-        :param propagated_distance: the distance propagated over time by the waves
+        :param delta_position: the distance propagated over time by the waves
         """
         waves_field_estimation = cast(SpatialCorrelationWavesFieldEstimation,
                                       self.create_waves_field_estimation(estimated_direction,
                                                                          wavelength))
-        waves_field_estimation.propagated_distance = propagated_distance
+        waves_field_estimation.delta_position = delta_position
         self.waves_fields_estimations.append(waves_field_estimation)

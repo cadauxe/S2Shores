@@ -28,7 +28,7 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         """
         WavesFieldSampleDynamics.__init__(self)
         self._delta_time = np.nan
-        self._propagated_distance = np.nan
+        self._delta_position = np.nan
         self._delta_phase = np.nan
         self._period_range = period_range
 
@@ -85,13 +85,13 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
                 (self.ambiguity < ambiguity_max))
 
     @property
-    def propagated_distance(self) -> float:
+    def delta_position(self) -> float:
         """ :returns: the propagated distance over time """
-        return self._propagated_distance
+        return self._delta_position
 
-    @propagated_distance.setter
-    def propagated_distance(self, value: float) -> None:
-        if value != self._propagated_distance:
+    @delta_position.setter
+    def delta_position(self, value: float) -> None:
+        if value != self._delta_position:
             if np.isnan(value) or value == 0:
                 value = np.nan
             else:
@@ -99,13 +99,13 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
                     # delta_time and propagated distance have opposite signs
                     self._invert_direction()
                     value = -value
-            self._propagated_distance = value
+            self._delta_position = value
             self._solve_shift_equations()
 
     @property
-    def absolute_propagated_distance(self) -> float:
+    def absolute_delta_position(self) -> float:
         """ :returns: the absolute value of the propagated distance over time """
-        return abs(self._propagated_distance)
+        return abs(self._delta_position)
 
     @property
     def delta_phase(self) -> float:
@@ -131,13 +131,13 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
 
     def wavelength_change_in_estimation(self) -> None:
         """ When wavelength has changed (new value is ensured to be different from the previous one)
-        either reset delta_phase and propagated_distance if both were set, or update one of them if
+        either reset delta_phase and delta_position if both were set, or update one of them if
         the other is set.
         """
         if not self._updating_wavelength:
-            if not np.isnan(self.delta_phase) and not np.isnan(self.propagated_distance):
+            if not np.isnan(self.delta_phase) and not np.isnan(self.delta_position):
                 self._delta_phase = np.nan
-                self._propagated_distance = np.nan
+                self._delta_position = np.nan
         self._solve_shift_equations()
 
     def period_change_in_estimation(self) -> None:
@@ -166,14 +166,14 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         """
         delta_phase_set = not np.isnan(self.delta_phase)
         wavelength_set = not np.isnan(self.wavelength)
-        propagated_distance_set = not np.isnan(self.propagated_distance)
-        if wavelength_set and delta_phase_set and not propagated_distance_set:
-            self._propagated_distance = self.wavelength * self.delta_phase / (2 * np.pi)
-        elif wavelength_set and not delta_phase_set and propagated_distance_set:
-            self._delta_phase = 2 * np.pi * self.propagated_distance / self.wavelength
-        elif not wavelength_set and delta_phase_set and propagated_distance_set:
+        delta_position_set = not np.isnan(self.delta_position)
+        if wavelength_set and delta_phase_set and not delta_position_set:
+            self._delta_position = self.wavelength * self.delta_phase / (2 * np.pi)
+        elif wavelength_set and not delta_phase_set and delta_position_set:
+            self._delta_phase = 2 * np.pi * self.delta_position / self.wavelength
+        elif not wavelength_set and delta_phase_set and delta_position_set:
             self._updating_wavelength = True
-            self.wavelength = 2 * np.pi * self.propagated_distance / self.delta_phase
+            self.wavelength = 2 * np.pi * self.delta_position / self.delta_phase
             self._updating_wavelength = False
 
     def _solve_temporal_shift_equation(self) -> None:
@@ -196,6 +196,6 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         result = WavesFieldSampleDynamics.__str__(self)
         result += f'\nWaves Field Estimation: \n  delta time: {self.delta_time:5.3f} (s)'
         result += f' ambiguity: {self.ambiguity:5.3f} (unitless)'
-        result += f'\n  propagated distance: {self.propagated_distance:5.2f} (m)'
+        result += f'\n  delta position: {self.delta_position:5.2f} (m)'
         result += f'  delta phase: {self.delta_phase:5.2f} (rd)'
         return result
