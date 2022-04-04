@@ -64,18 +64,20 @@ class LocalBathyEstimator(ABC):
         distance = self.global_estimator.get_distoshore(location)
         gravity = self.global_estimator.get_gravity(location, 0.)
         inside_roi = self.global_estimator.is_inside_roi(location)
-        self._waves_fields_estimations = BathymetrySampleEstimations(location, gravity,
-                                                                     distance, inside_roi)
 
         sequential_delta_times = np.array([])
         for frame_index in range(len(self.global_estimator.selected_frames) - 1):
             delta_time = self.global_estimator.get_delta_time(
                 self.global_estimator.selected_frames[frame_index],
                 self.global_estimator.selected_frames[frame_index + 1],
-                self.location)
+                location)
             # FIXME: copied from CorrelationBathyEstimator but wrong !?
             sequential_delta_times = np.append(delta_time, sequential_delta_times)
         self._sequential_delta_times = sequential_delta_times
+
+        self._waves_fields_estimations = BathymetrySampleEstimations(location, gravity,
+                                                                     self.propagation_duration,
+                                                                     distance, inside_roi)
 
         self._metrics: Dict[str, Any] = {}
 

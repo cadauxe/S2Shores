@@ -35,7 +35,7 @@ class BathymetrySampleEstimations(list):
     estimators, as well as a list of bathymetry estimations made at this location.
     """
 
-    def __init__(self, location: PointType, gravity: float,
+    def __init__(self, location: PointType, gravity: float, delta_time: float,
                  distance_to_shore: float, inside_roi: bool) -> None:
         super().__init__()
 
@@ -43,6 +43,7 @@ class BathymetrySampleEstimations(list):
         self._gravity = gravity
         self._distance_to_shore = distance_to_shore
         self._inside_roi = inside_roi
+        self._delta_time = delta_time
 
         self._data_available = True
         self._delta_time_available = True
@@ -150,6 +151,11 @@ class BathymetrySampleEstimations(list):
         """ :returns: the acceleration of the gravity at this estimation location (m/s2)
         """
         return self._gravity
+
+    @property
+    def delta_time(self) -> float:
+        """ :returns: the time difference between the images used for this estimation """
+        return self._delta_time
 
     @property
     def data_available(self) -> bool:

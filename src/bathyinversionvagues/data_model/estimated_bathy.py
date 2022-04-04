@@ -142,7 +142,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                           'name': 'Gravity'}},
     'delta_time': {'layer_type': EXPERT_LAYER,
                    'layer_name': 'Delta Acquisition Time',
-                   'dimensions': DIMS_Y_X_NKEEP_TIME,  # FIXME: does not work with DIMS_Y_X_TIME
+                   'dimensions': DIMS_Y_X_TIME,
                    'data_type': np.float32,
                    'fill_value': np.nan,
                    'precision': 4,
