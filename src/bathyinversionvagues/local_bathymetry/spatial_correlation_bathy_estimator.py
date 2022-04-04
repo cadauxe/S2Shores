@@ -42,7 +42,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
         super().__init__(location, global_estimator, selected_directions)
-        self._number_frames = len(self.images_sequence)
+
         if self.selected_directions is None:
             self.selected_directions = linear_directions(-180., 0., 1.)
 
@@ -93,8 +93,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the estimated direction of the waves propagation
         """
         tmp_image = np.ones(self.images_sequence[0].pixels.shape)
-        for frame in range(self._number_frames):
-            tmp_image *= self.images_sequence[frame].pixels
+        for frame_image in self.images_sequence:
+            tmp_image *= frame_image.pixels
         tmp_wavesimage = WavesImage(tmp_image, self.spatial_resolution)
         tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)
         tmp_wavesradon_augmented = tmp_wavesradon.radon_augmentation(
