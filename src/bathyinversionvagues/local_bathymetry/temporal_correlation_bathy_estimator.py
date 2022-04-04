@@ -26,6 +26,7 @@ from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
+from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -48,6 +49,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_transform: Optional[WavesRadon] = None
         self._angles: Optional[np.ndarray] = None
         self._distances: Optional[np.ndarray] = None
+        self._sampling_positions = None
+        self._time_series = None
+
         # Filters
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
             clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
@@ -103,14 +107,27 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
             propagation_duration = np.sum(
                 self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
-            travelled_distance = self.compute_travelled_distance(
-                distances, propagation_duration, wave_length)
 
-            waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation,
-                                          self.create_waves_field_estimation(direction_propagation,
-                                                                             wave_length))
-            waves_field_estimation.delta_time = propagation_duration
-            waves_field_estimation.propagated_distance = travelled_distance
+            # Keep in mind that list_estimation stores several estimations for the same
+            # sinogram and only the best of them should be added in the final list
+            distance_to_shore = self.global_estimator.get_distoshore(self.location)
+            inside_roi = self.global_estimator.is_inside_roi(self.location)
+            list_estimations = WavesFieldsEstimations(self.location, self.gravity,
+                                                      distance_to_shore, inside_roi)
+            for distance in distances:
+                estimation = self.create_waves_field_estimation(direction_propagation,
+                                                                wave_length)
+                estimation.delta_time = propagation_duration
+                estimation.propagated_distance = distance
+                list_estimations.append(estimation)
+
+            list_estimations.remove_unphysical_waves_fields()
+            if not list_estimations:
+                raise ValueError('No correct wave fied estimations have been found')
+            list_estimations.sort_on_attribute('linearity', reverse=False)
+            best_estimation = list_estimations[0]
+
+            waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation, best_estimation)
             self.waves_fields_estimations.append(waves_field_estimation)
 
             if self.debug_sample:
@@ -125,14 +142,19 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
-        """ :return: tuple of sampling positions
+        """ :returns: tuple of sampling positions
+        :raises ValueError: when sampling has not been defined
         """
+        if not self._sampling_positions:
+            raise ValueError('Sampling positions are not defined')
         return self._sampling_positions
 
     def get_correlation_matrix(self) -> np.ndarray:
         """Compute temporal correlation matrix
         """
         temporal_lag = self.local_estimator_params['TEMPORAL_LAG']
+        if not self._time_series:
+            raise ValueError('Time series are not defined')
         return cross_correlation(self._time_series[:, temporal_lag:],
                                  self._time_series[:, :-temporal_lag])
 
@@ -165,30 +187,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         return np.sqrt(
             np.square((self.sampling_positions[0] - self.sampling_positions[0].T)) +
             np.square((self.sampling_positions[1] - self.sampling_positions[1].T)))
-
-    def compute_travelled_distance(self, distances: np.ndarray,
-                                   propagation_duration: float, wave_length: float) -> float:
-        """ This function selects the travelled_distance among entry distances according to
-        the linerity coefficient closest to minimal value
-
-        :param distances: all candidates for travelled distances
-        :param propagation_duration: the duration used to propagate waves
-        :param wave_length: wave_length of selected wave
-        :returns: travelled distances by the selected wave during propagation_duration
-        :raises ValueError: when there is no linearity coefficient between min and max values
-        """
-        celerities = np.abs(distances / propagation_duration)
-        linearity_coefficients = (2 * np.pi * celerities**2) / (wave_length * self.gravity)
-        possible_values = np.logical_and(
-            linearity_coefficients > self.global_estimator.waves_linearity_min,
-            linearity_coefficients < self.global_estimator.waves_linearity_max)
-        if len(linearity_coefficients[possible_values]) < 1:
-            raise ValueError('No correct linearity coefficient found')
-        index_linearity_criteria = np.argmin(linearity_coefficients[possible_values])
-        travelled_distance = distances[possible_values][index_linearity_criteria]
-        self.metrics['linearity_coefficients'] = linearity_coefficients
-        self.metrics['celerities'] = celerities
-        return travelled_distance
 
     def get_correlation_image(self) -> WavesImage:
         """ This function computes the correlation image by projecting the the correlation matrix
@@ -289,7 +287,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                               distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']
                               * period)
         distances = x_axis[peaks] * self.spatial_resolution
-        index = np.argsort(np.abs(distances))
+        index = np.argsort(sinogram[peaks])[::-1]
         if self.debug_sample:
             self.metrics['interval'] = interval
             self.metrics['x_axis'] = x_axis
