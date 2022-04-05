@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class handling the information describing a waves field sample..
+""" Class handling the information describing a wave field sample..
 
 :author: Alain Giros
 :organization: CNES
@@ -8,17 +8,16 @@
 :created: 6 mars 2021
 """
 from typing import Tuple
-import numpy as np
 
 
 from .bathymetry_sample_inversion import BathymetrySampleInversion
-from .waves_field_sample_estimation import WavesFieldSampleEstimation
+from .wave_field_sample_estimation import WaveFieldSampleEstimation
 
 
-class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInversion):
+class BathymetrySampleEstimation(WaveFieldSampleEstimation, BathymetrySampleInversion):
     """ This class encapsulates the information estimating bathymetry on a sample.
 
-    It inherits from WavesFieldSampleEstimation and BathymetrySampleInversion and defines specific
+    It inherits from WaveFieldSampleEstimation and BathymetrySampleInversion and defines specific
     attributes related to the sample bathymetry estimation.
     """
 
@@ -35,7 +34,7 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
         :raises NotImplementedError: when the depth estimation method is unsupported
         """
 
-        WavesFieldSampleEstimation.__init__(self, period_range)
+        WaveFieldSampleEstimation.__init__(self, period_range)
         BathymetrySampleInversion.__init__(
             self, gravity, shallow_water_limit, depth_estimation_method)
 
@@ -44,13 +43,13 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
     def is_physical(self) -> bool:
         """  Check if a bathymetry estimation on a sample satisfies physical constraints.
 
-        :returns: True is the waves field is valid, False otherwise
+        :returns: True is the wave field is valid, False otherwise
         """
         # minimum and maximum values for the ambiguity:
         #   - minimum correspond to the ambiguity for shallow water.
         #   - maximum correspond to the ambiguity for offshore water.
         ambiguity_range = (self.ambiguity_low_depth, self.ambiguity_offshore)
-        return (self.is_waves_field_valid(ambiguity_range) and
+        return (self.is_wave_field_valid(ambiguity_range) and
                 self.is_linearity_inside(self._linearity_range))
 
     @property
@@ -66,7 +65,7 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
         return self.delta_time / self.period_offshore
 
     def __str__(self) -> str:
-        result = WavesFieldSampleEstimation.__str__(self)
+        result = WaveFieldSampleEstimation.__str__(self)
         result += '\n' + BathymetrySampleInversion.__str__(self)
         result += f'\nBathymetry Estimation: '
         result += f' ambiguity low depth: {self.ambiguity_low_depth:5.3f} '

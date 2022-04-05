@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class handling the information describing a waves field sample..
+""" Class handling the information describing a wave field sample..
 
 :author: Alain Giros
 :organization: CNES
@@ -11,22 +11,22 @@ from typing import Tuple
 import numpy as np
 
 
-from .waves_field_sample_dynamics import WavesFieldSampleDynamics
+from .wave_field_sample_dynamics import WaveFieldSampleDynamics
 
 
-class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
-    """ This class encapsulates the information estimating a waves field sample.
+class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
+    """ This class encapsulates the information estimating a wave field sample.
 
-    It inherits from WavesFieldSampleDynamics and defines specific attributes related to the sample
+    It inherits from WaveFieldSampleDynamics and defines specific attributes related to the sample
     estimation based on physical bathymetry.
     """
 
     def __init__(self, period_range: Tuple[float, float]) -> None:
-        """ Encapsulates the information related to the estimation of a waves field.
+        """ Encapsulates the information related to the estimation of a wave field.
 
         :param period_range: minimum and maximum values allowed for the period
         """
-        WavesFieldSampleDynamics.__init__(self)
+        WaveFieldSampleDynamics.__init__(self)
         self._delta_time = np.nan
         self._delta_position = np.nan
         self._delta_phase = np.nan
@@ -38,11 +38,11 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
         self._updating_period = False
         self.register_period_change(self.period_change_in_estimation)
 
-    def is_waves_field_valid(self, ambiguity_range: Tuple[float, float]) -> bool:
-        """  Check if a waves field estimation satisfies physical constraints.
+    def is_wave_field_valid(self, ambiguity_range: Tuple[float, float]) -> bool:
+        """  Check if a wave field estimation satisfies physical constraints.
 
         :param ambiguity_range: the minimum and maximum values allowed for the ambiguity
-        :returns: True is the waves field is valid, False otherwise
+        :returns: True is the wave field is valid, False otherwise
         """
         return (self.is_period_inside(self._period_range) and
                 self.is_ambiguity_inside(ambiguity_range))
@@ -60,8 +60,8 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
 
     @property
     def ambiguity(self) -> float:
-        """ :returns: the ratio of delta_time over the waves period. When its absolute value is
-                      greater than 1, there is an  ambiguity in detecting the waves.
+        """ :returns: the ratio of delta_time over the wave field period. When its absolute value is
+                      greater than 1, there is an  ambiguity in detecting the wave field.
         """
         return self.delta_time / self.period
 
@@ -193,8 +193,8 @@ class WavesFieldSampleEstimation(WavesFieldSampleDynamics):
             self._delta_time = self.period * self.delta_phase / (2 * np.pi)
 
     def __str__(self) -> str:
-        result = WavesFieldSampleDynamics.__str__(self)
-        result += f'\nWaves Field Estimation: \n  delta time: {self.delta_time:5.3f} (s)'
+        result = WaveFieldSampleDynamics.__str__(self)
+        result += f'\nWave Field Estimation: \n  delta time: {self.delta_time:5.3f} (s)'
         result += f' ambiguity: {self.ambiguity:5.3f} (unitless)'
         result += f'\n  delta position: {self.delta_position:5.2f} (m)'
         result += f'  delta phase: {self.delta_phase:5.2f} (rd)'

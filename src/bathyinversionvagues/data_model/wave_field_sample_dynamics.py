@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class handling the information describing a waves field sample..
+""" Class handling the information describing a wave field sample..
 
 :author: Alain Giros
 :organization: CNES
@@ -11,12 +11,12 @@ from typing import List, Callable, Tuple
 
 import numpy as np
 
-from .waves_field_sample_geometry import WavesFieldSampleGeometry
+from .wave_field_sample_geometry import WaveFieldSampleGeometry
 
 
-class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
-    """ This class encapsulates the information related to the dynamics of a waves field sample.
-    It inherits from WavesFieldSampleGeometry which describes the observed field geometry,
+class WaveFieldSampleDynamics(WaveFieldSampleGeometry):
+    """ This class encapsulates the information related to the dynamics of a wave field sample.
+    It inherits from WaveFieldSampleGeometry which describes the observed field geometry,
     and contains specific attributes related to the field dynamics:
 
     - its period
@@ -25,8 +25,8 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
     """
 
     def __init__(self) -> None:
-        """ Encapsulates the information related to the dynamics of a waves field sample, namely
-        the waves field period and its celerity.
+        """ Encapsulates the information related to the dynamics of a wave field sample, namely
+        the wave field period and its celerity.
         """
 
         super().__init__()
@@ -38,7 +38,7 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
     @property
     def period(self) -> float:
-        """ :returns: The waves field period (s), which was either externally provided or computed
+        """ :returns: The wave field period (s), which was either externally provided or computed
                       from the wavelength and the celerity
         :raises ValueError: when the period is not positive.
         """
@@ -58,7 +58,7 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
                 notify()
 
     def is_period_inside(self, period_range: Tuple[float, float]) -> bool:
-        """ Check if the waves field period is inside some range of values.
+        """ Check if the wave field period is inside some range of values.
 
         :param period_range: minimum and maximum values allowed for the period
         :returns: True if the period is between the minimum and maximum values, False otherwise
@@ -68,7 +68,7 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
 
     @property
     def celerity(self) -> float:
-        """ :returns: The waves field velocity (m/s), which was either externally provided or
+        """ :returns: The wave field velocity (m/s), which was either externally provided or
                       computed from the wavelength and the period
         :raises ValueError: when the celerity is not positive.
         """
@@ -117,7 +117,7 @@ class WavesFieldSampleDynamics(WavesFieldSampleGeometry):
             self.wavelength = self.celerity * self.period
 
     def __str__(self) -> str:
-        result = WavesFieldSampleGeometry.__str__(self)
+        result = WaveFieldSampleGeometry.__str__(self)
         result += f'\nDynamics:   period: {self.period:5.2f} (s)  '
         result += f'celerity: {self.celerity:5.2f} (m/s)'
         return result

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-""" Base class for the estimators of waves fields from several images taken at a small
-time intervals.
+""" Base class for the estimators of wave fields from several images taken at a small
+time interval.
 
 :author: Alain Giros
 :organization: CNES

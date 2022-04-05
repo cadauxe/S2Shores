@@ -13,7 +13,7 @@ from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
 
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .waves_fields_display import display_initial_data, display_radon_transforms, display_context
+from .wave_fields_display import display_initial_data, display_radon_transforms, display_context
 
 
 class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
@@ -53,7 +53,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         dump_numpy_variable(total_spectrum_normalized, 'refined total_spectrum_normalized')
 
         print(f'estimations after direction refinement :')
-        print(self.waves_fields_estimations)
+        print(self.wave_fields_estimations)
 
         # Displays
         display_initial_data(self)

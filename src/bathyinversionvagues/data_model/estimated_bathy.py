@@ -67,7 +67,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                        'fill_value': np.nan,
                        'precision': 2,
                        'attrs': {'Dimension': 'Meters [m]',
-                                 'name': 'Distance used for measuring waves celerity'}},
+                                 'name': 'Distance used for measuring wave celerity'}},
     'absolute_delta_position': {'layer_type': EXPERT_LAYER,
                                 'layer_name': 'Propagated distance (Absolute)',
                                 'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -75,7 +75,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                                 'fill_value': np.nan,
                                 'precision': 2,
                                 'attrs': {'Dimension': 'Meters [m]',
-                                          'name': 'Distance used for measuring waves celerity'}},
+                                          'name': 'Distance used for measuring wave celerity'}},
     'wavelength': {'layer_type': NOMINAL_LAYER,
                    'layer_name': 'Wavelength',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -165,7 +165,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                            'attrs': {'Dimension': 'Unitless',
                                      'name': '|delta_time| / period'}},
     'linearity': {'layer_type': EXPERT_LAYER,
-                  'layer_name': 'Waves Linearity',
+                  'layer_name': 'Wave Linearity',
                   'dimensions': DIMS_Y_X_NKEEP_TIME,
                   'data_type': np.float32,
                   'fill_value': np.nan,
@@ -179,7 +179,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                         'fill_value': np.nan,
                         'precision': 2,
                         'attrs': {'Dimension': 'Seconds [sec]',
-                                  'name': 'period_offshore'}},
+                                  'name': 'Period of the wave field if it was offshore'}},
     'energy': {'layer_type': DEBUG_LAYER,
                'layer_name': 'Energy',
                'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -311,8 +311,8 @@ class EstimatedBathy:
     # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
                     y_index: int, x_index: int) -> None:
-        waves_fields_estimations = self.estimated_bathy[y_index, x_index]
-        bathy_property = waves_fields_estimations.get_attribute(sample_property)
+        wave_fields_estimations = self.estimated_bathy[y_index, x_index]
+        bathy_property = wave_fields_estimations.get_attribute(sample_property)
 
         if layer_data.ndim == 2:
             layer_data[y_index, x_index] = np.array(bathy_property)

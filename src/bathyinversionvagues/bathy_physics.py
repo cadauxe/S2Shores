@@ -17,7 +17,7 @@ def linearity_indicator(wavelength: float, celerity: float, gravity: float) -> f
     """ Computes a linearity indicator of the depth estimation using the linear dispersive relation
 
     :param wavelength: wavelength of the waves (m)
-    :param celerity: the celerity of the waves field (m.s-1)
+    :param celerity: the celerity of the waves (m.s-1)
     :param gravity: acceleration of the gravity (m/s2)
     :returns: an indicator of the linearity between celerity and wavelength (unitless, positive)
     """

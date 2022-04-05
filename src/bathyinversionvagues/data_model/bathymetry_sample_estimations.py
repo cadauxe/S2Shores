@@ -62,7 +62,7 @@ class BathymetrySampleEstimations(list):
             super().append(estimation)
 
     def sort_on_attribute(self, attribute_name: Optional[str] = None, reverse: bool = True) -> None:
-        """ Sort in place the waves fields estimations based on one of their attributes.
+        """ Sort in place the wave fields estimations based on one of their attributes.
 
         :param attribute_name: name of an attribute present in all estimations to use for sorting
         :param reverse: When True sorting is in descending order, when False in ascending order
@@ -72,7 +72,7 @@ class BathymetrySampleEstimations(list):
 
     def argsort_on_attribute(self, attribute_name: Optional[str] = None,
                              reverse: bool = True) -> List[int]:
-        """ Return the indices of the waves fields estimations which would sort them based
+        """ Return the indices of the wave fields estimations which would sort them based
         on one of their attributes.
 
         :param attribute_name: name of an attribute present in all estimations to use for sorting
@@ -99,16 +99,16 @@ class BathymetrySampleEstimations(list):
         # Firstly try to find the attribute from the estimations common attributes
         if hasattr(self, attribute_name):
             # retrieve attribute from the estimations header
-            waves_field_attribute = getattr(self, attribute_name)
+            wave_field_attribute = getattr(self, attribute_name)
         else:
             if not self:
                 err_msg = f'Attribute {attribute_name} undefined (no estimations)'
                 raise WavesEstimationAttributeError(err_msg)
-            waves_field_attribute = self.get_estimations_attribute(attribute_name)
-        return waves_field_attribute
+            wave_field_attribute = self.get_estimations_attribute(attribute_name)
+        return wave_field_attribute
 
     def get_estimations_attribute(self, attribute_name: str) -> List[float]:
-        """ Retrieve the values of some attribute in the list of stored waves field estimations.
+        """ Retrieve the values of some attribute in the list of stored wave field estimations.
 
         :param attribute_name: name of the attribute to retrieve
         :returns: the values of the attribute in the order where the estimations are stored
@@ -118,14 +118,14 @@ class BathymetrySampleEstimations(list):
         try:
             return [getattr(estimation, attribute_name) for estimation in self]
         except AttributeError:
-            err_msg = f'Attribute {attribute_name} undefined for some waves field estimation'
+            err_msg = f'Attribute {attribute_name} undefined for some wave field estimation'
             raise WavesEstimationAttributeError(err_msg)
 
-    def remove_unphysical_waves_fields(self) -> None:
-        """  Remove unphysical waves fields
+    def remove_unphysical_wave_fields(self) -> None:
+        """  Remove unphysical wave fields
         """
-        # Filter non physical waves fields in bathy estimations
-        # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
+        # Filter non physical wave fields in bathy estimations
+        # We iterate over a copy of the list in order to keep wave fields estimations unaffected
         # on its specific attributes inside the loops.
         for estimation in list(self):
             if not estimation.is_physical():

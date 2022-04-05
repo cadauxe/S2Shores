@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-module -- Class encapsulating an image onto which waves estimation will be made
+module -- Class encapsulating an image onto which wave field estimation will be made
 
 
 :author: Alain Giros

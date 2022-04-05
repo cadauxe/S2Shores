@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class handling the information describing a waves field sample..
+""" Class handling the information describing a wave field sample..
 
 :author: Alain Giros
 :organization: CNES
@@ -10,7 +10,7 @@
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
-class TemporalCorrelationWavesFieldEstimation(BathymetrySampleEstimation):
+class TemporalCorrelationBathyEstimation(BathymetrySampleEstimation):
     """ This class encapsulates the information estimated in a bathymetry sample by a
     TemporalCorrelationBathyEstimator.
     """

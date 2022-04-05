@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class handling the information describing a waves field sample.
+""" Class handling the information describing a wave field sample.
 
 :author: Alain Giros
 :organization: CNES
@@ -14,8 +14,8 @@ import numpy as np
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
-class SpatialDFTWavesFieldEstimation(BathymetrySampleEstimation):
-    """ This class encapsulates the information estimated in a waves field sample by a
+class SpatialDFTBathyEstimation(BathymetrySampleEstimation):
+    """ This class encapsulates the information estimated in a wave field sample by a
     SpatialDFTBathyEstimator.
 
     It defines the estimation attributes specific to this estimator.
@@ -38,7 +38,7 @@ class SpatialDFTWavesFieldEstimation(BathymetrySampleEstimation):
 
     @property
     def energy(self) -> float:
-        """ :returns: the energy of the waves field """
+        """ :returns: the energy of the wave field """
         return self._energy
 
     @energy.setter

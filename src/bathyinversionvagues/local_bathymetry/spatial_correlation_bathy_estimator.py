@@ -25,7 +25,7 @@ from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError
 
 from .local_bathy_estimator import LocalBathyEstimator
-from .spatial_correlation_waves_field_estimation import SpatialCorrelationWavesFieldEstimation
+from .spatial_correlation_bathy_estimation import SpatialCorrelationBathyEstimation
 
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
     """ Class performing spatial correlation to compute bathymetry
     """
 
-    waves_field_estimation_cls = SpatialCorrelationWavesFieldEstimation
+    wave_field_estimation_cls = SpatialCorrelationBathyEstimation
 
     def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
@@ -77,7 +77,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
         delta_position = self.compute_delta_position(correlation_signal, wavelength)
-        self.save_waves_field_estimation(estimated_direction, wavelength, delta_position)
+        self.save_wave_field_estimation(estimated_direction, wavelength, delta_position)
 
     def compute_radon_transforms(self) -> None:
 
@@ -174,18 +174,18 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
         return delta_position
 
-    def save_waves_field_estimation(self,
-                                    estimated_direction: float,
-                                    wavelength: float,
-                                    delta_position: float) -> None:
-        """ Saves the waves_field_estimation
+    def save_wave_field_estimation(self,
+                                   estimated_direction: float,
+                                   wavelength: float,
+                                   delta_position: float) -> None:
+        """ Saves the wave_field_estimation
 
         :param estimated_direction: the waves estimated propagation direction
         :param wavelength: the wave length of the waves
         :param delta_position: the distance propagated over time by the waves
         """
-        waves_field_estimation = cast(SpatialCorrelationWavesFieldEstimation,
-                                      self.create_waves_field_estimation(estimated_direction,
-                                                                         wavelength))
-        waves_field_estimation.delta_position = delta_position
-        self.waves_fields_estimations.append(waves_field_estimation)
+        wave_field_estimation = cast(SpatialCorrelationBathyEstimation,
+                                     self.create_bathymetry_estimation(estimated_direction,
+                                                                       wavelength))
+        wave_field_estimation.delta_position = delta_position
+        self.wave_fields_estimations.append(wave_field_estimation)

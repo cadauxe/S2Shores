@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Base class for the estimators of waves fields from several images taken at a small
+""" Base class for the estimators of wave fields from several images taken at a small
 time intervals.
 
 :author: Alain Giros
@@ -35,7 +35,7 @@ class LocalBathyEstimator(ABC):
     @property
     @classmethod
     @abstractmethod
-    def waves_field_estimation_cls(cls) -> Type[BathymetrySampleEstimation]:
+    def wave_field_estimation_cls(cls) -> Type[BathymetrySampleEstimation]:
         """ :returns: a class inheriting from BathymetrySampleEstimation to use for storing an
                       estimation.
         """
@@ -75,15 +75,15 @@ class LocalBathyEstimator(ABC):
             sequential_delta_times = np.append(delta_time, sequential_delta_times)
         self._sequential_delta_times = sequential_delta_times
 
-        self._waves_fields_estimations = BathymetrySampleEstimations(location, gravity,
-                                                                     self.propagation_duration,
-                                                                     distance, inside_roi)
+        self._wave_fields_estimations = BathymetrySampleEstimations(location, gravity,
+                                                                    self.propagation_duration,
+                                                                    distance, inside_roi)
 
         self._metrics: Dict[str, Any] = {}
 
     def can_estimate_bathy(self) -> bool:
-        return (self.waves_fields_estimations.distance_to_shore > 0 and
-                self.waves_fields_estimations.inside_roi)
+        return (self.wave_fields_estimations.distance_to_shore > 0 and
+                self.wave_fields_estimations.inside_roi)
 
     def set_images_sequence(self, images_sequence: List[WavesImage]) -> None:
         """ initialize the image_sequence to use with this estimator
@@ -131,12 +131,12 @@ class LocalBathyEstimator(ABC):
     def gravity(self) -> float:
         """ :returns: the acceleration of the gravity at the working position of the estimator
         """
-        return self.waves_fields_estimations.gravity
+        return self.wave_fields_estimations.gravity
 
     @property
     def location(self) -> PointType:
         """ :returns: The (X, Y) coordinates of the location where this estimator is acting"""
-        return self.waves_fields_estimations.location
+        return self.wave_fields_estimations.location
 
     @property
     def sequential_delta_times(self) -> np.ndarray:
@@ -149,37 +149,37 @@ class LocalBathyEstimator(ABC):
         """  Run the local bathymetry estimation, using some method specific to the inheriting
         class.
 
-        This method stores its results in the waves_fields_estimations list and
+        This method stores its results in the wave_fields_estimations list and
         its metrics in _metrics attribute.
         """
 
-    def create_waves_field_estimation(self, direction: float, wavelength: float
-                                      ) -> BathymetrySampleEstimation:
+    def create_bathymetry_estimation(self, direction: float, wavelength: float
+                                     ) -> BathymetrySampleEstimation:
         """ Creates the BathymetrySampleEstimation instance where the local estimator will store its
         estimation.
 
-        :param direction: the propagation direction of the waves field (degrees measured
+        :param direction: the propagation direction of the wave field (degrees measured
                           counterclockwise from the East).
-        :param wavelength: the wavelength of the waves field
-        :returns: an initialized instance of WavesFilesEstimation to be filled in further on.
+        :param wavelength: the wavelength of the wave field
+        :returns: an initialized instance of BathymetrySampleEstimation to be filled in further on.
         """
-        waves_field_estimation = self.waves_field_estimation_cls(
+        bathy_estimation = self.wave_field_estimation_cls(
             self.gravity,
             self.global_estimator.depth_estimation_method,
             self.global_estimator.waves_period_range,
             self.global_estimator.waves_linearity_range,
             self.global_estimator.depth_min)
-        waves_field_estimation.delta_time = self.propagation_duration
-        waves_field_estimation.direction = direction
-        waves_field_estimation.wavelength = wavelength
+        bathy_estimation.delta_time = self.propagation_duration
+        bathy_estimation.direction = direction
+        bathy_estimation.wavelength = wavelength
 
-        return waves_field_estimation
+        return bathy_estimation
 
     @property
-    def waves_fields_estimations(self) -> BathymetrySampleEstimations:
-        """ :returns: the estimations recorded by this estimator.
+    def wave_fields_estimations(self) -> BathymetrySampleEstimations:
+        """ :returns: the wave fields estimations recorded by this estimator.
         """
-        return self._waves_fields_estimations
+        return self._wave_fields_estimations
 
     @property
     def metrics(self) -> Dict[str, Any]:

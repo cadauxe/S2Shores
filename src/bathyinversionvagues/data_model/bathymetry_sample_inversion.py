@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class handling the information describing a waves field sample..
+""" Class handling the information describing a wave field sample..
 
 :author: Alain Giros
 :organization: CNES
@@ -13,16 +13,16 @@ import numpy as np
 
 from ..bathy_physics import (period_offshore, period_low_depth,
                              depth_from_dispersion, linearity_indicator)
-from .waves_field_sample_dynamics import WavesFieldSampleDynamics
+from .wave_field_sample_dynamics import WaveFieldSampleDynamics
 
 
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
 
 
-class BathymetrySampleInversion(WavesFieldSampleDynamics):
+class BathymetrySampleInversion(WaveFieldSampleDynamics):
     """ This class encapsulates the bathymetric inversion for a given sample.
 
-    It inherits from WavesFieldSampleDynamics and defines specific attributes related to the
+    It inherits from WaveFieldSampleDynamics and defines specific attributes related to the
     bathymetry for that sample..
     """
 

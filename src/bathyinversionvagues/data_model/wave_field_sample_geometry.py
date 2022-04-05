@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class handling the information describing a waves field sample..
+""" Class handling the information describing a wave field sample..
 
 :author: Alain Giros
 :organization: CNES
@@ -12,7 +12,7 @@ from typing import List, Callable
 import numpy as np
 
 
-class WavesFieldSampleGeometry:
+class WaveFieldSampleGeometry:
     """ This class encapsulates the geometric information defining a sample of a wave field:
 
     - its direction relative to some origin direction (image or geographical azimuth),
@@ -52,13 +52,13 @@ class WavesFieldSampleGeometry:
 
     @property
     def direction_from_north(self) -> float:
-        """ :returns: The direction relative to the North from which the waves field comes from,
+        """ :returns: The direction relative to the North from which the wave field comes from,
         counted clockwise (degrees)"""
         return (270. - self._direction) % 360.
 
     @property
     def wavelength(self) -> float:
-        """ :returns: The waves field wavelength (m)
+        """ :returns: The wave field wavelength (m)
         :raises ValueError: when the wavelength is not positive.
         """
         return self._wavelength
@@ -74,7 +74,7 @@ class WavesFieldSampleGeometry:
 
     @property
     def wavenumber(self) -> float:
-        """ :returns: The waves field wave number (m-1)"""
+        """ :returns: The wave field wave number (m-1)"""
         return 1. / self._wavelength
 
     @wavenumber.setter

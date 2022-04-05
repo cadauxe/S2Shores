@@ -49,8 +49,8 @@ class BathyEstimatorParameters:
         return result
 
     @property
-    def nb_max_waves_fields(self) -> int:
-        """ :returns: the maximum number of waves fields to keep
+    def nb_max_wave_fields(self) -> int:
+        """ :returns: the maximum number of wave fields to keep
         """
         return self._global_estimator_params['NKEEP']
 

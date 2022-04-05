@@ -49,8 +49,8 @@ class OrthoBathyEstimator:
 
         start_load = time.time()
         # nbkeep shall be understood as a filtering in terms of the number of proposed samples.
-        # Will disappear when true Waves Fields will be identified and implemented.
-        nb_keep = self.parent_estimator.nb_max_waves_fields
+        # Will disappear when true Wave Fields will be identified and implemented.
+        nb_keep = self.parent_estimator.nb_max_wave_fields
 
         estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
                                          self.sampled_ortho.ortho_stack.acquisition_time)
@@ -89,24 +89,24 @@ class OrthoBathyEstimator:
             # TODO: use selected_directions argument
             local_bathy_estimator = local_bathy_estimator_factory(estimation_point,
                                                                   self.parent_estimator)
-            bathy_estimations = local_bathy_estimator.waves_fields_estimations
+            bathy_estimations = local_bathy_estimator.wave_fields_estimations
             images_sequence = self._create_images_sequence(sub_tile_images, estimation_point)
             local_bathy_estimator.set_images_sequence(images_sequence)
             if local_bathy_estimator.can_estimate_bathy():
                 local_bathy_estimator.run()
-                bathy_estimations.remove_unphysical_waves_fields()
+                bathy_estimations.remove_unphysical_wave_fields()
                 bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)
                 if self.parent_estimator.debug_sample:
                     print(f'estimations after sorting :')
                     print(bathy_estimations)
         except NoDeltaTimeValueError:
-            bathy_estimations = local_bathy_estimator.waves_fields_estimations
+            bathy_estimations = local_bathy_estimator.wave_fields_estimations
             bathy_estimations.delta_time_available = False
             bathy_estimations.clear()
         except WavesException as excp:
             warn_msg = f'Unable to estimate bathymetry: {str(excp)}'
             warnings.warn(warn_msg)
-            bathy_estimations = local_bathy_estimator.waves_fields_estimations
+            bathy_estimations = local_bathy_estimator.wave_fields_estimations
             bathy_estimations.clear()
         return bathy_estimations
 

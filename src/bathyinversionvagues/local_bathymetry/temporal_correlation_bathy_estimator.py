@@ -28,7 +28,7 @@ from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
 
 from .local_bathy_estimator import LocalBathyEstimator
-from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
+from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
 
 
 if TYPE_CHECKING:
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """ Class performing temporal correlation to compute bathymetry
     """
-    waves_field_estimation_cls = TemporalCorrelationWavesFieldEstimation
+    wave_field_estimation_cls = TemporalCorrelationBathyEstimation
 
     def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
@@ -114,24 +114,24 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             # Keep in mind that direction_estimations stores several estimations for a same
             # direction and only the best of them should be added in the final list
             # direction_estimation is empty at this point
-            direction_estimations = deepcopy(self.waves_fields_estimations)
+            direction_estimations = deepcopy(self.wave_fields_estimations)
 
             for distance in distances:
-                estimation = self.create_waves_field_estimation(direction_propagation,
-                                                                wave_length)
+                estimation = self.create_bathymetry_estimation(direction_propagation,
+                                                               wave_length)
                 estimation.delta_position = distance
                 direction_estimations.append(estimation)
 
             celerities = direction_estimations.get_attribute('celerity')
             linearity_coefficients = direction_estimations.get_attribute('linearity')
-            direction_estimations.remove_unphysical_waves_fields()
+            direction_estimations.remove_unphysical_wave_fields()
             if not direction_estimations:
                 raise WavesEstimationError('No correct wave fied estimations have been found')
             direction_estimations.sort_on_attribute('linearity', reverse=False)
             best_estimation = direction_estimations[0]
 
-            waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation, best_estimation)
-            self.waves_fields_estimations.append(waves_field_estimation)
+            wave_field_estimation = cast(TemporalCorrelationBathyEstimation, best_estimation)
+            self.wave_fields_estimations.append(wave_field_estimation)
 
             if self.debug_sample:
                 self.metrics['radon_transform'] = radon_transform

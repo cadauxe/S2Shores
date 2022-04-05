@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Class managing the computation of waves fields from two images taken at a small time interval.
+Class managing the computation of wave fields from two images taken at a small time interval.
 
 
 :author: Alain Giros
@@ -97,7 +97,7 @@ def display_initial_data(local_estimator):
     plt.close('all')
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
-    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.waves_fields_estimations]
+    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.wave_fields_estimations]
     build_image_display(axs[0, 0], 'first image original',
                         local_estimator.images_sequence[0].original_pixels,
                         directions=arrows, cmap='gray')
