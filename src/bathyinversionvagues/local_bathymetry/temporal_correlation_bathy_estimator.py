@@ -7,21 +7,20 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-import warnings
-
+from copy import deepcopy
 from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
-import pandas
-from scipy.interpolate import interp1d
-from scipy.signal import butter, find_peaks, sosfiltfilt
 
+import pandas
+from scipy.signal import find_peaks
 import numpy as np
+
 
 from ..bathy_physics import wavelength_offshore
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
-from ..generic_utils.signal_utils import find_period_from_peaks, find_period_from_zeros
+from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.image_geometry_types import PointType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
@@ -52,6 +51,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_transform: Optional[WavesRadon] = None
         self._angles: Optional[np.ndarray] = None
         self._distances: Optional[np.ndarray] = None
+        self._sampling_positions: Optional[Tuple[np.ndarray, np.ndarray]] = None
+        self._time_series: Optional[np.ndarray] = None
+
         # Filters
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
             clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
@@ -105,34 +107,30 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             sinogram_max_var_values = sinogram_max_var.values
             wave_length = self.compute_wave_length(sinogram_max_var_values)
             distances = self.compute_distances(
-                sinogram_max_var_values, wave_length, self.local_estimator_params['HOPS_NUMBER'])
+                sinogram_max_var_values,
+                wave_length,
+                nb_hops=self.local_estimator_params['HOPS_NUMBER'])
 
-            celerities = np.abs(distances / self.propagation_duration)
+            # Keep in mind that direction_estimations stores several estimations for a same
+            # direction and only the best of them should be added in the final list
+            # direction_estimation is empty at this point
+            direction_estimations = deepcopy(self.waves_fields_estimations)
 
-            temporal_signals = []
-            periods = []
-            arg_peaks_max = []
-            for celerity in celerities:
-                temporal_signal = self.temporal_reconstruction(
-                    celerity, direction_propagation)
-                try:
-                    temporal_signal = self.temporal_reconstruction_tuning(temporal_signal)
-                except ValueError as excp:
-                    warnings.warn(str(excp))
-                temporal_signals.append(temporal_signal)
-                period, arg_peak_max = find_period_from_peaks(
-                    temporal_signal, min_period=int(self.global_estimator.waves_period_min))
-                periods.append(period)
-                arg_peaks_max.append(arg_peak_max)
+            for distance in distances:
+                estimation = self.create_waves_field_estimation(direction_propagation,
+                                                                wave_length)
+                estimation.delta_position = distance
+                direction_estimations.append(estimation)
 
-            celerities_from_periods = [wave_length / period for period in periods]
-            errors_celerities = np.abs(celerities_from_periods - celerities)
-            index_min = np.nanargmin(errors_celerities)
+            celerities = direction_estimations.get_attribute('celerity')
+            linearity_coefficients = direction_estimations.get_attribute('linearity')
+            direction_estimations.remove_unphysical_waves_fields()
+            if not direction_estimations:
+                raise WavesEstimationError('No correct wave fied estimations have been found')
+            direction_estimations.sort_on_attribute('linearity', reverse=False)
+            best_estimation = direction_estimations[0]
 
-            waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation,
-                                          self.create_waves_field_estimation(direction_propagation,
-                                                                             wave_length))
-            waves_field_estimation.delta_position = distances[index_min]
+            waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation, best_estimation)
             self.waves_fields_estimations.append(waves_field_estimation)
 
             if self.debug_sample:
@@ -140,25 +138,28 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self.metrics['variances'] = variances
                 self.metrics['sinogram_max_var'] = sinogram_max_var_values
                 # TODO: use objects in debug
-                self.metrics['temporal_signals'] = temporal_signals
-                self.metrics['arg_peaks_max'] = arg_peaks_max
-                self.metrics['periods'] = periods
                 self.metrics['propagation_duration'] = self.propagation_duration
+                self.metrics['distances'] = distances
                 self.metrics['celerities'] = celerities
-                self.metrics['celerities_from_periods'] = celerities_from_periods
+                self.metrics['linearity_coefficients'] = linearity_coefficients
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
-        """ :return: tuple of sampling positions
+        """ :returns: tuple of sampling positions
+        :raises ValueError: when sampling has not been defined
         """
+        if self._sampling_positions is None:
+            raise ValueError('Sampling positions are not defined')
         return self._sampling_positions
 
     def get_correlation_matrix(self) -> np.ndarray:
         """Compute temporal correlation matrix
         """
         temporal_lag = self.local_estimator_params['TEMPORAL_LAG']
+        if self._time_series is None:
+            raise ValueError('Time series are not defined')
         return cross_correlation(self._time_series[:, temporal_lag:],
                                  self._time_series[:, :-temporal_lag])
 
@@ -222,7 +223,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def correlation_image(self) -> WavesImage:
-        """ :return: correlation image used to perform radon transformation
+        """ Correlation image
+        :return: correlation image used to perform radon transformation
         """
         if self._correlation_image is None:
             self._correlation_image = self.get_correlation_image()
@@ -272,77 +274,27 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def compute_distances(self, sinogram: np.ndarray, wave_length: float,
                           nb_hops: int) -> np.ndarray:
         """ Propagated distance computation (in meter)
-        - 1) sinogram maximum is determined on interval [-wave_length, wave_length]
-        - 2) nb_max_hops propagated distances are computed from the position of the maximum using
-             following formula :
-            [dx , dx + wave_length, ..., dx + (nb_max_hops)*wave_length] (an adaptation to negative
-            values is also made if needed)
+        Maxima are computed using peaks detection and the smallest nb_hops distances are selected
 
         :param sinogram: sinogram having maximum variance
         :param wave_length: wave_length computed on sinogram
-        :param nb_hops: number of propagated distances computed
+        :param nb_hops : number of peaks to consider to compute distances
         :returns: np.ndarray of size nb_hops containing computed distances
         """
-        x = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
-        interval = np.logical_and(x * self.spatial_resolution > -wave_length,
-                                  x * self.spatial_resolution < wave_length)
-        peaks, _ = find_peaks(sinogram)
-        peaks = peaks[interval[peaks]]
-        max_indice = np.argmax(sinogram[peaks])
-        dx = x[peaks[max_indice]]
-        wavelength_hops = wave_length * np.arange(nb_hops)
-        if dx <= 0:
-            wavelength_hops = -wavelength_hops
-        distances = dx * self.spatial_resolution + wavelength_hops
-
+        x_axis = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
+        interval = np.logical_and(x_axis * self.spatial_resolution > -wave_length,
+                                  x_axis * self.spatial_resolution < wave_length)
+        period = int(wave_length / self.spatial_resolution)
+        max_sinogram = np.max(sinogram)
+        tuning_parameters = self.local_estimator_params['TUNING']
+        peaks, _ = find_peaks(sinogram, height=tuning_parameters['PEAK_DETECTION_HEIGHT_RATIO']
+                              * max_sinogram,
+                              distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']
+                              * period)
+        distances = x_axis[peaks] * self.spatial_resolution
+        index = np.argsort(sinogram[peaks])[::-1]
         if self.debug_sample:
             self.metrics['interval'] = interval
-            self.metrics['x'] = x
-            max_indices = np.array(peaks[max_indice] + wavelength_hops / self.spatial_resolution,
-                                   dtype=int)
-            self.metrics['max_indices'] = max_indices[np.logical_and(max_indices > 0,
-                                                                     max_indices < len(sinogram))]
-            self.metrics['distances'] = distances
-        return distances
-
-    def temporal_reconstruction(self, celerity: float, direction_propagation: float) -> np.ndarray:
-        """ Temporal reconstruction of the correlation signal following propagation direction
-        :param celerity : computed celerity in meter/second
-        :param direction_propagation: angle of direction propagation in degrees
-        :returns: temporal reconstruction of the signal
-        """
-        distances = np.cos(np.radians(direction_propagation - self.angles.T.flatten())) * \
-            self.distances.flatten() * self.spatial_resolution
-        time = distances / celerity
-        time_unique, index_unique = np.unique(time, return_index=True)
-        index_unique_sorted = np.argsort(time_unique)
-        time_unique_sorted = time_unique[index_unique_sorted]
-        timevec = np.arange(np.min(time_unique_sorted), np.max(time_unique_sorted),
-                            self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION'])
-        corr_unique_sorted = self.correlation_matrix.T.flatten()[
-            index_unique[index_unique_sorted]]
-        interpolation = interp1d(time_unique_sorted, corr_unique_sorted)
-        temporal_signal = interpolation(timevec)
-        return temporal_signal
-
-    def temporal_reconstruction_tuning(self, temporal_signal: np.ndarray) -> np.ndarray:
-        """ Tuning of temporal signal
-        :param temporal_signal : temporal signal to be tuned
-        :raises ValueError: when the signal is too short to be filtered
-        :returns: tuned temporal signal
-        """
-        lowcut = 1 / self.global_estimator.waves_period_max
-        highcut = 1 / self.global_estimator.waves_period_min
-        nyq = 0.5 / self.local_estimator_params['RESOLUTION']['TIME_INTERPOLATION']
-        low = lowcut / nyq
-        high = highcut / nyq
-
-        sos_filter = butter(1, (low, high),
-                            btype='bandpass', output='sos')
-        # Formula found on :
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html
-        padlen = 3 * (2 * len(sos_filter) + 1 - min((sos_filter[:, 2] == 0).sum(),
-                                                    (sos_filter[:, 5] == 0).sum()))
-        if not len(temporal_signal) > padlen:
-            raise ValueError('Temporal signal is too short to be filtered')
-        return sosfiltfilt(sos_filter, temporal_signal)
+            self.metrics['x_axis'] = x_axis
+            self.metrics['max_indices'] = peaks[index][:nb_hops]
+        return distances[index][:nb_hops]
