@@ -11,7 +11,7 @@ from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 import pandas
 from scipy.signal import find_peaks
-
+from copy import deepcopy
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
@@ -49,8 +49,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_transform: Optional[WavesRadon] = None
         self._angles: Optional[np.ndarray] = None
         self._distances: Optional[np.ndarray] = None
-        self._sampling_positions = None
-        self._time_series = None
+        self._sampling_positions: Optional[np.ndarray] = None
+        self._time_series: Optional[np.ndarray] = None
 
         # Filters
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
@@ -108,26 +108,25 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             propagation_duration = np.sum(
                 self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
 
-            # Keep in mind that list_estimation stores several estimations for the same
-            # sinogram and only the best of them should be added in the final list
-            distance_to_shore = self.global_estimator.get_distoshore(self.location)
-            inside_roi = self.global_estimator.is_inside_roi(self.location)
-            list_estimations = WavesFieldsEstimations(self.location, self.gravity,
-                                                      distance_to_shore, inside_roi)
+            # Keep in mind that direction_estimations stores several estimations for a same
+            # direction and only the best of them should be added in the final list
+            # direction_estimation is empty at this point
+            direction_estimations = deepcopy(self.waves_fields_estimations)
+
             for distance in distances:
                 estimation = self.create_waves_field_estimation(direction_propagation,
                                                                 wave_length)
                 estimation.delta_time = propagation_duration
                 estimation.propagated_distance = distance
-                list_estimations.append(estimation)
+                direction_estimations.append(estimation)
 
-            celerities = list_estimations.get_attribute('celerity')
-            linearity_coefficients = list_estimations.get_attribute('linearity')
-            list_estimations.remove_unphysical_waves_fields()
-            if not list_estimations:
-                raise ValueError('No correct wave fied estimations have been found')
-            list_estimations.sort_on_attribute('linearity', reverse=False)
-            best_estimation = list_estimations[0]
+            celerities = direction_estimations.get_attribute('celerity')
+            linearity_coefficients = direction_estimations.get_attribute('linearity')
+            direction_estimations.remove_unphysical_waves_fields()
+            if not direction_estimations:
+                raise WavesEstimationError('No correct wave fied estimations have been found')
+            direction_estimations.sort_on_attribute('linearity', reverse=False)
+            best_estimation = direction_estimations[0]
 
             waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation, best_estimation)
             self.waves_fields_estimations.append(waves_field_estimation)
