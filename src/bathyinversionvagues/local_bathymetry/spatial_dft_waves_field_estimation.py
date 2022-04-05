@@ -48,7 +48,7 @@ class SpatialDFTWavesFieldEstimation(BathymetrySampleEstimation):
     @property
     def energy_ratio(self) -> float:
         """ :returns: The ratio of energy relative to the max peak """
-        return (self.delta_phase_ratio ** 2) * self.energy
+        return (self.period_ratio ** 2) * self.energy
 
     def __str__(self) -> str:
         result = super().__str__()

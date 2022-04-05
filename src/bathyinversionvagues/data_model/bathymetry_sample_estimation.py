@@ -42,7 +42,7 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
         self._linearity_range = linearity_range
 
     def is_physical(self) -> bool:
-        """  Check if a bathymetry estimationon a sample satisfies physical constraints.
+        """  Check if a bathymetry estimation on a sample satisfies physical constraints.
 
         :returns: True is the waves field is valid, False otherwise
         """
@@ -52,13 +52,6 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
         ambiguity_range = (self.ambiguity_low_depth, self.ambiguity_offshore)
         return (self.is_waves_field_valid(ambiguity_range) and
                 self.is_linearity_inside(self._linearity_range))
-
-    # FIXME: delta_phase_ratio should be removed. It is equal to period_ratio which has a more
-    # generic meaning.
-    @property
-    def delta_phase_ratio(self) -> float:
-        """ :returns: the fraction of the maximum phase shift allowable in deep waters """
-        return self.delta_phase / (2 * np.pi * self.ambiguity_offshore)
 
     @property
     def ambiguity_low_depth(self) -> float:
@@ -75,7 +68,7 @@ class BathymetrySampleEstimation(WavesFieldSampleEstimation, BathymetrySampleInv
     def __str__(self) -> str:
         result = WavesFieldSampleEstimation.__str__(self)
         result += '\n' + BathymetrySampleInversion.__str__(self)
-        result += f'\nBathymetry Estimation:  delta phase ratio: {self.delta_phase_ratio:5.2f} '
+        result += f'\nBathymetry Estimation: '
         result += f' ambiguity low depth: {self.ambiguity_low_depth:5.3f} '
         result += f' ambiguity offshore: {self.ambiguity_offshore:5.3f} '
         return result
