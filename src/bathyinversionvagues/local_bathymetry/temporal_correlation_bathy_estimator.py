@@ -121,6 +121,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 estimation.propagated_distance = distance
                 list_estimations.append(estimation)
 
+            celerities = list_estimations.get_attribute('celerity')
+            linearity_coefficients = list_estimations.get_attribute('linearity')
             list_estimations.remove_unphysical_waves_fields()
             if not list_estimations:
                 raise ValueError('No correct wave fied estimations have been found')
@@ -137,6 +139,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 # TODO: use objects in debug
                 self.metrics['propagation_duration'] = propagation_duration
                 self.metrics['distances'] = distances
+                self.metrics['celerities'] = celerities
+                self.metrics['linearity_coefficients'] = linearity_coefficients
         except Exception as excp:
             print(f'Bathymetry computation failed: {str(excp)}')
 
@@ -145,7 +149,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ :returns: tuple of sampling positions
         :raises ValueError: when sampling has not been defined
         """
-        if not self._sampling_positions:
+        if self._sampling_positions is None:
             raise ValueError('Sampling positions are not defined')
         return self._sampling_positions
 
@@ -153,7 +157,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """Compute temporal correlation matrix
         """
         temporal_lag = self.local_estimator_params['TEMPORAL_LAG']
-        if not self._time_series:
+        if self._time_series is None:
             raise ValueError('Time series are not defined')
         return cross_correlation(self._time_series[:, temporal_lag:],
                                  self._time_series[:, :-temporal_lag])

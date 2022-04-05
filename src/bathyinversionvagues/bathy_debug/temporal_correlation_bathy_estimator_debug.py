@@ -109,10 +109,11 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             ax5.axis('off')
             distances = metrics['distances']
             celerities = metrics['celerities']
-            chain_dx = ' '.join([f'{distance:.2f} | ' for distance in distances])
+            linearity_coefficients = metrics['linearity_coefficients']
             chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
             chain_coefficients = ' '.join(
-                [f'{coefficient:.2f} | ' for coefficient in metrics['linearity_coefficients']])
+                [f'{coefficient:.2f} | ' for coefficient in linearity_coefficients])
+            chain_dx = ' '.join([f'{distance:.2f} | ' for distance in distances])
             ax5.annotate(f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n'
                          f' c = {chain_celerities} \n ckg = {chain_coefficients}\n'
                          f' chosen_celerity = {wave_celerity}', (0, 0), color='g')
