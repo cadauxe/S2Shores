@@ -184,8 +184,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param wavelength: the wave length of the waves
         :param delta_position: the distance propagated over time by the waves
         """
-        wave_field_estimation = cast(SpatialCorrelationBathyEstimation,
+        bathymetry_estimation = cast(SpatialCorrelationBathyEstimation,
                                      self.create_bathymetry_estimation(estimated_direction,
                                                                        wavelength))
-        wave_field_estimation.delta_position = delta_position
-        self.wave_fields_estimations.append(wave_field_estimation)
+        bathymetry_estimation.delta_position = delta_position
+        self.bathymetry_estimations.append(bathymetry_estimation)

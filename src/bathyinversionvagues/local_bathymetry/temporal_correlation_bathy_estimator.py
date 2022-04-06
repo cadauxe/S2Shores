@@ -8,7 +8,7 @@
 :created: 18/06/2021
 """
 from copy import deepcopy
-from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
+from typing import Optional, Tuple, TYPE_CHECKING  # @NoMove
 
 
 import pandas
@@ -114,7 +114,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             # Keep in mind that direction_estimations stores several estimations for a same
             # direction and only the best of them should be added in the final list
             # direction_estimation is empty at this point
-            direction_estimations = deepcopy(self.wave_fields_estimations)
+            direction_estimations = deepcopy(self.bathymetry_estimations)
 
             for distance in distances:
                 estimation = self.create_bathymetry_estimation(direction_propagation,
@@ -130,8 +130,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             direction_estimations.sort_on_attribute('linearity', reverse=False)
             best_estimation = direction_estimations[0]
 
-            wave_field_estimation = cast(TemporalCorrelationBathyEstimation, best_estimation)
-            self.wave_fields_estimations.append(wave_field_estimation)
+            self.bathymetry_estimations.append(best_estimation)
 
             if self.debug_sample:
                 self.metrics['radon_transform'] = radon_transform

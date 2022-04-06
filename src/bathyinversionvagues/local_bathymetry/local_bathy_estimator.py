@@ -75,15 +75,15 @@ class LocalBathyEstimator(ABC):
             sequential_delta_times = np.append(delta_time, sequential_delta_times)
         self._sequential_delta_times = sequential_delta_times
 
-        self._wave_fields_estimations = BathymetrySampleEstimations(location, gravity,
-                                                                    self.propagation_duration,
-                                                                    distance, inside_roi)
+        self._bathymetry_estimations = BathymetrySampleEstimations(location, gravity,
+                                                                   self.propagation_duration,
+                                                                   distance, inside_roi)
 
         self._metrics: Dict[str, Any] = {}
 
     def can_estimate_bathy(self) -> bool:
-        return (self.wave_fields_estimations.distance_to_shore > 0 and
-                self.wave_fields_estimations.inside_roi)
+        return (self.bathymetry_estimations.distance_to_shore > 0 and
+                self.bathymetry_estimations.inside_roi)
 
     def set_images_sequence(self, images_sequence: List[WavesImage]) -> None:
         """ initialize the image_sequence to use with this estimator
@@ -131,12 +131,12 @@ class LocalBathyEstimator(ABC):
     def gravity(self) -> float:
         """ :returns: the acceleration of the gravity at the working position of the estimator
         """
-        return self.wave_fields_estimations.gravity
+        return self.bathymetry_estimations.gravity
 
     @property
     def location(self) -> PointType:
         """ :returns: The (X, Y) coordinates of the location where this estimator is acting"""
-        return self.wave_fields_estimations.location
+        return self.bathymetry_estimations.location
 
     @property
     def sequential_delta_times(self) -> np.ndarray:
@@ -149,7 +149,7 @@ class LocalBathyEstimator(ABC):
         """  Run the local bathymetry estimation, using some method specific to the inheriting
         class.
 
-        This method stores its results in the wave_fields_estimations list and
+        This method stores its results in the bathymetry_estimations list and
         its metrics in _metrics attribute.
         """
 
@@ -176,10 +176,10 @@ class LocalBathyEstimator(ABC):
         return bathy_estimation
 
     @property
-    def wave_fields_estimations(self) -> BathymetrySampleEstimations:
+    def bathymetry_estimations(self) -> BathymetrySampleEstimations:
         """ :returns: the wave fields estimations recorded by this estimator.
         """
-        return self._wave_fields_estimations
+        return self._bathymetry_estimations
 
     @property
     def metrics(self) -> Dict[str, Any]:

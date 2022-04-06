@@ -89,7 +89,7 @@ class OrthoBathyEstimator:
             # TODO: use selected_directions argument
             local_bathy_estimator = local_bathy_estimator_factory(estimation_point,
                                                                   self.parent_estimator)
-            bathy_estimations = local_bathy_estimator.wave_fields_estimations
+            bathy_estimations = local_bathy_estimator.bathymetry_estimations
             images_sequence = self._create_images_sequence(sub_tile_images, estimation_point)
             local_bathy_estimator.set_images_sequence(images_sequence)
             if local_bathy_estimator.can_estimate_bathy():
@@ -100,13 +100,13 @@ class OrthoBathyEstimator:
                     print(f'estimations after sorting :')
                     print(bathy_estimations)
         except NoDeltaTimeValueError:
-            bathy_estimations = local_bathy_estimator.wave_fields_estimations
+            bathy_estimations = local_bathy_estimator.bathymetry_estimations
             bathy_estimations.delta_time_available = False
             bathy_estimations.clear()
         except WavesException as excp:
             warn_msg = f'Unable to estimate bathymetry: {str(excp)}'
             warnings.warn(warn_msg)
-            bathy_estimations = local_bathy_estimator.wave_fields_estimations
+            bathy_estimations = local_bathy_estimator.bathymetry_estimations
             bathy_estimations.clear()
         return bathy_estimations
 

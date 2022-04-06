@@ -311,8 +311,8 @@ class EstimatedBathy:
     # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
                     y_index: int, x_index: int) -> None:
-        wave_fields_estimations = self.estimated_bathy[y_index, x_index]
-        bathy_property = wave_fields_estimations.get_attribute(sample_property)
+        bathymetry_estimations = self.estimated_bathy[y_index, x_index]
+        bathy_property = bathymetry_estimations.get_attribute(sample_property)
 
         if layer_data.ndim == 2:
             layer_data[y_index, x_index] = np.array(bathy_property)

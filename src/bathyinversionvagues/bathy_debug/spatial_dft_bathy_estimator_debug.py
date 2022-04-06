@@ -53,7 +53,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         dump_numpy_variable(total_spectrum_normalized, 'refined total_spectrum_normalized')
 
         print(f'estimations after direction refinement :')
-        print(self.wave_fields_estimations)
+        print(self.bathymetry_estimations)
 
         # Displays
         display_initial_data(self)
