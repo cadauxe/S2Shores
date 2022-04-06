@@ -40,6 +40,11 @@ class BathymetrySampleEstimation(WaveFieldSampleEstimation, BathymetrySampleInve
 
         self._linearity_range = linearity_range
 
+    def __hash__(self) -> int:
+        """ :returns: a hash code based on direction + wavelength + period
+        """
+        return hash((self.direction, self.wavelength, self.period))
+
     def is_physical(self) -> bool:
         """  Check if a bathymetry estimation on a sample satisfies physical constraints.
 

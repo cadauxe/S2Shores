@@ -54,9 +54,9 @@ class BathymetrySampleEstimations(list):
 
         :param estimation: a new estimation to store inside this localized list of estimations
         """
-        stored_wavelengths_directions = [(estim.wavelength, estim.direction) for estim in self]
+        stored_estimations_hashes = [hash(estim) for estim in self]
         # Do not store duplicate estimations for the same direction/wavelength
-        if (estimation.wavelength, estimation.direction) in stored_wavelengths_directions:
+        if hash(estimation) in stored_estimations_hashes:
             warnings.warn(f'\nTrying to store a duplicate estimation:\n{str(estimation)} ')
         else:
             super().append(estimation)
@@ -68,7 +68,8 @@ class BathymetrySampleEstimations(list):
         :param reverse: When True sorting is in descending order, when False in ascending order
         """
         if attribute_name is not None:
-            self.sort(key=lambda x: getattr(x, attribute_name), reverse=reverse)
+            name = attribute_name
+            self.sort(key=lambda x: getattr(x, name), reverse=reverse)
 
     def argsort_on_attribute(self, attribute_name: Optional[str] = None,
                              reverse: bool = True) -> List[int]:
