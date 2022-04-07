@@ -20,7 +20,8 @@ from .waves_image import WavesImage
 
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
-FrameIdType = Union[int, str, datetime]
+FrameIdType = Union[str, int, datetime]
+FramesIdsType = Union[List[str], List[int], List[datetime]]
 
 
 class ImagesSequence(list):
@@ -31,29 +32,34 @@ class ImagesSequence(list):
         self._resolution: Optional[float] = None
         self._shape: Optional[Tuple[int, ...]] = None
 
-        # FIXME: list or dict indexed by frame_id ???
-        self._frames_id: List[FrameIdType] = []
-        self._frames_time: List[datetime] = []
+        # FIXME: list or dict indexed by image_id ???
+        self._images_id: List[FrameIdType] = []
+        self._images_time: List[datetime] = []
 
     @property
     def resolution(self) -> Optional[float]:
-        """ :returns: The spatial resolution of this sequence of frames (m-1)"""
+        """ :returns: The spatial resolution of this sequence of images (m-1)"""
         return self._resolution
 
     @property
+    def shape(self) -> Optional[Tuple[int, ...]]:
+        """ :returns: The shape of all the images contained in this this sequence of images"""
+        return self._shape
+
+    @property
     def sampling_frequency(self) -> Optional[float]:
-        """ :returns: The spatial sampling frequency of this sequence of frames (m-1)"""
+        """ :returns: The spatial sampling frequency of this sequence of images (m-1)"""
         if self.resolution is None:
             return None
         return 1. / self.resolution
 
     def append_image(self, image: WavesImage, image_id: FrameIdType) -> None:
         if self._resolution is not None and image.resolution != self._resolution:
-            msg = 'Trying to add an frame into images sequence with incompatible resolution:  new '
+            msg = 'Trying to add an image into images sequence with incompatible resolution:  new '
             msg += f'image resolution: {image.resolution} sequence resolution: {self.resolution}'
             raise ValueError(msg)
         if self._shape is not None and image.pixels.shape != self._shape:
-            msg = 'Trying to add an image into frames sequence with incompatible shape:'
+            msg = 'Trying to add an image into images sequence with incompatible shape:'
             msg += f' new image shape: {image.pixels.shape} sequence shape: {self._shape}'
             raise ValueError(msg)
         self._resolution = image.resolution
@@ -61,9 +67,9 @@ class ImagesSequence(list):
         self.append(image)
 
         # TODO: make some checks on image_id
-        self._frames_id.append(image_id)
+        self._images_id.append(image_id)
 
-    def extract_window(self, window: ImageWindowType) -> List[WavesImage]:
+    def extract_window(self, window: ImageWindowType) -> 'ImagesSequence':
 
         # Create the sequence of WavesImages
         images_sequence: List[WavesImage] = []

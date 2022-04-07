@@ -18,6 +18,7 @@ import numpy as np
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..image.image_geometry_types import PointType
+from ..image_processing.images_sequence import ImagesSequence
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
 
@@ -51,7 +52,7 @@ class LocalBathyEstimator(ABC):
         :param selected_directions: the set of directions onto which the sinogram must be computed
         :raise SequenceImagesError: when sequence can no be exploited
         """
-        self.images_sequence: List[WavesImage] = []
+        self.images_sequence: ImagesSequence
         self.spatial_resolution = 0.
 
         self.global_estimator = global_estimator
@@ -85,7 +86,7 @@ class LocalBathyEstimator(ABC):
         return (self.bathymetry_estimations.distance_to_shore > 0 and
                 self.bathymetry_estimations.inside_roi)
 
-    def set_images_sequence(self, images_sequence: List[WavesImage]) -> None:
+    def set_images_sequence(self, images_sequence: ImagesSequence) -> None:
         """ initialize the image_sequence to use with this estimator
 
         :param images_sequence: a list of superimposed local images centered around the position
@@ -96,13 +97,7 @@ class LocalBathyEstimator(ABC):
             raise SequenceImagesError('Cannot redefine the sequence of images for this estimator')
         if not images_sequence:
             raise SequenceImagesError('Sequence images is empty')
-        self.spatial_resolution = images_sequence[0].resolution
-        shape = images_sequence[0].pixels.shape
-        for wave_image in images_sequence[1:]:
-            if wave_image.resolution != self.spatial_resolution:
-                raise SequenceImagesError('Images in sequence do not have same resolution')
-            if wave_image.pixels.shape != shape:
-                raise SequenceImagesError('Images in sequence do not have same size')
+        self.spatial_resolution = images_sequence.resolution
         self.images_sequence = images_sequence
 
     @property
