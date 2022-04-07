@@ -15,7 +15,7 @@ from xarray import Dataset  # @NoMove
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..data_model.estimated_bathy import EstimatedBathy
 from ..data_providers.delta_time_provider import NoDeltaTimeValueError
-from ..image.image_geometry_types import PointType
+from ..image.image_geometry_types import PointType, ImageWindowType
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
@@ -90,7 +90,8 @@ class OrthoBathyEstimator:
             local_bathy_estimator = local_bathy_estimator_factory(estimation_point,
                                                                   self.parent_estimator)
             bathy_estimations = local_bathy_estimator.bathymetry_estimations
-            images_sequence = self._create_images_sequence(sub_tile_images, estimation_point)
+            window = self.sampled_ortho.window_extent(estimation_point)
+            images_sequence = self._create_images_sequence(sub_tile_images, window)
             local_bathy_estimator.set_images_sequence(images_sequence)
             if local_bathy_estimator.can_estimate_bathy():
                 local_bathy_estimator.run()
@@ -111,17 +112,12 @@ class OrthoBathyEstimator:
         return bathy_estimations
 
     def _create_images_sequence(self, sub_tile_images: List[WavesImage],
-                                estimation_point: PointType) -> List[WavesImage]:
-
-        window = self.sampled_ortho.window_extent(estimation_point)
+                                window: ImageWindowType) -> List[WavesImage]:
 
         # Create the sequence of WavesImages (to be used by ALL estimators)
         images_sequence: List[WavesImage] = []
         for index, frame_id in enumerate(self.parent_estimator.selected_frames):
-            # TODO: make a method in WavesImage to create an excerpt ?
-            pixels = sub_tile_images[index].pixels
-            window_image = WavesImage(pixels[window[0]:window[1] + 1, window[2]:window[3] + 1],
-                                      sub_tile_images[index].resolution)
+            window_image = sub_tile_images[index].extract_sub_image(window)
             images_sequence.append(window_image)
             if self.parent_estimator.debug_sample:
                 print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
