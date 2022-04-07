@@ -5,7 +5,7 @@
 :created: 14/05/2021
 """
 from datetime import datetime
-from typing import Mapping, Hashable, Any, Dict, List
+from typing import Mapping, Hashable, Any, Dict, List, Union, Tuple
 
 import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
@@ -22,6 +22,8 @@ ALL_LAYERS_TYPES = NOMINAL_LAYER
 
 DIMS_Y_X_NKEEP_TIME = ['y', 'x', 'kKeep', 'time']
 DIMS_Y_X_TIME = ['y', 'x', 'time']
+
+METERS_UNIT = 'Meters [m]'
 
 
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
@@ -42,7 +44,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
               'data_type': np.float32,
               'fill_value': np.nan,
               'precision': 2,
-              'attrs': {'Dimension': 'Meters [m]',
+              'attrs': {'Dimension': METERS_UNIT,
                         'name': 'Raw estimated depth'}},
     'direction_from_north': {'layer_type': NOMINAL_LAYER,
                              'layer_name': 'Direction',
@@ -66,7 +68,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                        'data_type': np.float32,
                        'fill_value': np.nan,
                        'precision': 2,
-                       'attrs': {'Dimension': 'Meters [m]',
+                       'attrs': {'Dimension': METERS_UNIT,
                                  'name': 'Distance used for measuring wave celerity'}},
     'absolute_delta_position': {'layer_type': EXPERT_LAYER,
                                 'layer_name': 'Propagated distance (Absolute)',
@@ -74,7 +76,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                                 'data_type': np.float32,
                                 'fill_value': np.nan,
                                 'precision': 2,
-                                'attrs': {'Dimension': 'Meters [m]',
+                                'attrs': {'Dimension': METERS_UNIT,
                                           'name': 'Distance used for measuring wave celerity'}},
     'wavelength': {'layer_type': NOMINAL_LAYER,
                    'layer_name': 'Wavelength',
@@ -82,7 +84,7 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'data_type': np.float32,
                    'fill_value': np.nan,
                    'precision': 1,
-                   'attrs': {'Dimension': 'Meters [m]',
+                   'attrs': {'Dimension': METERS_UNIT,
                              'name': 'Wavelength'}},
     'wavenumber': {'layer_type': EXPERT_LAYER,
                    'layer_name': 'Wavenumber',
@@ -279,10 +281,13 @@ class EstimatedBathy:
         :param nb_keep: the number of different bathymetry estimations to keep for one location.
         :raises IndexError: when the property is not a scalar or a vector
         :returns: an xarray DataArray containing the formatted property
+        :raises WavesEstimationAttributeError: when the requested property cannot be found in the
+                                               estimations attributes.
         """
         nb_samples_y, nb_samples_x = self.estimated_bathy.shape
 
         dims = layer_definition['dimensions']
+        layer_shape: Union[Tuple[int, int], Tuple[int, int, int]]
         if 'kKeep' in dims:
             layer_shape = (nb_samples_y, nb_samples_x, nb_keep)
         else:
@@ -325,7 +330,8 @@ class EstimatedBathy:
             layer_data[y_index, x_index, :] = np.array(bathy_property)
 
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
-        dict_coords: Mapping[Hashable, Any] = {}
+        dict_coords: Dict[Hashable, Any] = {}
+        value: Union[np.ndarray, List[datetime]]
         for element in dims:
             if element == 'y':
                 value = self.y_samples

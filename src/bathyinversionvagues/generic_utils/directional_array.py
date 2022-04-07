@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, Any, Tuple
+from typing import Optional, Any, Tuple, cast
 
 import numpy as np
 
@@ -76,7 +76,7 @@ class DirectionalArray(QuantizedDirectionsDict):
         if directions is None:
             selected_directions = np.array(self.sorted_directions)
         else:
-            selected_directions_array = self.quantizer.quantize(directions)
+            selected_directions_array = cast(np.ndarray, self.quantizer.quantize(directions))
             selected_directions = np.array(sorted(selected_directions_array.tolist()))
 
         # Build array by selecting the requested directions
