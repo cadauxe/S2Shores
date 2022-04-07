@@ -7,7 +7,7 @@
 import time
 import warnings
 
-from typing import List, TYPE_CHECKING  # @NoMove
+from typing import TYPE_CHECKING  # @NoMove
 
 from xarray import Dataset  # @NoMove
 
@@ -15,10 +15,9 @@ from xarray import Dataset  # @NoMove
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..data_model.estimated_bathy import EstimatedBathy
 from ..data_providers.delta_time_provider import NoDeltaTimeValueError
-from ..image.image_geometry_types import PointType, ImageWindowType
+from ..image.image_geometry_types import PointType
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..image_processing.images_sequence import ImagesSequence
-from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..waves_exceptions import WavesException
 
@@ -27,7 +26,6 @@ if TYPE_CHECKING:
     from .bathy_estimator import BathyEstimator  # @UnusedImport
 
 
-# TODO: create a WavesImageSequence class holding a list of WavesImage
 # TODO: Make this class inherit from BathyEstimator ?
 class OrthoBathyEstimator:
     """ This class implements the computation of bathymetry over a sampled orthorectifed image.
@@ -93,7 +91,13 @@ class OrthoBathyEstimator:
                                                                   self.parent_estimator)
             bathy_estimations = local_bathy_estimator.bathymetry_estimations
             window = self.sampled_ortho.window_extent(estimation_point)
-            images_sequence = self._create_images_sequence(sub_tile_images, window)
+            images_sequence = sub_tile_images.extract_window(window)
+            if self.parent_estimator.debug_sample:
+                for index, frame_id in enumerate(self.parent_estimator.selected_frames):
+                    print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
+                    print(f'Window in ortho image coordinate: {window}')
+                    print(f'--{frame_id} imagette {images_sequence[index]}')
+
             local_bathy_estimator.set_images_sequence(images_sequence)
             if local_bathy_estimator.can_estimate_bathy():
                 local_bathy_estimator.run()
@@ -112,17 +116,3 @@ class OrthoBathyEstimator:
             bathy_estimations = local_bathy_estimator.bathymetry_estimations
             bathy_estimations.clear()
         return bathy_estimations
-
-    def _create_images_sequence(self, sub_tile_images: ImagesSequence,
-                                window: ImageWindowType) -> List[WavesImage]:
-
-        # Create the sequence of WavesImages (to be used by ALL estimators)
-        images_sequence: List[WavesImage] = []
-        for index, frame_id in enumerate(self.parent_estimator.selected_frames):
-            window_image = sub_tile_images[index].extract_sub_image(window)
-            images_sequence.append(window_image)
-            if self.parent_estimator.debug_sample:
-                print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
-                print(f'Window in ortho image coordinate: {window}')
-                print(f'--{frame_id} imagette {window_image}')
-        return images_sequence

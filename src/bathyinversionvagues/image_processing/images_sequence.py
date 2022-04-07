@@ -15,10 +15,12 @@ from typing import Tuple, Callable, List, Any, Union, Optional
 
 import numpy as np
 
+from ..image.image_geometry_types import ImageWindowType
 from .waves_image import WavesImage
 
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
+FrameIdType = Union[int, str, datetime]
 
 
 class ImagesSequence(list):
@@ -30,7 +32,7 @@ class ImagesSequence(list):
         self._shape: Optional[Tuple[int, ...]] = None
 
         # FIXME: list or dict indexed by frame_id ???
-        self._frames_id: List[Union[int, str]] = []
+        self._frames_id: List[FrameIdType] = []
         self._frames_time: List[datetime] = []
 
     @property
@@ -45,7 +47,7 @@ class ImagesSequence(list):
             return None
         return 1. / self.resolution
 
-    def append_image(self, image: WavesImage, image_id: Union[int, str]) -> None:
+    def append_image(self, image: WavesImage, image_id: FrameIdType) -> None:
         if self._resolution is not None and image.resolution != self._resolution:
             msg = 'Trying to add an frame into images sequence with incompatible resolution:  new '
             msg += f'image resolution: {image.resolution} sequence resolution: {self.resolution}'
@@ -60,3 +62,12 @@ class ImagesSequence(list):
 
         # TODO: make some checks on image_id
         self._frames_id.append(image_id)
+
+    def extract_window(self, window: ImageWindowType) -> List[WavesImage]:
+
+        # Create the sequence of WavesImages
+        images_sequence: List[WavesImage] = []
+        for sub_tile_image in self:
+            window_image = sub_tile_image.extract_sub_image(window)
+            images_sequence.append(window_image)
+        return images_sequence
