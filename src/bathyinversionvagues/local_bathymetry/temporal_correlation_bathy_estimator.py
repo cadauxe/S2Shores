@@ -90,58 +90,55 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
-        try:
-            self.create_sequence_time_series()
-            filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
-            self.correlation_image.pixels = filtered_image.pixels
-            radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
-            filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
-            direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
-            sinogram_max_var = radon_transform[direction_propagation]
-            sinogram_max_var_values = sinogram_max_var.values
-            wave_length = self.compute_wave_length(sinogram_max_var_values)
-            distances = self.compute_distances(
-                sinogram_max_var_values,
-                wave_length,
-                nb_hops=self.local_estimator_params['HOPS_NUMBER'])
+        self.create_sequence_time_series()
+        filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
+        self.correlation_image.pixels = filtered_image.pixels
+        radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
+        filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
+        direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
+        sinogram_max_var = radon_transform[direction_propagation]
+        sinogram_max_var_values = sinogram_max_var.values
+        wave_length = self.compute_wave_length(sinogram_max_var_values)
+        distances = self.compute_distances(
+            sinogram_max_var_values,
+            wave_length,
+            nb_hops=self.local_estimator_params['HOPS_NUMBER'])
 
-            propagation_duration = np.sum(
-                self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
+        propagation_duration = np.sum(
+            self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
 
-            # Keep in mind that direction_estimations stores several estimations for a same
-            # direction and only the best of them should be added in the final list
-            # direction_estimation is empty at this point
-            direction_estimations = deepcopy(self.waves_fields_estimations)
+        # Keep in mind that direction_estimations stores several estimations for a same
+        # direction and only the best of them should be added in the final list
+        # direction_estimation is empty at this point
+        direction_estimations = deepcopy(self.waves_fields_estimations)
 
-            for distance in distances:
-                estimation = self.create_waves_field_estimation(direction_propagation,
-                                                                wave_length)
-                estimation.delta_time = propagation_duration
-                estimation.propagated_distance = distance
-                direction_estimations.append(estimation)
+        for distance in distances:
+            estimation = self.create_waves_field_estimation(direction_propagation,
+                                                            wave_length)
+            estimation.delta_time = propagation_duration
+            estimation.propagated_distance = distance
+            direction_estimations.append(estimation)
 
-            celerities = direction_estimations.get_attribute('celerity')
-            linearity_coefficients = direction_estimations.get_attribute('linearity')
-            direction_estimations.remove_unphysical_waves_fields()
-            if not direction_estimations:
-                raise WavesEstimationError('No correct wave fied estimations have been found')
-            direction_estimations.sort_on_attribute('linearity', reverse=False)
-            best_estimation = direction_estimations[0]
+        celerities = direction_estimations.get_attribute('celerity')
+        linearity_coefficients = direction_estimations.get_attribute('linearity')
+        direction_estimations.remove_unphysical_waves_fields()
+        if not direction_estimations:
+            raise WavesEstimationError('No correct wave fied estimations have been found')
+        direction_estimations.sort_on_attribute('linearity', reverse=False)
+        best_estimation = direction_estimations[0]
 
-            waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation, best_estimation)
-            self.waves_fields_estimations.append(waves_field_estimation)
+        waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation, best_estimation)
+        self.waves_fields_estimations.append(waves_field_estimation)
 
-            if self.debug_sample:
-                self.metrics['radon_transform'] = radon_transform
-                self.metrics['variances'] = variances
-                self.metrics['sinogram_max_var'] = sinogram_max_var_values
-                # TODO: use objects in debug
-                self.metrics['propagation_duration'] = propagation_duration
-                self.metrics['distances'] = distances
-                self.metrics['celerities'] = celerities
-                self.metrics['linearity_coefficients'] = linearity_coefficients
-        except Exception as excp:
-            print(f'Bathymetry computation failed: {str(excp)}')
+        if self.debug_sample:
+            self.metrics['radon_transform'] = radon_transform
+            self.metrics['variances'] = variances
+            self.metrics['sinogram_max_var'] = sinogram_max_var_values
+            # TODO: use objects in debug
+            self.metrics['propagation_duration'] = propagation_duration
+            self.metrics['distances'] = distances
+            self.metrics['celerities'] = celerities
+            self.metrics['linearity_coefficients'] = linearity_coefficients
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -261,8 +258,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: wave length
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
-        period, wave_length_zeros = find_period_from_zeros(
-            sinogram, int(min_wavelength / self.spatial_resolution))
+        try:
+            period, wave_length_zeros = find_period_from_zeros(
+                sinogram, int(min_wavelength / self.spatial_resolution))
+        except ValueError:
+            raise WavesEstimationError('Wave lenth can not be computed from sinogram')
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:

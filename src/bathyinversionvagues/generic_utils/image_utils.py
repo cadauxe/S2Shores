@@ -8,6 +8,7 @@
 from scipy.signal import fftconvolve
 
 import numpy as np
+import warnings
 
 
 def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
@@ -26,9 +27,13 @@ def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
     # Sum of squares across rows
     ss1 = (image1_c ** 2).sum(1)
     ss2 = (image2_c ** 2).sum(1)
+    product_deviation = np.sqrt(np.dot(ss1[:, None], ss2[None]))
+    if np.any(product_deviation == 0):
+        warnings.warn('At least one signal has a standard deviation of 0')
+        product_deviation[product_deviation == 0] = np.nan
 
     # Finally get corr coeff
-    return np.dot(image1_c, image2_c.T) / np.sqrt(np.dot(ss1[:, None], ss2[None]))
+    return np.divide(np.dot(image1_c, image2_c.T), product_deviation)
 
 
 def normxcorr2(template: np.ndarray, image: np.ndarray, mode: str = 'full') -> np.ndarray:
