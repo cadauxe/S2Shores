@@ -8,10 +8,11 @@
 :created: 18/06/2021
 """
 from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
+from copy import deepcopy
+from scipy.signal import find_peaks
+
 
 import pandas
-from scipy.signal import find_peaks
-from copy import deepcopy
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
@@ -26,7 +27,6 @@ from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
-from ..data_model.waves_fields_estimations import WavesFieldsEstimations
 
 
 if TYPE_CHECKING:
@@ -49,7 +49,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.radon_transform: Optional[WavesRadon] = None
         self._angles: Optional[np.ndarray] = None
         self._distances: Optional[np.ndarray] = None
-        self._sampling_positions: Optional[np.ndarray] = None
+        self._sampling_positions: Optional[Tuple[np.ndarray, np.ndarray]] = None
         self._time_series: Optional[np.ndarray] = None
 
         # Filters
@@ -155,8 +155,13 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         temporal_lag = self.local_estimator_params['TEMPORAL_LAG']
         if self._time_series is None:
             raise ValueError('Time series are not defined')
-        return cross_correlation(self._time_series[:, temporal_lag:],
-                                 self._time_series[:, :-temporal_lag])
+        result = cross_correlation(
+            self._time_series[:, temporal_lag:], self._time_series[:, :-temporal_lag])
+        check_nan = np.logical_not(np.isnan(result)).sum()
+        # Here we check if all values in the matrix are nan
+        if check_nan == 0:
+            raise WavesEstimationError('Correlation computation has failed')
+        return result
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -256,13 +261,14 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ Wave length computation (in meter)
         :param sinogram : sinogram used to compute wave length
         :returns: wave length
+        :raises WavesEstimationError: if wave length can not be computed from sinogram
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         try:
             period, wave_length_zeros = find_period_from_zeros(
                 sinogram, int(min_wavelength / self.spatial_resolution))
-        except ValueError:
-            raise WavesEstimationError('Wave lenth can not be computed from sinogram')
+        except ValueError as excp:
+            raise WavesEstimationError('Wave length can not be computed from sinogram') from excp
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
