@@ -11,7 +11,7 @@ from typing import cast, Tuple
 
 import numpy as np
 
-from ..bathy_physics import (period_offshore, period_low_depth,
+from ..bathy_physics import (period_offshore, period_low_depth, wavelength_offshore,
                              depth_from_dispersion, linearity_indicator)
 from .wave_field_sample_dynamics import WaveFieldSampleDynamics
 
@@ -89,15 +89,26 @@ class BathymetrySampleInversion(WaveFieldSampleDynamics):
                                             self._gravity))
 
     @property
-    def period_ratio(self) -> float:
+    def relative_period(self) -> float:
         """ :returns: the ratio of the period offshore over the period"""
         return self.period_offshore / self.period
+
+    @property
+    def wavelength_offshore(self) -> float:
+        """ :returns: the wavelength offshore (s)"""
+        return cast(float, wavelength_offshore(self.period, self._gravity))
+
+    @property
+    def relative_wavelength(self) -> float:
+        """ :returns: the ratio of the wavelength offshore over the wavelength"""
+        return self.wavelength_offshore / self.wavelength
 
     def __str__(self) -> str:
         result = f'Bathymetry inversion: depth: {self.depth:5.2f} (m) '
         result += f' gamma: {self.linearity:5.3f} '
         result += f' offshore period: {self.period_offshore:5.2f} (s) '
         result += f' shallow water period: {self.period_low_depth:5.2f} (s) '
-        result += f' period ratio: {self.period_ratio:5.2f} '
+        result += f' relative period: {self.relative_period:5.2f} '
+        result += f' relative wavelength: {self.relative_wavelength:5.2f} '
         result += f' gravity: {self._gravity:5.3f} (s) '
         return result

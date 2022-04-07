@@ -38,14 +38,15 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
         self._updating_period = False
         self.register_period_change(self.period_change_in_estimation)
 
-    def is_wave_field_valid(self, ambiguity_range: Tuple[float, float]) -> bool:
+    def is_wave_field_valid(self, stroboscopic_factor_range: Tuple[float, float]) -> bool:
         """  Check if a wave field estimation satisfies physical constraints.
 
-        :param ambiguity_range: the minimum and maximum values allowed for the ambiguity
+        :param stroboscopic_factor_range: the minimum and maximum values allowed for the
+                                          stroboscopic factor
         :returns: True is the wave field is valid, False otherwise
         """
         return (self.is_period_inside(self._period_range) and
-                self.is_ambiguity_inside(ambiguity_range))
+                self.is_stroboscopic_factor_inside(stroboscopic_factor_range))
 
     @property
     def delta_time(self) -> float:
@@ -59,30 +60,33 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
             self._solve_shift_equations()
 
     @property
-    def ambiguity(self) -> float:
-        """ :returns: the ratio of delta_time over the wave field period. When its absolute value is
-                      greater than 1, there is an  ambiguity in detecting the wave field.
+    def stroboscopic_factor(self) -> float:
+        """ :returns: the ratio of delta_time over the wave field period. When its value is
+                      equal to multiples of 1/2 no wave movement can be perceived. when its
+                      fractional part is lower than 1/2 the movement is perceived in the right
+                      direction, whereas it is perceived as retrograde when the fractional part
+                      is greater than 1/2.
         """
         return self.delta_time / self.period
 
     @property
-    def absolute_ambiguity(self) -> float:
-        """ :returns: the ambiguity as a positive value.
+    def absolute_stroboscopic_factor(self) -> float:
+        """ :returns: the stroboscopic factor as a positive value.
         """
-        return abs(self.ambiguity)
+        return abs(self.stroboscopic_factor)
 
-    def is_ambiguity_inside(self, ambiguity_range: Tuple[float, float]) -> bool:
-        """ Check if the ambiguity is inside a given range of values.
+    def is_stroboscopic_factor_inside(self, stroboscopic_factor_range: Tuple[float, float]) -> bool:
+        """ Check if the stroboscopic factor is inside a given range of values.
 
-        :param ambiguity_range: the minimum and maximum values allowed for the ambiguity
-        :returns: True if the ambiguity is between a minimum and a maximum values, False otherwise.
+        :param stroboscopic_factor_range: the minimum and maximum values allowed for the factor
+        :returns: True if the factor is between a minimum and a maximum values, False otherwise.
         """
-        ambiguity_min, ambiguity_max = ambiguity_range
-        if ambiguity_min > ambiguity_max:
-            ambiguity_min, ambiguity_max = ambiguity_max, ambiguity_min
-        return (not np.isnan(self.ambiguity) and
-                (ambiguity_min < self.ambiguity) and
-                (self.ambiguity < ambiguity_max))
+        stroboscopic_factor_min, stroboscopic_factor_max = stroboscopic_factor_range
+        if stroboscopic_factor_min > stroboscopic_factor_max:
+            stroboscopic_factor_max, stroboscopic_factor_min = stroboscopic_factor_range
+        return (not np.isnan(self.stroboscopic_factor) and
+                (stroboscopic_factor_min < self.stroboscopic_factor) and
+                (self.stroboscopic_factor < stroboscopic_factor_max))
 
     @property
     def delta_position(self) -> float:
@@ -195,7 +199,7 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
     def __str__(self) -> str:
         result = WaveFieldSampleDynamics.__str__(self)
         result += f'\nWave Field Estimation: \n  delta time: {self.delta_time:5.3f} (s)'
-        result += f' ambiguity: {self.ambiguity:5.3f} (unitless)'
+        result += f' stroboscopic factor: {self.stroboscopic_factor:5.3f} (unitless)'
         result += f'\n  delta position: {self.delta_position:5.2f} (m)'
         result += f'  delta phase: {self.delta_phase:5.2f} (rd)'
         return result
