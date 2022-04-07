@@ -72,3 +72,6 @@ class WavesImage:
         """
         return WavesImage(self.pixels[window[0]:window[1] + 1, window[2]:window[3] + 1],
                           self.resolution)
+
+    def __str__(self) -> str:
+        return f'Resolution: {self.resolution}  Shape: {self.pixels.shape}:\n{self.pixels}'

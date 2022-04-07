@@ -17,6 +17,7 @@ from ..data_model.estimated_bathy import EstimatedBathy
 from ..data_providers.delta_time_provider import NoDeltaTimeValueError
 from ..image.image_geometry_types import PointType, ImageWindowType
 from ..image.sampled_ortho_image import SampledOrthoImage
+from ..image_processing.images_sequence import ImagesSequence
 from ..image_processing.waves_image import WavesImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..waves_exceptions import WavesException
@@ -56,8 +57,9 @@ class OrthoBathyEstimator:
                                          self.sampled_ortho.ortho_stack.acquisition_time)
 
         # subtile reading
-        sub_tile_images = [self.sampled_ortho.read_pixels(frame_id) for
-                           frame_id in self.parent_estimator.selected_frames]
+        sub_tile_images = ImagesSequence()
+        for frame_id in self.parent_estimator.selected_frames:
+            sub_tile_images.append_image(self.sampled_ortho.read_pixels(frame_id), frame_id)
         print(f'Loading time: {time.time() - start_load:.2f} s')
 
         start = time.time()
@@ -79,7 +81,7 @@ class OrthoBathyEstimator:
 
         return estimated_bathy.build_dataset(self.parent_estimator.layers_type, nb_keep)
 
-    def _run_local_bathy_estimator(self, sub_tile_images: List[WavesImage],
+    def _run_local_bathy_estimator(self, sub_tile_images: ImagesSequence,
                                    estimation_point: PointType) -> BathymetrySampleEstimations:
 
         self.parent_estimator.set_debug_flag(estimation_point)
@@ -111,7 +113,7 @@ class OrthoBathyEstimator:
             bathy_estimations.clear()
         return bathy_estimations
 
-    def _create_images_sequence(self, sub_tile_images: List[WavesImage],
+    def _create_images_sequence(self, sub_tile_images: ImagesSequence,
                                 window: ImageWindowType) -> List[WavesImage]:
 
         # Create the sequence of WavesImages (to be used by ALL estimators)
@@ -122,6 +124,5 @@ class OrthoBathyEstimator:
             if self.parent_estimator.debug_sample:
                 print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
                 print(f'Window in ortho image coordinate: {window}')
-                print(f'--{frame_id} imagette {window_image.pixels.shape}:')
-                print(window_image.pixels)
+                print(f'--{frame_id} imagette {window_image}')
         return images_sequence
