@@ -145,12 +145,12 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the distance propagated over time by the waves (m)
         """
         argmax_ac = len(correlation_signal) / 2
-        delta_time = self.propagation_duration
         celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
                                                   self.gravity)
         # TODO: revisit signs management
-        spatial_shift_offshore_min = -celerity_offshore_max * abs(delta_time)
-        stroboscopic_factor_offshore = delta_time / period_offshore(1. / wavelength, self.gravity)
+        spatial_shift_offshore_min = -celerity_offshore_max * abs(self.propagation_duration)
+        stroboscopic_factor_offshore = self.propagation_duration / period_offshore(1. / wavelength,
+                                                                                   self.gravity)
         if stroboscopic_factor_offshore < 1:
             spatial_shift_offshore_max = -spatial_shift_offshore_min
         else:

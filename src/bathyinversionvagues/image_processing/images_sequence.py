@@ -30,7 +30,7 @@ class ImagesSequence(list):
     def __init__(self) -> None:
         super().__init__()
         self._resolution = 0.
-        self._shape: Optional[Tuple[int, ...]] = None
+        self._shape: Tuple[int, ...] = (0, 0)
 
         self._images_id: List[FrameIdType] = []
         self._images_time: List[datetime] = []
@@ -66,7 +66,7 @@ class ImagesSequence(list):
             msg = 'Trying to add an image into images sequence with incompatible resolution:  new '
             msg += f'image resolution: {image.resolution} sequence resolution: {self.resolution}'
             raise ValueError(msg)
-        if self._shape is not None and image.pixels.shape != self._shape:
+        if self._shape != (0, 0) and image.pixels.shape != self._shape:
             msg = 'Trying to add an image into images sequence with incompatible shape:'
             msg += f' new image shape: {image.pixels.shape} sequence shape: {self._shape}'
             raise ValueError(msg)
