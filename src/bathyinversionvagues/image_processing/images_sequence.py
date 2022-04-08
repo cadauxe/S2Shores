@@ -21,15 +21,17 @@ FrameIdType = Union[str, int, datetime]
 FramesIdsType = Union[List[str], List[int], List[datetime]]
 
 
+# FIXME: list or dict indexed by image_id ???
 class ImagesSequence(list):
+    """ Class encapsulating the information describing a sequence of superimposed images of same
+    shape and resolution and providing operations on it.
+    """
+
     def __init__(self) -> None:
-        """ Constructor
-        """
         super().__init__()
-        self._resolution: Optional[float] = None
+        self._resolution = 0.
         self._shape: Optional[Tuple[int, ...]] = None
 
-        # FIXME: list or dict indexed by image_id ???
         self._images_id: List[FrameIdType] = []
         self._images_time: List[datetime] = []
 
@@ -39,7 +41,7 @@ class ImagesSequence(list):
         return self._shape
 
     @property
-    def resolution(self) -> Optional[float]:
+    def resolution(self) -> float:
         """ :returns: The spatial resolution of this sequence of images (m)"""
         return self._resolution
 
@@ -60,7 +62,7 @@ class ImagesSequence(list):
                             already recorded or when the image identifier is already present in the
                             sequence.
         """
-        if self._resolution is not None and image.resolution != self._resolution:
+        if self._resolution != 0. and image.resolution != self._resolution:
             msg = 'Trying to add an image into images sequence with incompatible resolution:  new '
             msg += f'image resolution: {image.resolution} sequence resolution: {self.resolution}'
             raise ValueError(msg)
@@ -79,7 +81,7 @@ class ImagesSequence(list):
 
     def extract_window(self, window: ImageWindowType) -> 'ImagesSequence':
         """ Extract a new images sequence by taking pixels from a window contained within the
-        images.
+        sequence shape.
 
         :param window: a window defined within the shape of this images sequence:
                        (line_start, line_stop, column_start, column_stop)

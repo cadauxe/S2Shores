@@ -93,10 +93,10 @@ class OrthoBathyEstimator:
             window = self.sampled_ortho.window_extent(estimation_point)
             images_sequence = sub_tile_images.extract_window(window)
             if self.parent_estimator.debug_sample:
-                for index, frame_id in enumerate(self.parent_estimator.selected_frames):
+                for index, image_sequence in enumerate(images_sequence):
                     print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
-                    print(f'Window in ortho image coordinate: {window}')
-                    print(f'--{frame_id} imagette {images_sequence[index]}')
+                    print(f'Window inside ortho image coordinates: {window}')
+                    print(f'--{images_sequence._images_id[index]} imagette {image_sequence}')
 
             local_bathy_estimator.set_images_sequence(images_sequence)
             if local_bathy_estimator.can_estimate_bathy():
