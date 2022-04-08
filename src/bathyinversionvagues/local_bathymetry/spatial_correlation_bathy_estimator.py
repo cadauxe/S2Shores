@@ -92,7 +92,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
         :returns: the estimated direction of the waves propagation
         """
-        tmp_image = np.ones(self.images_sequence[0].pixels.shape)
+        tmp_image = np.ones(self.images_sequence.shape)
         for frame_image in self.images_sequence:
             tmp_image *= frame_image.pixels
         tmp_wavesimage = WavesImage(tmp_image, self.spatial_resolution)
