@@ -44,7 +44,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                  selected_directions: Optional[np.ndarray] = None) -> None:
         super().__init__(location, global_estimator, selected_directions)
         if self.selected_directions is None:
-            self.selected_directions = linear_directions(-180., 0., 1.)
+            self.selected_directions = linear_directions(-180., 60., 1.)
         # Processing attributes
         self._correlation_matrix: Optional[np.ndarray] = None
         self._correlation_image: Optional[WavesImage] = None
