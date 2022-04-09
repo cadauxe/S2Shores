@@ -22,6 +22,7 @@ from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.image_geometry_types import PointType
+from ..image_processing.images_sequence import ImagesSequence
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
@@ -40,9 +41,12 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """
     wave_field_estimation_cls = TemporalCorrelationBathyEstimation
 
-    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
+    def __init__(self, location: PointType, images_sequence: ImagesSequence,
+                 global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
-        super().__init__(location, global_estimator, selected_directions)
+
+        super().__init__(location, images_sequence, global_estimator, selected_directions)
+
         if self.selected_directions is None:
             self.selected_directions = linear_directions(-180., 0., 1.)
         # Processing attributes

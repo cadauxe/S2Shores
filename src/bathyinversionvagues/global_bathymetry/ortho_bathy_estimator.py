@@ -86,10 +86,7 @@ class OrthoBathyEstimator:
 
         # computes the bathymetry at the specified position
         try:
-            # TODO: use selected_directions argument
-            local_bathy_estimator = local_bathy_estimator_factory(estimation_point,
-                                                                  self.parent_estimator)
-            bathy_estimations = local_bathy_estimator.bathymetry_estimations
+            # Build the images sequence for the estimation point
             window = self.sampled_ortho.window_extent(estimation_point)
             images_sequence = sub_tile_images.extract_window(window)
             if self.parent_estimator.debug_sample:
@@ -98,7 +95,11 @@ class OrthoBathyEstimator:
                     print(f'Window inside ortho image coordinates: {window}')
                     print(f'--{images_sequence._images_id[index]} imagette {image_sequence}')
 
-            local_bathy_estimator.set_images_sequence(images_sequence)
+            # TODO: use selected_directions argument
+            local_bathy_estimator = local_bathy_estimator_factory(estimation_point, images_sequence,
+                                                                  self.parent_estimator)
+
+            bathy_estimations = local_bathy_estimator.bathymetry_estimations
             if local_bathy_estimator.can_estimate_bathy():
                 local_bathy_estimator.run()
                 bathy_estimations.remove_unphysical_wave_fields()

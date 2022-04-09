@@ -16,6 +16,7 @@ import numpy as np
 from ..bathy_physics import wavenumber_offshore
 from ..generic_utils.image_filters import detrend, desmooth
 from ..image.image_geometry_types import PointType
+from ..image_processing.images_sequence import ImagesSequence
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
@@ -36,10 +37,11 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     final_estimations_sorting = 'energy'
     wave_field_estimation_cls = SpatialDFTBathyEstimation
 
-    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
+    def __init__(self, location: PointType, images_sequence: ImagesSequence,
+                 global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
-        super().__init__(location, global_estimator, selected_directions)
+        super().__init__(location, images_sequence, global_estimator, selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []
 

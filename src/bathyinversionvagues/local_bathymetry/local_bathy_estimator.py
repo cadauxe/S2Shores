@@ -11,7 +11,7 @@ time intervals.
 from abc import abstractmethod, ABC
 from copy import deepcopy
 
-from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
+from typing import Dict, Any, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
@@ -19,7 +19,7 @@ from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..image.image_geometry_types import PointType
 from ..image_processing.images_sequence import ImagesSequence
-from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image_processing.waves_image import ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
 
 
@@ -41,19 +41,24 @@ class LocalBathyEstimator(ABC):
                       estimation.
         """
 
-    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
+    def __init__(self, location: PointType, images_sequence: ImagesSequence,
+                 global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
         :param location: The (X, Y) coordinates of the location where this estimator is acting
+        :param images_sequence: a list of superimposed local images centered around the position
+                                where the estimator is working.
         :param global_estimator: a global bathymetry estimator able to provide the services needed
                                  by this local bathymetry estimator (access to parameters,
                                  data providers, debugging, ...)
         :param selected_directions: the set of directions onto which the sinogram must be computed
-        :raise SequenceImagesError: when sequence can no be exploited
+        :raises SequenceImagesError: when the sequence is empty
         """
-        self.images_sequence: ImagesSequence
-        self.spatial_resolution = 0.
+        if not images_sequence:
+            raise SequenceImagesError('Sequence images is empty')
+        self.images_sequence = images_sequence
+        self.spatial_resolution = images_sequence.resolution
 
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
@@ -85,20 +90,6 @@ class LocalBathyEstimator(ABC):
     def can_estimate_bathy(self) -> bool:
         return (self.bathymetry_estimations.distance_to_shore > 0 and
                 self.bathymetry_estimations.inside_roi)
-
-    def set_images_sequence(self, images_sequence: ImagesSequence) -> None:
-        """ initialize the image_sequence to use with this estimator
-
-        :param images_sequence: a list of superimposed local images centered around the position
-                                where the estimator is working.
-        :raise SequenceImagesError: when sequence can no be exploited
-        """
-        if self.spatial_resolution != 0.:
-            raise SequenceImagesError('Cannot redefine the sequence of images for this estimator')
-        if not images_sequence:
-            raise SequenceImagesError('Sequence images is empty')
-        self.spatial_resolution = images_sequence.resolution
-        self.images_sequence = images_sequence
 
     @property
     @abstractmethod
