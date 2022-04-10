@@ -108,11 +108,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
             sinogram_max_var = radon_transform[direction_propagation]
             sinogram_max_var_values = sinogram_max_var.values
-            wave_length = self.compute_wave_length(sinogram_max_var_values)
-            distances = self.compute_distances(
-                sinogram_max_var_values,
-                wave_length,
-                nb_hops=self.local_estimator_params['HOPS_NUMBER'])
+            wavelength = self.compute_wavelength(sinogram_max_var_values)
+            distances = self.compute_distances(sinogram_max_var_values, wavelength,
+                                               nb_hops=self.local_estimator_params['HOPS_NUMBER'])
 
             # Keep in mind that direction_estimations stores several estimations for a same
             # direction and only the best of them should be added in the final list
@@ -121,7 +119,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
             for distance in distances:
                 estimation = self.create_bathymetry_estimation(direction_propagation,
-                                                               wave_length)
+                                                               wavelength)
                 estimation.delta_position = distance
                 direction_estimations.append(estimation)
 
@@ -156,15 +154,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             raise ValueError('Sampling positions are not defined')
         return self._sampling_positions
 
-    def get_correlation_matrix(self) -> np.ndarray:
-        """Compute temporal correlation matrix
-        """
-        if self._time_series is None:
-            raise ValueError('Time series are not defined')
-        # FIXME: 1 subtracted to compensate nb_lag_frames increment, but incorrect
-        return cross_correlation(self._time_series[:, self.nb_lag_frames - 1:],
-                                 self._time_series[:, :-self.nb_lag_frames + 1])
-
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
         """ :returns: A list of functions together with their parameters to be applied
@@ -173,38 +162,16 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         preprocessing_filters: ImageProcessingFilters = []
         return preprocessing_filters
 
-    def get_angles(self) -> np.ndarray:
-        """ Get the angles between all points selected to compute correlation
-        :return: Angles (in degrees)
-        """
-        xrawipool_ik_dist = \
-            np.tile(self.sampling_positions[0], (len(self.sampling_positions[0]), 1)) - \
-            np.tile(self.sampling_positions[0].T, (1, len(self.sampling_positions[0])))
-        yrawipool_ik_dist = \
-            np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - \
-            np.tile(self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
-        return np.arctan2(yrawipool_ik_dist, xrawipool_ik_dist) * 180 / np.pi
-
-    def get_distances(self) -> np.ndarray:
-        """ Distances between positions x and positions y
-        Be aware these distances are not in meter and have to be multiplied by spatial resolution
-
-        :return: the distances between all points selected to compute correlation
-        """
-        return np.sqrt(
-            np.square((self.sampling_positions[0] - self.sampling_positions[0].T)) +
-            np.square((self.sampling_positions[1] - self.sampling_positions[1].T)))
-
     def get_correlation_image(self) -> WavesImage:
-        """ This function computes the correlation image by projecting the the correlation matrix
+        """ This function computes the correlation image by projecting the correlation matrix
         on an array where axis are distances and center is the point where distance is 0.
         If several points have same coordinates, the mean of correlation is taken for this position
         """
 
-        indices_x = np.round(self.distances * np.cos(np.radians(self.angles)))
+        indices_x = np.round(self.distances * np.cos(self.angles))
         indices_x = np.array(indices_x - np.min(indices_x), dtype=int).T
 
-        indices_y = np.round(self.distances * np.sin(np.radians(self.angles)))
+        indices_y = np.round(self.distances * np.sin(self.angles))
         indices_y = np.array(indices_y - np.min(indices_y), dtype=int).T
 
         xr_s = pandas.Series(indices_x.flatten())
@@ -218,8 +185,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         indices_x = np.array(dataframe_grouped['xr'])
         indices_y = np.array(dataframe_grouped['yr'])
 
-        projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
-            (np.max(indices_x) + 1, np.max(indices_y) + 1))
+        projected_matrix = np.nanmean(self.correlation_matrix) * np.ones((np.max(indices_x) + 1,
+                                                                          np.max(indices_y) + 1))
         projected_matrix[indices_x, indices_y] = values
         return WavesImage(projected_matrix, self.spatial_resolution)
 
@@ -234,33 +201,48 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def correlation_matrix(self) -> np.ndarray:
-        """ Be aware this matrix is projected before radon transformation in temporal correlation
-        case
+        """ Compute temporal correlation matrix. Be aware this matrix is projected before radon
+        transformation
 
         :return: correlation matrix used for temporal reconstruction
         """
         if self._correlation_matrix is None:
-            self._correlation_matrix = self.get_correlation_matrix()
+            if self._time_series is None:
+                raise ValueError('Time series are not defined')
+            # FIXME: 1 subtracted to compensate nb_lag_frames increment, but incorrect
+            self._correlation_matrix = cross_correlation(
+                self._time_series[:, self.nb_lag_frames - 1:],
+                self._time_series[:, :-self.nb_lag_frames + 1])
+
         return self._correlation_matrix
 
     @property
     def angles(self) -> np.ndarray:
-        """ :return: angles in radian
+        """ :return: the angles between all points selected to compute correlation (in radians)
         """
         if self._angles is None:
-            self._angles = self.get_angles()
+            xrawipool_ik_dist = \
+                np.tile(self.sampling_positions[0], (len(self.sampling_positions[0]), 1)) - \
+                np.tile(self.sampling_positions[0].T, (1, len(self.sampling_positions[0])))
+            yrawipool_ik_dist = \
+                np.tile(self.sampling_positions[1], (len(self.sampling_positions[1]), 1)) - \
+                np.tile(self.sampling_positions[1].T, (1, len(self.sampling_positions[1])))
+            self._angles = np.arctan2(yrawipool_ik_dist, xrawipool_ik_dist)
         return self._angles
 
     @property
     def distances(self) -> np.ndarray:
-        """ :return: distances
+        """ :return: Distances between all points selected to compute correlation. Be aware that
+                     these distances are in pixels and must multiplied by spatial resolution
         """
         if self._distances is None:
-            self._distances = self.get_distances()
+            self._distances = np.sqrt(
+                np.square((self.sampling_positions[0] - self.sampling_positions[0].T)) +
+                np.square((self.sampling_positions[1] - self.sampling_positions[1].T)))
         return self._distances
 
-    def compute_wave_length(self, sinogram: np.ndarray) -> float:
-        """ Wave length computation (in meter)
+    def compute_wavelength(self, sinogram: np.ndarray) -> float:
+        """ Wavelength computation (in meter)
         :param sinogram : sinogram used to compute wave length
         :returns: wave length
         """
