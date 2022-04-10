@@ -49,8 +49,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
     @property
     def nb_lag_frames(self) -> int:
-        # FIXME: this is not semantically consistent
-        return 1
+        return 2
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:

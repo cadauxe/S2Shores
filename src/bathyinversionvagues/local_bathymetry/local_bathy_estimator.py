@@ -106,10 +106,11 @@ class LocalBathyEstimator(ABC):
         """ :returns: The time length of the sequence of images used for the estimation. May be
                       positive or negative to account for chronology of start and stop images.
         """
-        if self.nb_lag_frames > len(self._sequential_delta_times):
+        if self.nb_lag_frames > len(self.images_sequence):
             raise WavesEstimationError(
                 'The chosen number of lag frames is greater than the number of available frames')
-        return np.sum(self._sequential_delta_times[:self.nb_lag_frames])
+        # FIXME: this slicing seems wrong when frames are not the first ones in the sequance
+        return np.sum(self._sequential_delta_times[:self.nb_lag_frames - 1])
 
     @property
     @abstractmethod
