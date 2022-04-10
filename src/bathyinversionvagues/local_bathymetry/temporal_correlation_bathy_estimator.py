@@ -81,19 +81,17 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         if percentage_points < 0 or percentage_points > 100:
             raise ValueError('Percentage must be between 0 and 100')
         merge_array = np.dstack([image.pixels for image in self.images_sequence])
-        shape_x, shape_y = self.images_sequence.shape
+        shape_y, shape_x = self.images_sequence.shape
         image_size = shape_x * shape_y
         time_series = np.reshape(merge_array, (image_size, -1))
         # A seed is used here to reproduce same results
         np.random.seed(0)
         nb_random_points = round(image_size * percentage_points / 100)
-        random_indexes = np.random.randint(0, image_size, size=nb_random_points)
-        positions_y, positions_x = np.meshgrid(np.linspace(1, shape_x, shape_x),
-                                               np.linspace(1, shape_y, shape_y))
-
-        sampling_positions_x = np.reshape(positions_x.flatten()[random_indexes], (1, -1))
-        sampling_positions_y = np.reshape(positions_y.flatten()[random_indexes], (1, -1))
-        self._sampling_positions = (sampling_positions_x, sampling_positions_y)
+        random_indexes = np.random.randint(image_size, size=nb_random_points)
+        sampling_positions_x, sampling_positions_y = np.unravel_index(random_indexes,
+                                                                      self.images_sequence.shape)
+        self._sampling_positions = (np.reshape(sampling_positions_x, (1, -1)),
+                                    np.reshape(sampling_positions_y, (1, -1)))
         self._time_series = time_series[random_indexes, :]
 
     def run(self) -> None:
