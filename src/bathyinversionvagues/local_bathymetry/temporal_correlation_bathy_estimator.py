@@ -69,8 +69,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def nb_lag_frames(self) -> int:
-        # FIXME: this is not what we want, but needed to retrieve same propagation_duration
-        return self.local_estimator_params['TEMPORAL_LAG'] + 1
+        return self.local_estimator_params['TEMPORAL_LAG']
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
@@ -207,7 +206,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         if self._correlation_matrix is None:
             if self._time_series is None:
                 raise ValueError('Time series are not defined')
-            # FIXME: 1 subtracted to compensate nb_lag_frames increment, but incorrect
             self._correlation_matrix = cross_correlation(
                 self._time_series[:, self.nb_lag_frames - 1:],
                 self._time_series[:, :-self.nb_lag_frames + 1])
