@@ -58,6 +58,10 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         return 2
 
     @property
+    def radon_augmentation_factor(self) -> float:
+        return self.local_estimator_params['AUGMENTED_RADON_FACTOR']
+
+    @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
         preprocessing_filters: ImageProcessingFilters = []
         preprocessing_filters.append((detrend, []))
@@ -86,7 +90,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         for image in self.images_sequence:
             radon_transform = WavesRadon(image, self.selected_directions)
             radon_transform_augmented = radon_transform.radon_augmentation(
-                self.local_estimator_params['AUGMENTED_RADON_FACTOR'])
+                self.radon_augmentation_factor)
             self.radon_transforms.append(radon_transform_augmented)
 
     def find_direction(self) -> float:
@@ -99,8 +103,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             tmp_image *= frame_image.pixels
         tmp_wavesimage = WavesImage(tmp_image, self.spatial_resolution)
         tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)
-        tmp_wavesradon_augmented = tmp_wavesradon.radon_augmentation(
-            self.local_estimator_params['AUGMENTED_RADON_FACTOR'])
+        tmp_wavesradon_augmented = tmp_wavesradon.radon_augmentation(self.radon_augmentation_factor)
         estimated_direction, _ = tmp_wavesradon_augmented.get_direction_maximum_variance()
         return estimated_direction
 
@@ -132,10 +135,10 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the wave length (m)
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
-        period, _ = find_period_from_zeros(correlation_signal, int(
-            min_wavelength / self.spatial_resolution))
-        wavelength = period * self.spatial_resolution * \
-            self.local_estimator_params['AUGMENTED_RADON_FACTOR']
+        correl_signal_resolution = self.spatial_resolution * self.radon_augmentation_factor
+        period, _ = find_period_from_zeros(correlation_signal,
+                                           int(min_wavelength / correl_signal_resolution))
+        wavelength = period * correl_signal_resolution
         return wavelength
 
     def compute_delta_position(self, correlation_signal: np.ndarray,
