@@ -20,7 +20,7 @@ from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimatio
 from ..image.image_geometry_types import PointType
 from ..image_processing.images_sequence import ImagesSequence
 from ..image_processing.waves_image import ImageProcessingFilters
-from ..waves_exceptions import SequenceImagesError
+from ..waves_exceptions import SequenceImagesError, WavesEstimationError
 
 
 if TYPE_CHECKING:
@@ -71,15 +71,7 @@ class LocalBathyEstimator(ABC):
         gravity = self.global_estimator.get_gravity(location, 0.)
         inside_roi = self.global_estimator.is_inside_roi(location)
 
-        sequential_delta_times = []
-        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
-            delta_time = self.global_estimator.get_delta_time(
-                self.global_estimator.selected_frames[frame_index],
-                self.global_estimator.selected_frames[frame_index + 1],
-                location)
-            # FIXME: copied from CorrelationBathyEstimator but wrong !?
-            sequential_delta_times.append(delta_time)
-        self._sequential_delta_times = np.array(sequential_delta_times)
+        self._set_sequential_delta_times(location)
 
         self._bathymetry_estimations = BathymetrySampleEstimations(location, gravity,
                                                                    self.propagation_duration,
@@ -87,16 +79,37 @@ class LocalBathyEstimator(ABC):
 
         self._metrics: Dict[str, Any] = {}
 
+    def _set_sequential_delta_times(self, location: PointType) -> None:
+        """ Computes the list of time differences between 2 consecutive frames in the image sequence
+        """
+        sequential_delta_times = []
+        for frame_index in range(len(self.images_sequence) - 1):
+            delta_time = self.global_estimator.get_delta_time(
+                self.images_sequence._images_id[frame_index],
+                self.images_sequence._images_id[frame_index + 1],
+                location)
+            sequential_delta_times.append(delta_time)
+        self._sequential_delta_times = np.array(sequential_delta_times)
+
     def can_estimate_bathy(self) -> bool:
         return (self.bathymetry_estimations.distance_to_shore > 0 and
                 self.bathymetry_estimations.inside_roi)
 
     @property
     @abstractmethod
+    def nb_lag_frames(self) -> int:
+        """ :returns: The number of frames used by an estimator.
+        """
+
+    @property
     def propagation_duration(self) -> float:
         """ :returns: The time length of the sequence of images used for the estimation. May be
                       positive or negative to account for chronology of start and stop images.
         """
+        if self.nb_lag_frames > len(self._sequential_delta_times):
+            raise WavesEstimationError(
+                'The chosen number of lag frames is greater than the number of available frames')
+        return np.sum(self._sequential_delta_times[:self.nb_lag_frames])
 
     @property
     @abstractmethod
@@ -123,12 +136,6 @@ class LocalBathyEstimator(ABC):
     def location(self) -> PointType:
         """ :returns: The (X, Y) coordinates of the location where this estimator is acting"""
         return self.bathymetry_estimations.location
-
-    @property
-    def sequential_delta_times(self) -> np.ndarray:
-        """ :returns: the time differences between 2 consecutive frames in the image sequence
-        """
-        return self._sequential_delta_times
 
     @abstractmethod
     def run(self) -> None:

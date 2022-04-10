@@ -54,8 +54,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         self.directions = None
 
     @property
-    def propagation_duration(self) -> float:
-        return self.sequential_delta_times[0]
+    def nb_lag_frames(self) -> int:
+        # FIXME: this is not semantically consistent
+        return 1
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:

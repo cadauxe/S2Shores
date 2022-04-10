@@ -68,11 +68,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
 
     @property
-    def propagation_duration(self) -> float:
-        if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.sequential_delta_times):
-            raise WavesEstimationError(
-                'The chosen number of lag frames is bigger than the number of available frames')
-        return np.sum(self.sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
+    def nb_lag_frames(self) -> int:
+        return self.local_estimator_params['TEMPORAL_LAG']
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
@@ -161,11 +158,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def get_correlation_matrix(self) -> np.ndarray:
         """Compute temporal correlation matrix
         """
-        temporal_lag = self.local_estimator_params['TEMPORAL_LAG']
         if self._time_series is None:
             raise ValueError('Time series are not defined')
-        return cross_correlation(self._time_series[:, temporal_lag:],
-                                 self._time_series[:, :-temporal_lag])
+        return cross_correlation(self._time_series[:, self.nb_lag_frames:],
+                                 self._time_series[:, :-self.nb_lag_frames])
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:

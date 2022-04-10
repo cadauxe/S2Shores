@@ -48,9 +48,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.full_linear_wavenumbers = self.get_full_linear_wavenumbers()
 
     @property
-    def propagation_duration(self) -> float:
-        # FIXME: index delta times by the index of the pair of images
-        return self.sequential_delta_times[0]
+    def nb_lag_frames(self) -> int:
+        # FIXME: this is not semantically consistent
+        return 1
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
