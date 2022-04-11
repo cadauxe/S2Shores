@@ -20,18 +20,18 @@ class SampledOrthoImage:
     """ This class makes the link between a CartoSampling and the image in which it is defined.
     """
 
-    def __init__(self, ortho_stack: OrthoStack, x_samples: np.ndarray, y_samples: np.ndarray,
+    def __init__(self, ortho_stack: OrthoStack, carto_sampling: CartoSampling,
                  margins: MarginsType) -> None:
         """ Define the samples belonging to the subtile. These samples correspond to the cross
         product of the X and Y coordinates.
 
         :param ortho_stack: the orthorectified stack onto which the sampling is defined
-        :param x_samples: the X coordinates defining the samples of the subtile
+        :param carto_sampling: the sampling of this SampledOrthoImage
         :param y_samples: the Y coordinates defining the samples of the subtile
         :param margins: the margins to consider around the samples to determine the image extent
         """
         self.ortho_stack = ortho_stack
-        self.carto_sampling = CartoSampling(x_samples, y_samples)
+        self.carto_sampling = carto_sampling
         self._margins = margins
 
         # col_start, line_start, nb_cols and nb_lines define the rectangle of pixels in image
@@ -58,12 +58,11 @@ class SampledOrthoImage:
         :returns: a list of SampledOrthoImage objects covering the orthorectfied image with the
                   specified sampling steps and margins.
         """
-        x_samples, y_samples = image.get_samples_positions(step_x, step_y, margins, roi)
-
-        subtiles_def = build_tiling(x_samples, y_samples, nb_subtiles_max)
+        ortho_sampling = image.get_samples_positions(step_x, step_y, margins, roi)
+        subtiles_samplings = build_tiling(ortho_sampling, nb_subtiles_max)
         subtiles: List[SampledOrthoImage] = []
-        for subtile_def in subtiles_def:
-            subtiles.append(cls(image, *subtile_def, margins))
+        for subtile_sampling in subtiles_samplings:
+            subtiles.append(cls(image, subtile_sampling, margins))
         return subtiles
 
     def read_pixels(self, frame_id: FrameIdType) -> WavesImage:

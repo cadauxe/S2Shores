@@ -167,8 +167,8 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         x_samples = np.array([])
         y_samples = np.array([])
         for subtile in self.subtiles:
-            x_samples = np.concatenate((x_samples, subtile.carto_sampling._x_samples))
-            y_samples = np.concatenate((y_samples, subtile.carto_sampling._y_samples))
+            x_samples = np.concatenate((x_samples, subtile.carto_sampling.x_samples))
+            y_samples = np.concatenate((y_samples, subtile.carto_sampling.y_samples))
         x_samples_filtered = x_samples[np.logical_and(
             x_samples > bottom_left_corner[0], x_samples < top_right_corner[0])][::decimation]
         y_samples_filtered = y_samples[np.logical_and(

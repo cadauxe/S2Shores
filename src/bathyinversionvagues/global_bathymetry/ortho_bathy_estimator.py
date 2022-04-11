@@ -62,16 +62,13 @@ class OrthoBathyEstimator:
 
         start = time.time()
         computed_points = 0
-        for x_sample in self.sampled_ortho.carto_sampling._x_samples:
-            for y_sample in self.sampled_ortho.carto_sampling._y_samples:
-                estimation_point = (x_sample, y_sample)
-                bathy_estimations = self._run_local_bathy_estimator(sub_tile_images,
-                                                                    estimation_point)
-                if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
-                    computed_points += 1
+        for estimation_point in self.sampled_ortho.carto_sampling.all_points():
+            bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, estimation_point)
+            if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
+                computed_points += 1
 
-                # Store bathymetry sample estimations
-                estimated_bathy.store_estimations(bathy_estimations)
+            # Store bathymetry sample estimations
+            estimated_bathy.store_estimations(bathy_estimations)
 
         total_points = self.sampled_ortho.carto_sampling.nb_samples
         comput_time = time.time() - start

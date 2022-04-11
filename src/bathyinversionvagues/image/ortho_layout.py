@@ -4,13 +4,14 @@
 :author: GIROS Alain
 :created: 05/08/2021
 """
-from typing import Tuple, Optional  # @NoMove
+from typing import Optional  # @NoMove
 
 import numpy as np  # @NoMove
 from shapely.geometry import Polygon, Point
 
 from ..generic_utils.tiling_utils import modular_sampling
 
+from .carto_sampling import CartoSampling
 from .geo_transform import GeoTransform
 from .image_geometry_types import MarginsType, PointType, ImageWindowType, GdalGeoTransformType
 
@@ -49,7 +50,7 @@ class OrthoLayout:
 
     # TODO: define steps default values based on resolution
     def get_samples_positions(self, step_x: float, step_y: float, local_margins: MarginsType,
-                              roi: Optional[Polygon] = None) -> Tuple[np.ndarray, np.ndarray]:
+                              roi: Optional[Polygon] = None) -> CartoSampling:
         """ x_samples, y_samples are the coordinates  of the final samples in georeferenced system
         sampled from a starting position with different steps on X and Y axis.
 
@@ -78,7 +79,7 @@ class OrthoLayout:
 
     def _get_acceptable_samples(self, x_samples: np.ndarray, y_samples: np.ndarray,
                                 local_margins: MarginsType, roi: Optional[Polygon] = None
-                                ) -> Tuple[np.ndarray, np.ndarray]:
+                                ) -> CartoSampling:
         """ Filter out the samples which does not fall inside the ROI is it is defined and whose
         window centered on them does not belong to the image footprint.
 
@@ -120,7 +121,7 @@ class OrthoLayout:
         x_samples = np.array(acceptable_samples_x)
         y_samples = np.array(acceptable_samples_y)
 
-        return x_samples, y_samples
+        return CartoSampling(x_samples, y_samples)
 
     def window_pixels(self, point: PointType, margins: MarginsType,
                       line_start: int = 0, col_start: int = 0) -> ImageWindowType:

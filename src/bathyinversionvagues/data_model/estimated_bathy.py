@@ -332,9 +332,9 @@ class EstimatedBathy:
         value: Union[np.ndarray, List[datetime]]
         for element in dims:
             if element == 'y':
-                value = self.carto_sampling._y_samples
+                value = self.carto_sampling.y_samples
             elif element == 'x':
-                value = self.carto_sampling._x_samples
+                value = self.carto_sampling.x_samples
             elif element == 'kKeep':
                 value = np.arange(1, nb_keep + 1)
             else:
