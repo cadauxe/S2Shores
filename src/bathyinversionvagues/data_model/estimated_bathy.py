@@ -10,8 +10,9 @@ from typing import Mapping, Hashable, Any, Dict, List, Union, Tuple
 import numpy as np  # @NoMove
 from xarray import Dataset, DataArray  # @NoMove
 
+from ..image.carto_sampling import CartoSampling
+from ..waves_exceptions import WavesEstimationAttributeError
 
-from ..waves_exceptions import WavesEstimationIndexingError, WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
 
@@ -211,36 +212,27 @@ class EstimatedBathy:
     """ This class gathers all the estimated bathymetry samples in a whole dataset.
     """
 
-    def __init__(self, x_samples: np.ndarray, y_samples: np.ndarray,
-                 acq_time: str) -> None:
+    def __init__(self, carto_sampling: CartoSampling, acq_time: str) -> None:
         """ Define dimensions for which the estimated bathymetry samples will be defined.
 
-        :param x_samples: the X coordinates defining the estimated bathymetry samples
-        :param y_samples: the Y coordinates defining the estimated bathymetry samples
+        :param carto_sampling: the X and Y sampling of the estimated bathymetry
         :param acq_time: the time at which the bathymetry samples are estimated
         """
         # data is stored as a 2D array of python objects, here a dictionary containing bathy fields.
-        self.estimated_bathy = np.empty((y_samples.shape[0], x_samples.shape[0]), dtype=np.object_)
+        self.carto_sampling = carto_sampling
+        self.estimated_bathy = np.empty(carto_sampling.shape, dtype=np.object_)
 
         timestamp = datetime(int(acq_time[:4]), int(acq_time[4:6]), int(acq_time[6:8]),
                              int(acq_time[9:11]), int(acq_time[11:13]), int(acq_time[13:15]))
         self.timestamps = [timestamp]
-        self.x_samples = x_samples
-        self.y_samples = y_samples
 
     def store_estimations(self, bathy_estimations: BathymetrySampleEstimations) -> None:
         """ Store a set of bathymetry estimations at some location
 
         :param bathy_estimations: the whole set of bathy estimations data at one point.
-        :raises WavesEstimationIndexingError: when the x, y sample coordinates cannot be retrieved
         """
-        x_sample, y_sample = bathy_estimations.location
-        x_index = np.where(self.x_samples == x_sample)
-        y_index = np.where(self.y_samples == y_sample)
-        if len(x_index[0]) == 0 or len(y_index[0]) == 0:
-            msg_err = f'x_sample: {x_sample} or y_sample: {y_sample} indexes not found'
-            raise WavesEstimationIndexingError(msg_err)
-        self.estimated_bathy[y_index[0][0], x_index[0][0]] = bathy_estimations
+        index_y, index_x = self.carto_sampling.index_point(bathy_estimations.location)
+        self.estimated_bathy[index_y, index_x] = bathy_estimations
 
     def build_dataset(self, layers_type: str, nb_keep: int) -> Dataset:
         """ Build an xarray DataSet containing the estimated bathymetry.
@@ -332,9 +324,9 @@ class EstimatedBathy:
         value: Union[np.ndarray, List[datetime]]
         for element in dims:
             if element == 'y':
-                value = self.y_samples
+                value = self.carto_sampling._y_samples
             elif element == 'x':
-                value = self.x_samples
+                value = self.carto_sampling._x_samples
             elif element == 'kKeep':
                 value = np.arange(1, nb_keep + 1)
             else:

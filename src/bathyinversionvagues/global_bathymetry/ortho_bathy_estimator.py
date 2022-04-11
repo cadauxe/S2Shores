@@ -51,8 +51,7 @@ class OrthoBathyEstimator:
         # Will disappear when true Wave Fields will be identified and implemented.
         nb_keep = self.parent_estimator.nb_max_wave_fields
 
-        estimated_bathy = EstimatedBathy(self.sampled_ortho.carto_sampling._x_samples,
-                                         self.sampled_ortho.carto_sampling._y_samples,
+        estimated_bathy = EstimatedBathy(self.sampled_ortho.carto_sampling,
                                          self.sampled_ortho.ortho_stack.acquisition_time)
 
         # subtile reading

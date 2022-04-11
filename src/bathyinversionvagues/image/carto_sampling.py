@@ -8,10 +8,12 @@ from typing import Tuple, List
 import numpy as np  # @NoMove
 
 from ..generic_utils.numpy_utils import split_samples
+from ..waves_exceptions import WavesIndexingError
 
 from .image_geometry_types import PointType
 
 
+# TODO: define this as a class method of CartoSampling
 def build_tiling(x_samples: np.ndarray, y_samples: np.ndarray,
                  nb_tiles_max: int = 1) -> List[Tuple[np.ndarray, np.ndarray]]:
     """ Build a tiling of the provided samples. The number of created tiles may be lower
@@ -38,6 +40,7 @@ def build_tiling(x_samples: np.ndarray, y_samples: np.ndarray,
     return tiles_def
 
 
+# TODO: create an iterator over sampled points and use it
 class CartoSampling:
     """ A carto sampling is a subset of samples in a 2D space. It is built by taking consecutive
     samples in some samples coordinates lists, which means that there is no constraint on the
@@ -77,8 +80,22 @@ class CartoSampling:
         """
         return len(self._x_samples) * len(self._y_samples)
 
+    @property
+    def shape(self) -> Tuple[int, int]:
+        """ :returns: the shape of the 2D sampling.
+        """
+        return self._y_samples.shape[0], self._x_samples.shape[0]
+
+    def index_point(self, point: PointType) -> Tuple[int, int]:
+        x_index = np.where(self._x_samples == point[0])
+        y_index = np.where(self._y_samples == point[1])
+        if not x_index[0] or not y_index[0]:
+            msg_err = f'x_sample: { point[0]} or y_sample: {point[1]} indexes not found'
+            raise WavesIndexingError(msg_err)
+        return y_index[0][0], x_index[0][0]
+
     def __str__(self) -> str:
-        msg = f' N: {self.nb_samples} = {len(self._x_samples)}*{len(self._y_samples)} '
+        msg = f' N: {self.nb_samples} = {len(self._y_samples)}*{len(self._x_samples)} '
         msg += f' X[{self.upper_left_sample[0]}, {self.lower_right_sample[0]}] *'
         msg += f' Y[{self.upper_left_sample[1]}, {self.lower_right_sample[1]}]'
         return msg
