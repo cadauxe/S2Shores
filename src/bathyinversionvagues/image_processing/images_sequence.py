@@ -10,7 +10,7 @@
 """
 from datetime import datetime
 
-from typing import Tuple, Callable, List, Any, Union, Optional
+from typing import Tuple, Callable, List, Any, Union
 
 import numpy as np
 
@@ -43,7 +43,7 @@ class ImagesSequence(list):
         self._images_time: List[datetime] = []
 
     @property
-    def shape(self) -> Optional[Tuple[int, ...]]:
+    def shape(self) -> Tuple[int, ...]:
         """ :returns: The shape common to all the images contained in this sequence of images"""
         return self._shape
 
@@ -53,35 +53,22 @@ class ImagesSequence(list):
         return self._resolution
 
     @property
-    def sampling_frequency(self) -> Optional[float]:
+    def sampling_frequency(self) -> float:
         """ :returns: The spatial sampling frequency of this sequence of images (m-1)"""
-        if self.resolution is None:
-            return None
+        if self.resolution == 0.:
+            return np.Infinity
         return 1. / self.resolution
 
-    def _get_sequential_delta_times(self, location: PointType) -> np.ndarray:
-        """ Computes the list of time differences between 2 consecutive frames in the image sequence
-        """
-        sequential_delta_times = []
-        for frame_index in range(len(self) - 1):
-            delta_time = self._delta_time_provider.get_delta_time(self._images_id[frame_index],
-                                                                  self._images_id[frame_index + 1],
-                                                                  location)
-            sequential_delta_times.append(delta_time)
-        return np.array(sequential_delta_times)
-
-    # TODO: pass frames ids instead of a number of frames, which is wrong
-    def get_propagation_duration(self, location: PointType, nb_used_frames: int) -> float:
+    def get_time_difference(self, location: PointType,
+                            start_frame_id: FrameIdType, stop_frame_id: FrameIdType) -> float:
         """ :returns: The time duration between the start and stop images used for the estimation.
                       Positive or negative depending on the chronology of start and stop images.
-        :raises SequenceImagesError: if the number of frames is not correct
+        :raises SequenceImagesError: if the start or stop frames are unknown.
         """
-        if nb_used_frames > len(self):
-            msg = 'The chosen number of lag frames is greater than the number of available frames'
+        if start_frame_id not in self._images_id or stop_frame_id not in self._images_id:
+            msg = f'Start and/or stop frames are unknown in this image sequence: {self._images_id}'
             raise SequenceImagesError(msg)
-        sequential_delta_times = self._get_sequential_delta_times(location)
-        # FIXME: this slicing is wrong when frames are not the first ones in the sequence
-        return np.sum(sequential_delta_times[:nb_used_frames - 1])
+        return self._delta_time_provider.get_delta_time(start_frame_id, stop_frame_id, location)
 
     def append_image(self, image: WavesImage, image_id: FrameIdType) -> None:
         """ Append a new image to this image sequence. The first appended image fixes the spatial

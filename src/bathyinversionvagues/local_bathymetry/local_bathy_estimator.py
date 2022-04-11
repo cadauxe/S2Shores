@@ -18,7 +18,7 @@ import numpy as np
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..image.image_geometry_types import PointType
-from ..image_processing.images_sequence import ImagesSequence
+from ..image_processing.images_sequence import ImagesSequence, FrameIdType
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
 
@@ -84,8 +84,14 @@ class LocalBathyEstimator(ABC):
 
     @property
     @abstractmethod
-    def nb_used_frames(self) -> int:
-        """ :returns: The number of frames used by an estimator.
+    def start_frame_id(self) -> FrameIdType:
+        """ :returns: The id of the start frame used by this estimator.
+        """
+
+    @property
+    @abstractmethod
+    def stop_frame_id(self) -> FrameIdType:
+        """ :returns: The id of the stop frame used by this estimator.
         """
 
     @property
@@ -93,7 +99,9 @@ class LocalBathyEstimator(ABC):
         """ :returns: The time length of the sequence of images used for the estimation. May be
                       positive or negative to account for chronology of start and stop images.
         """
-        return self.images_sequence.get_propagation_duration(self._location, self.nb_used_frames)
+        return self.images_sequence.get_time_difference(self._location,
+                                                        self.start_frame_id,
+                                                        self.stop_frame_id)
 
     @property
     @abstractmethod

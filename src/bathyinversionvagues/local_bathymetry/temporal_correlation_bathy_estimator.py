@@ -22,7 +22,7 @@ from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.image_geometry_types import PointType
-from ..image_processing.images_sequence import ImagesSequence
+from ..image_processing.images_sequence import ImagesSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
@@ -68,7 +68,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
 
     @property
-    def nb_used_frames(self) -> int:
+    def start_frame_id(self) -> FrameIdType:
+        return 1
+
+    @property
+    def stop_frame_id(self) -> FrameIdType:
         return self.nb_lags + 1
 
     @property

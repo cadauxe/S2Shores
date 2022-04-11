@@ -18,7 +18,7 @@ from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.image_geometry_types import PointType
-from ..image_processing.images_sequence import ImagesSequence
+from ..image_processing.images_sequence import ImagesSequence, FrameIdType
 from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
@@ -54,8 +54,12 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         self.directions = None
 
     @property
-    def nb_used_frames(self) -> int:
-        return 2
+    def start_frame_id(self) -> FrameIdType:
+        return self.global_estimator.selected_frames[0]
+
+    @property
+    def stop_frame_id(self) -> FrameIdType:
+        return self.global_estimator.selected_frames[1]
 
     @property
     def radon_augmentation_factor(self) -> float:

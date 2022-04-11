@@ -16,7 +16,7 @@ import numpy as np
 from ..bathy_physics import wavenumber_offshore
 from ..generic_utils.image_filters import detrend, desmooth
 from ..image.image_geometry_types import PointType
-from ..image_processing.images_sequence import ImagesSequence
+from ..image_processing.images_sequence import ImagesSequence, FrameIdType
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
@@ -48,8 +48,12 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.full_linear_wavenumbers = self.get_full_linear_wavenumbers()
 
     @property
-    def nb_used_frames(self) -> int:
-        return 2
+    def start_frame_id(self) -> FrameIdType:
+        return self.global_estimator.selected_frames[0]
+
+    @property
+    def stop_frame_id(self) -> FrameIdType:
+        return self.global_estimator.selected_frames[1]
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
