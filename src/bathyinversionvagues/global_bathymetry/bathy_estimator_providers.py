@@ -15,7 +15,7 @@ from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, G
                                                ConstantGravityProvider)
 from ..data_providers.roi_provider import (RoiProvider, VectorFileRoiProvider)
 from ..image.image_geometry_types import PointType
-from ..image.ortho_stack import OrthoStack, FrameIdType
+from ..image.ortho_stack import OrthoStack
 
 
 class BathyEstimatorProviders:

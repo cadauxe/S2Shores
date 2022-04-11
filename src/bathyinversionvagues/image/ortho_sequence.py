@@ -21,7 +21,6 @@ from ..waves_exceptions import SequenceImagesError
 from .image_geometry_types import PointType, ImageWindowType
 
 
-ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 FrameIdType = Union[str, int, datetime]
 FramesIdsType = Union[List[str], List[int], List[datetime]]
 
