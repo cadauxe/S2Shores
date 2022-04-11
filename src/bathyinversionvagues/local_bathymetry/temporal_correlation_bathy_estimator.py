@@ -68,7 +68,13 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
 
     @property
-    def nb_lag_frames(self) -> int:
+    def nb_used_frames(self) -> int:
+        return self.nb_lags + 1
+
+    @property
+    def nb_lags(self) -> int:
+        """ :returns: the number of lags (interval between 2 frames) to use
+        """
         return self.local_estimator_params['TEMPORAL_LAG']
 
     def create_sequence_time_series(self) -> None:
@@ -202,13 +208,13 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         transformation
 
         :return: correlation matrix used for temporal reconstruction
+        :raises ValueError: when the time series is not defined
         """
         if self._correlation_matrix is None:
             if self._time_series is None:
                 raise ValueError('Time series are not defined')
-            self._correlation_matrix = cross_correlation(
-                self._time_series[:, self.nb_lag_frames - 1:],
-                self._time_series[:, :-self.nb_lag_frames + 1])
+            self._correlation_matrix = cross_correlation(self._time_series[:, self.nb_lags:],
+                                                         self._time_series[:, :-self.nb_lags])
 
         return self._correlation_matrix
 

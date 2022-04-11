@@ -48,7 +48,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         self.full_linear_wavenumbers = self.get_full_linear_wavenumbers()
 
     @property
-    def nb_lag_frames(self) -> int:
+    def nb_used_frames(self) -> int:
         return 2
 
     @property

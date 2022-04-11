@@ -54,7 +54,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         self.directions = None
 
     @property
-    def nb_lag_frames(self) -> int:
+    def nb_used_frames(self) -> int:
         return 2
 
     @property
