@@ -239,7 +239,7 @@ class EstimatedBathy:
 
         :param bathy_estimations: the whole set of bathy estimations data at one point.
         """
-        index_y, index_x = self.carto_sampling.index_point(bathy_estimations.location)
+        index_x, index_y = self.carto_sampling.index_point(bathy_estimations.location)
         self.estimated_bathy[index_y, index_x] = bathy_estimations
 
     def build_dataset(self, layers_type: str, nb_keep: int) -> Dataset:

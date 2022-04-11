@@ -87,12 +87,21 @@ class CartoSampling:
         return self._y_samples.shape[0], self._x_samples.shape[0]
 
     def index_point(self, point: PointType) -> Tuple[int, int]:
+        """ Retrieve the indexes of the coordinates of a point in the X and Y samples
+
+        :param point: a point in 2D, whose coordinates must be retrieved in the sampling
+        :returns: the indexes of X and Y in the sampling definitions
+        :raises WavesIndexingError: when one coordinate of the point is undefined in the sampling
+        """
         x_index = np.where(self._x_samples == point[0])
-        y_index = np.where(self._y_samples == point[1])
-        if not x_index[0] or not y_index[0]:
-            msg_err = f'x_sample: { point[0]} or y_sample: {point[1]} indexes not found'
+        if x_index[0].size == 0:
+            msg_err = f'X coordinate: { point[0]} undefined in x_samples: {self._x_samples}'
             raise WavesIndexingError(msg_err)
-        return y_index[0][0], x_index[0][0]
+        y_index = np.where(self._y_samples == point[1])
+        if y_index[0].size == 0:
+            msg_err = f'Y coordinate: { point[1]} undefined in y_samples: {self._y_samples}'
+            raise WavesIndexingError(msg_err)
+        return x_index[0][0], y_index[0][0]
 
     def __str__(self) -> str:
         msg = f' N: {self.nb_samples} = {len(self._y_samples)}*{len(self._x_samples)} '
