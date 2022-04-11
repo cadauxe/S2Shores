@@ -9,11 +9,12 @@
 :created: 7 april 2022
 """
 from datetime import datetime
-from typing import Tuple, Callable, List, Any, Union, Optional, TYPE_CHECKING
+
+from typing import Tuple, Callable, List, Any, Union, Optional
 
 import numpy as np
 
-
+from ..data_providers.delta_time_provider import DeltaTimeProvider
 from ..image.image_geometry_types import PointType, ImageWindowType
 from ..waves_exceptions import SequenceImagesError
 
@@ -24,9 +25,6 @@ ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 FrameIdType = Union[str, int, datetime]
 FramesIdsType = Union[List[str], List[int], List[datetime]]
 
-if TYPE_CHECKING:
-    from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
-
 
 # FIXME: list or dict indexed by image_id ???
 class ImagesSequence(list):
@@ -34,8 +32,10 @@ class ImagesSequence(list):
     shape and resolution and providing operations on it.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, delta_time_provider: DeltaTimeProvider) -> None:
         super().__init__()
+
+        self._delta_time_provider = delta_time_provider
         self._resolution = 0.
         self._shape: Tuple[int, ...] = (0, 0)
 
@@ -59,28 +59,27 @@ class ImagesSequence(list):
             return None
         return 1. / self.resolution
 
-    def _get_sequential_delta_times(self, global_estimator: 'BathyEstimator', location: PointType
-                                    ) -> np.ndarray:
+    def _get_sequential_delta_times(self, location: PointType) -> np.ndarray:
         """ Computes the list of time differences between 2 consecutive frames in the image sequence
         """
         sequential_delta_times = []
         for frame_index in range(len(self) - 1):
-            delta_time = global_estimator.get_delta_time(self._images_id[frame_index],
-                                                         self._images_id[frame_index + 1],
-                                                         location)
+            delta_time = self._delta_time_provider.get_delta_time(self._images_id[frame_index],
+                                                                  self._images_id[frame_index + 1],
+                                                                  location)
             sequential_delta_times.append(delta_time)
         return np.array(sequential_delta_times)
 
     # TODO: pass frames ids instead of a number of frames, which is wrong
-    def get_propagation_duration(self, global_estimator: 'BathyEstimator', location: PointType,
-                                 nb_used_frames: int) -> float:
-        """ :returns: The time length of the sequence of images used for the estimation. May be
-                      positive or negative to account for chronology of start and stop images.
+    def get_propagation_duration(self, location: PointType, nb_used_frames: int) -> float:
+        """ :returns: The time duration between the start and stop images used for the estimation.
+                      Positive or negative depending on the chronology of start and stop images.
+        :raises SequenceImagesError: if the number of frames is not correct
         """
         if nb_used_frames > len(self):
             msg = 'The chosen number of lag frames is greater than the number of available frames'
             raise SequenceImagesError(msg)
-        sequential_delta_times = self._get_sequential_delta_times(global_estimator, location)
+        sequential_delta_times = self._get_sequential_delta_times(location)
         # FIXME: this slicing is wrong when frames are not the first ones in the sequence
         return np.sum(sequential_delta_times[:nb_used_frames - 1])
 
@@ -121,7 +120,7 @@ class ImagesSequence(list):
                   window. It has the same resolution and number of images as this sequence
                   and the image identifiers are copied from the image identifiers of this sequence.
         """
-        images_sequence = ImagesSequence()
+        images_sequence = ImagesSequence(self._delta_time_provider)
         for index, sub_tile_image in enumerate(self):
             window_image = sub_tile_image.extract_sub_image(window)
             images_sequence.append_image(window_image, self._images_id[index])

@@ -93,8 +93,7 @@ class LocalBathyEstimator(ABC):
         """ :returns: The time length of the sequence of images used for the estimation. May be
                       positive or negative to account for chronology of start and stop images.
         """
-        return self.images_sequence.get_propagation_duration(self.global_estimator, self._location,
-                                                             self.nb_used_frames)
+        return self.images_sequence.get_propagation_duration(self._location, self.nb_used_frames)
 
     @property
     @abstractmethod

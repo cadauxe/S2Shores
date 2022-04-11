@@ -55,7 +55,7 @@ class OrthoBathyEstimator:
                                          self.sampled_ortho.ortho_stack.acquisition_time)
 
         # subtile reading
-        sub_tile_images = ImagesSequence()
+        sub_tile_images = ImagesSequence(self.parent_estimator.delta_time_provider)
         for frame_id in self.parent_estimator.selected_frames:
             sub_tile_images.append_image(self.sampled_ortho.read_pixels(frame_id), frame_id)
         print(f'Loading time: {time.time() - start_load:.2f} s')

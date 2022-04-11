@@ -165,17 +165,11 @@ class BathyEstimatorProviders:
         if self._delta_time_provider is not None:
             self._delta_time_provider.client_epsg_code = self._ortho_stack.epsg_code
 
-    def get_delta_time(self, first_frame_id: FrameIdType, second_frame_id: FrameIdType,
-                       point: PointType) -> float:
-        """ Returns the delta time at some point expressed by its X, Y and H coordinates in
-        some SRS, using the delta time provider associated to this bathymetry estimator.
-
-        :param first_frame_id: the id of the frame from which the duration will be counted
-        :param second_frame_id: the id of the frame to which the duration will be counted
-        :param point: a tuple containing the X and Y coordinates in the SRS set for the provider
-        :returns: the delta time between frames at this point (s).
-        :raises NoDeltaTimeProviderError: when no DeltaTimeProvider has been set for this estimator.
+    @property
+    def delta_time_provider(self) -> DeltaTimeProvider:
+        """ :returns: The delta time provider associated to this estimator.
+        :raises NoDeltaTimeProviderError: when no provider is defined.
         """
         if self._delta_time_provider is None:
             raise NoDeltaTimeProviderError()
-        return self._delta_time_provider.get_delta_time(first_frame_id, second_frame_id, point)
+        return self._delta_time_provider
