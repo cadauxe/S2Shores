@@ -18,7 +18,7 @@ from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.image_geometry_types import PointType
-from ..image_processing.images_sequence import ImagesSequence, FrameIdType
+from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
@@ -39,11 +39,11 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     wave_field_estimation_cls = SpatialCorrelationBathyEstimation
 
-    def __init__(self, location: PointType, images_sequence: ImagesSequence,
+    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
                  global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
-        super().__init__(location, images_sequence, global_estimator, selected_directions)
+        super().__init__(location, ortho_sequence, global_estimator, selected_directions)
 
         if self.selected_directions is None:
             self.selected_directions = linear_directions(-180., 0., 1.)
@@ -91,7 +91,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     def compute_radon_transforms(self) -> None:
 
-        for image in self.images_sequence:
+        for image in self.ortho_sequence:
             radon_transform = WavesRadon(image, self.selected_directions)
             radon_transform_augmented = radon_transform.radon_augmentation(
                 self.radon_augmentation_factor)
@@ -102,8 +102,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
         :returns: the estimated direction of the waves propagation
         """
-        tmp_image = np.ones(self.images_sequence.shape)
-        for frame_image in self.images_sequence:
+        tmp_image = np.ones(self.ortho_sequence.shape)
+        for frame_image in self.ortho_sequence:
             tmp_image *= frame_image.pixels
         tmp_wavesimage = WavesImage(tmp_image, self.spatial_resolution)
         tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)

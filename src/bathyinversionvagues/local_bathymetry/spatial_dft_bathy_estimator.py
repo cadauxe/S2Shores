@@ -16,7 +16,7 @@ import numpy as np
 from ..bathy_physics import wavenumber_offshore
 from ..generic_utils.image_filters import detrend, desmooth
 from ..image.image_geometry_types import PointType
-from ..image_processing.images_sequence import ImagesSequence, FrameIdType
+from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
@@ -37,11 +37,11 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     final_estimations_sorting = 'energy'
     wave_field_estimation_cls = SpatialDFTBathyEstimation
 
-    def __init__(self, location: PointType, images_sequence: ImagesSequence,
+    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
                  global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
-        super().__init__(location, images_sequence, global_estimator, selected_directions)
+        super().__init__(location, ortho_sequence, global_estimator, selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []
 
@@ -74,7 +74,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """ Compute the Radon transforms of all the images in the sequence using the currently
         selected directions.
         """
-        for image in self.images_sequence:
+        for image in self.ortho_sequence:
             radon_transform = WavesRadon(image, self.selected_directions)
             self.radon_transforms.append(radon_transform)
 

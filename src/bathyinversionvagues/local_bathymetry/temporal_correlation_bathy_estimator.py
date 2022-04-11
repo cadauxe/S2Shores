@@ -22,7 +22,7 @@ from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.image_geometry_types import PointType
-from ..image_processing.images_sequence import ImagesSequence, FrameIdType
+from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
@@ -41,11 +41,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """
     wave_field_estimation_cls = TemporalCorrelationBathyEstimation
 
-    def __init__(self, location: PointType, images_sequence: ImagesSequence,
+    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
                  global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
-        super().__init__(location, images_sequence, global_estimator, selected_directions)
+        super().__init__(location, ortho_sequence, global_estimator, selected_directions)
 
         if self.selected_directions is None:
             self.selected_directions = linear_directions(-180., 0., 1.)
@@ -89,8 +89,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         percentage_points = self.local_estimator_params['PERCENTAGE_POINTS']
         if percentage_points < 0 or percentage_points > 100:
             raise ValueError('Percentage must be between 0 and 100')
-        merge_array = np.dstack([image.pixels for image in self.images_sequence])
-        shape_y, shape_x = self.images_sequence.shape
+        merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
+        shape_y, shape_x = self.ortho_sequence.shape
         image_size = shape_x * shape_y
         time_series = np.reshape(merge_array, (image_size, -1))
         # A seed is used here to reproduce same results
@@ -98,7 +98,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         nb_random_points = round(image_size * percentage_points / 100)
         random_indexes = np.random.randint(image_size, size=nb_random_points)
         sampling_positions_x, sampling_positions_y = np.unravel_index(random_indexes,
-                                                                      self.images_sequence.shape)
+                                                                      self.ortho_sequence.shape)
         self._sampling_positions = (np.reshape(sampling_positions_x, (1, -1)),
                                     np.reshape(sampling_positions_y, (1, -1)))
         self._time_series = time_series[random_indexes, :]

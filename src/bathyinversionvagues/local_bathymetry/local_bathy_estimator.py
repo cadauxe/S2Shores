@@ -18,7 +18,7 @@ import numpy as np
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..image.image_geometry_types import PointType
-from ..image_processing.images_sequence import ImagesSequence, FrameIdType
+from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
 
@@ -41,13 +41,13 @@ class LocalBathyEstimator(ABC):
                       estimation.
         """
 
-    def __init__(self, location: PointType, images_sequence: ImagesSequence,
+    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
                  global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
         :param location: The (X, Y) coordinates of the location where this estimator is acting
-        :param images_sequence: a list of superimposed local images centered around the position
+        :param ortho_sequence: a list of superimposed local images centered around the position
                                 where the estimator is working.
         :param global_estimator: a global bathymetry estimator able to provide the services needed
                                  by this local bathymetry estimator (access to parameters,
@@ -55,10 +55,10 @@ class LocalBathyEstimator(ABC):
         :param selected_directions: the set of directions onto which the sinogram must be computed
         :raises SequenceImagesError: when the sequence is empty
         """
-        if not images_sequence:
-            raise SequenceImagesError('Sequence images is empty')
-        self.images_sequence = images_sequence
-        self.spatial_resolution = images_sequence.resolution
+        if not ortho_sequence:
+            raise SequenceImagesError('Ortho Sequence is empty')
+        self.ortho_sequence = ortho_sequence
+        self.spatial_resolution = ortho_sequence.resolution
 
         self._location = location
         self.global_estimator = global_estimator
@@ -99,9 +99,9 @@ class LocalBathyEstimator(ABC):
         """ :returns: The time length of the sequence of images used for the estimation. May be
                       positive or negative to account for chronology of start and stop images.
         """
-        return self.images_sequence.get_time_difference(self._location,
-                                                        self.start_frame_id,
-                                                        self.stop_frame_id)
+        return self.ortho_sequence.get_time_difference(self._location,
+                                                       self.start_frame_id,
+                                                       self.stop_frame_id)
 
     @property
     @abstractmethod
@@ -114,7 +114,7 @@ class LocalBathyEstimator(ABC):
         """ Process the images before doing the bathymetry estimation with a sequence of
         image processing filters.
         """
-        for image in self.images_sequence:
+        for image in self.ortho_sequence:
             filtered_image = image.apply_filters(self.preprocessing_filters)
             image.pixels = filtered_image.pixels
 

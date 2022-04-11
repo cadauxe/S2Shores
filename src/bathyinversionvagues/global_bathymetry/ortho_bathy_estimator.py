@@ -16,8 +16,8 @@ from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimatio
 from ..data_model.estimated_bathy import EstimatedBathy
 from ..data_providers.delta_time_provider import NoDeltaTimeValueError
 from ..image.image_geometry_types import PointType
+from ..image.ortho_sequence import OrthoSequence
 from ..image.sampled_ortho_image import SampledOrthoImage
-from ..image_processing.images_sequence import ImagesSequence
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..waves_exceptions import WavesException
 
@@ -55,7 +55,7 @@ class OrthoBathyEstimator:
                                          self.sampled_ortho.ortho_stack.acquisition_time)
 
         # subtile reading
-        sub_tile_images = ImagesSequence(self.parent_estimator.delta_time_provider)
+        sub_tile_images = OrthoSequence(self.parent_estimator.delta_time_provider)
         for frame_id in self.parent_estimator.selected_frames:
             sub_tile_images.append_image(self.sampled_ortho.read_pixels(frame_id), frame_id)
         print(f'Loading time: {time.time() - start_load:.2f} s')
@@ -79,7 +79,7 @@ class OrthoBathyEstimator:
 
         return estimated_bathy.build_dataset(self.parent_estimator.layers_type, nb_keep)
 
-    def _run_local_bathy_estimator(self, sub_tile_images: ImagesSequence,
+    def _run_local_bathy_estimator(self, sub_tile_images: OrthoSequence,
                                    estimation_point: PointType) -> BathymetrySampleEstimations:
 
         self.parent_estimator.set_debug_flag(estimation_point)
@@ -88,15 +88,15 @@ class OrthoBathyEstimator:
         try:
             # Build the images sequence for the estimation point
             window = self.sampled_ortho.window_extent(estimation_point)
-            images_sequence = sub_tile_images.extract_window(window)
+            ortho_sequence = sub_tile_images.extract_window(window)
             if self.parent_estimator.debug_sample:
-                for index, image_sequence in enumerate(images_sequence):
+                for index, image_sequence in enumerate(ortho_sequence):
                     print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
                     print(f'Window inside ortho image coordinates: {window}')
-                    print(f'--{images_sequence._images_id[index]} imagette {image_sequence}')
+                    print(f'--{ortho_sequence._images_id[index]} imagette {image_sequence}')
 
             # TODO: use selected_directions argument
-            local_bathy_estimator = local_bathy_estimator_factory(estimation_point, images_sequence,
+            local_bathy_estimator = local_bathy_estimator_factory(estimation_point, ortho_sequence,
                                                                   self.parent_estimator)
 
             bathy_estimations = local_bathy_estimator.bathymetry_estimations

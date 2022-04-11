@@ -11,9 +11,10 @@ from typing import Dict, Optional  # @NoMove
 from osgeo import gdal
 
 from ..data_providers.delta_time_provider import DeltaTimeProvider
-from ..image_processing.images_sequence import FrameIdType, FramesIdsType
 from ..image_processing.waves_image import WavesImage
+
 from .ortho_layout import OrthoLayout
+from .ortho_sequence import FrameIdType, FramesIdsType
 
 
 class OrthoStack(ABC, OrthoLayout):

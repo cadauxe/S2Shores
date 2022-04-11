@@ -15,10 +15,10 @@ from typing import Tuple, Callable, List, Any, Union
 import numpy as np
 
 from ..data_providers.delta_time_provider import DeltaTimeProvider
-from ..image.image_geometry_types import PointType, ImageWindowType
+from ..image_processing.waves_image import WavesImage
 from ..waves_exceptions import SequenceImagesError
 
-from .waves_image import WavesImage
+from .image_geometry_types import PointType, ImageWindowType
 
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
@@ -27,7 +27,7 @@ FramesIdsType = Union[List[str], List[int], List[datetime]]
 
 
 # FIXME: list or dict indexed by image_id ???
-class ImagesSequence(list):
+class OrthoSequence(list):
     """ Class encapsulating the information describing a sequence of superimposed images of same
     shape and resolution and providing operations on it.
     """
@@ -97,7 +97,7 @@ class ImagesSequence(list):
         self.append(image)
         self._images_id.append(image_id)
 
-    def extract_window(self, window: ImageWindowType) -> 'ImagesSequence':
+    def extract_window(self, window: ImageWindowType) -> 'OrthoSequence':
         """ Extract a new images sequence by taking pixels from a window contained within the
         sequence shape.
 
@@ -107,8 +107,8 @@ class ImagesSequence(list):
                   window. It has the same resolution and number of images as this sequence
                   and the image identifiers are copied from the image identifiers of this sequence.
         """
-        images_sequence = ImagesSequence(self._delta_time_provider)
+        ortho_sequence = OrthoSequence(self._delta_time_provider)
         for index, sub_tile_image in enumerate(self):
             window_image = sub_tile_image.extract_sub_image(window)
-            images_sequence.append_image(window_image, self._images_id[index])
-        return images_sequence
+            ortho_sequence.append_image(window_image, self._images_id[index])
+        return ortho_sequence

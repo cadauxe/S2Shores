@@ -105,8 +105,8 @@ def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
-    first_image = local_estimator.images_sequence[0]
-    second_image = local_estimator.images_sequence[1]
+    first_image = local_estimator.ortho_sequence[0]
+    second_image = local_estimator.ortho_sequence[1]
     build_image_display(axs[0, 0], 'first image original', first_image.original_pixels,
                         directions=arrows, cmap='gray')
     build_image_display(axs[1, 0], 'second image original', second_image.original_pixels,
@@ -184,8 +184,8 @@ def display_energies(local_estimator: 'SpatialDFTBathyEstimator',
     fig, ax = plt.subplots()
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
 
-    image1_energy = local_estimator.images_sequence[0].energy_inner_disk
-    image2_energy = local_estimator.images_sequence[1].energy_inner_disk
+    image1_energy = local_estimator.ortho_sequence[0].energy_inner_disk
+    image2_energy = local_estimator.ortho_sequence[1].energy_inner_disk
     ax.plot(radon1_obj.get_sinograms_energies() / image1_energy)
     ax.plot(radon2_obj.get_sinograms_energies() / image2_energy)
     plt.show()
@@ -199,8 +199,8 @@ def animate_sinograms(local_estimator: 'SpatialDFTBathyEstimator',
 
     sinogram1_init = radon1_obj[radon1_obj.directions[0]]
     sinogram2_init = radon2_obj[radon2_obj.directions[0]]
-    image1_energy = local_estimator.images_sequence[0].energy_inner_disk
-    image2_energy = local_estimator.images_sequence[0].energy_inner_disk
+    image1_energy = local_estimator.ortho_sequence[0].energy_inner_disk
+    image2_energy = local_estimator.ortho_sequence[1].energy_inner_disk
 
     line1, = ax.plot(sinogram1_init.values)
     line2, = ax.plot(sinogram2_init.values)
@@ -246,8 +246,8 @@ def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     axs[1, 1].set_title('radon image2')
     sinograms1_energies = radon1.get_sinograms_energies()
     sinograms2_energies = radon2.get_sinograms_energies()
-    image1_energy = local_estimator.images_sequence[0].energy_inner_disk
-    image2_energy = local_estimator.images_sequence[1].energy_inner_disk
+    image1_energy = local_estimator.ortho_sequence[0].energy_inner_disk
+    image2_energy = local_estimator.ortho_sequence[1].energy_inner_disk
     axs[0, 2].plot(sinograms1_energies / image1_energy)
     axs[0, 2].plot(sinograms2_energies / image2_energy)
     axs[0, 2].set_title('directions energies')
