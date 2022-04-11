@@ -100,13 +100,13 @@ class BathymetrySampleEstimations(list):
         # Firstly try to find the attribute from the estimations common attributes
         if hasattr(self, attribute_name):
             # retrieve attribute from the estimations header
-            wave_field_attribute = getattr(self, attribute_name)
+            bathymetry_estimation_attribute = getattr(self, attribute_name)
         else:
             if not self:
                 err_msg = f'Attribute {attribute_name} undefined (no estimations)'
                 raise WavesEstimationAttributeError(err_msg)
-            wave_field_attribute = self.get_estimations_attribute(attribute_name)
-        return wave_field_attribute
+            bathymetry_estimation_attribute = self.get_estimations_attribute(attribute_name)
+        return bathymetry_estimation_attribute
 
     def get_estimations_attribute(self, attribute_name: str) -> List[float]:
         """ Retrieve the values of some attribute in the list of stored wave field estimations.

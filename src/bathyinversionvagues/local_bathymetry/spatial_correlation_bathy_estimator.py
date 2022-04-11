@@ -150,13 +150,13 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
                                                   self.gravity)
         # TODO: revisit signs management
         spatial_shift_offshore_min = -celerity_offshore_max * abs(delta_time)
-        ambiguity_offshore = delta_time / period_offshore(1. / wavelength, self.gravity)
-        if ambiguity_offshore < 1:
+        stroboscopic_factor_offshore = delta_time / period_offshore(1. / wavelength, self.gravity)
+        if stroboscopic_factor_offshore < 1:
             spatial_shift_offshore_max = -spatial_shift_offshore_min
         else:
             # unused for s2
             spatial_shift_offshore_max = -self.local_estimator_params['PEAK_POSITION_MAX_FACTOR'] \
-                * ambiguity_offshore * wavelength
+                * stroboscopic_factor_offshore * wavelength
         peaks_pos, _ = find_peaks(correlation_signal)
         delta_position = np.nan
         if peaks_pos.size != 0:
@@ -184,8 +184,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param wavelength: the wave length of the waves
         :param delta_position: the distance propagated over time by the waves
         """
-        wave_field_estimation = cast(SpatialCorrelationBathyEstimation,
+        bathymetry_estimation = cast(SpatialCorrelationBathyEstimation,
                                      self.create_bathymetry_estimation(estimated_direction,
                                                                        wavelength))
-        wave_field_estimation.delta_position = delta_position
-        self.wave_fields_estimations.append(wave_field_estimation)
+        bathymetry_estimation.delta_position = delta_position
+        self.bathymetry_estimations.append(bathymetry_estimation)

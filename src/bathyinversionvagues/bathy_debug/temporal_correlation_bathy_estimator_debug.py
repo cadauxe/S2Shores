@@ -31,7 +31,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # FIXME: Handle severals wave_estimations
         ######################################################
         try:
-            wave_estimation = self.wave_fields_estimations[0]
+            wave_estimation = self.bathymetry_estimations[0]
             wave_direction = wave_estimation.direction
             wave_wavelength = wave_estimation.wavelength
             wave_celerity = wave_estimation.celerity

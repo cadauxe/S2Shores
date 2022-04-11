@@ -50,29 +50,36 @@ class BathymetrySampleEstimation(WaveFieldSampleEstimation, BathymetrySampleInve
 
         :returns: True is the wave field is valid, False otherwise
         """
-        # minimum and maximum values for the ambiguity:
-        #   - minimum correspond to the ambiguity for shallow water.
-        #   - maximum correspond to the ambiguity for offshore water.
-        ambiguity_range = (self.ambiguity_low_depth, self.ambiguity_offshore)
-        return (self.is_wave_field_valid(ambiguity_range) and
+        # minimum and maximum values for the stroboscopic factor
+        #   - minimum correspond to the stroboscopic factor for shallow water.
+        #   - maximum correspond to the stroboscopic factor for offshore water.
+        stroboscopic_factor_range = (self.stroboscopic_factor_low_depth,
+                                     self.stroboscopic_factor_offshore)
+        return (self.is_wave_field_valid(stroboscopic_factor_range) and
                 self.is_linearity_inside(self._linearity_range))
 
     @property
-    def ambiguity_low_depth(self) -> float:
-        """ :returns: the ambiguity relative to the period limit in shallow water
+    def stroboscopic_factor_low_depth(self) -> float:
+        """ :returns: the stroboscopic factor relative to the period limit in shallow water
     """
         return self.delta_time / self.period_low_depth
 
     @property
-    def ambiguity_offshore(self) -> float:
-        """ :returns: the ambiguity relative to the period offshore.
+    def stroboscopic_factor_offshore(self) -> float:
+        """ :returns: the stroboscopic factor relative to the period offshore.
         """
         return self.delta_time / self.period_offshore
+
+    @property
+    def absolute_stroboscopic_factor_offshore(self) -> float:
+        """ :returns: the stroboscopic factor relative to the period offshore.
+        """
+        return abs(self.stroboscopic_factor_offshore)
 
     def __str__(self) -> str:
         result = WaveFieldSampleEstimation.__str__(self)
         result += '\n' + BathymetrySampleInversion.__str__(self)
         result += f'\nBathymetry Estimation: '
-        result += f' ambiguity low depth: {self.ambiguity_low_depth:5.3f} '
-        result += f' ambiguity offshore: {self.ambiguity_offshore:5.3f} '
+        result += f' stroboscopic factor low depth: {self.stroboscopic_factor_low_depth:5.3f} '
+        result += f' stroboscopic factor offshore: {self.stroboscopic_factor_offshore:5.3f} '
         return result
