@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Definition of the CartoTile class and associated functions
+""" Definition of the CartoSampling class and associated functions
 
 :author: GIROS Alain
 :created: 05/05/2021
@@ -38,47 +38,47 @@ def build_tiling(x_samples: np.ndarray, y_samples: np.ndarray,
     return tiles_def
 
 
-class CartoTile:
-    """ A tile is a subset of samples in a 2D space. Tiles are built by taking consecutive
-    samples in the samples coordinates lists, which means that there is no constraint on the
+class CartoSampling:
+    """ A carto sampling is a subset of samples in a 2D space. It is built by taking consecutive
+    samples in some samples coordinates lists, which means that there is no constraint on the
     spatial distribution of these samples. It is up to the caller to impose these constraints
     by providing increasing or decreasing ordered lists of coordinates or whatever desired order,
     according to the needs.
     """
 
     def __init__(self, x_samples: np.ndarray, y_samples: np.ndarray) -> None:
-        """ Define the samples belonging to the tile. These samples correspond to the cross
+        """ Define the samples defining this carto sampling. These samples correspond to the cross
         product of the X and Y coordinates.
 
-        :param x_samples: the X coordinates defining the tile samples
-        :param y_samples: the Y coordinates defining the tile samples
+        :param x_samples: the X coordinates defining the carto sampling
+        :param y_samples: the Y coordinates defining the carto sampling
         """
 
-        self.x_samples = x_samples
-        self.y_samples = y_samples
+        self._x_samples = x_samples
+        self._y_samples = y_samples
 
     @property
     def upper_left_sample(self) -> PointType:
-        """ :returns: the coordinates of the upper left sample of the tile, assuming that
+        """ :returns: the coordinates of the upper left sample of this sampling, assuming that
                       Y axis is decreasing from top to down.
         """
-        return self.x_samples[0], self.y_samples[-1]
+        return self._x_samples[0], self._y_samples[-1]
 
     @property
     def lower_right_sample(self) -> PointType:
-        """ :returns: the coordinates of the loxer right sample of the tile, assuming that
+        """ :returns: the coordinates of the loxer right sample of this sampling, assuming that
                       Y axis is decreasing from top to down.
         """
-        return self.x_samples[-1], self.y_samples[0]
+        return self._x_samples[-1], self._y_samples[0]
 
     @property
     def nb_samples(self) -> int:
-        """ :returns: the number of samples in the tile.
+        """ :returns: the number of samples in this carto sampling.
         """
-        return len(self.x_samples) * len(self.y_samples)
+        return len(self._x_samples) * len(self._y_samples)
 
     def __str__(self) -> str:
-        msg = f' N: {self.nb_samples} = {len(self.x_samples)}*{len(self.y_samples)} '
+        msg = f' N: {self.nb_samples} = {len(self._x_samples)}*{len(self._y_samples)} '
         msg += f' X[{self.upper_left_sample[0]}, {self.lower_right_sample[0]}] *'
         msg += f' Y[{self.upper_left_sample[1]}, {self.lower_right_sample[1]}]'
         return msg

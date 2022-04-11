@@ -51,7 +51,8 @@ class OrthoBathyEstimator:
         # Will disappear when true Wave Fields will be identified and implemented.
         nb_keep = self.parent_estimator.nb_max_wave_fields
 
-        estimated_bathy = EstimatedBathy(self.sampled_ortho.x_samples, self.sampled_ortho.y_samples,
+        estimated_bathy = EstimatedBathy(self.sampled_ortho.carto_sampling._x_samples,
+                                         self.sampled_ortho.carto_sampling._y_samples,
                                          self.sampled_ortho.ortho_stack.acquisition_time)
 
         # subtile reading
@@ -62,8 +63,8 @@ class OrthoBathyEstimator:
 
         start = time.time()
         computed_points = 0
-        for x_sample in self.sampled_ortho.x_samples:
-            for y_sample in self.sampled_ortho.y_samples:
+        for x_sample in self.sampled_ortho.carto_sampling._x_samples:
+            for y_sample in self.sampled_ortho.carto_sampling._y_samples:
                 estimation_point = (x_sample, y_sample)
                 bathy_estimations = self._run_local_bathy_estimator(sub_tile_images,
                                                                     estimation_point)
@@ -73,7 +74,7 @@ class OrthoBathyEstimator:
                 # Store bathymetry sample estimations
                 estimated_bathy.store_estimations(bathy_estimations)
 
-        total_points = self.sampled_ortho.nb_samples
+        total_points = self.sampled_ortho.carto_sampling.nb_samples
         comput_time = time.time() - start
         print(f'Computed {computed_points}/{total_points} points in: {comput_time:.2f} s')
 
