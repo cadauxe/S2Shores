@@ -4,40 +4,13 @@
 :author: GIROS Alain
 :created: 05/05/2021
 """
-from typing import Tuple, List
+from typing import Tuple, List, Iterator
 import numpy as np  # @NoMove
 
 from ..generic_utils.numpy_utils import split_samples
 from ..waves_exceptions import WavesIndexingError
 
 from .image_geometry_types import PointType
-
-
-# TODO: define this as a class method of CartoSampling
-def build_tiling(x_samples: np.ndarray, y_samples: np.ndarray,
-                 nb_tiles_max: int = 1) -> List[Tuple[np.ndarray, np.ndarray]]:
-    """ Build a tiling of the provided samples. The number of created tiles may be lower
-    than the requested number of tiles, if this number is not a square number.
-
-    :param x_samples: the samples X coordinates, no order imposed.
-    :param y_samples: the samples Y coordinates, no order imposed.
-    :param nb_tiles_max: the maximum number of tiles in the tiling
-
-    :returns: a list of samples defining a set of tiles covering the provided samples.
-    """
-
-    tiles_def = []
-    # Full samples cropped in crop*crop tiles
-    crop = int(np.sqrt(nb_tiles_max))
-    nb_tiles_x = min(crop, x_samples.size)  # Possibly different from nb_tiles_y in the future
-    nb_tiles_y = min(crop, y_samples.size)  # Possibly different from nb_tiles_x in the future
-    x_samples_parts = split_samples(x_samples, nb_tiles_x)
-    y_samples_parts = split_samples(y_samples, nb_tiles_y)
-    for x_samples_part in x_samples_parts:
-        for y_samples_part in y_samples_parts:
-            subtile_def = (x_samples_part, y_samples_part)
-            tiles_def.append(subtile_def)
-    return tiles_def
 
 
 # TODO: create an iterator over sampled points and use it
@@ -59,6 +32,18 @@ class CartoSampling:
 
         self._x_samples = x_samples
         self._y_samples = y_samples
+
+    @property
+    def x_samples(self) -> np.ndarray:
+        """ :returns: the sampling coordinates along the X axis.
+        """
+        return self._x_samples
+
+    @property
+    def y_samples(self) -> np.ndarray:
+        """ :returns: the sampling coordinates along the Y axis.
+        """
+        return self._y_samples
 
     @property
     def upper_left_sample(self) -> PointType:
@@ -103,8 +88,43 @@ class CartoSampling:
             raise WavesIndexingError(msg_err)
         return x_index[0][0], y_index[0][0]
 
+    def all_points(self) -> Iterator[PointType]:
+        """ A generator returning all points in the CartoSampling one after the other.
+
+        :yields: (X, Y) coordinates of successive points in the sampling
+        """
+        for x_sample in self._x_samples:
+            for y_sample in self._y_samples:
+                yield x_sample, y_sample
+
     def __str__(self) -> str:
         msg = f' N: {self.nb_samples} = {len(self._y_samples)}*{len(self._x_samples)} '
         msg += f' X[{self.upper_left_sample[0]}, {self.lower_right_sample[0]}] *'
         msg += f' Y[{self.upper_left_sample[1]}, {self.lower_right_sample[1]}]'
         return msg
+
+
+# TODO: define this as a class method of CartoSampling
+def build_tiling(input_sampling: CartoSampling, nb_tiles_max: int = 1) -> List[CartoSampling]:
+    """ Build a tiling of the provided sampling. The number of created tiles may be lower
+    than the requested number of tiles, if this number is not a square number.
+
+    :param input_sampling: the sampling to split in tiles
+    :param nb_tiles_max: the maximum number of tiles in the tiling
+
+    :returns: a list of samplings defining a set of tiles covering the provided sampling.
+    """
+    x_samples = input_sampling.x_samples
+    y_samples = input_sampling.y_samples
+
+    tiles_samplings = []
+    # Full samples cropped in crop*crop tiles
+    crop = int(np.sqrt(nb_tiles_max))
+    nb_tiles_x = min(crop, x_samples.size)  # Possibly different from nb_tiles_y in the future
+    nb_tiles_y = min(crop, y_samples.size)  # Possibly different from nb_tiles_x in the future
+    x_samples_parts = split_samples(x_samples, nb_tiles_x)
+    y_samples_parts = split_samples(y_samples, nb_tiles_y)
+    for x_samples_part in x_samples_parts:
+        for y_samples_part in y_samples_parts:
+            tiles_samplings.append(CartoSampling(x_samples_part, y_samples_part))
+    return tiles_samplings
