@@ -9,16 +9,23 @@
 :created: 7 april 2022
 """
 from datetime import datetime
+from typing import Tuple, Callable, List, Any, Union, Optional, TYPE_CHECKING
 
-from typing import Tuple, Callable, List, Any, Union, Optional
+import numpy as np
 
-from ..image.image_geometry_types import ImageWindowType
+
+from ..image.image_geometry_types import PointType, ImageWindowType
+from ..waves_exceptions import SequenceImagesError
+
 from .waves_image import WavesImage
 
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 FrameIdType = Union[str, int, datetime]
 FramesIdsType = Union[List[str], List[int], List[datetime]]
+
+if TYPE_CHECKING:
+    from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
 
 # FIXME: list or dict indexed by image_id ???
@@ -51,6 +58,31 @@ class ImagesSequence(list):
         if self.resolution is None:
             return None
         return 1. / self.resolution
+
+    def _get_sequential_delta_times(self, global_estimator: 'BathyEstimator', location: PointType
+                                    ) -> np.ndarray:
+        """ Computes the list of time differences between 2 consecutive frames in the image sequence
+        """
+        sequential_delta_times = []
+        for frame_index in range(len(self) - 1):
+            delta_time = global_estimator.get_delta_time(self._images_id[frame_index],
+                                                         self._images_id[frame_index + 1],
+                                                         location)
+            sequential_delta_times.append(delta_time)
+        return np.array(sequential_delta_times)
+
+    # TODO: pass frames ids instead of a number of frames, which is wrong
+    def get_propagation_duration(self, global_estimator: 'BathyEstimator', location: PointType,
+                                 nb_used_frames: int) -> float:
+        """ :returns: The time length of the sequence of images used for the estimation. May be
+                      positive or negative to account for chronology of start and stop images.
+        """
+        if nb_used_frames > len(self):
+            msg = 'The chosen number of lag frames is greater than the number of available frames'
+            raise SequenceImagesError(msg)
+        sequential_delta_times = self._get_sequential_delta_times(global_estimator, location)
+        # FIXME: this slicing is wrong when frames are not the first ones in the sequence
+        return np.sum(sequential_delta_times[:nb_used_frames - 1])
 
     def append_image(self, image: WavesImage, image_id: FrameIdType) -> None:
         """ Append a new image to this image sequence. The first appended image fixes the spatial

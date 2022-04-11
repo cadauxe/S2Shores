@@ -20,7 +20,7 @@ from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimatio
 from ..image.image_geometry_types import PointType
 from ..image_processing.images_sequence import ImagesSequence
 from ..image_processing.waves_image import ImageProcessingFilters
-from ..waves_exceptions import SequenceImagesError, WavesEstimationError
+from ..waves_exceptions import SequenceImagesError
 
 
 if TYPE_CHECKING:
@@ -60,6 +60,7 @@ class LocalBathyEstimator(ABC):
         self.images_sequence = images_sequence
         self.spatial_resolution = images_sequence.resolution
 
+        self._location = location
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.local_estimator_params
@@ -67,29 +68,15 @@ class LocalBathyEstimator(ABC):
         self.selected_directions = selected_directions
 
         # FIXME: distance to shore test should take into account windows sizes
-        distance = self.global_estimator.get_distoshore(location)
-        gravity = self.global_estimator.get_gravity(location, 0.)
-        inside_roi = self.global_estimator.is_inside_roi(location)
+        distance = self.global_estimator.get_distoshore(self._location)
+        gravity = self.global_estimator.get_gravity(self._location, 0.)
+        inside_roi = self.global_estimator.is_inside_roi(self._location)
 
-        self._set_sequential_delta_times(location)
-
-        self._bathymetry_estimations = BathymetrySampleEstimations(location, gravity,
+        self._bathymetry_estimations = BathymetrySampleEstimations(self._location, gravity,
                                                                    self.propagation_duration,
                                                                    distance, inside_roi)
 
         self._metrics: Dict[str, Any] = {}
-
-    def _set_sequential_delta_times(self, location: PointType) -> None:
-        """ Computes the list of time differences between 2 consecutive frames in the image sequence
-        """
-        sequential_delta_times = []
-        for frame_index in range(len(self.images_sequence) - 1):
-            delta_time = self.global_estimator.get_delta_time(
-                self.images_sequence._images_id[frame_index],
-                self.images_sequence._images_id[frame_index + 1],
-                location)
-            sequential_delta_times.append(delta_time)
-        self._sequential_delta_times = np.array(sequential_delta_times)
 
     def can_estimate_bathy(self) -> bool:
         return (self.bathymetry_estimations.distance_to_shore > 0 and
@@ -106,11 +93,8 @@ class LocalBathyEstimator(ABC):
         """ :returns: The time length of the sequence of images used for the estimation. May be
                       positive or negative to account for chronology of start and stop images.
         """
-        if self.nb_used_frames > len(self.images_sequence):
-            raise WavesEstimationError(
-                'The chosen number of lag frames is greater than the number of available frames')
-        # FIXME: this slicing is wrong when frames are not the first ones in the sequence
-        return np.sum(self._sequential_delta_times[:self.nb_used_frames - 1])
+        return self.images_sequence.get_propagation_duration(self.global_estimator, self._location,
+                                                             self.nb_used_frames)
 
     @property
     @abstractmethod
