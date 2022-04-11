@@ -41,7 +41,6 @@ SPATIAL_DFT:
 TEMPORAL_CORRELATION:
   TEMPORAL_LAG: 1  # number of frames to let wave propagation happen (example 3 for a 1Hz sequence)
   PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation
-  HOPS_NUMBER: 3 # number of correlation peaks used to determine celerity
   TUNING:
     PEAK_DETECTION_HEIGHT_RATIO: 0.3
     PEAK_DETECTION_DISTANCE_RATIO: 0.5

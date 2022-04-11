@@ -108,12 +108,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             wave_length = self.compute_wave_length(sinogram_max_var_values)
             distances = self.compute_distances(
                 sinogram_max_var_values,
-                wave_length,
-                nb_hops=self.local_estimator_params['HOPS_NUMBER'])
+                wave_length)
 
             # Keep in mind that direction_estimations stores several estimations for a same
             # direction and only the best of them should be added in the final list
-            # direction_estimation is empty at this point
+            # direction_estimations is empty at this point
             direction_estimations = deepcopy(self.wave_fields_estimations)
 
             for distance in distances:
@@ -271,14 +270,12 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self.metrics['wave_length_zeros'] = wave_length_zeros
         return wave_length
 
-    def compute_distances(self, sinogram: np.ndarray, wave_length: float,
-                          nb_hops: int) -> np.ndarray:
+    def compute_distances(self, sinogram: np.ndarray, wave_length: float) -> np.ndarray:
         """ Propagated distance computation (in meter)
         Maxima are computed using peaks detection and the smallest nb_hops distances are selected
 
         :param sinogram: sinogram having maximum variance
         :param wave_length: wave_length computed on sinogram
-        :param nb_hops : number of peaks to consider to compute distances
         :returns: np.ndarray of size nb_hops containing computed distances
         """
         x_axis = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
@@ -292,9 +289,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                               distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']
                               * period)
         distances = x_axis[peaks] * self.spatial_resolution
-        index = np.argsort(sinogram[peaks])[::-1]
         if self.debug_sample:
             self.metrics['interval'] = interval
             self.metrics['x_axis'] = x_axis
-            self.metrics['max_indices'] = peaks[index][:nb_hops]
-        return distances[index][:nb_hops]
+            self.metrics['max_indices'] = peaks
+        return distances
