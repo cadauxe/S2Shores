@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Definition of the CartoTile class and associated functions
+""" Definition of the CartoSampling class and associated functions
 
 :author: GIROS Alain
 :created: 05/05/2021
@@ -8,10 +8,12 @@ from typing import Tuple, List
 import numpy as np  # @NoMove
 
 from ..generic_utils.numpy_utils import split_samples
+from ..waves_exceptions import WavesIndexingError
 
 from .image_geometry_types import PointType
 
 
+# TODO: define this as a class method of CartoSampling
 def build_tiling(x_samples: np.ndarray, y_samples: np.ndarray,
                  nb_tiles_max: int = 1) -> List[Tuple[np.ndarray, np.ndarray]]:
     """ Build a tiling of the provided samples. The number of created tiles may be lower
@@ -38,47 +40,62 @@ def build_tiling(x_samples: np.ndarray, y_samples: np.ndarray,
     return tiles_def
 
 
-class CartoTile:
-    """ A tile is a subset of samples in a 2D space. Tiles are built by taking consecutive
-    samples in the samples coordinates lists, which means that there is no constraint on the
+# TODO: create an iterator over sampled points and use it
+class CartoSampling:
+    """ A carto sampling is a subset of samples in a 2D space. It is built by taking consecutive
+    samples in some samples coordinates lists, which means that there is no constraint on the
     spatial distribution of these samples. It is up to the caller to impose these constraints
     by providing increasing or decreasing ordered lists of coordinates or whatever desired order,
     according to the needs.
     """
 
     def __init__(self, x_samples: np.ndarray, y_samples: np.ndarray) -> None:
-        """ Define the samples belonging to the tile. These samples correspond to the cross
+        """ Define the samples defining this carto sampling. These samples correspond to the cross
         product of the X and Y coordinates.
 
-        :param x_samples: the X coordinates defining the tile samples
-        :param y_samples: the Y coordinates defining the tile samples
+        :param x_samples: the X coordinates defining the carto sampling
+        :param y_samples: the Y coordinates defining the carto sampling
         """
 
-        self.x_samples = x_samples
-        self.y_samples = y_samples
+        self._x_samples = x_samples
+        self._y_samples = y_samples
 
     @property
     def upper_left_sample(self) -> PointType:
-        """ :returns: the coordinates of the upper left sample of the tile, assuming that
+        """ :returns: the coordinates of the upper left sample of this sampling, assuming that
                       Y axis is decreasing from top to down.
         """
-        return self.x_samples[0], self.y_samples[-1]
+        return self._x_samples[0], self._y_samples[-1]
 
     @property
     def lower_right_sample(self) -> PointType:
-        """ :returns: the coordinates of the loxer right sample of the tile, assuming that
+        """ :returns: the coordinates of the loxer right sample of this sampling, assuming that
                       Y axis is decreasing from top to down.
         """
-        return self.x_samples[-1], self.y_samples[0]
+        return self._x_samples[-1], self._y_samples[0]
 
     @property
     def nb_samples(self) -> int:
-        """ :returns: the number of samples in the tile.
+        """ :returns: the number of samples in this carto sampling.
         """
-        return len(self.x_samples) * len(self.y_samples)
+        return len(self._x_samples) * len(self._y_samples)
+
+    @property
+    def shape(self) -> Tuple[int, int]:
+        """ :returns: the shape of the 2D sampling.
+        """
+        return self._y_samples.shape[0], self._x_samples.shape[0]
+
+    def index_point(self, point: PointType) -> Tuple[int, int]:
+        x_index = np.where(self._x_samples == point[0])
+        y_index = np.where(self._y_samples == point[1])
+        if not x_index[0] or not y_index[0]:
+            msg_err = f'x_sample: { point[0]} or y_sample: {point[1]} indexes not found'
+            raise WavesIndexingError(msg_err)
+        return y_index[0][0], x_index[0][0]
 
     def __str__(self) -> str:
-        msg = f' N: {self.nb_samples} = {len(self.x_samples)}*{len(self.y_samples)} '
+        msg = f' N: {self.nb_samples} = {len(self._y_samples)}*{len(self._x_samples)} '
         msg += f' X[{self.upper_left_sample[0]}, {self.lower_right_sample[0]}] *'
         msg += f' Y[{self.upper_left_sample[1]}, {self.lower_right_sample[1]}]'
         return msg

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-module -- Class encapsulating an image onto which wave field estimation will be made
+""" Class encapsulating an image onto which wave field estimation will be made
 
 
 :author: Alain Giros
@@ -14,6 +13,7 @@ from typing import Tuple, Callable, List, Any
 import numpy as np
 
 from ..generic_utils.numpy_utils import circular_mask
+from ..image.image_geometry_types import ImageWindowType
 
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
@@ -65,3 +65,13 @@ class WavesImage:
         """ :returns: The inscribed disk"""
         # FIXME: Ratio of the disk area on the chip area should be closer to PI/4 (0.02 difference)
         return circular_mask(self.pixels.shape[0], self.pixels.shape[1], self.pixels.dtype)
+
+    def extract_sub_image(self, window: ImageWindowType) -> 'WavesImage':
+        """ :param window: the window to extract from this image
+        :returns: a new WavesImage defined by a window inside this image.
+        """
+        return WavesImage(self.pixels[window[0]:window[1] + 1, window[2]:window[3] + 1],
+                          self.resolution)
+
+    def __str__(self) -> str:
+        return f'Resolution: {self.resolution}  Shape: {self.pixels.shape}:\n{self.pixels}'

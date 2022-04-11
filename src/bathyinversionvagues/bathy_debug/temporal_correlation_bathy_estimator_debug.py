@@ -41,7 +41,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             # Note that wave direction is clockwise origin east
             px = np.cos(np.deg2rad(wave_direction))
             py = -np.sin(np.deg2rad(wave_direction))
-            first_image = self.images_sequence[0].pixels
+            first_image = self.ortho_sequence[0].pixels
             correlation_matrix = self.correlation_image.pixels
             sinogram_max_var = metrics['sinogram_max_var']
             x = metrics['x_axis']

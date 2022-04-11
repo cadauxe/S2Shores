@@ -11,14 +11,15 @@ time intervals.
 from abc import abstractmethod, ABC
 from copy import deepcopy
 
-from typing import Dict, Any, List, Optional, Type, TYPE_CHECKING  # @NoMove
+from typing import Dict, Any, Optional, Type, TYPE_CHECKING  # @NoMove
 
 import numpy as np
 
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..image.image_geometry_types import PointType
-from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image.ortho_sequence import OrthoSequence, FrameIdType
+from ..image_processing.waves_image import ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
 
 
@@ -40,20 +41,26 @@ class LocalBathyEstimator(ABC):
                       estimation.
         """
 
-    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
+    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
+                 global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         """ Constructor
 
         :param location: The (X, Y) coordinates of the location where this estimator is acting
+        :param ortho_sequence: a list of superimposed local images centered around the position
+                                where the estimator is working.
         :param global_estimator: a global bathymetry estimator able to provide the services needed
                                  by this local bathymetry estimator (access to parameters,
                                  data providers, debugging, ...)
         :param selected_directions: the set of directions onto which the sinogram must be computed
-        :raise SequenceImagesError: when sequence can no be exploited
+        :raises SequenceImagesError: when the sequence is empty
         """
-        self.images_sequence: List[WavesImage] = []
-        self.spatial_resolution = 0.
+        if not ortho_sequence:
+            raise SequenceImagesError('Ortho Sequence is empty')
+        self.ortho_sequence = ortho_sequence
+        self.spatial_resolution = ortho_sequence.resolution
 
+        self._location = location
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.local_estimator_params
@@ -61,21 +68,11 @@ class LocalBathyEstimator(ABC):
         self.selected_directions = selected_directions
 
         # FIXME: distance to shore test should take into account windows sizes
-        distance = self.global_estimator.get_distoshore(location)
-        gravity = self.global_estimator.get_gravity(location, 0.)
-        inside_roi = self.global_estimator.is_inside_roi(location)
+        distance = self.global_estimator.get_distoshore(self._location)
+        gravity = self.global_estimator.get_gravity(self._location, 0.)
+        inside_roi = self.global_estimator.is_inside_roi(self._location)
 
-        sequential_delta_times = np.array([])
-        for frame_index in range(len(self.global_estimator.selected_frames) - 1):
-            delta_time = self.global_estimator.get_delta_time(
-                self.global_estimator.selected_frames[frame_index],
-                self.global_estimator.selected_frames[frame_index + 1],
-                location)
-            # FIXME: copied from CorrelationBathyEstimator but wrong !?
-            sequential_delta_times = np.append(delta_time, sequential_delta_times)
-        self._sequential_delta_times = sequential_delta_times
-
-        self._bathymetry_estimations = BathymetrySampleEstimations(location, gravity,
+        self._bathymetry_estimations = BathymetrySampleEstimations(self._location, gravity,
                                                                    self.propagation_duration,
                                                                    distance, inside_roi)
 
@@ -85,32 +82,26 @@ class LocalBathyEstimator(ABC):
         return (self.bathymetry_estimations.distance_to_shore > 0 and
                 self.bathymetry_estimations.inside_roi)
 
-    def set_images_sequence(self, images_sequence: List[WavesImage]) -> None:
-        """ initialize the image_sequence to use with this estimator
-
-        :param images_sequence: a list of superimposed local images centered around the position
-                                where the estimator is working.
-        :raise SequenceImagesError: when sequence can no be exploited
+    @property
+    @abstractmethod
+    def start_frame_id(self) -> FrameIdType:
+        """ :returns: The id of the start frame used by this estimator.
         """
-        if self.spatial_resolution != 0.:
-            raise SequenceImagesError('Cannot redefine the sequence of images for this estimator')
-        if not images_sequence:
-            raise SequenceImagesError('Sequence images is empty')
-        self.spatial_resolution = images_sequence[0].resolution
-        shape = images_sequence[0].pixels.shape
-        for wave_image in images_sequence[1:]:
-            if wave_image.resolution != self.spatial_resolution:
-                raise SequenceImagesError('Images in sequence do not have same resolution')
-            if wave_image.pixels.shape != shape:
-                raise SequenceImagesError('Images in sequence do not have same size')
-        self.images_sequence = images_sequence
 
     @property
     @abstractmethod
+    def stop_frame_id(self) -> FrameIdType:
+        """ :returns: The id of the stop frame used by this estimator.
+        """
+
+    @property
     def propagation_duration(self) -> float:
         """ :returns: The time length of the sequence of images used for the estimation. May be
                       positive or negative to account for chronology of start and stop images.
         """
+        return self.ortho_sequence.get_time_difference(self._location,
+                                                       self.start_frame_id,
+                                                       self.stop_frame_id)
 
     @property
     @abstractmethod
@@ -123,7 +114,7 @@ class LocalBathyEstimator(ABC):
         """ Process the images before doing the bathymetry estimation with a sequence of
         image processing filters.
         """
-        for image in self.images_sequence:
+        for image in self.ortho_sequence:
             filtered_image = image.apply_filters(self.preprocessing_filters)
             image.pixels = filtered_image.pixels
 
@@ -137,12 +128,6 @@ class LocalBathyEstimator(ABC):
     def location(self) -> PointType:
         """ :returns: The (X, Y) coordinates of the location where this estimator is acting"""
         return self.bathymetry_estimations.location
-
-    @property
-    def sequential_delta_times(self) -> np.ndarray:
-        """ :returns: the time differences between 2 consecutive frames in the image sequence
-        """
-        return self._sequential_delta_times
 
     @abstractmethod
     def run(self) -> None:
