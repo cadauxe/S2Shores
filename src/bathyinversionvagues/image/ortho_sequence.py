@@ -10,15 +10,16 @@
 """
 from datetime import datetime
 
-from typing import Tuple, Callable, List, Any, Union
+from typing import Tuple, List, Union
 
+from shapely.geometry import Point
 import numpy as np
 
 from ..data_providers.delta_time_provider import DeltaTimeProvider
 from ..image_processing.waves_image import WavesImage
 from ..waves_exceptions import SequenceImagesError
 
-from .image_geometry_types import PointType, ImageWindowType
+from .image_geometry_types import ImageWindowType
 
 
 FrameIdType = Union[str, int, datetime]
@@ -58,7 +59,7 @@ class OrthoSequence(list):
             return np.Infinity
         return 1. / self.resolution
 
-    def get_time_difference(self, location: PointType,
+    def get_time_difference(self, location: Point,
                             start_frame_id: FrameIdType, stop_frame_id: FrameIdType) -> float:
         """ :returns: The time duration between the start and stop images used for the estimation.
                       Positive or negative depending on the chronology of start and stop images.

@@ -7,12 +7,13 @@
 from typing import List, Optional, Dict, Any  # @NoMove
 from pathlib import Path
 
-import numpy as np
+from shapely.geometry import Point
 import xarray as xr  # @NoMove
 from xarray import Dataset  # @NoMove
 
+import numpy as np
 
-from ..image.image_geometry_types import MarginsType, PointType
+from ..image.image_geometry_types import MarginsType
 from ..image.ortho_stack import OrthoStack, FramesIdsType
 from ..image.sampled_ortho_image import SampledOrthoImage
 
@@ -47,7 +48,7 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
 
         # Init debugging points handling
         self._debug_path: Optional[Path] = None
-        self._debug_samples: List[PointType] = []
+        self._debug_samples: List[Point] = []
         self._debug_sample = False
 
     @property
@@ -153,7 +154,7 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
     def debug_path(self, path: Path) -> None:
         self._debug_path = path
 
-    def set_debug_area(self, bottom_left_corner: PointType, top_right_corner: PointType,
+    def set_debug_area(self, bottom_left_corner: Point, top_right_corner: Point,
                        decimation: int) -> None:
         """ Sets all points within rectangle defined by bottom_left_corner and top_right_corner to
         debug
@@ -170,27 +171,27 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
             x_samples = np.concatenate((x_samples, subtile.carto_sampling.x_samples))
             y_samples = np.concatenate((y_samples, subtile.carto_sampling.y_samples))
         x_samples_filtered = x_samples[np.logical_and(
-            x_samples > bottom_left_corner[0], x_samples < top_right_corner[0])][::decimation]
+            x_samples > bottom_left_corner.x, x_samples < top_right_corner.x)][::decimation]
         y_samples_filtered = y_samples[np.logical_and(
-            y_samples > bottom_left_corner[1], y_samples < top_right_corner[1])][::decimation]
+            y_samples > bottom_left_corner.y, y_samples < top_right_corner.y)][::decimation]
         list_samples = []
         for x_coord in x_samples_filtered:
             for y_coord in y_samples_filtered:
-                list_samples.append((x_coord, y_coord))
+                list_samples.append(Point(x_coord, y_coord))
         self._debug_samples = list_samples
 
-    def set_debug_samples(self, samples: List[PointType]) -> None:
+    def set_debug_samples(self, samples: List[Point]) -> None:
         """ Sets the list of sample points to debug
 
         :param samples: a list of (X,Y) tuples defining the points to debug
         """
         self._debug_samples = samples
 
-    def set_debug_flag(self, sample: PointType) -> None:
+    def set_debug_flag(self, sample: Point) -> None:
         """ Set or reset the debug flag for a given point depending on its presence into the set
         of points to debug.
 
-        :param sample: The coordinate of the point for which the debug flag must be set
+        :param sample: The point for which the debug flag must be set
         """
         self._debug_sample = sample in self._debug_samples
 

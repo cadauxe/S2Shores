@@ -7,6 +7,7 @@
 from typing import Optional  # @NoMove
 
 import numpy as np  # @NoMove
+from shapely.affinity import translate
 from shapely.geometry import Polygon, Point
 
 from ..generic_utils.tiling_utils import modular_sampling
@@ -38,9 +39,9 @@ class OrthoLayout:
         self._geo_transform = GeoTransform(gdal_geotransform)
 
         # Get georeferenced extent of the whole image
-        self.upper_left_x, self.upper_left_y = self._geo_transform.projected_coordinates(0., 0.)
-        self.lower_right_x, self.lower_right_y = self._geo_transform.projected_coordinates(
-            self._nb_columns, self._nb_lines)
+        self._upper_left_corner = self._geo_transform.projected_coordinates(Point(0., 0.))
+        self._lower_right_corner = self._geo_transform.projected_coordinates(Point(self._nb_columns,
+                                                                                   self._nb_lines))
 
     @property
     def epsg_code(self) -> int:
@@ -61,12 +62,12 @@ class OrthoLayout:
         :returns: the chosen samples specified by the cross product of X samples and Y samples
         """
         # Compute all the sampling X and Y coordinates falling inside the image domain
-        left_sample_index, right_sample_index = modular_sampling(self.upper_left_x,
-                                                                 self.lower_right_x,
+        left_sample_index, right_sample_index = modular_sampling(self._upper_left_corner.x,
+                                                                 self._lower_right_corner.x,
                                                                  step_x)
 
-        bottom_sample_index, top_sample_index = modular_sampling(self.lower_right_y,
-                                                                 self.upper_left_y,
+        bottom_sample_index, top_sample_index = modular_sampling(self._lower_right_corner.y,
+                                                                 self._upper_left_corner.y,
                                                                  step_y)
         x_samples = np.arange(left_sample_index, right_sample_index + 1) * step_x
         y_samples = np.arange(bottom_sample_index, top_sample_index + 1) * step_y
@@ -138,15 +139,15 @@ class OrthoLayout:
                   - start and stop lines (both included) in the image space defining the window
                   - start and stop columns  (both included) in the image space defining the window
         """
-        # define the sub window domain in utm
-        window_proj = [point.x - margins[0], point.x + margins[1],
-                       point.y - margins[2], point.y + margins[3]]
+        # define the sub window domain in projected coordinates
+        upper_left_corner = translate(point, xoff=-margins[0], yoff=margins[3])
+        lower_right_corner = translate(point, xoff=margins[1], yoff=-margins[2])
 
         # compute the sub window domain in pixels
-        window_col_start, window_line_start = self._geo_transform.image_coordinates(window_proj[0],
-                                                                                    window_proj[3])
-        window_col_stop, window_line_stop = self._geo_transform.image_coordinates(window_proj[1],
-                                                                                  window_proj[2])
+        image_upper_left_corner = self._geo_transform.image_coordinates(upper_left_corner)
+        image_lower_right_corner = self._geo_transform.image_coordinates(lower_right_corner)
+        window_col_start, window_line_start = image_upper_left_corner.coords[0]
+        window_col_stop, window_line_stop = image_lower_right_corner.coords[0]
         window_pix = (int(window_line_start) - line_start,
                       int(window_line_stop) - line_start,
                       int(window_col_start) - col_start,

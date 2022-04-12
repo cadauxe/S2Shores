@@ -8,6 +8,4 @@ from typing import Tuple
 
 MarginsType = Tuple[float, float, float, float]
 
-PointType = Tuple[float, float]
-
 ImageWindowType = Tuple[int, int, int, int]

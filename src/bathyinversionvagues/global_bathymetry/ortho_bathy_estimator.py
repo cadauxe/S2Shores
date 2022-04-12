@@ -10,12 +10,12 @@ import warnings
 from typing import TYPE_CHECKING  # @NoMove
 
 from xarray import Dataset  # @NoMove
+from shapely.geometry import Point
 
 
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..data_model.estimated_bathy import EstimatedBathy
 from ..data_providers.delta_time_provider import NoDeltaTimeValueError
-from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
@@ -77,7 +77,7 @@ class OrthoBathyEstimator:
         return estimated_bathy.build_dataset(self.parent_estimator.layers_type, nb_keep)
 
     def _run_local_bathy_estimator(self, sub_tile_images: OrthoSequence,
-                                   estimation_point: PointType) -> BathymetrySampleEstimations:
+                                   estimation_point: Point) -> BathymetrySampleEstimations:
 
         self.parent_estimator.set_debug_flag(estimation_point)
 

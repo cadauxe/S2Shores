@@ -6,13 +6,13 @@
 """
 from typing import List, Optional  # @NoMove
 
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point
 
-import numpy as np
 
 from ..image_processing.waves_image import WavesImage
+
 from .carto_sampling import CartoSampling, build_tiling
-from .image_geometry_types import PointType, MarginsType, ImageWindowType
+from .image_geometry_types import MarginsType, ImageWindowType
 from .ortho_stack import OrthoStack, FrameIdType
 
 
@@ -27,7 +27,6 @@ class SampledOrthoImage:
 
         :param ortho_stack: the orthorectified stack onto which the sampling is defined
         :param carto_sampling: the sampling of this SampledOrthoImage
-        :param y_samples: the Y coordinates defining the samples of the subtile
         :param margins: the margins to consider around the samples to determine the image extent
         """
         self.ortho_stack = ortho_stack
@@ -76,11 +75,11 @@ class SampledOrthoImage:
                                             self._line_start, self._line_stop,
                                             self._col_start, self._col_stop)
 
-    def window_extent(self, carto_point: PointType) -> ImageWindowType:
+    def window_extent(self, carto_point: Point) -> ImageWindowType:
         """ Given a point defined in the projected domain, computes a rectangle of pixels centered
         on the pixel containing this point and taking into account the SampledOrthoImage margins.
 
-        :param carto_point: the X and Y coordinates of the point
+        :param carto_point: the center point
         :returns: the window as a tuple of four coordinates relative to line_start and col_start of
                   this SampledOrthoImage
         """

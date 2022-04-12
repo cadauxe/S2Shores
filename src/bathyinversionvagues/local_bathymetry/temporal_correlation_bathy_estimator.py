@@ -10,18 +10,17 @@
 from copy import deepcopy
 from typing import Optional, Tuple, TYPE_CHECKING  # @NoMove
 
-
 import pandas
 from scipy.signal import find_peaks
-import numpy as np
+from shapely.geometry import Point
 
+import numpy as np
 
 from ..bathy_physics import wavelength_offshore
 from ..generic_utils.image_filters import detrend, clipping
 from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period_from_zeros
-from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
@@ -41,7 +40,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """
     wave_field_estimation_cls = TemporalCorrelationBathyEstimation
 
-    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
+    def __init__(self, location: Point, ortho_sequence: OrthoSequence,
                  global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 

@@ -4,16 +4,15 @@
 :author: GIROS Alain
 :created: 05/05/2021
 """
-from typing import Tuple, List, Iterator
+from typing import Tuple, List, Iterator  # @NoMove
+
 import numpy as np  # @NoMove
+from shapely.geometry import Point
 
 from ..generic_utils.numpy_utils import split_samples
 from ..waves_exceptions import WavesIndexingError
 
-from .image_geometry_types import PointType
 
-
-# TODO: create an iterator over sampled points and use it
 class CartoSampling:
     """ A carto sampling is a subset of samples in a 2D space. It is built by taking consecutive
     samples in some samples coordinates lists, which means that there is no constraint on the
@@ -46,18 +45,18 @@ class CartoSampling:
         return self._y_samples
 
     @property
-    def upper_left_sample(self) -> PointType:
-        """ :returns: the coordinates of the upper left sample of this sampling, assuming that
+    def upper_left_sample(self) -> Point:
+        """ :returns: The upper left sample of this sampling, assuming that
                       Y axis is decreasing from top to down.
         """
-        return self._x_samples[0], self._y_samples[-1]
+        return Point(self._x_samples[0], self._y_samples[-1])
 
     @property
-    def lower_right_sample(self) -> PointType:
-        """ :returns: the coordinates of the loxer right sample of this sampling, assuming that
+    def lower_right_sample(self) -> Point:
+        """ :returns: the loxer right sample of this sampling, assuming that
                       Y axis is decreasing from top to down.
         """
-        return self._x_samples[-1], self._y_samples[0]
+        return Point(self._x_samples[-1], self._y_samples[0])
 
     @property
     def nb_samples(self) -> int:
@@ -71,36 +70,36 @@ class CartoSampling:
         """
         return self._y_samples.shape[0], self._x_samples.shape[0]
 
-    def index_point(self, point: PointType) -> Tuple[int, int]:
+    def index_point(self, point: Point) -> Tuple[int, int]:
         """ Retrieve the indexes of the coordinates of a point in the X and Y samples
 
         :param point: a point in 2D, whose coordinates must be retrieved in the sampling
         :returns: the indexes of X and Y in the sampling definitions
         :raises WavesIndexingError: when one coordinate of the point is undefined in the sampling
         """
-        x_index = np.where(self._x_samples == point[0])
+        x_index = np.where(self._x_samples == point.x)
         if x_index[0].size == 0:
-            msg_err = f'X coordinate: { point[0]} undefined in x_samples: {self._x_samples}'
+            msg_err = f'X coordinate: { point.x} undefined in x_samples: {self._x_samples}'
             raise WavesIndexingError(msg_err)
-        y_index = np.where(self._y_samples == point[1])
+        y_index = np.where(self._y_samples == point.y)
         if y_index[0].size == 0:
-            msg_err = f'Y coordinate: { point[1]} undefined in y_samples: {self._y_samples}'
+            msg_err = f'Y coordinate: { point.y} undefined in y_samples: {self._y_samples}'
             raise WavesIndexingError(msg_err)
         return x_index[0][0], y_index[0][0]
 
-    def all_points(self) -> Iterator[PointType]:
+    def all_points(self) -> Iterator[Point]:
         """ A generator returning all points in the CartoSampling one after the other.
 
-        :yields: (X, Y) coordinates of successive points in the sampling
+        :yields: successive points in the sampling
         """
         for x_sample in self._x_samples:
             for y_sample in self._y_samples:
-                yield x_sample, y_sample
+                yield Point(x_sample, y_sample)
 
     def __str__(self) -> str:
         msg = f' N: {self.nb_samples} = {len(self._y_samples)}*{len(self._x_samples)} '
-        msg += f' X[{self.upper_left_sample[0]}, {self.lower_right_sample[0]}] *'
-        msg += f' Y[{self.upper_left_sample[1]}, {self.lower_right_sample[1]}]'
+        msg += f' X[{self.upper_left_sample.x}, {self.lower_right_sample.x}] *'
+        msg += f' Y[{self.upper_left_sample.y}, {self.lower_right_sample.y}]'
         return msg
 
 
