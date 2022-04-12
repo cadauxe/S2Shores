@@ -12,8 +12,8 @@ from shapely.geometry import Polygon, Point
 from ..generic_utils.tiling_utils import modular_sampling
 
 from .carto_sampling import CartoSampling
-from .geo_transform import GeoTransform
-from .image_geometry_types import MarginsType, PointType, ImageWindowType, GdalGeoTransformType
+from .geo_transform import GeoTransform, GdalGeoTransformType
+from .image_geometry_types import MarginsType, ImageWindowType
 
 
 class OrthoLayout:
@@ -96,9 +96,9 @@ class OrthoLayout:
         acceptable_samples_x = []
         for x_coord in x_samples:
             for y_coord in y_samples:
-                if roi is None or roi.contains(Point(x_coord, y_coord)):
-                    line_start, line_stop, col_start, col_stop = self.window_pixels((x_coord,
-                                                                                     y_coord),
+                point = Point(x_coord, y_coord)
+                if roi is None or roi.contains(point):
+                    line_start, line_stop, col_start, col_stop = self.window_pixels(point,
                                                                                     local_margins)
 
                     if (line_start >= 0 and line_stop < self._nb_lines and
@@ -109,9 +109,9 @@ class OrthoLayout:
         acceptable_samples_y = []
         for y_coord in y_samples:
             for x_coord in acceptable_samples_x:
-                if roi is None or roi.contains(Point(x_coord, y_coord)):
-                    line_start, line_stop, col_start, col_stop = self.window_pixels((x_coord,
-                                                                                     y_coord),
+                point = Point(x_coord, y_coord)
+                if roi is None or roi.contains(point):
+                    line_start, line_stop, col_start, col_stop = self.window_pixels(point,
                                                                                     local_margins)
                     if (line_start >= 0 and line_stop < self._nb_lines and
                             col_start >= 0 and col_stop < self._nb_columns):
@@ -123,14 +123,14 @@ class OrthoLayout:
 
         return CartoSampling(x_samples, y_samples)
 
-    def window_pixels(self, point: PointType, margins: MarginsType,
+    def window_pixels(self, point: Point, margins: MarginsType,
                       line_start: int = 0, col_start: int = 0) -> ImageWindowType:
         """ Given a point defined in the projected domain, computes a rectangle of pixels centered
         on the pixel containing this point and taking into account the specified margins.
         No check is done at this level to verify that the rectangle is contained within the pixels
         space.
 
-        :param point: the X and Y coordinates of the point
+        :param point: the center point
         :param margins: the margins to consider around the point in order to build the window.
         :param line_start: line number in the image from which the window coordinates are computed
         :param col_start: column number in the image from which the window coordinates are computed
@@ -139,8 +139,8 @@ class OrthoLayout:
                   - start and stop columns  (both included) in the image space defining the window
         """
         # define the sub window domain in utm
-        window_proj = [point[0] - margins[0], point[0] + margins[1],
-                       point[1] - margins[2], point[1] + margins[3]]
+        window_proj = [point.x - margins[0], point.x + margins[1],
+                       point.y - margins[2], point.y + margins[3]]
 
         # compute the sub window domain in pixels
         window_col_start, window_line_start = self._geo_transform.image_coordinates(window_proj[0],

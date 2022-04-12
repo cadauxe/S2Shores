@@ -4,7 +4,12 @@
 :author: GIROS Alain
 :created: 26/04/2021
 """
-from .image_geometry_types import PointType, GdalGeoTransformType
+from typing import Sequence
+
+from .image_geometry_types import PointType
+
+
+GdalGeoTransformType = Sequence[float]
 
 
 class GeoTransform:
