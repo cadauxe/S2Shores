@@ -87,6 +87,6 @@ class SampledOrthoImage:
                                               self._line_start, self._col_start)
 
     def __str__(self) -> str:
-        msg = super().__str__()
+        msg = str(self.carto_sampling)
         msg += f' C[{self._col_start}, {self._col_stop}] * L[{self._line_start}, {self._line_stop}]'
         return msg

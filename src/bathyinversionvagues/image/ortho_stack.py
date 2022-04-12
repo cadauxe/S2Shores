@@ -80,18 +80,6 @@ class OrthoStack(ABC, OrthoLayout):
         acquisition date and time.
         """
 
-    @property
-    def spatial_resolution(self) -> float:
-        """ :returns: the spatial resolution of the different frames in the stack (m)
-        """
-        return self._geo_transform.resolution
-
-    @property
-    def x_y_resolutions_equal(self) -> bool:
-        """ :returns: True if the absolute values of X and Y resolutions of the frames are equal
-        """
-        return self._geo_transform.x_y_resolutions_equal
-
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this ortho stack
         """
@@ -158,4 +146,4 @@ class OrthoStack(ABC, OrthoLayout):
         pixels = image.ReadAsArray(col_start, line_start, nb_cols, nb_lines)
         # release dataset
         image_dataset = None
-        return WavesImage(pixels, self.spatial_resolution)
+        return WavesImage(pixels, self._geo_transform.resolution)
