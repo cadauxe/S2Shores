@@ -83,45 +83,41 @@ class OrthoLayout:
         """ Filter out the samples which does not fall inside the ROI is it is defined and whose
         window centered on them does not belong to the image footprint.
 
-        :param x_samples: the cartographic coordinates of the samples to filter along the X axis
-        :param y_samples: the cartographic coordinates of the samples to filter along the Y axis
+        :param sampling: the cartographic coordinates of the samples to filter along the X axis
         :param local_margins: the margins to consider around the samples
         :param roi: a rectangle describing the ROI if any.
         :returns: the chosen samples specified by the cross product of X samples and Y samples
         """
         if roi is not None:
             sampling = sampling.limit_to_roi(roi)
-        x_samples = sampling.x_samples
-        y_samples = sampling.y_samples
-        acceptable_samples_x = []
-        for x_coord in x_samples:
-            for y_coord in y_samples:
-                point = Point(x_coord, y_coord)
-                if roi is None or roi.contains(point):
-                    line_start, line_stop, col_start, col_stop = self.window_pixels(point,
-                                                                                    local_margins)
 
-                    if (line_start >= 0 and line_stop < self._nb_lines and
-                            col_start >= 0 and col_stop < self._nb_columns):
-                        acceptable_samples_x.append(x_coord)
-                        break
+        acceptable_samples_x = []
+        for point in sampling.x_y_sampling():
+            if roi is None or roi.contains(point):
+                if self.is_window_inside(point, local_margins):
+                    acceptable_samples_x.append(point.x)
+                    break
 
         acceptable_samples_y = []
-        for y_coord in y_samples:
-            for x_coord in acceptable_samples_x:
-                point = Point(x_coord, y_coord)
-                if roi is None or roi.contains(point):
-                    line_start, line_stop, col_start, col_stop = self.window_pixels(point,
-                                                                                    local_margins)
-                    if (line_start >= 0 and line_stop < self._nb_lines and
-                            col_start >= 0 and col_stop < self._nb_columns):
-                        acceptable_samples_y.append(y_coord)
-                        break
+        x_reduced_sampling = Sampling2D(np.array(acceptable_samples_x), sampling.y_samples)
+        for point in x_reduced_sampling.y_x_sampling():
+            if roi is None or roi.contains(point):
+                if self.is_window_inside(point, local_margins):
+                    acceptable_samples_y.append(point.y)
+                    break
 
-        x_samples = np.array(acceptable_samples_x)
-        y_samples = np.array(acceptable_samples_y)
+        return Sampling2D(np.array(acceptable_samples_x), np.array(acceptable_samples_y))
 
-        return Sampling2D(x_samples, y_samples)
+    def is_window_inside(self, point: Point, margins: MarginsType) -> bool:
+        """ Determine if a window centered on a given point is fully inside the OrthoLayout
+
+        :param point: the center point
+        :param margins: the margins defining the window around the point
+        :returns: True if the window is fully inside the layout, False otherwise
+        """
+        line_start, line_stop, col_start, col_stop = self.window_pixels(point, margins)
+        return (line_start >= 0 and line_stop < self._nb_lines and
+                col_start >= 0 and col_stop < self._nb_columns)
 
     def window_pixels(self, point: Point, margins: MarginsType,
                       line_start: int = 0, col_start: int = 0) -> ImageWindowType:
