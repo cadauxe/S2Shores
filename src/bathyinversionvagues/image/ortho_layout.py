@@ -91,22 +91,30 @@ class OrthoLayout:
         if roi is not None:
             sampling = sampling.limit_to_roi(roi)
 
+        x_samples = sampling.x_samples
+        y_samples = sampling.y_samples
         acceptable_samples_x = []
-        for point in sampling.x_y_sampling():
-            if roi is None or roi.contains(point):
-                if self.is_window_inside(point, local_margins):
-                    acceptable_samples_x.append(point.x)
-                    break
+        for x_coord in x_samples:
+            for y_coord in y_samples:
+                point = Point(x_coord, y_coord)
+                if roi is None or roi.contains(point):
+                    if self.is_window_inside(point, local_margins):
+                        acceptable_samples_x.append(x_coord)
+                        break
 
         acceptable_samples_y = []
-        x_reduced_sampling = Sampling2D(np.array(acceptable_samples_x), sampling.y_samples)
-        for point in x_reduced_sampling.y_x_sampling():
-            if roi is None or roi.contains(point):
-                if self.is_window_inside(point, local_margins):
-                    acceptable_samples_y.append(point.y)
-                    break
+        for y_coord in y_samples:
+            for x_coord in acceptable_samples_x:
+                point = Point(x_coord, y_coord)
+                if roi is None or roi.contains(point):
+                    if self.is_window_inside(point, local_margins):
+                        acceptable_samples_y.append(y_coord)
+                        break
 
-        return Sampling2D(np.array(acceptable_samples_x), np.array(acceptable_samples_y))
+        x_samples = np.array(acceptable_samples_x)
+        y_samples = np.array(acceptable_samples_y)
+
+        return Sampling2D(x_samples, y_samples)
 
     def is_window_inside(self, point: Point, margins: MarginsType) -> bool:
         """ Determine if a window centered on a given point is fully inside the OrthoLayout
