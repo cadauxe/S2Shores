@@ -128,8 +128,8 @@ class OrthoStack(ABC, OrthoLayout):
         :returns: a DeltaTimeProvider fully configured for being used with this ortho stack.
         """
 
-    def read_pixels(self, frame_id: FrameIdType, line_start: int, line_stop: int,
-                    col_start: int, col_stop: int) -> WavesImage:
+    def read_frame_image(self, frame_id: FrameIdType, line_start: int, line_stop: int,
+                         col_start: int, col_stop: int) -> WavesImage:
         """ Read a rectangle of pixels from a specific frame of this stack.
 
         :param frame_id: the identifier of the  frame to read

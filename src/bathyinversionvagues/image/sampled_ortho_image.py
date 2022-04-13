@@ -62,16 +62,16 @@ class SampledOrthoImage:
             subtiles.append(cls(image, subtile_sampling, margins))
         return subtiles
 
-    def read_pixels(self, frame_id: FrameIdType) -> WavesImage:
+    def read_frame_image(self, frame_id: FrameIdType) -> WavesImage:
         """ Read the whole rectangle of pixels corresponding to this SampledOrthoImage
         retrieved from a specific frame of the orthorectified stack.
 
         :param frame_id: the identifier of the frame in the stack
         :returns: the rectangle of pixels as an array
         """
-        return self.ortho_stack.read_pixels(frame_id,
-                                            self._line_start, self._line_stop,
-                                            self._col_start, self._col_stop)
+        return self.ortho_stack.read_frame_image(frame_id,
+                                                 self._line_start, self._line_stop,
+                                                 self._col_start, self._col_stop)
 
     def window_extent(self, carto_point: Point) -> ImageWindowType:
         """ Given a point defined in the projected domain, computes a rectangle of pixels centered
