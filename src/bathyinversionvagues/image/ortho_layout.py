@@ -11,10 +11,9 @@ from shapely.affinity import translate
 from shapely.geometry import Polygon, Point
 
 from ..generic_utils.tiling_utils import modular_sampling
-
-from .carto_sampling import CartoSampling
 from .geo_transform import GeoTransform, GdalGeoTransformType
 from .image_geometry_types import MarginsType, ImageWindowType
+from .sampling_2d import Sampling2D
 
 
 class OrthoLayout:
@@ -51,12 +50,12 @@ class OrthoLayout:
 
     # TODO: define steps default values based on resolution
     def get_samples_positions(self, step_x: float, step_y: float, local_margins: MarginsType,
-                              roi: Optional[Polygon] = None) -> CartoSampling:
+                              roi: Optional[Polygon] = None) -> Sampling2D:
         """ x_samples, y_samples are the coordinates  of the final samples in georeferenced system
         sampled from a starting position with different steps on X and Y axis.
 
-        :param step_x: the cartographic sampling to use along the X axis to sample this image
-        :param step_y: the cartographic sampling to use along the Y axis to sample this image
+        :param step_x: the sampling step to use along the X axis to sample this image
+        :param step_y: the sampling step to use along the Y axis to sample this image
         :param local_margins: the margins to consider around the samples
         :param roi: a rectangle describing the ROI if any.
         :returns: the chosen samples specified by the cross product of X samples and Y samples
@@ -80,7 +79,7 @@ class OrthoLayout:
 
     def _get_acceptable_samples(self, x_samples: np.ndarray, y_samples: np.ndarray,
                                 local_margins: MarginsType, roi: Optional[Polygon] = None
-                                ) -> CartoSampling:
+                                ) -> Sampling2D:
         """ Filter out the samples which does not fall inside the ROI is it is defined and whose
         window centered on them does not belong to the image footprint.
 
@@ -122,7 +121,7 @@ class OrthoLayout:
         x_samples = np.array(acceptable_samples_x)
         y_samples = np.array(acceptable_samples_y)
 
-        return CartoSampling(x_samples, y_samples)
+        return Sampling2D(x_samples, y_samples)
 
     def window_pixels(self, point: Point, margins: MarginsType,
                       line_start: int = 0, col_start: int = 0) -> ImageWindowType:

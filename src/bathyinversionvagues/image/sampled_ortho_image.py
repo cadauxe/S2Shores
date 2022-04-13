@@ -8,19 +8,17 @@ from typing import List, Optional  # @NoMove
 
 from shapely.geometry import Polygon, Point
 
-
 from ..image_processing.waves_image import WavesImage
-
-from .carto_sampling import CartoSampling, build_tiling
 from .image_geometry_types import MarginsType, ImageWindowType
 from .ortho_stack import OrthoStack, FrameIdType
+from .sampling_2d import Sampling2D
 
 
 class SampledOrthoImage:
-    """ This class makes the link between a CartoSampling and the image in which it is defined.
+    """ This class makes the link between a Sampling2D and the image in which it is defined.
     """
 
-    def __init__(self, ortho_stack: OrthoStack, carto_sampling: CartoSampling,
+    def __init__(self, ortho_stack: OrthoStack, carto_sampling: Sampling2D,
                  margins: MarginsType) -> None:
         """ Define the samples belonging to the subtile. These samples correspond to the cross
         product of the X and Y coordinates.
@@ -50,8 +48,8 @@ class SampledOrthoImage:
 
         :param image: the orthorectified image onto which the sampling is defined
         :param nb_subtiles_max: the meximum number of tiles to create
-        :param step_x: the cartographic sampling to use along the X axis for building the tiles
-        :param step_y: the cartographic sampling to use along the X axis for building the tiles
+        :param step_x: the sampling step to use along the X axis for building the tiles
+        :param step_y: the sampling step to use along the X axis for building the tiles
         :param margins: the margins to consider around the samples to determine the image extent
         :param roi: theroi for which bathymetry must be computed, if any.
         :returns: a list of SampledOrthoImage objects covering the orthorectfied image with the

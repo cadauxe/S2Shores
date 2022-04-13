@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Definition of the CartoSampling class and associated functions
+""" Definition of the Sampling2D class and associated functions
 
 :author: GIROS Alain
 :created: 05/05/2021
@@ -13,8 +13,8 @@ from ..generic_utils.numpy_utils import split_samples
 from ..waves_exceptions import WavesIndexingError
 
 
-class CartoSampling:
-    """ A carto sampling is a subset of samples in a 2D space. It is built by taking consecutive
+class Sampling2D:
+    """ A 2S sampling is a subset of samples in a 2D space. It is built by taking consecutive
     samples in some samples coordinates lists, which means that there is no constraint on the
     spatial distribution of these samples. It is up to the caller to impose these constraints
     by providing increasing or decreasing ordered lists of coordinates or whatever desired order,
@@ -22,11 +22,11 @@ class CartoSampling:
     """
 
     def __init__(self, x_samples: np.ndarray, y_samples: np.ndarray) -> None:
-        """ Define the samples defining this carto sampling. These samples correspond to the cross
+        """ Define the samples defining this 2D sampling. These samples correspond to the cross
         product of the X and Y coordinates.
 
-        :param x_samples: the X coordinates defining the carto sampling
-        :param y_samples: the Y coordinates defining the carto sampling
+        :param x_samples: the X coordinates defining the 2D sampling
+        :param y_samples: the Y coordinates defining the 2D sampling
         """
 
         self._x_samples = x_samples
@@ -60,7 +60,7 @@ class CartoSampling:
 
     @property
     def nb_samples(self) -> int:
-        """ :returns: the number of samples in this carto sampling.
+        """ :returns: the number of samples in this 2D sampling.
         """
         return len(self._x_samples) * len(self._y_samples)
 
@@ -88,7 +88,7 @@ class CartoSampling:
         return x_index[0][0], y_index[0][0]
 
     def all_points(self) -> Iterator[Point]:
-        """ A generator returning all points in the CartoSampling one after the other.
+        """ A generator returning all points in the Sampling2D one after the other.
 
         :yields: successive points in the sampling
         """
@@ -103,8 +103,8 @@ class CartoSampling:
         return msg
 
 
-# TODO: define this as a class method of CartoSampling
-def build_tiling(input_sampling: CartoSampling, nb_tiles_max: int = 1) -> List[CartoSampling]:
+# TODO: define this as a class method of Sampling2D
+def build_tiling(input_sampling: Sampling2D, nb_tiles_max: int = 1) -> List[Sampling2D]:
     """ Build a tiling of the provided sampling. The number of created tiles may be lower
     than the requested number of tiles, if this number is not a square number.
 
@@ -125,5 +125,5 @@ def build_tiling(input_sampling: CartoSampling, nb_tiles_max: int = 1) -> List[C
     y_samples_parts = split_samples(y_samples, nb_tiles_y)
     for x_samples_part in x_samples_parts:
         for y_samples_part in y_samples_parts:
-            tiles_samplings.append(CartoSampling(x_samples_part, y_samples_part))
+            tiles_samplings.append(Sampling2D(x_samples_part, y_samples_part))
     return tiles_samplings
