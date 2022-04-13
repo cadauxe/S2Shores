@@ -58,16 +58,6 @@ class OrthoSequence(list):
             raise AttributeError(msg)
         return self[0].resolution
 
-    @property
-    def sampling_frequency(self) -> float:
-        """ :returns: The spatial sampling frequency of this sequence of images (m-1)
-        :raises AttributeError: when there is no image in the sequence
-        """
-        if not self:
-            msg = 'Sampling frequency undefined when there is no image in the OrthoSequence'
-            raise AttributeError(msg)
-        return self[0].sampling_frequency
-
     def get_time_difference(self, location: Point,
                             start_frame_id: FrameIdType, stop_frame_id: FrameIdType) -> float:
         """ :returns: The time duration between the start and stop images used for the estimation.
