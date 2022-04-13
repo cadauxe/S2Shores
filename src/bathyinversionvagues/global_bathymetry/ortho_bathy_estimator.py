@@ -62,7 +62,7 @@ class OrthoBathyEstimator:
 
         start = time.time()
         computed_points = 0
-        for estimation_point in self.sampled_ortho.carto_sampling.up_right_sampling():
+        for estimation_point in self.sampled_ortho.carto_sampling.x_y_sampling():
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, estimation_point)
             if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
                 computed_points += 1

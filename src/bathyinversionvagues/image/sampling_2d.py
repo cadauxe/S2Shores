@@ -87,7 +87,7 @@ class Sampling2D:
             raise WavesIndexingError(msg_err)
         return x_index[0][0], y_index[0][0]
 
-    def up_right_sampling(self) -> Iterator[Point]:
+    def x_y_sampling(self) -> Iterator[Point]:
         """ A generator returning all points in this Sampling2D one after the other. Sampling is
         done by providing all the points for the first X coordinate and then all the points for the
         next X coordinate, and so on.
@@ -96,6 +96,17 @@ class Sampling2D:
         """
         for x_sample in self._x_samples:
             for y_sample in self._y_samples:
+                yield Point(x_sample, y_sample)
+
+    def y_x_sampling(self) -> Iterator[Point]:
+        """ A generator returning all points in this Sampling2D one after the other. Sampling is
+        done by providing all the points for the first Y coordinate and then all the points for the
+        next Y coordinate, and so on.
+
+        :yields: successive points in the sampling
+        """
+        for y_sample in self._y_samples:
+            for x_sample in self._x_samples:
                 yield Point(x_sample, y_sample)
 
     def split(self, nb_tiles_max: int = 1) -> List['Sampling2D']:
