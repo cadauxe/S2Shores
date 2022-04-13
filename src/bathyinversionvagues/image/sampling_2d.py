@@ -87,8 +87,10 @@ class Sampling2D:
             raise WavesIndexingError(msg_err)
         return x_index[0][0], y_index[0][0]
 
-    def all_points(self) -> Iterator[Point]:
-        """ A generator returning all points in the Sampling2D one after the other.
+    def up_right_sampling(self) -> Iterator[Point]:
+        """ A generator returning all points in this Sampling2D one after the other. Sampling is
+        done by providing all the points for the first X coordinate and then all the points for the
+        next X coordinate, and so on.
 
         :yields: successive points in the sampling
         """
