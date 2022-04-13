@@ -8,7 +8,7 @@
 :created: 18/06/2021
 """
 from copy import deepcopy
-from typing import Optional, Tuple, TYPE_CHECKING  # @NoMove
+from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 
 import pandas
@@ -73,7 +73,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def stop_frame_id(self) -> FrameIdType:
-        return self.nb_lags + 1
+        return cast(int, self.start_frame_id) + self.nb_lags
 
     @property
     def nb_lags(self) -> int:
