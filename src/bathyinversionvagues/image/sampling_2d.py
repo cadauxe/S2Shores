@@ -7,7 +7,7 @@
 from typing import Tuple, List, Iterator  # @NoMove
 
 import numpy as np  # @NoMove
-from shapely.geometry import Point
+from shapely.geometry import Polygon, Point
 
 from ..generic_utils.numpy_utils import split_samples
 from ..waves_exceptions import WavesIndexingError
@@ -119,6 +119,19 @@ class Sampling2D:
             for y_samples_part in y_samples_parts:
                 tiles_samplings.append(Sampling2D(x_samples_part, y_samples_part))
         return tiles_samplings
+
+    def limit_to_roi(self, roi: Polygon) -> 'Sampling2D':
+        """ Computes a new Sampling2D from this one limited to its intersection with an ROI.
+
+        :param roi: a region of interest
+        :returns: a sampling limited to the X and Y coordinates which intersect the ROI.
+        """
+        roi_minx, roi_miny, roi_maxx, roi_maxy = roi.bounds
+        x_samples = np.extract((self.x_samples >= roi_minx) & (self.x_samples <= roi_maxx),
+                               self.x_samples)
+        y_samples = np.extract((self.y_samples >= roi_miny) & (self.y_samples <= roi_maxy),
+                               self.y_samples)
+        return Sampling2D(x_samples, y_samples)
 
     def __str__(self) -> str:
         msg = f' N: {self.nb_samples} = {len(self._y_samples)}*{len(self._x_samples)} '

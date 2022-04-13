@@ -75,11 +75,11 @@ class OrthoLayout:
         x_samples += self._geo_transform.x_resolution / 2.
         y_samples += self._geo_transform.y_resolution / 2.
 
-        return self._get_acceptable_samples(x_samples, y_samples, local_margins, roi)
+        sampling = Sampling2D(x_samples, y_samples)
+        return self._get_acceptable_samples(sampling, local_margins, roi)
 
-    def _get_acceptable_samples(self, x_samples: np.ndarray, y_samples: np.ndarray,
-                                local_margins: MarginsType, roi: Optional[Polygon] = None
-                                ) -> Sampling2D:
+    def _get_acceptable_samples(self, sampling: Sampling2D, local_margins: MarginsType,
+                                roi: Optional[Polygon] = None) -> Sampling2D:
         """ Filter out the samples which does not fall inside the ROI is it is defined and whose
         window centered on them does not belong to the image footprint.
 
@@ -90,9 +90,9 @@ class OrthoLayout:
         :returns: the chosen samples specified by the cross product of X samples and Y samples
         """
         if roi is not None:
-            roi_minx, roi_miny, roi_maxx, roi_maxy = roi.bounds
-            x_samples = np.extract((x_samples >= roi_minx) & (x_samples <= roi_maxx), x_samples)
-            y_samples = np.extract((y_samples >= roi_miny) & (y_samples <= roi_maxy), y_samples)
+            sampling = sampling.limit_to_roi(roi)
+        x_samples = sampling.x_samples
+        y_samples = sampling.y_samples
         acceptable_samples_x = []
         for x_coord in x_samples:
             for y_coord in y_samples:
