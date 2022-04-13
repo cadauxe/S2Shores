@@ -86,8 +86,7 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         roi = None
         if self._roi_provider is not None and self._limit_to_roi:
             roi = self._roi_provider.bounding_box(0.1)
-        self.subtiles = SampledOrthoImage.build_subtiles(self._ortho_stack,
-                                                         self._nb_subtiles_max,
+        self.subtiles = self._ortho_stack.build_subtiles(self._nb_subtiles_max,
                                                          self.sampling_step_x,
                                                          self.sampling_step_y,
                                                          self.measure_extent,

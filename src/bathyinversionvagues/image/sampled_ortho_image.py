@@ -4,21 +4,24 @@
 :author: GIROS Alain
 :created: 05/05/2021
 """
-from typing import List, Optional  # @NoMove
+from typing import TYPE_CHECKING  # @NoMove
 
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Point
 
 from ..image_processing.waves_image import WavesImage
 from .image_geometry_types import MarginsType, ImageWindowType
-from .ortho_stack import OrthoStack, FrameIdType
 from .sampling_2d import Sampling2D
+
+
+if TYPE_CHECKING:
+    from .ortho_stack import OrthoStack, FrameIdType  # @UnusedImport
 
 
 class SampledOrthoImage:
     """ This class makes the link between a Sampling2D and the image in which it is defined.
     """
 
-    def __init__(self, ortho_stack: OrthoStack, carto_sampling: Sampling2D,
+    def __init__(self, ortho_stack: 'OrthoStack', carto_sampling: Sampling2D,
                  margins: MarginsType) -> None:
         """ Define the samples belonging to the subtile. These samples correspond to the cross
         product of the X and Y coordinates.
@@ -39,30 +42,7 @@ class SampledOrthoImage:
         _, self._line_stop, _, self._col_stop = \
             self.ortho_stack.window_pixels(self.carto_sampling.lower_right_sample, self._margins)
 
-    @classmethod
-    def build_subtiles(cls, image: OrthoStack, nb_subtiles_max: int, step_x: float, step_y: float,
-                       margins: MarginsType, roi: Optional[Polygon] = None) \
-            -> List['SampledOrthoImage']:
-        """ Class method building a set of SampledOrthoImage instances, forming a tiling of the
-        specified orthorectifed image.
-
-        :param image: the orthorectified image onto which the sampling is defined
-        :param nb_subtiles_max: the meximum number of tiles to create
-        :param step_x: the sampling step to use along the X axis for building the tiles
-        :param step_y: the sampling step to use along the X axis for building the tiles
-        :param margins: the margins to consider around the samples to determine the image extent
-        :param roi: theroi for which bathymetry must be computed, if any.
-        :returns: a list of SampledOrthoImage objects covering the orthorectfied image with the
-                  specified sampling steps and margins.
-        """
-        ortho_sampling = image.get_samples_positions(step_x, step_y, margins, roi)
-        subtiles_samplings = ortho_sampling.split(nb_subtiles_max)
-        subtiles: List[SampledOrthoImage] = []
-        for subtile_sampling in subtiles_samplings:
-            subtiles.append(cls(image, subtile_sampling, margins))
-        return subtiles
-
-    def read_frame_image(self, frame_id: FrameIdType) -> WavesImage:
+    def read_frame_image(self, frame_id: 'FrameIdType') -> WavesImage:
         """ Read the whole rectangle of pixels corresponding to this SampledOrthoImage
         retrieved from a specific frame of the orthorectified stack.
 
