@@ -56,7 +56,7 @@ class SampledOrthoImage:
                   specified sampling steps and margins.
         """
         ortho_sampling = image.get_samples_positions(step_x, step_y, margins, roi)
-        subtiles_samplings = build_tiling(ortho_sampling, nb_subtiles_max)
+        subtiles_samplings = ortho_sampling.split(nb_subtiles_max)
         subtiles: List[SampledOrthoImage] = []
         for subtile_sampling in subtiles_samplings:
             subtiles.append(cls(image, subtile_sampling, margins))

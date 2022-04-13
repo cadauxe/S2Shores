@@ -98,34 +98,30 @@ class Sampling2D:
             for y_sample in self._y_samples:
                 yield Point(x_sample, y_sample)
 
+    def split(self, nb_tiles_max: int = 1) -> List['Sampling2D']:
+        """ Build a set of sampling2d which makes a tiling of this 2D sampling. The number of
+        created tiles may be lower than the requested number of tiles, if this number is not a
+        square number.
+
+        :param nb_tiles_max: the maximum number of tiles in the tiling
+
+        :returns: a list of samplings defining a set of tiles covering this sampling.
+        """
+        tiles_samplings = []
+        # Full samples cropped in crop*crop tiles
+        crop = int(np.sqrt(nb_tiles_max))
+        nb_tiles_x = min(crop, self.x_samples.size)
+        nb_tiles_y = min(crop, self.y_samples.size)
+
+        x_samples_parts = split_samples(self.x_samples, nb_tiles_x)
+        y_samples_parts = split_samples(self.y_samples, nb_tiles_y)
+        for x_samples_part in x_samples_parts:
+            for y_samples_part in y_samples_parts:
+                tiles_samplings.append(Sampling2D(x_samples_part, y_samples_part))
+        return tiles_samplings
+
     def __str__(self) -> str:
         msg = f' N: {self.nb_samples} = {len(self._y_samples)}*{len(self._x_samples)} '
         msg += f' X[{self.upper_left_sample.x}, {self.lower_right_sample.x}] *'
         msg += f' Y[{self.upper_left_sample.y}, {self.lower_right_sample.y}]'
         return msg
-
-
-# TODO: define this as a class method of Sampling2D
-def build_tiling(input_sampling: Sampling2D, nb_tiles_max: int = 1) -> List[Sampling2D]:
-    """ Build a tiling of the provided sampling. The number of created tiles may be lower
-    than the requested number of tiles, if this number is not a square number.
-
-    :param input_sampling: the sampling to split in tiles
-    :param nb_tiles_max: the maximum number of tiles in the tiling
-
-    :returns: a list of samplings defining a set of tiles covering the provided sampling.
-    """
-    x_samples = input_sampling.x_samples
-    y_samples = input_sampling.y_samples
-
-    tiles_samplings = []
-    # Full samples cropped in crop*crop tiles
-    crop = int(np.sqrt(nb_tiles_max))
-    nb_tiles_x = min(crop, x_samples.size)  # Possibly different from nb_tiles_y in the future
-    nb_tiles_y = min(crop, y_samples.size)  # Possibly different from nb_tiles_x in the future
-    x_samples_parts = split_samples(x_samples, nb_tiles_x)
-    y_samples_parts = split_samples(y_samples, nb_tiles_y)
-    for x_samples_part in x_samples_parts:
-        for y_samples_part in y_samples_parts:
-            tiles_samplings.append(Sampling2D(x_samples_part, y_samples_part))
-    return tiles_samplings
