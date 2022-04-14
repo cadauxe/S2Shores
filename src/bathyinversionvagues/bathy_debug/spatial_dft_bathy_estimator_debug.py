@@ -13,7 +13,7 @@ from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
 
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .waves_fields_display import display_initial_data, display_radon_transforms, display_context
+from .wave_fields_display import display_initial_data, display_radon_transforms, display_context
 
 
 class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
@@ -24,16 +24,12 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         metrics = self.metrics
 
         initial_sino1_fft = self.radon_transforms[0].get_sinograms_standard_dfts()
-        initial_sino2_fft = self.radon_transforms[1].get_sinograms_standard_dfts()
         initial_total_spectrum_normalized = metrics['standard_dft']['total_spectrum_normalized']
         initial_phase_shift = np.angle(metrics['standard_dft']['sinograms_correlation_fft'])
 
         sino1_fft = self.radon_transforms[0].get_sinograms_interpolated_dfts()
-        sino2_fft = self.radon_transforms[1].get_sinograms_interpolated_dfts()
         phase_shift = np.angle(metrics['interpolated_dft']['sinograms_correlation_fft'])
         total_spectrum_normalized = metrics['interpolated_dft']['total_spectrum_normalized']
-        total_spectrum = metrics['interpolated_dft']['total_spectrum']
-        max_heta = metrics['interpolated_dft']['max_heta']
 
         # Printouts
         dump_numpy_variable(self.radon_transforms[0].pixels, 'input pixels for Radon transform 1 ')
@@ -53,7 +49,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         dump_numpy_variable(total_spectrum_normalized, 'refined total_spectrum_normalized')
 
         print(f'estimations after direction refinement :')
-        print(self.waves_fields_estimations)
+        print(self.bathymetry_estimations)
 
         # Displays
         display_initial_data(self)
