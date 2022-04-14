@@ -17,6 +17,7 @@ import numpy as np
 
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
+from ..data_providers.delta_time_provider import NoDeltaTimeValueError
 from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import ImageProcessingFilters
@@ -73,14 +74,27 @@ class LocalBathyEstimator(ABC):
         inside_roi = self.global_estimator.is_inside_roi(self._location)
 
         self._bathymetry_estimations = BathymetrySampleEstimations(self._location, gravity,
-                                                                   self.propagation_duration,
+                                                                   np.nan,
                                                                    distance, inside_roi)
+        try:
+            propagation_duration = self.ortho_sequence.get_time_difference(self._location,
+                                                                           self.start_frame_id,
+                                                                           self.stop_frame_id)
+            self.bathymetry_estimations.delta_time = propagation_duration
+        except NoDeltaTimeValueError:
+            self.bathymetry_estimations.delta_time = np.nan
 
         self._metrics: Dict[str, Any] = {}
 
     def can_estimate_bathy(self) -> bool:
+        """ Test if conditions to start bathymetry estimation are met.
+
+        :returns: True if the point is on water and inside a possible ROI and if delta time is
+                  available for that point, False otherwise.
+        """
         return (self.bathymetry_estimations.distance_to_shore > 0 and
-                self.bathymetry_estimations.inside_roi)
+                self.bathymetry_estimations.inside_roi and
+                self.bathymetry_estimations.delta_time_available)
 
     @property
     @abstractmethod
@@ -99,9 +113,7 @@ class LocalBathyEstimator(ABC):
         """ :returns: The time length of the sequence of images used for the estimation. May be
                       positive or negative to account for chronology of start and stop images.
         """
-        return self.ortho_sequence.get_time_difference(self._location,
-                                                       self.start_frame_id,
-                                                       self.stop_frame_id)
+        return self.bathymetry_estimations.delta_time
 
     @property
     @abstractmethod

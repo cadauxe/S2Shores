@@ -158,6 +158,15 @@ class BathymetrySampleEstimations(list):
         """ :returns: the time difference between the images used for this estimation """
         return self._delta_time
 
+    @delta_time.setter
+    def delta_time(self, value: bool) -> None:
+        self._delta_time = value
+
+    @property
+    def delta_time_available(self) -> bool:
+        """ :returns: True if delta time was available for doing estimations, False otherwise """
+        return not np.isnan(self.delta_time)
+
     @property
     def data_available(self) -> bool:
         """ :returns: True if data was available for doing the estimations, False otherwise """
@@ -166,15 +175,6 @@ class BathymetrySampleEstimations(list):
     @data_available.setter
     def data_available(self, value: bool) -> None:
         self._data_available = value
-
-    @property
-    def delta_time_available(self) -> bool:
-        """ :returns: True if delta time was available for doing estimations, False otherwise """
-        return self._delta_time_available
-
-    @delta_time_available.setter
-    def delta_time_available(self, value: bool) -> None:
-        self._delta_time_available = value
 
     @property
     def status(self) -> int:
