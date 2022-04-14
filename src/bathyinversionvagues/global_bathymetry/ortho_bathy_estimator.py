@@ -14,7 +14,6 @@ from xarray import Dataset  # @NoMove
 
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..data_model.estimated_bathy import EstimatedBathy
-from ..data_providers.delta_time_provider import NoDeltaTimeValueError
 from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence
 from ..image.sampled_ortho_image import SampledOrthoImage
@@ -107,10 +106,6 @@ class OrthoBathyEstimator:
                 if self.parent_estimator.debug_sample:
                     print(f'estimations after sorting :')
                     print(bathy_estimations)
-        except NoDeltaTimeValueError:
-            bathy_estimations = local_bathy_estimator.bathymetry_estimations
-            bathy_estimations.delta_time_available = False
-            bathy_estimations.clear()
         except WavesException as excp:
             warn_msg = f'Unable to estimate bathymetry: {str(excp)}'
             warnings.warn(warn_msg)
