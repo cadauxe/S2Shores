@@ -11,13 +11,13 @@ from shapely.geometry import Polygon
 import numpy as np
 
 from ..image_processing.waves_image import WavesImage
-from .carto_tile import CartoTile, build_tiling
+from .carto_sampling import CartoSampling, build_tiling
 from .image_geometry_types import PointType, MarginsType, ImageWindowType
 from .ortho_stack import OrthoStack, FrameIdType
 
 
-class SampledOrthoImage(CartoTile):
-    """ This class makes the link between a CartoTile and the image in which it is defined.
+class SampledOrthoImage:
+    """ This class makes the link between a CartoSampling and the image in which it is defined.
     """
 
     def __init__(self, ortho_stack: OrthoStack, x_samples: np.ndarray, y_samples: np.ndarray,
@@ -30,17 +30,17 @@ class SampledOrthoImage(CartoTile):
         :param y_samples: the Y coordinates defining the samples of the subtile
         :param margins: the margins to consider around the samples to determine the image extent
         """
-        super().__init__(x_samples, y_samples)
         self.ortho_stack = ortho_stack
+        self.carto_sampling = CartoSampling(x_samples, y_samples)
         self._margins = margins
 
         # col_start, line_start, nb_cols and nb_lines define the rectangle of pixels in image
         # coordinates which are just needed to process the subtile. No margins and no missing
         # lines or columns.
         self._line_start, _, self._col_start, _ = \
-            self.ortho_stack.window_pixels(self.upper_left_sample, self._margins)
+            self.ortho_stack.window_pixels(self.carto_sampling.upper_left_sample, self._margins)
         _, self._line_stop, _, self._col_stop = \
-            self.ortho_stack.window_pixels(self.lower_right_sample, self._margins)
+            self.ortho_stack.window_pixels(self.carto_sampling.lower_right_sample, self._margins)
 
     @classmethod
     def build_subtiles(cls, image: OrthoStack, nb_subtiles_max: int, step_x: float, step_y: float,

@@ -4,7 +4,7 @@
 :author: GIROS Alain
 :created: 17/05/2021
 """
-from typing import Optional
+from typing import Optional, Tuple
 
 from ..image.ortho_stack import FramesIdsType
 
@@ -49,8 +49,8 @@ class BathyEstimatorParameters:
         return result
 
     @property
-    def nb_max_waves_fields(self) -> int:
-        """ :returns: the maximum number of waves fields to keep
+    def nb_max_wave_fields(self) -> int:
+        """ :returns: the maximum number of wave fields to keep
         """
         return self._global_estimator_params['NKEEP']
 
@@ -79,6 +79,12 @@ class BathyEstimatorParameters:
         return self._global_estimator_params['MAX_T']
 
     @property
+    def waves_period_range(self) -> Tuple[float, float]:
+        """ :returns: the range of waves period (s) to consider as physical
+        """
+        return self.waves_period_min, self.waves_period_max
+
+    @property
     def waves_linearity_min(self) -> float:
         """ :returns: the minimum value of waves linearity to consider when doing inversion
         """
@@ -89,6 +95,12 @@ class BathyEstimatorParameters:
         """ :returns: the maximum value of waves linearity to consider when doing inversion
         """
         return self._global_estimator_params['MAX_WAVES_LINEARITY']
+
+    @property
+    def waves_linearity_range(self) -> Tuple[float, float]:
+        """ :returns: the range of values for waves linearity to consider as physical
+        """
+        return self.waves_linearity_min, self.waves_linearity_max
 
     @property
     def sampling_step_x(self) -> float:

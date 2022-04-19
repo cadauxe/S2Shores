@@ -44,8 +44,8 @@ class ProductNotFound(WavesException):
     """
 
 
-class WavesEstimationIndexingError(WavesException):
-    """ Exception raised when an estimation cannot be found with its coordinates.
+class WavesIndexingError(WavesException):
+    """ Exception raised when a point cannot be found in the sampling with its coordinates.
     """
 
 

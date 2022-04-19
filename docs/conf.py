@@ -7,13 +7,13 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import os
-import sys
 import inspect
+import os
 import shutil
+import sys
+
 
 # -- Path setup --------------------------------------------------------------
-
 __location__ = os.path.join(
     os.getcwd(), os.path.dirname(inspect.getfile(inspect.currentframe()))
 )
@@ -92,7 +92,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "BathyInversionVagues"
-copyright = "2021, Alexia Mondot"
+copyright = "2022, CNES-Labo OT"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
