@@ -63,7 +63,16 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def radon_augmentation_factor(self) -> float:
+        """ The factor by which the spatial resolution must be divided in order to improve the
+        accuracy of the propagation distance estimation.
+        """
         return self.local_estimator_params['AUGMENTED_RADON_FACTOR']
+
+    @property
+    def augmented_resolution(self) -> float:
+        """ The augmented spatial resolution at which the propagation distance estimation is done.
+        """
+        return self.spatial_resolution * self.radon_augmentation_factor
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -90,7 +99,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         self.save_wave_field_estimation(estimated_direction, wavelength, delta_position)
 
     def compute_radon_transforms(self) -> None:
-
+        """ Compute the augmented Radon transforms of all the images in the sequence using the
+        currently selected directions.
+        """
         for image in self.ortho_sequence:
             radon_transform = WavesRadon(image, self.selected_directions)
             radon_transform_augmented = radon_transform.radon_augmentation(
@@ -139,10 +150,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the wave length (m)
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
-        correl_signal_resolution = self.spatial_resolution * self.radon_augmentation_factor
-        period, _ = find_period_from_zeros(correlation_signal,
-                                           int(min_wavelength / correl_signal_resolution))
-        wavelength = period * correl_signal_resolution
+        min_period_unitless = int(min_wavelength / self.augmented_resolution)
+        period, _ = find_period_from_zeros(correlation_signal, min_period_unitless)
+        wavelength = period * self.augmented_resolution
         return wavelength
 
     def compute_delta_position(self, correlation_signal: np.ndarray,
@@ -152,6 +162,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param correlation_signal: spatial cross correlated signal
         :param wavelength: the wave length (m)
         :returns: the distance propagated over time by the waves (m)
+        :raises WavesEstimationError: when no directional peak can be found
         """
         argmax_ac = len(correlation_signal) / 2
         celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
