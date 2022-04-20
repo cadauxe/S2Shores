@@ -178,19 +178,16 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             spatial_shift_offshore_max = -self.local_estimator_params['PEAK_POSITION_MAX_FACTOR'] \
                 * stroboscopic_factor_offshore * wavelength
         peaks_pos, _ = find_peaks(correlation_signal)
-        delta_position = np.nan
-        if peaks_pos.size != 0:
-            relative_distance = peaks_pos - argmax_ac
-            pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_offshore_min) & (
-                relative_distance < spatial_shift_offshore_max))]
-            if pt_in_range.size != 0:
-                argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
-                # TODO: add variable to adapt to be in meters
-                delta_position = argmax_ac - argmax  # supposed to be in meters,
-            else:
-                raise WavesEstimationError('Unable to find any directional peak')
-        else:
+        if peaks_pos.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
+        relative_distance = peaks_pos - argmax_ac
+        pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_offshore_min) & (
+            relative_distance < spatial_shift_offshore_max))]
+        if pt_in_range.size == 0:
+            raise WavesEstimationError('Unable to find any directional peak')
+        argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
+        # TODO: add variable to adapt to be in meters
+        delta_position = argmax_ac - argmax  # supposed to be in meters,
 
         return delta_position
 
