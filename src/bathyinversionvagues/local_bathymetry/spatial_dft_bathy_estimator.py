@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Class managing the computation of waves fields from two images taken at a small time interval.
+""" Class managing the computation of wave fields from two images taken at a small time interval.
 
 :author: Alain Giros
 :organization: CNES
@@ -16,12 +16,13 @@ import numpy as np
 from ..bathy_physics import wavenumber_offshore
 from ..generic_utils.image_filters import detrend, desmooth
 from ..image.image_geometry_types import PointType
+from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
 
 from .local_bathy_estimator import LocalBathyEstimator
-from .spatial_dft_waves_field_estimation import SpatialDFTWavesFieldEstimation
+from .spatial_dft_bathy_estimation import SpatialDFTBathyEstimation
 
 
 if TYPE_CHECKING:
@@ -34,16 +35,25 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
     """
 
     final_estimations_sorting = 'energy'
-    waves_field_estimation_cls = SpatialDFTWavesFieldEstimation
+    wave_field_estimation_cls = SpatialDFTBathyEstimation
 
-    def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
+    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
+                 global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 
-        super().__init__(location, global_estimator, selected_directions)
+        super().__init__(location, ortho_sequence, global_estimator, selected_directions)
 
         self.radon_transforms: List[WavesRadon] = []
 
         self.full_linear_wavenumbers = self.get_full_linear_wavenumbers()
+
+    @property
+    def start_frame_id(self) -> FrameIdType:
+        return self.global_estimator.selected_frames[0]
+
+    @property
+    def stop_frame_id(self) -> FrameIdType:
+        return self.global_estimator.selected_frames[1]
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -64,7 +74,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """ Compute the Radon transforms of all the images in the sequence using the currently
         selected directions.
         """
-        for image in self.images_sequence:
+        for image in self.ortho_sequence:
             radon_transform = WavesRadon(image, self.selected_directions)
             self.radon_transforms.append(radon_transform)
 
@@ -220,9 +230,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             wavenumber = normalized_frequency * self.radon_transforms[0].sampling_frequency
 
             energy = total_spectrum[wavenumber_index, direction_index]
-            estimation = self.save_waves_field_estimation(estimated_direction, wavenumber,
-                                                          estimated_phase_shift, energy)
-            self.waves_fields_estimations.append(estimation)
+            estimation = self.save_wave_field_estimation(estimated_direction, wavenumber,
+                                                         estimated_phase_shift, energy)
+            self.bathymetry_estimations.append(estimation)
 
         if self.debug_sample:
 
@@ -234,24 +244,22 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
             self.metrics['totSpec'] = np.abs(total_spectrum) / np.mean(total_spectrum)
             self.metrics['interpolated_dft'] = metrics
 
-    def save_waves_field_estimation(self, direction: float, wavenumber: float, phase_shift: float,
-                                    energy: float) -> SpatialDFTWavesFieldEstimation:
+    def save_wave_field_estimation(self, direction: float, wavenumber: float, phase_shift: float,
+                                   energy: float) -> SpatialDFTBathyEstimation:
         """ Saves estimated parameters in a new estimation.
 
-        :param direction: direction of the waves field (°)
-        :param wavenumber: wavenumber of the waves field (m-1)
+        :param direction: direction of the wave field (°)
+        :param wavenumber: wavenumber of the wave field (m-1)
         :param phase_shift: phase difference estimated between the 2 images (rd)
-        :param energy: energy of the waves field (definition TBD)
+        :param energy: energy of the wave field (definition TBD)
         :returns: a bathy estimation
         """
-        waves_field_estimation = cast(SpatialDFTWavesFieldEstimation,
-                                      self.create_waves_field_estimation(direction, 1 / wavenumber))
+        wave_field_estimation = cast(SpatialDFTBathyEstimation,
+                                     self.create_bathymetry_estimation(direction, 1 / wavenumber))
 
-        # FIXME: index delta times by the index of the pair of images
-        waves_field_estimation.delta_time = self.sequential_delta_times[0]
-        waves_field_estimation.delta_phase = phase_shift
-        waves_field_estimation.energy = energy
-        return waves_field_estimation
+        wave_field_estimation.delta_phase = phase_shift
+        wave_field_estimation.energy = energy
+        return wave_field_estimation
 
     def _cross_correl_spectrum(self, sino1_fft: np.ndarray, sino2_fft: np.ndarray,
                                ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:

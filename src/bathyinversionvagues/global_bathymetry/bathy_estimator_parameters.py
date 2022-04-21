@@ -49,8 +49,8 @@ class BathyEstimatorParameters:
         return result
 
     @property
-    def nb_max_waves_fields(self) -> int:
-        """ :returns: the maximum number of waves fields to keep
+    def nb_max_wave_fields(self) -> int:
+        """ :returns: the maximum number of wave fields to keep
         """
         return self._global_estimator_params['NKEEP']
 
@@ -82,7 +82,7 @@ class BathyEstimatorParameters:
     def waves_period_range(self) -> Tuple[float, float]:
         """ :returns: the range of waves period (s) to consider as physical
         """
-        return (self.waves_period_min, self.waves_period_max)
+        return self.waves_period_min, self.waves_period_max
 
     @property
     def waves_linearity_min(self) -> float:
@@ -100,7 +100,7 @@ class BathyEstimatorParameters:
     def waves_linearity_range(self) -> Tuple[float, float]:
         """ :returns: the range of values for waves linearity to consider as physical
         """
-        return (self.waves_linearity_min, self.waves_linearity_max)
+        return self.waves_linearity_min, self.waves_linearity_max
 
     @property
     def sampling_step_x(self) -> float:

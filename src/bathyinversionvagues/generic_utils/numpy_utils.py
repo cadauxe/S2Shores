@@ -93,16 +93,18 @@ class HashableNdArray:
 
         :param array: The ndarray to encapsulate.
         """
-        self.__encapsulated_array = array
-        self.__hash = int(sha1(array.view()).hexdigest(), 16)
+        self._encapsulated_array = array
+        self._hash = int(sha1(array.view()).hexdigest(), 16)
 
     def __eq__(self, other: object) -> bool:
-        return all(self.__encapsulated_array == other.__encapsulated_array)
+        if not isinstance(other, HashableNdArray):
+            return False
+        return all(self._encapsulated_array == other._encapsulated_array)
 
     def __hash__(self) -> int:
-        return self.__hash
+        return self._hash
 
     def unwrap(self) -> np.ndarray:
         """ Returns the encapsulated ndarray.
         """
-        return self.__encapsulated_array
+        return self._encapsulated_array

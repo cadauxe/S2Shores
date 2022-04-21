@@ -21,12 +21,13 @@ from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.image_geometry_types import PointType
+from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
-from .temporal_correlation_waves_field_estimation import TemporalCorrelationWavesFieldEstimation
+from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
 
 
 if TYPE_CHECKING:
@@ -36,13 +37,13 @@ if TYPE_CHECKING:
 class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """ Class performing temporal correlation to compute bathymetry
     """
-    waves_field_estimation_cls = TemporalCorrelationWavesFieldEstimation
+    waves_field_estimation_cls = TemporalCorrelationBathyEstimation
 
     def __init__(self, location: PointType, global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
         super().__init__(location, global_estimator, selected_directions)
         if self.selected_directions is None:
-            self.selected_directions = linear_directions(-180., 0., 1.)
+            self.selected_directions = linear_directions(-180., 60., 1.)
         # Processing attributes
         self._correlation_matrix: Optional[np.ndarray] = None
         self._correlation_image: Optional[WavesImage] = None
@@ -60,9 +61,23 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
             (filter_mean,
              [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
-        if self.local_estimator_params['TEMPORAL_LAG'] >= len(self._sequential_delta_times):
+        if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.nb_lags):
             raise WavesEstimationError(
                 'The chosen number of lag frames is bigger than the number of available frames')
+
+    @property
+    def start_frame_id(self) -> FrameIdType:
+        return 1
+
+    @property
+    def stop_frame_id(self) -> FrameIdType:
+        return self.nb_lags + 1
+
+    @property
+    def nb_lags(self) -> int:
+        """ :returns: the number of lags (interval between 2 frames) to use
+        """
+        return self.local_estimator_params['TEMPORAL_LAG']
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
@@ -72,8 +87,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         percentage_points = self.local_estimator_params['PERCENTAGE_POINTS']
         if percentage_points < 0 or percentage_points > 100:
             raise ValueError('Percentage must be between 0 and 100')
-        merge_array = np.dstack([image.pixels for image in self.images_sequence])
-        shape_x, shape_y = self.images_sequence[0].pixels.shape
+        merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
+        shape_x, shape_y = self.ortho_sequence[0].pixels.shape
         time_series = np.reshape(merge_array, (shape_x * shape_y, -1))
         # A seed is used here to reproduce same results
         np.random.seed(0)
@@ -98,24 +113,20 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
         sinogram_max_var = radon_transform[direction_propagation]
         sinogram_max_var_values = sinogram_max_var.values
-        wave_length = self.compute_wave_length(sinogram_max_var_values)
+        wavelength = self.compute_wave_length(sinogram_max_var_values)
         distances = self.compute_distances(
             sinogram_max_var_values,
-            wave_length,
+            wavelength,
             nb_hops=self.local_estimator_params['HOPS_NUMBER'])
-
-        propagation_duration = np.sum(
-            self._sequential_delta_times[:self.local_estimator_params['TEMPORAL_LAG']])
 
         # Keep in mind that direction_estimations stores several estimations for a same
         # direction and only the best of them should be added in the final list
         # direction_estimation is empty at this point
-        direction_estimations = deepcopy(self.waves_fields_estimations)
+        direction_estimations = deepcopy(self.bathymetry_estimations)
 
         for distance in distances:
-            estimation = self.create_waves_field_estimation(direction_propagation,
-                                                            wave_length)
-            estimation.delta_time = propagation_duration
+            estimation = self.create_bathymetry_estimation(direction_propagation,
+                                                           wavelength)
             estimation.propagated_distance = distance
             direction_estimations.append(estimation)
 
@@ -127,15 +138,14 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         direction_estimations.sort_on_attribute('linearity', reverse=False)
         best_estimation = direction_estimations[0]
 
-        waves_field_estimation = cast(TemporalCorrelationWavesFieldEstimation, best_estimation)
-        self.waves_fields_estimations.append(waves_field_estimation)
+        waves_field_estimation = cast(TemporalCorrelationBathyEstimation, best_estimation)
+        self.bathymetry_estimations.append(best_estimation)
 
         if self.debug_sample:
             self.metrics['radon_transform'] = radon_transform
             self.metrics['variances'] = variances
             self.metrics['sinogram_max_var'] = sinogram_max_var_values
             # TODO: use objects in debug
-            self.metrics['propagation_duration'] = propagation_duration
             self.metrics['distances'] = distances
             self.metrics['celerities'] = celerities
             self.metrics['linearity_coefficients'] = linearity_coefficients

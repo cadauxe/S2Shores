@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Class managing the computation of waves fields from two images taken at a small time interval.
+Class managing the computation of wave fields from two images taken at a small time interval.
 
 
 :author: Alain Giros
@@ -9,25 +9,31 @@ Class managing the computation of waves fields from two images taken at a small 
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Optional, List, Tuple  # @NoMove
+from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
 
 
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
+from bathyinversionvagues.image_processing.waves_radon import WavesRadon
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def display_curve(data, legend):
+if TYPE_CHECKING:
+    from ..local_bathymetry.spatial_dft_bathy_estimator \
+        import SpatialDFTBathyEstimator  # @UnusedImport
+
+
+def display_curve(data: np.ndarray, legend: str) -> None:
     _, ax = plt.subplots()
     ax.plot(data)
     ax.set_title(legend)
     plt.show()
 
 
-def display_3curves(data1, data2, data3):
+def display_3curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray) -> None:
     _, ax = plt.subplots(3)
     ax[0].plot(data1)
     ax[1].plot(data2)
@@ -35,7 +41,8 @@ def display_3curves(data1, data2, data3):
     plt.show()
 
 
-def display_4curves(data1, data2, data3, data4):
+def display_4curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray,
+                    data4: np.ndarray) -> None:
     _, ax = plt.subplots(nrows=2, ncols=2)
     ax[0, 0].plot(data1)
     ax[1, 0].plot(data2)
@@ -44,14 +51,14 @@ def display_4curves(data1, data2, data3, data4):
     plt.show()
 
 
-def display_image(data, legend):
+def display_image(data: np.ndarray, legend: str) -> None:
     _, ax = plt.subplots()
     ax.imshow(data, aspect='auto', cmap='gray')
     ax.set_title(legend)
     plt.show()
 
 
-def get_display_title(local_estimator) -> str:
+def get_display_title(local_estimator: 'SpatialDFTBathyEstimator') -> str:
     title = f'{local_estimator.global_estimator._ortho_stack.short_name} {local_estimator.location}'
     return title
 
@@ -74,8 +81,8 @@ def build_image_display(axes: Axes, title: str, image: np.ndarray,
     axes.set_title(title)
 
 
-def build_directional_2d_display(axes: Axes, title: str,
-                                 values: np.ndarray, directions: np.ndarray, **kwargs) -> None:
+def build_directional_2d_display(axes: Axes, title: str, values: np.ndarray,
+                                 directions: np.ndarray, **kwargs: dict) -> None:
     extent = [np.min(directions), np.max(directions), 0, values.shape[0]]
     imin = np.min(values)
     imax = np.max(values)
@@ -93,22 +100,20 @@ def build_directional_curve_display(axes: Axes, title: str,
     axes.set_title(title)
 
 
-def display_initial_data(local_estimator):
+def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.close('all')
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
-    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.waves_fields_estimations]
-    build_image_display(axs[0, 0], 'first image original',
-                        local_estimator.images_sequence[0].original_pixels,
+    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    first_image = local_estimator.ortho_sequence[0]
+    second_image = local_estimator.ortho_sequence[1]
+    build_image_display(axs[0, 0], 'first image original', first_image.original_pixels,
                         directions=arrows, cmap='gray')
-    build_image_display(axs[1, 0], 'second image original',
-                        local_estimator.images_sequence[1].original_pixels,
+    build_image_display(axs[1, 0], 'second image original', second_image.original_pixels,
                         directions=arrows, cmap='gray')
-    build_image_display(axs[0, 1], 'first image filtered',
-                        local_estimator.images_sequence[0].pixels,
+    build_image_display(axs[0, 1], 'first image filtered', first_image.pixels,
                         directions=arrows, cmap='gray')
-    build_image_display(axs[1, 1], 'second image filtered',
-                        local_estimator.images_sequence[1].pixels,
+    build_image_display(axs[1, 1], 'second image filtered', second_image.pixels,
                         directions=arrows, cmap='gray')
     first_radon_transform = local_estimator.radon_transforms[0]
     second_radon_transform = local_estimator.radon_transforms[1]
@@ -120,7 +125,8 @@ def display_initial_data(local_estimator):
     plt.show()
 
 
-def display_radon_transforms(local_estimator, refinement_phase=False):
+def display_radon_transforms(local_estimator: 'SpatialDFTBathyEstimator',
+                             refinement_phase: bool=False) -> None:
     plt.close('all')
     fig, axs = plt.subplots(nrows=6, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
@@ -133,7 +139,8 @@ def display_radon_transforms(local_estimator, refinement_phase=False):
     plt.show()
 
 
-def build_radon_transform_display(axs, transform, title, refinement_phase=False):
+def build_radon_transform_display(axs: Axes, transform: WavesRadon, title: str,
+                                  refinement_phase: bool=False) -> None:
     values, directions = transform.get_as_arrays()
     sino_fft = transform.get_sinograms_standard_dfts()
     dft_amplitudes = np.abs(sino_fft)
@@ -148,7 +155,8 @@ def build_radon_transform_display(axs, transform, title, refinement_phase=False)
     build_directional_curve_display(axs[3], 'Sinograms Variances / Energies', variances, directions)
 
 
-def build_correl_spectrum_display(axs, local_estimator, title, refinement_phase):
+def build_correl_spectrum_display(axs: Axes, local_estimator: 'SpatialDFTBathyEstimator',
+                                  title: str, refinement_phase: bool) -> None:
     radon_transform = local_estimator.radon_transforms[0]
     if not refinement_phase:
         _, directions = radon_transform.get_as_arrays()
@@ -171,37 +179,39 @@ def build_correl_spectrum_display(axs, local_estimator, title, refinement_phase)
                                     total_spectrum_normalized, directions)
 
 
-def display_energies(local_estimator, radon1_obj, radon2_obj):
+def display_energies(local_estimator: 'SpatialDFTBathyEstimator',
+                     radon1_obj: WavesRadon, radon2_obj: WavesRadon) -> None:
     fig, ax = plt.subplots()
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
 
-    image1_energy = local_estimator.images_sequence[0].energy_inner_disk
-    image2_energy = local_estimator.images_sequence[1].energy_inner_disk
+    image1_energy = local_estimator.ortho_sequence[0].energy_inner_disk
+    image2_energy = local_estimator.ortho_sequence[1].energy_inner_disk
     ax.plot(radon1_obj.get_sinograms_energies() / image1_energy)
     ax.plot(radon2_obj.get_sinograms_energies() / image2_energy)
     plt.show()
 
 
-def animate_sinograms(local_estimator, radon1_obj, radon2_obj):
+def animate_sinograms(local_estimator: 'SpatialDFTBathyEstimator',
+                      radon1_obj: WavesRadon, radon2_obj: WavesRadon) -> None:
 
     fig, ax = plt.subplots()
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
 
     sinogram1_init = radon1_obj[radon1_obj.directions[0]]
     sinogram2_init = radon2_obj[radon2_obj.directions[0]]
-    image1_energy = local_estimator.images_sequence[0].energy_inner_disk
-    image2_energy = local_estimator.images_sequence[0].energy_inner_disk
+    image1_energy = local_estimator.ortho_sequence[0].energy_inner_disk
+    image2_energy = local_estimator.ortho_sequence[1].energy_inner_disk
 
     line1, = ax.plot(sinogram1_init.values)
     line2, = ax.plot(sinogram2_init.values)
-    values1, directions1 = radon1_obj.get_as_arrays()
+    values1, _ = radon1_obj.get_as_arrays()
     min_radon = np.amin(values1)
     max_radon = np.amax(values1)
     plt.ylim(min_radon, max_radon)
     dir_text = ax.text(0, max_radon * 0.9, f'direction: 0, energy1: {sinogram1_init.energy}',
                        fontsize=10)
 
-    def animate(direction):
+    def animate(direction: float):
         sinogram1 = radon1_obj[direction]
         sinogram2 = radon2_obj[direction]
         line1.set_ydata(sinogram1.values)  # update the data.
@@ -216,7 +226,7 @@ def animate_sinograms(local_estimator, radon1_obj, radon2_obj):
     plt.show()
 
 
-def display_context(local_estimator):
+def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     radon1 = local_estimator.radon_transforms[0]
     radon2 = local_estimator.radon_transforms[1]
 
@@ -236,8 +246,8 @@ def display_context(local_estimator):
     axs[1, 1].set_title('radon image2')
     sinograms1_energies = radon1.get_sinograms_energies()
     sinograms2_energies = radon2.get_sinograms_energies()
-    image1_energy = local_estimator.images_sequence[0].energy_inner_disk
-    image2_energy = local_estimator.images_sequence[1].energy_inner_disk
+    image1_energy = local_estimator.ortho_sequence[0].energy_inner_disk
+    image2_energy = local_estimator.ortho_sequence[1].energy_inner_disk
     axs[0, 2].plot(sinograms1_energies / image1_energy)
     axs[0, 2].plot(sinograms2_energies / image2_energy)
     axs[0, 2].set_title('directions energies')

@@ -17,7 +17,7 @@ def linearity_indicator(wavelength: float, celerity: float, gravity: float) -> f
     """ Computes a linearity indicator of the depth estimation using the linear dispersive relation
 
     :param wavelength: wavelength of the waves (m)
-    :param celerity: the celerity of the waves field (m.s-1)
+    :param celerity: the celerity of the waves (m.s-1)
     :param gravity: acceleration of the gravity (m/s2)
     :returns: an indicator of the linearity between celerity and wavelength (unitless, positive)
     """
@@ -33,32 +33,26 @@ def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) ->
     return depth
 
 
-def time_sampling_factor_low_depth(wavenumber: NdArrayOrFloat, delta_t: float, min_depth: float,
-                                   gravity: float) -> NdArrayOrFloat:
-    """ Computes the time sampling factor relative to the period limit in shallow water
+def period_low_depth(wavenumber: NdArrayOrFloat, min_depth: float,
+                     gravity: float) -> NdArrayOrFloat:
+    """ Computes the waves period limit in shallow water
 
     :param wavenumber: wavenumber(s) of the waves (1/m)
-    :param delta_t: acquisition times difference (s)
     :param min_depth: minimum depth limit (m)
     :param gravity: acceleration of the gravity (m/s2)
-    :returns: the time sampling factor relative to the period limit in shallow water (unitless)
+    :returns: the waves period limit in shallow water (s)
     """
-    celerity_low_depth_limit = np.sqrt(gravity * min_depth)
-    period_low_depth_limit = 1. / (celerity_low_depth_limit * wavenumber)
-    return delta_t / period_low_depth_limit
+    return 1. / (celerity_low_depth(min_depth, gravity) * wavenumber)
 
 
-def time_sampling_factor_offshore(wavenumber: NdArrayOrFloat, delta_t: float,
-                                  gravity: float) -> NdArrayOrFloat:
-    """ Computes the time sampling factor relative to the period offshore
+def celerity_low_depth(shallow_water_depth: float, gravity: float) -> float:
+    """ Computes the celerity in shallow water
 
-    :param wavenumber: wavenumber(s) of the waves (1/m)
-    :param delta_t: acquisition times difference (s)
+    :param shallow_water_depth: minimum depth limit (m)
     :param gravity: acceleration of the gravity (m/s2)
-    :returns: the time sampling factor relative to the period offshore (unitless)
+    :returns: the celerity in shallow water (m/s)
     """
-
-    return delta_t / period_offshore(wavenumber, gravity)
+    return np.sqrt(gravity * shallow_water_depth)
 
 
 def period_offshore(wavenumber: NdArrayOrFloat, gravity: float) -> NdArrayOrFloat:

@@ -15,6 +15,7 @@ from ..bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstim
 from ..bathy_debug.temporal_correlation_bathy_estimator_debug import \
     TemporalCorrelationBathyEstimatorDebug
 from ..image.image_geometry_types import PointType
+from ..image.ortho_sequence import OrthoSequence
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
@@ -37,7 +38,7 @@ LOCAL_BATHY_ESTIMATION_CLS_DEBUG = {'SPATIAL_DFT': SpatialDFTBathyEstimatorDebug
                                     'SPATIAL_CORRELATION': SpatialCorrelationBathyEstimator}
 
 
-def local_bathy_estimator_factory(location: PointType,
+def local_bathy_estimator_factory(location: PointType, ortho_sequence: OrthoSequence,
                                   global_estimator: 'BathyEstimator',
                                   selected_directions: Optional[np.ndarray] = None) \
         -> LocalBathyEstimator:
@@ -48,7 +49,8 @@ def local_bathy_estimator_factory(location: PointType,
     """
     local_bathy_estimator_cls = get_local_bathy_estimator_cls(global_estimator.local_estimator_code,
                                                               global_estimator.debug_sample)
-    return local_bathy_estimator_cls(location, global_estimator, selected_directions)
+    return local_bathy_estimator_cls(location, ortho_sequence, global_estimator,
+                                     selected_directions)
 
 
 def get_local_bathy_estimator_cls(local_estimator_code: str,

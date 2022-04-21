@@ -30,7 +30,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
     def explore_results(self) -> None:
         # FIXME: Handle severals wave_estimations
         ######################################################
-        wave_estimation = self.waves_fields_estimations[0]
+        wave_estimation = self.bathymetry_estimations[0]
         wave_direction = wave_estimation.direction
         wave_wavelength = wave_estimation.wavelength
         wave_celerity = wave_estimation.celerity
@@ -40,7 +40,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Note that wave direction is clockwise origin east
         px = np.cos(np.deg2rad(wave_direction))
         py = -np.sin(np.deg2rad(wave_direction))
-        first_image = self.images_sequence[0].pixels
+        first_image = self.ortho_sequence[0].pixels
         correlation_matrix = self.correlation_image.pixels
         sinogram_max_var = metrics['sinogram_max_var']
         x = metrics['x_axis']

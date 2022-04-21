@@ -17,7 +17,7 @@ import numpy as np
 from ..image.image_geometry_types import PointType
 from ..waves_exceptions import WavesEstimationAttributeError
 
-from .waves_field_estimation import WavesFieldEstimation
+from .bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
 class SampleStatus(IntEnum):
@@ -30,12 +30,12 @@ class SampleStatus(IntEnum):
     OUTSIDE_ROI = 5
 
 
-class WavesFieldsEstimations(list):
+class BathymetrySampleEstimations(list):
     """ This class gathers information relevant to some location, whatever the bathymetry
     estimators, as well as a list of bathymetry estimations made at this location.
     """
 
-    def __init__(self, location: PointType, gravity: float,
+    def __init__(self, location: PointType, gravity: float, delta_time: float,
                  distance_to_shore: float, inside_roi: bool) -> None:
         super().__init__()
 
@@ -43,41 +43,43 @@ class WavesFieldsEstimations(list):
         self._gravity = gravity
         self._distance_to_shore = distance_to_shore
         self._inside_roi = inside_roi
+        self._delta_time = delta_time
 
         self._data_available = True
         self._delta_time_available = True
 
-    def append(self, estimation: WavesFieldEstimation) -> None:
+    def append(self, estimation: BathymetrySampleEstimation) -> None:
         """ Store a single estimation into the estimations list, ensuring that there are no
         duplicate estimations for the same (direction, wavelength) pair.
 
         :param estimation: a new estimation to store inside this localized list of estimations
         """
-        stored_wavelengths_directions = [(estim.wavelength, estim.direction) for estim in self]
+        stored_estimations_hashes = [hash(estim) for estim in self]
         # Do not store duplicate estimations for the same direction/wavelength
-        if (estimation.wavelength, estimation.direction) in stored_wavelengths_directions:
+        if hash(estimation) in stored_estimations_hashes:
             warnings.warn(f'\nTrying to store a duplicate estimation:\n{str(estimation)} ')
         else:
             super().append(estimation)
 
     def sort_on_attribute(self, attribute_name: Optional[str] = None, reverse: bool = True) -> None:
-        """ Sort in place the waves fields estimations based on one of their attributes.
+        """ Sort in place the wave fields estimations based on one of their attributes.
 
         :param attribute_name: name of an attribute present in all estimations to use for sorting
         :param reverse: When True sorting is in descending order, when False in ascending order
         """
         if attribute_name is not None:
-            self.sort(key=lambda x: getattr(x, attribute_name), reverse=reverse)
+            name = attribute_name
+            self.sort(key=lambda x: getattr(x, name), reverse=reverse)
 
     def argsort_on_attribute(self, attribute_name: Optional[str] = None,
                              reverse: bool = True) -> List[int]:
-        """ Return the indices of the waves fields estimations which would sort them based
+        """ Return the indices of the wave fields estimations which would sort them based
         on one of their attributes.
 
         :param attribute_name: name of an attribute present in all estimations to use for sorting
         :param reverse: When True sorting is in descending order, when False in ascending order
         :returns: either en empty list if attribute_name is None or the list of indices which would
-                  sort this WavesFieldsEstimations according to one of the attributes.
+                  sort this BathymetrySampleEstimations according to one of the attributes.
         """
         if attribute_name is not None:
             attr_list = [getattr(estimation, attribute_name) for estimation in self]
@@ -88,8 +90,8 @@ class WavesFieldsEstimations(list):
         return []
 
     def get_attribute(self, attribute_name: str) -> Union[float, List[float]]:
-        """ Retrieve the values of an attribute either at the level of WavesFieldsEstimations or
-        in the list of WavesFieldEstimation
+        """ Retrieve the values of an attribute either at the level of BathymetrySampleEstimations
+        or in the list of BathymetrySampleEstimation instances
 
         :param attribute_name: name of the estimation attribute to retrieve
         :returns: the values of the attribute either as a scalar or a list of values
@@ -98,16 +100,16 @@ class WavesFieldsEstimations(list):
         # Firstly try to find the attribute from the estimations common attributes
         if hasattr(self, attribute_name):
             # retrieve attribute from the estimations header
-            waves_field_attribute = getattr(self, attribute_name)
+            bathymetry_estimation_attribute = getattr(self, attribute_name)
         else:
             if not self:
                 err_msg = f'Attribute {attribute_name} undefined (no estimations)'
                 raise WavesEstimationAttributeError(err_msg)
-            waves_field_attribute = self.get_estimations_attribute(attribute_name)
-        return waves_field_attribute
+            bathymetry_estimation_attribute = self.get_estimations_attribute(attribute_name)
+        return bathymetry_estimation_attribute
 
     def get_estimations_attribute(self, attribute_name: str) -> List[float]:
-        """ Retrieve the values of some attribute in the list of stored waves field estimations.
+        """ Retrieve the values of some attribute in the list of stored wave field estimations.
 
         :param attribute_name: name of the attribute to retrieve
         :returns: the values of the attribute in the order where the estimations are stored
@@ -117,14 +119,14 @@ class WavesFieldsEstimations(list):
         try:
             return [getattr(estimation, attribute_name) for estimation in self]
         except AttributeError:
-            err_msg = f'Attribute {attribute_name} undefined for some waves field estimation'
+            err_msg = f'Attribute {attribute_name} undefined for some wave field estimation'
             raise WavesEstimationAttributeError(err_msg)
 
-    def remove_unphysical_waves_fields(self) -> None:
-        """  Remove unphysical waves fields
+    def remove_unphysical_wave_fields(self) -> None:
+        """  Remove unphysical wave fields
         """
-        # Filter non physical waves fields in bathy estimations
-        # We iterate over a copy of the list in order to keep waves_fields_estimations unaffected
+        # Filter non physical wave fields in bathy estimations
+        # We iterate over a copy of the list in order to keep wave fields estimations unaffected
         # on its specific attributes inside the loops.
         for estimation in list(self):
             if not estimation.is_physical():
@@ -152,6 +154,20 @@ class WavesFieldsEstimations(list):
         return self._gravity
 
     @property
+    def delta_time(self) -> float:
+        """ :returns: the time difference between the images used for this estimation """
+        return self._delta_time
+
+    @delta_time.setter
+    def delta_time(self, value: bool) -> None:
+        self._delta_time = value
+
+    @property
+    def delta_time_available(self) -> bool:
+        """ :returns: True if delta time was available for doing estimations, False otherwise """
+        return not np.isnan(self.delta_time)
+
+    @property
     def data_available(self) -> bool:
         """ :returns: True if data was available for doing the estimations, False otherwise """
         return self._data_available
@@ -161,21 +177,7 @@ class WavesFieldsEstimations(list):
         self._data_available = value
 
     @property
-    def delta_time_available(self) -> bool:
-        """ :returns: True if delta time was available for doing estimations, False otherwise """
-        return self._delta_time_available
-
-    @delta_time_available.setter
-    def delta_time_available(self, value: bool) -> None:
-        self._delta_time_available = value
-
-    @property
-    def success(self) -> bool:
-        """ :returns: True if estimations were run successfully, False otherwise """
-        return len(self) > 0
-
-    @property
-    def sample_status(self) -> int:
+    def status(self) -> int:
         """ :returns: a synthetic value giving the final estimation status
         """
         status = SampleStatus.SUCCESS
@@ -187,7 +189,7 @@ class WavesFieldsEstimations(list):
             status = SampleStatus.NO_DATA
         elif not self.delta_time_available:
             status = SampleStatus.NO_DELTA_TIME
-        elif not self.success:
+        elif not self:
             status = SampleStatus.FAIL
         return status.value
 
@@ -196,7 +198,7 @@ class WavesFieldsEstimations(list):
         result += f'  distance to shore: {self.distance_to_shore}   gravity: {self.gravity}\n'
         result += f'  availability: '
         result += f' (data: {self.data_available}, delta time: {self.delta_time_available})\n'
-        result += f'  STATUS: {self.sample_status}'
+        result += f'  STATUS: {self.status}'
         result += f' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME,'
         result += f' 5: OUTSIDE_ROI)\n'
         result += f'{len(self)} estimations available:\n'

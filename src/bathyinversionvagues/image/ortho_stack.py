@@ -5,20 +5,16 @@
 :created: 17/05/2021
 """
 from abc import ABC, abstractmethod
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, Union, List, Optional  # @NoMove
+from typing import Dict, Optional  # @NoMove
 
 from osgeo import gdal
 
-
 from ..data_providers.delta_time_provider import DeltaTimeProvider
 from ..image_processing.waves_image import WavesImage
+
 from .ortho_layout import OrthoLayout
-
-
-FrameIdType = Union[str, int, datetime]
-FramesIdsType = Union[List[str], List[int], List[datetime]]
+from .ortho_sequence import FrameIdType, FramesIdsType
 
 
 class OrthoStack(ABC, OrthoLayout):
