@@ -82,8 +82,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     def run(self) -> None:
         self.preprocess_images()  # TODO: should be in the init ?
-        self.compute_radon_transforms()
         estimated_direction = self.find_direction()
+        self.selected_directions = np.array([estimated_direction])
+        self.compute_radon_transforms()
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
         delta_position = self.compute_delta_position(correlation_signal, wavelength)
