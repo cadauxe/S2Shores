@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.4] - 2017-03-15
+## [0.4] - 2022-03-01
   
 Here we would have the update steps for 1.2.4 for people to follow.
  
