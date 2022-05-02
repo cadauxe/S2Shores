@@ -63,7 +63,16 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def radon_augmentation_factor(self) -> float:
+        """ The factor by which the spatial resolution must be divided in order to improve the
+        accuracy of the propagation distance estimation.
+        """
         return self.local_estimator_params['AUGMENTED_RADON_FACTOR']
+
+    @property
+    def augmented_resolution(self) -> float:
+        """ The augmented spatial resolution at which the propagation distance estimation is done.
+        """
+        return self.spatial_resolution * self.radon_augmentation_factor
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
@@ -90,7 +99,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         self.save_wave_field_estimation(estimated_direction, wavelength, delta_position)
 
     def compute_radon_transforms(self, estimated_direction: float) -> None:
-
+        """ Compute the augmented Radon transforms of all the images in the sequence along a single
+        direction.
+        """
         for image in self.ortho_sequence:
             radon_transform = WavesRadon(image, np.array([estimated_direction]))
             radon_transform_augmented = radon_transform.radon_augmentation(
@@ -135,10 +146,9 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the wave length (m)
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
-        correl_signal_resolution = self.spatial_resolution * self.radon_augmentation_factor
-        period, _ = find_period_from_zeros(correlation_signal,
-                                           int(min_wavelength / correl_signal_resolution))
-        wavelength = period * correl_signal_resolution
+        min_period_unitless = int(min_wavelength / self.augmented_resolution)
+        period, _ = find_period_from_zeros(correlation_signal, min_period_unitless)
+        wavelength = period * self.augmented_resolution
         return wavelength
 
     def compute_delta_position(self, correlation_signal: np.ndarray,
@@ -148,6 +158,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :param correlation_signal: spatial cross correlated signal
         :param wavelength: the wave length (m)
         :returns: the distance propagated over time by the waves (m)
+        :raises WavesEstimationError: when no directional peak can be found
         """
         argmax_ac = len(correlation_signal) / 2
         celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
@@ -163,19 +174,15 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             spatial_shift_offshore_max = -self.local_estimator_params['PEAK_POSITION_MAX_FACTOR'] \
                 * stroboscopic_factor_offshore * wavelength
         peaks_pos, _ = find_peaks(correlation_signal)
-        delta_position = np.nan
-        if peaks_pos.size != 0:
-            relative_distance = peaks_pos - argmax_ac
-            pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_offshore_min) & (
-                relative_distance < spatial_shift_offshore_max))]
-            if pt_in_range.size != 0:
-                argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
-                # TODO: add variable to adapt to be in meters
-                delta_position = argmax_ac - argmax  # supposed to be in meters,
-            else:
-                raise WavesEstimationError('Unable to find any directional peak')
-        else:
+        if peaks_pos.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
+        relative_distance = peaks_pos - argmax_ac
+        pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_offshore_min) & (
+            relative_distance < spatial_shift_offshore_max))]
+        if pt_in_range.size == 0:
+            raise WavesEstimationError('Unable to find any directional peak')
+        argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
+        delta_position = (argmax_ac - argmax) * self.augmented_resolution
 
         return delta_position
 
