@@ -20,7 +20,7 @@ from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.sinograms import Sinograms
-from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError
@@ -103,11 +103,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
         :returns: the estimated direction of the waves propagation
         """
-        tmp_image = np.ones(self.ortho_sequence.shape)
-        for frame_image in self.ortho_sequence:
-            tmp_image *= frame_image.pixels
-        tmp_wavesimage = WavesImage(tmp_image, self.spatial_resolution)
-        tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)
+        tmp_wavesradon = WavesRadon(self.ortho_sequence[0], self.selected_directions)
         estimated_direction, _ = tmp_wavesradon.get_direction_maximum_variance()
         return estimated_direction
 
