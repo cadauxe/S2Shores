@@ -52,8 +52,9 @@ class WavesSinogram:
                        interpolated.
         :returns: the interpolated sinogram.
         """
-        new_axis = np.linspace(0, self.size - 1, int(self.size / factor))
         current_axis = np.linspace(0, self.size - 1, self.size)
+        nb_over_samples = int(np.around(((self.size - 1) / factor) + 1))
+        new_axis = np.linspace(0, self.size - 1, nb_over_samples)
         return WavesSinogram(np.interp(new_axis, current_axis, self.values))
 
     @property
