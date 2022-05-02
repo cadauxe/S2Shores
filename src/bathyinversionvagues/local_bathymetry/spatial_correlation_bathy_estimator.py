@@ -83,23 +83,23 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
     def run(self) -> None:
         self.preprocess_images()  # TODO: should be in the init ?
         estimated_direction = self.find_direction()
-        self.selected_directions = np.array([estimated_direction])
-        self.compute_radon_transforms()
+        self.compute_radon_transforms(estimated_direction)
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
         delta_position = self.compute_delta_position(correlation_signal, wavelength)
         self.save_wave_field_estimation(estimated_direction, wavelength, delta_position)
 
-    def compute_radon_transforms(self) -> None:
+    def compute_radon_transforms(self, estimated_direction: float) -> None:
 
         for image in self.ortho_sequence:
-            radon_transform = WavesRadon(image, self.selected_directions)
+            radon_transform = WavesRadon(image, np.array([estimated_direction]))
             radon_transform_augmented = radon_transform.radon_augmentation(
                 self.radon_augmentation_factor)
             self.radon_transforms.append(radon_transform_augmented)
 
     def find_direction(self) -> float:
-        """ Find the direction of the waves propagation
+        """ Find the direction of the waves propagation using the radon transform of the first
+        image in the sequence.
 
         :returns: the estimated direction of the waves propagation
         """
