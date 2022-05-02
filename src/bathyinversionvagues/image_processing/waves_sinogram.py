@@ -10,6 +10,9 @@
 :created: 4 mars 2021
 """
 from typing import List, Tuple, Callable, Any  # @NoMove
+
+
+from scipy.interpolate import interp1d
 import numpy as np
 
 from ..generic_utils.numpy_utils import HashableNdArray
@@ -55,7 +58,11 @@ class WavesSinogram:
         current_axis = np.linspace(0, self.size - 1, self.size)
         nb_over_samples = int(np.around(((self.size - 1) / factor) + 1))
         new_axis = np.linspace(0, self.size - 1, nb_over_samples)
-        return WavesSinogram(np.interp(new_axis, current_axis, self.values))
+
+        interpolating_func = interp1d(current_axis, self.values, kind='linear', assume_sorted=True)
+        interpolated_values = interpolating_func(new_axis)
+        # interpolated_values = np.interp(new_axis, current_axis, self.values)
+        return WavesSinogram(interpolated_values)
 
     @property
     def dft(self) -> np.ndarray:
