@@ -8,7 +8,6 @@
 from scipy.signal import fftconvolve
 
 import numpy as np
-import warnings
 
 
 def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
@@ -19,6 +18,7 @@ def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
     :param image1 : matrix image1
     :param image2 : matrix image2
     :return: cross correlation matrix
+    :raises ValueError : when cross_correlation can not be computed
     """
     # Rowwise mean of input arrays & subtract from input arrays themselves
     image1_c = image1 - image1.mean(1)[:, None]
@@ -29,8 +29,8 @@ def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
     ss2 = (image2_c ** 2).sum(1)
     product_deviation = np.sqrt(np.dot(ss1[:, None], ss2[None]))
     if np.any(product_deviation == 0):
-        warnings.warn('At least one signal has a standard deviation of 0')
-        product_deviation[product_deviation == 0] = np.nan
+        raise ValueError(
+            'Cross correlation can not be computed because of standard deviation of 0')
 
     # Finally get corr coeff
     return np.divide(np.dot(image1_c, image2_c.T), product_deviation)

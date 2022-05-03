@@ -12,7 +12,6 @@ from typing import Optional, Tuple, TYPE_CHECKING  # @NoMove
 
 
 import pandas
-import warnings
 from scipy.signal import find_peaks
 import numpy as np
 
@@ -26,7 +25,8 @@ from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
-from ..waves_exceptions import WavesEstimationError, SequenceImagesError
+from ..waves_exceptions import WavesEstimationError, SinogramError
+from ..waves_exceptions import CorrelationError, SequenceImagesError
 from ..image_processing.waves_sinogram import SignalProcessingFilters
 
 from .local_bathy_estimator import LocalBathyEstimator
@@ -114,10 +114,17 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
         self.correlation_image.pixels = filtered_image.pixels
         radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
+        if self.debug_sample:
+            self.metrics['radon_transform'] = radon_transform
         filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
         direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
+        if self.debug_sample:
+            self.metrics['variances'] = variances
+            self.metrics['direction'] = direction_propagation
         sinogram_max_var = radon_transform[direction_propagation]
         sinogram_max_var_values = sinogram_max_var.values
+        if self.debug_sample:
+            self.metrics['sinogram_max_var'] = sinogram_max_var_values
         wavelength = self.compute_wavelength(sinogram_max_var_values)
         distances = self.compute_distances(sinogram_max_var_values, wavelength)
 
@@ -131,10 +138,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             estimation.delta_position = distance
             direction_estimations.append(estimation)
         if self.debug_sample:
-            self.metrics['radon_transform'] = radon_transform
-            self.metrics['variances'] = variances
-            self.metrics['sinogram_max_var'] = sinogram_max_var_values
-            self.metrics['direction'] = direction_propagation
+
             self.metrics['propagation_duration'] = self.propagation_duration
             self.metrics['direction_estimations'] = deepcopy(direction_estimations)
         direction_estimations.remove_unphysical_wave_fields()
@@ -205,18 +209,18 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         transformation
 
         :return: correlation matrix used for temporal reconstruction
-        :raises ValueError: when the time series is not defined
+        :raises CorrelationError:  when correlation matrix can not be computed
+        :raises SequenceImagesError: when the time series is not defined
         """
         if self._correlation_matrix is None:
             if self._time_series is None:
-                raise ValueError('Time series are not defined')
-            with warnings.catch_warnings() as warning:
+                raise SequenceImagesError('Time series are not defined')
+            try:
                 self._correlation_matrix = cross_correlation(self._time_series[:, self.nb_lags:],
                                                              self._time_series[:, :-self.nb_lags])
-                if warning:
-                    self.metrics['uncomplete_cross_correlation'] = True
-                else:
-                    self.metrics['uncomplete_cross_correlation'] = False
+            except ValueError as excp:
+                raise CorrelationError(
+                    'Cross correlation can not be computed because of standard deviation of 0') from excp
         return self._correlation_matrix
 
     @property
@@ -248,14 +252,14 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ Wavelength computation (in meter)
         :param sinogram : sinogram used to compute wave length
         :returns: wave length
-        :raises SequenceImagesError: if wave length can not be computed from sinogram
+        :raises SinogramError: if wave length can not be computed from sinogram
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         try:
             period, wave_length_zeros = find_period_from_zeros(
                 sinogram, int(min_wavelength / self.spatial_resolution))
         except ValueError as excp:
-            raise SequenceImagesError('Wave length can not be computed from sinogram') from excp
+            raise SinogramError('Wave length can not be computed from sinogram') from excp
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
@@ -278,8 +282,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                               * max_sinogram,
                               distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']
                               * period)
-        distances = x_axis[peaks] * self.spatial_resolution
         if self.debug_sample:
-            self.metrics['x_axis'] = x_axis
             self.metrics['max_indices'] = peaks
+        distances = x_axis[peaks] * self.spatial_resolution
         return distances

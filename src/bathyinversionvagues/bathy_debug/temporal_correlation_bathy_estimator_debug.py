@@ -7,19 +7,19 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
+
+import os
+import numpy as np
 from typing import Optional, TYPE_CHECKING
 
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
 
-import os
-import numpy as np
-
 from ..local_bathymetry.temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
 from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence
-from ..waves_exceptions import WavesEstimationError
+from ..waves_exceptions import WavesEstimationError, SinogramError, CorrelationError
 
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 
@@ -48,6 +48,18 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             self.explore_results()
             self.dump_figure()
             raise excp
+        except SinogramError as excp:
+            self.show_thumbnail()
+            self.show_correlation_matrix()
+            self.show_radon_matrix()
+            self.show_failed_sinogram()
+            self.dump_figure()
+            raise excp
+        except CorrelationError as excp:
+            self.show_thumbnail()
+            self.print_correlation_matrix_error()
+            self.dump_figure()
+            raise excp
         self.explore_results()
         self.dump_figure()
 
@@ -62,9 +74,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         subfigure.imshow(first_image, norm=Normalize(vmin=imin, vmax=imax))
         (l_1, l_2) = np.shape(first_image)
         radius = min(l_1, l_2) / 3
-        cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
-        cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
-        subfigure.arrow(l_1 // 2, l_2 // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
+        if 'direction' in self.metrics:
+            cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
+            cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
+            subfigure.arrow(l_1 // 2, l_2 // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
         plt.title('Thumbnail')
 
     def show_correlation_matrix(self) -> None:
@@ -77,12 +90,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         subfigure.imshow(self.correlation_image.pixels, norm=Normalize(vmin=imin, vmax=imax))
         (l_1, l_2) = np.shape(self.correlation_image.pixels)
         radius = min(l_1, l_2) / 3
-        cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
-        cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
-        subfigure.arrow(l_1 // 2, l_2 // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
-
-        if self.metrics['uncomplete_cross_correlation']:
-            plt.annotate('WARNING : uncomplete cross correlation', (0, 0), color='orange')
+        if 'direction' in self.metrics:
+            cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
+            cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
+            subfigure.arrow(l_1 // 2, l_2 // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
         plt.title('Correlation matrix')
 
     def show_radon_matrix(self) -> None:
@@ -100,9 +111,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         l_1, _ = np.shape(radon_array)
         plt.plot(self.selected_directions, l_1 * self._metrics['variances'] /
                  np.max(self._metrics['variances']), 'r')
-        subfigure.arrow(self.metrics['direction'], 0, 0, l_1)
-        plt.annotate(f"{self.metrics['direction']} °",
-                     (self.metrics['direction'] + 5, 10), color='orange')
+        if 'direction' in self.metrics:
+            subfigure.arrow(self.metrics['direction'], 0, 0, l_1)
+            plt.annotate(f"{self.metrics['direction']} °",
+                         (self.metrics['direction'] + 5, 10), color='orange')
         plt.title('Radon matrix')
 
     def show_sinogram(self) -> None:
@@ -110,8 +122,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """
         # Fourth diagram : Sinogram & wave length computation
         subfigure = self._figure.add_subplot(self._gs[2, :2])
-        x_axis = self.metrics['x_axis']
         sinogram_max_var = self.metrics['sinogram_max_var']
+        x_axis = np.arange(-(len(sinogram_max_var) // 2), len(sinogram_max_var) // 2 + 1)
         wave_length_zeros = self.metrics['wave_length_zeros']
         max_indices = self.metrics['max_indices']
         subfigure.plot(x_axis, sinogram_max_var)
@@ -129,6 +141,15 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                  min_limit_y),
                 color='orange')
         plt.title('Sinogram')
+
+    def show_failed_sinogram(self) -> None:
+        """ Show sinogram on which computaiton has failed
+        """
+        # Fourth diagram : Sinogram & wave length computation
+        subfigure = self._figure.add_subplot(self._gs[2, :2])
+        sinogram_max_var = self.metrics['sinogram_max_var']
+        x_axis = np.arange(-(len(sinogram_max_var) // 2), len(sinogram_max_var) // 2 + 1)
+        subfigure.plot(x_axis, sinogram_max_var)
 
     def show_values(self) -> None:
         """ Show physical values for a debug point
@@ -153,6 +174,14 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                f' dx = {distances} \n'
                                f' c = {celerities} \n ckg = {linerities}\n'
                                f' No estimations have been found', (0, 0), color='g')
+
+    def print_correlation_matrix_error(self) -> None:
+        """ Display a message for correlation matrix error in debug image
+        """
+        subfigure = self._figure.add_subplot(self._gs[1, :2])
+        subfigure.axis('off')
+        subfigure.annotate('Correlation can not be computed',
+                           (0, 0), color='g')
 
     def dump_figure(self) -> None:
         """ Save figure for a debug point
