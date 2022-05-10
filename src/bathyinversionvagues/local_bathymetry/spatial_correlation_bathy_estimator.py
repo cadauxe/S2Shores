@@ -20,7 +20,7 @@ from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.sinograms import Sinograms
-from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError
@@ -91,35 +91,31 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     def run(self) -> None:
         self.preprocess_images()  # TODO: should be in the init ?
-        self.compute_radon_transforms()
         estimated_direction = self.find_direction()
+        self.compute_radon_transforms(estimated_direction)
         correlation_signal = self.compute_spatial_correlation(estimated_direction)
         wavelength = self.compute_wavelength(correlation_signal)
         delta_position = self.compute_delta_position(correlation_signal, wavelength)
         self.save_wave_field_estimation(estimated_direction, wavelength, delta_position)
 
-    def compute_radon_transforms(self) -> None:
-        """ Compute the augmented Radon transforms of all the images in the sequence using the
-        currently selected directions.
+    def compute_radon_transforms(self, estimated_direction: float) -> None:
+        """ Compute the augmented Radon transforms of all the images in the sequence along a single
+        direction.
         """
         for image in self.ortho_sequence:
-            radon_transform = WavesRadon(image, self.selected_directions)
+            radon_transform = WavesRadon(image, np.array([estimated_direction]))
             radon_transform_augmented = radon_transform.radon_augmentation(
                 self.radon_augmentation_factor)
             self.radon_transforms.append(radon_transform_augmented)
 
     def find_direction(self) -> float:
-        """ Find the direction of the waves propagation
+        """ Find the direction of the waves propagation using the radon transform of the first
+        image in the sequence.
 
         :returns: the estimated direction of the waves propagation
         """
-        tmp_image = np.ones(self.ortho_sequence.shape)
-        for frame_image in self.ortho_sequence:
-            tmp_image *= frame_image.pixels
-        tmp_wavesimage = WavesImage(tmp_image, self.spatial_resolution)
-        tmp_wavesradon = WavesRadon(tmp_wavesimage, self.selected_directions)
-        tmp_wavesradon_augmented = tmp_wavesradon.radon_augmentation(self.radon_augmentation_factor)
-        estimated_direction, _ = tmp_wavesradon_augmented.get_direction_maximum_variance()
+        tmp_wavesradon = WavesRadon(self.ortho_sequence[0], self.selected_directions)
+        estimated_direction, _ = tmp_wavesradon.get_direction_maximum_variance()
         return estimated_direction
 
     def compute_spatial_correlation(self, estimated_direction: float) -> np.ndarray:
@@ -164,25 +160,28 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: the distance propagated over time by the waves (m)
         :raises WavesEstimationError: when no directional peak can be found
         """
-        argmax_ac = len(correlation_signal) / 2
-        celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
-                                                  self.gravity)
-        # TODO: revisit signs management
-        spatial_shift_offshore_min = -celerity_offshore_max * abs(self.propagation_duration)
-        stroboscopic_factor_offshore = self.propagation_duration / period_offshore(1. / wavelength,
-                                                                                   self.gravity)
-        if stroboscopic_factor_offshore < 1:
-            spatial_shift_offshore_max = -spatial_shift_offshore_min
-        else:
-            # unused for s2
-            spatial_shift_offshore_max = -self.local_estimator_params['PEAK_POSITION_MAX_FACTOR'] \
-                * stroboscopic_factor_offshore * wavelength
         peaks_pos, _ = find_peaks(correlation_signal)
         if peaks_pos.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
-        relative_distance = peaks_pos - argmax_ac
-        pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_offshore_min) & (
-            relative_distance < spatial_shift_offshore_max))]
+        argmax_ac = len(correlation_signal) // 2
+        relative_distance = (peaks_pos - argmax_ac) * self.augmented_resolution
+
+        celerity_offshore_max = celerity_offshore(self.global_estimator.waves_period_max,
+                                                  self.gravity)
+        spatial_shift_offshore_max = celerity_offshore_max * self.propagation_duration
+        spatial_shift_min = min(-spatial_shift_offshore_max, spatial_shift_offshore_max)
+        spatial_shift_max = -spatial_shift_min
+
+        stroboscopic_factor_offshore = self.propagation_duration / period_offshore(1. / wavelength,
+                                                                                   self.gravity)
+        if abs(stroboscopic_factor_offshore) >= 1:
+            # unused for s2
+            print('test stroboscopie vrai')
+            spatial_shift_offshore_max = self.local_estimator_params['PEAK_POSITION_MAX_FACTOR'] \
+                * stroboscopic_factor_offshore * wavelength
+
+        pt_in_range = peaks_pos[np.where((relative_distance >= spatial_shift_min) &
+                                         (relative_distance < spatial_shift_max))]
         if pt_in_range.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
         argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
