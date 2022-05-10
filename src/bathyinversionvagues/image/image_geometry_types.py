@@ -4,12 +4,8 @@
 :author: GIROS Alain
 :created: 18/05/2021
 """
-from typing import Tuple, Sequence
+from typing import Tuple
 
 MarginsType = Tuple[float, float, float, float]
 
-PointType = Tuple[float, float]
-
 ImageWindowType = Tuple[int, int, int, int]
-
-GdalGeoTransformType = Sequence[float]
