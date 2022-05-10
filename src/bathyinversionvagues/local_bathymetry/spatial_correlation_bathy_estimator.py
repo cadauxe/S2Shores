@@ -10,6 +10,7 @@
 from typing import Optional, List, TYPE_CHECKING, cast  # @NoMove
 
 from scipy.signal import find_peaks
+from shapely.geometry import Point
 
 import numpy as np
 
@@ -17,7 +18,6 @@ from ..bathy_physics import celerity_offshore, wavelength_offshore, period_offsh
 from ..generic_utils.image_filters import detrend, desmooth
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
-from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
@@ -39,7 +39,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     wave_field_estimation_cls = SpatialCorrelationBathyEstimation
 
-    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
+    def __init__(self, location: Point, ortho_sequence: OrthoSequence,
                  global_estimator: 'BathyEstimator',
                  selected_directions: Optional[np.ndarray] = None) -> None:
 

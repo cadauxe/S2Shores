@@ -118,6 +118,6 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                          f' c = {chain_celerities} \n ckg = {chain_coefficients}\n'
                          f' chosen_celerity = {wave_celerity}', (0, 0), color='g')
             fig.savefig(os.path.join(
-                debug_path, f'Infos_point_{self.location[0]}_{self.location[1]}.png'), dpi=300)
+                debug_path, f'Infos_point_{self.location.x}_{self.location.y}.png'), dpi=300)
         except Exception as excp:
             print(f'Bathymetry debug failed: {str(excp)}')
