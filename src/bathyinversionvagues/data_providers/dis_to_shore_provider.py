@@ -16,7 +16,6 @@ import xarray as xr  # @NoMove
 import numpy as np
 
 from ..image.geo_transform import GeoTransform
-from ..image.image_geometry_types import PointType
 
 from .localized_data_provider import LocalizedDataProvider
 
@@ -108,7 +107,7 @@ class GeotiffDisToShoreProvider(DisToShoreProvider):
         self._distoshore: Optional[Any] = None
         self._geotransform: Optional[GeoTransform] = None
 
-    def get_distoshore(self, point: PointType) -> float:
+    def get_distoshore(self, point: Point) -> float:
         """ Provides the distance to shore of a point in kilometers.
 
         :param point: a tuple containing the X and Y coordinates in the SRS of the client
@@ -126,7 +125,7 @@ class GeotiffDisToShoreProvider(DisToShoreProvider):
             image = distoshore_dataset.GetRasterBand(1)
             self._distoshore = image.ReadAsArray(0, 0, xsize, ysize)
 
-        provider_point = self.transform_point(point, 0.)
+        provider_point = self.transform_point((point.x, point.y), 0.)
         image_point = self._geotransform.image_coordinates(*provider_point[0:2])
         result = self._distoshore[round(image_point[1])][round(image_point[0])]
 
