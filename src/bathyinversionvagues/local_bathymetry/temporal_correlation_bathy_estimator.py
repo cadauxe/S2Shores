@@ -10,6 +10,7 @@
 from copy import deepcopy
 from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
+
 import pandas
 from scipy.signal import find_peaks
 from shapely.geometry import Point
