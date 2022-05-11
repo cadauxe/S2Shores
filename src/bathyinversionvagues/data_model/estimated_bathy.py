@@ -20,8 +20,8 @@ EXPERT_LAYER = DEBUG_LAYER + ['EXPERT']
 NOMINAL_LAYER = EXPERT_LAYER + ['NOMINAL']
 ALL_LAYERS_TYPES = NOMINAL_LAYER
 
-DIMS_Y_X_NKEEP_TIME = ['time', 'kKeep', 'y', 'x']
-DIMS_Y_X_TIME = ['time', 'y', 'x']
+DIMS_Y_X_NKEEP_TIME = ['y', 'x', 'kKeep', 'time']
+DIMS_Y_X_TIME = ['y', 'x', 'time']
 
 METERS_UNIT = 'Meters [m]'
 
@@ -286,7 +286,7 @@ class EstimatedBathy:
         dims = layer_definition['dimensions']
         layer_shape: Union[Tuple[int, int], Tuple[int, int, int]]
         if 'kKeep' in dims:
-            layer_shape = (nb_keep, nb_samples_y, nb_samples_x)
+            layer_shape = (nb_samples_y, nb_samples_x, nb_keep)
         else:
             layer_shape = (nb_samples_y, nb_samples_x)
         layer_data = np.full(layer_shape,
@@ -304,16 +304,13 @@ class EstimatedBathy:
         if not_found == nb_samples_x * nb_samples_y:
             raise WavesEstimationAttributeError(f'no values defined for: {sample_property}')
 
-        rounded_layer = layer_data.round(decimals=layer_definition['precision'])
-
+        layer_data.round(layer_definition['precision'])
         # Add a dimension at the end for time singleton
-        array = np.expand_dims(rounded_layer, axis=0)
-
+        array = np.expand_dims(layer_data, axis=layer_data.ndim)
         return DataArray(array, coords=self._get_coords(dims, nb_keep),
                          dims=dims, attrs=layer_definition['attrs'])
 
     # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
-
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
                     y_index: int, x_index: int) -> None:
         bathymetry_estimations = self.estimated_bathy[y_index, x_index]
@@ -322,12 +319,12 @@ class EstimatedBathy:
         if layer_data.ndim == 2:
             layer_data[y_index, x_index] = np.array(bathy_property)
         else:
-            nb_keep = layer_data.shape[0]
+            nb_keep = layer_data.shape[2]
             if len(bathy_property) > nb_keep:
                 bathy_property = bathy_property[:nb_keep]
             elif len(bathy_property) < nb_keep:
                 bathy_property += [np.nan] * (nb_keep - len(bathy_property))
-            layer_data[:, y_index, x_index] = np.array(bathy_property)
+            layer_data[y_index, x_index, :] = np.array(bathy_property)
 
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         dict_coords: Dict[Hashable, Any] = {}
@@ -339,9 +336,7 @@ class EstimatedBathy:
                 value = self.carto_sampling.x_samples
             elif element == 'kKeep':
                 value = np.arange(1, nb_keep + 1)
-            elif element == 'time':
-                value = self.timestamps
             else:
-                raise ValueError('Unknown dimension in netcdf bathy description')
+                value = self.timestamps
             dict_coords[element] = value
         return dict_coords
