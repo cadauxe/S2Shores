@@ -126,7 +126,7 @@ class GeotiffDisToShoreProvider(DisToShoreProvider):
             self._distoshore = image.ReadAsArray(0, 0, xsize, ysize)
 
         provider_point = self.transform_point((point.x, point.y), 0.)
-        image_point = self._geotransform.image_coordinates(*provider_point[0:2])
-        result = self._distoshore[round(image_point[1])][round(image_point[0])]
+        image_point = self._geotransform.image_coordinates(Point(provider_point[0:2]))
+        result = self._distoshore[round(image_point.y)][round(image_point.x)]
 
         return result
