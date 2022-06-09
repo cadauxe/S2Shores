@@ -25,8 +25,9 @@ from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
+from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
+from ..waves_exceptions import CorrelationComputationError, SequenceImagesError
 from ..image_processing.waves_sinogram import SignalProcessingFilters
-from ..waves_exceptions import WavesEstimationError
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
@@ -66,6 +67,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
              [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
             (filter_mean,
              [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+        if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.ortho_sequence):
+            raise ValueError(
+                'The chosen number of lag frames is bigger than the number of available frames')
 
     @property
     def start_frame_id(self) -> FrameIdType:
@@ -106,50 +110,44 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
-        try:
-            self.create_sequence_time_series()
-            filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
-            self.correlation_image.pixels = filtered_image.pixels
-            radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
-            filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
-            direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
-            sinogram_max_var = radon_transform[direction_propagation]
-            sinogram_max_var_values = sinogram_max_var.values
-            wavelength = self.compute_wavelength(sinogram_max_var_values)
-            distances = self.compute_distances(sinogram_max_var_values, wavelength)
+        self.create_sequence_time_series()
+        filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
+        self.correlation_image.pixels = filtered_image.pixels
+        radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
+        if self.debug_sample:
+            self.metrics['radon_transform'] = radon_transform
+        filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
+        direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
+        if self.debug_sample:
+            self.metrics['variances'] = variances
+            self.metrics['direction'] = direction_propagation
+        sinogram_max_var = radon_transform[direction_propagation]
+        sinogram_max_var_values = sinogram_max_var.values
+        if self.debug_sample:
+            self.metrics['sinogram_max_var'] = sinogram_max_var_values
+        wavelength = self.compute_wavelength(sinogram_max_var_values)
+        distances = self.compute_distances(sinogram_max_var_values, wavelength)
 
-            # Keep in mind that direction_estimations stores several estimations for a same
-            # direction and only the best of them should be added in the final list
-            # direction_estimation is empty at this point
-            direction_estimations = deepcopy(self.bathymetry_estimations)
+        # Keep in mind that direction_estimations stores several estimations for a same
+        # direction and only the best of them should be added in the final list
+        # direction_estimation is empty at this point
+        direction_estimations = deepcopy(self.bathymetry_estimations)
+        for distance in distances:
+            estimation = self.create_bathymetry_estimation(direction_propagation,
+                                                           wavelength)
+            estimation.delta_position = distance
+            direction_estimations.append(estimation)
+        if self.debug_sample:
 
-            for distance in distances:
-                estimation = self.create_bathymetry_estimation(direction_propagation,
-                                                               wavelength)
-                estimation.delta_position = distance
-                direction_estimations.append(estimation)
+            self.metrics['propagation_duration'] = self.propagation_duration
+            self.metrics['direction_estimations'] = deepcopy(direction_estimations)
+        direction_estimations.remove_unphysical_wave_fields()
+        if not direction_estimations:
+            raise WavesEstimationError('No correct wave fied estimations have been found')
+        direction_estimations.sort_on_attribute('linearity', reverse=False)
+        best_estimation = direction_estimations[0]
 
-            celerities = direction_estimations.get_attribute('celerity')
-            linearity_coefficients = direction_estimations.get_attribute('linearity')
-            direction_estimations.remove_unphysical_wave_fields()
-            if not direction_estimations:
-                raise WavesEstimationError('No correct wave fied estimations have been found')
-            direction_estimations.sort_on_attribute('linearity', reverse=False)
-            best_estimation = direction_estimations[0]
-
-            self.bathymetry_estimations.append(best_estimation)
-
-            if self.debug_sample:
-                self.metrics['radon_transform'] = radon_transform
-                self.metrics['variances'] = variances
-                self.metrics['sinogram_max_var'] = sinogram_max_var_values
-                # TODO: use objects in debug
-                self.metrics['propagation_duration'] = self.propagation_duration
-                self.metrics['distances'] = distances
-                self.metrics['celerities'] = celerities
-                self.metrics['linearity_coefficients'] = linearity_coefficients
-        except Exception as excp:
-            print(f'Bathymetry computation failed: {str(excp)}')
+        self.bathymetry_estimations.append(best_estimation)
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -191,8 +189,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         indices_x = np.array(dataframe_grouped['xr'])
         indices_y = np.array(dataframe_grouped['yr'])
 
-        projected_matrix = np.nanmean(self.correlation_matrix) * np.ones((np.max(indices_x) + 1,
-                                                                          np.max(indices_y) + 1))
+        projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
+            (np.max(indices_x) + 1, np.max(indices_y) + 1))
         projected_matrix[indices_x, indices_y] = values
         return WavesImage(projected_matrix, self.spatial_resolution)
 
@@ -211,14 +209,18 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         transformation
 
         :return: correlation matrix used for temporal reconstruction
-        :raises ValueError: when the time series is not defined
+        :raises CorrelationComputationError:  when correlation matrix can not be computed
+        :raises SequenceImagesError: when the time series is not defined
         """
         if self._correlation_matrix is None:
             if self._time_series is None:
-                raise ValueError('Time series are not defined')
-            self._correlation_matrix = cross_correlation(self._time_series[:, self.nb_lags:],
-                                                         self._time_series[:, :-self.nb_lags])
-
+                raise SequenceImagesError('Time series are not defined')
+            try:
+                self._correlation_matrix = cross_correlation(self._time_series[:, self.nb_lags:],
+                                                             self._time_series[:, :-self.nb_lags])
+            except ValueError as excp:
+                raise CorrelationComputationError(
+                    'Cross correlation can not be computed because of standard deviation of 0') from excp
         return self._correlation_matrix
 
     @property
@@ -250,10 +252,14 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ Wavelength computation (in meter)
         :param sinogram : sinogram used to compute wave length
         :returns: wave length
+        :raises NotExploitableSinogram: if wave length can not be computed from sinogram
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
-        period, wave_length_zeros = find_period_from_zeros(
-            sinogram, int(min_wavelength / self.spatial_resolution))
+        try:
+            period, wave_length_zeros = find_period_from_zeros(
+                sinogram, int(min_wavelength / self.spatial_resolution))
+        except ValueError as excp:
+            raise NotExploitableSinogram('Wave length can not be computed from sinogram') from excp
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
@@ -262,15 +268,13 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     def compute_distances(self, sinogram: np.ndarray, wavelength: float) -> np.ndarray:
         """ Propagated distance computation (in meter)
-        Maxima are computed using peaks detection and the smallest nb_hops distances are selected
+        Maxima are computed using peaks detection
 
         :param sinogram: sinogram having maximum variance
         :param wavelength: wave_length computed on sinogram
         :returns: np.ndarray of size nb_hops containing computed distances
         """
         x_axis = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
-        interval = np.logical_and(x_axis * self.spatial_resolution > -wavelength,
-                                  x_axis * self.spatial_resolution < wavelength)
         period = int(wavelength / self.spatial_resolution)
         max_sinogram = np.max(sinogram)
         tuning_parameters = self.local_estimator_params['TUNING']
@@ -278,9 +282,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                               * max_sinogram,
                               distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']
                               * period)
-        distances = x_axis[peaks] * self.spatial_resolution
         if self.debug_sample:
-            self.metrics['interval'] = interval
-            self.metrics['x_axis'] = x_axis
             self.metrics['max_indices'] = peaks
+        distances = x_axis[peaks] * self.spatial_resolution
         return distances

@@ -7,19 +7,24 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
+
 import os
+import numpy as np
+from typing import Optional, TYPE_CHECKING
 
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
 
-import matplotlib as mpl
-import numpy as np
-
-from ..local_bathymetry.temporal_correlation_bathy_estimator import \
-    TemporalCorrelationBathyEstimator
+from ..local_bathymetry.temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
+from ..image.image_geometry_types import PointType
+from ..image.ortho_sequence import OrthoSequence
+from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram, CorrelationComputationError
 
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
+
+if TYPE_CHECKING:
+    from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
 
 class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
@@ -27,97 +32,171 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
     """ Class performing debugging for temporal correlation method
     """
 
-    def explore_results(self) -> None:
+    def __init__(self, location: PointType, ortho_sequence: OrthoSequence,
+                 global_estimator: 'BathyEstimator',
+                 selected_directions: Optional[np.ndarray] = None) -> None:
         # FIXME: Handle severals wave_estimations
         ######################################################
+        super().__init__(location, ortho_sequence, global_estimator, selected_directions)
+        self._figure = plt.figure(constrained_layout=True)
+        self._gs = gridspec.GridSpec(5, 2, figure=self._figure)
+
+    def run(self) -> None:
         try:
-            wave_estimation = self.bathymetry_estimations[0]
-            wave_direction = wave_estimation.direction
-            wave_wavelength = wave_estimation.wavelength
-            wave_celerity = wave_estimation.celerity
-            wave_depth = wave_estimation.depth
+            super().run()
+        except WavesEstimationError as excp:
+            self.explore_results()
+            raise excp
+        except NotExploitableSinogram as excp:
+            self.show_thumbnail()
+            self.show_correlation_matrix()
+            self.show_radon_matrix()
+            self.show_failed_sinogram()
+            self.dump_figure()
+            raise excp
+        except CorrelationComputationError as excp:
+            self.show_thumbnail()
+            self.print_correlation_matrix_error()
+            self.dump_figure()
+            raise excp
 
-            metrics = self.metrics
-            # Note that wave direction is clockwise origin east
-            px = np.cos(np.deg2rad(wave_direction))
-            py = -np.sin(np.deg2rad(wave_direction))
-            first_image = self.ortho_sequence[0].pixels
-            correlation_matrix = self.correlation_image.pixels
-            sinogram_max_var = metrics['sinogram_max_var']
-            x = metrics['x_axis']
-            interval = metrics['interval']
-            debug_path = self.global_estimator.debug_path
+    def show_thumbnail(self) -> None:
+        """ Show first frame in sequence for a debug point
+        """
+        # First diagram : first image of the sequence
+        first_image = self.ortho_sequence[0].pixels
+        subfigure = self._figure.add_subplot(self._gs[0, 0])
+        imin = np.min(first_image)
+        imax = np.max(first_image)
+        subfigure.imshow(first_image, norm=Normalize(vmin=imin, vmax=imax))
+        (l_1, l_2) = np.shape(first_image)
+        radius = min(l_1, l_2) / 3
+        if 'direction' in self.metrics:
+            cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
+            cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
+            subfigure.arrow(l_1 // 2, l_2 // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
+        plt.title('Thumbnail')
 
-            fig = plt.figure(constrained_layout=True)
-            gs = gridspec.GridSpec(5, 2, figure=fig)
+    def show_correlation_matrix(self) -> None:
+        """ Show correlation matrix for a debug point
+        """
+        # Second diagram : correlation matrix
+        subfigure = self._figure.add_subplot(self._gs[0, 1])
+        imin = np.min(self.correlation_image.pixels)
+        imax = np.max(self.correlation_image.pixels)
+        subfigure.imshow(self.correlation_image.pixels, norm=Normalize(vmin=imin, vmax=imax))
+        (l_1, l_2) = np.shape(self.correlation_image.pixels)
+        radius = min(l_1, l_2) / 3
+        if 'direction' in self.metrics:
+            cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
+            cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
+            subfigure.arrow(l_1 // 2, l_2 // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
+        plt.title('Correlation matrix')
 
-            # First diagram : first image of the sequence
-            ax = fig.add_subplot(gs[0, 0])
-            imin = np.min(first_image)
-            imax = np.max(first_image)
-            ax.imshow(first_image, norm=Normalize(vmin=imin, vmax=imax))
-            (l1, l2) = np.shape(first_image)
-            radius = min(l1, l2) / 3
-            ax.arrow(l1 // 2, l2 // 2, radius * px, radius * py)
-            plt.title('Thumbnail')
+    def show_radon_matrix(self) -> None:
+        """ Show radon matrix for a debug point
+        """
+        # Third diagram : Radon transform & maximum variance
+        subfigure = self._figure.add_subplot(self._gs[1, :2])
+        radon_array, _ = self.metrics['radon_transform'].get_as_arrays()
+        nb_directions, _ = radon_array.shape
+        directions = self.selected_directions
+        min_dir = np.min(directions)
+        max_dir = np.max(directions)
+        subfigure.imshow(radon_array, interpolation='nearest', aspect='auto',
+                         origin='lower', extent=[min_dir, max_dir, 0, nb_directions])
+        l_1, _ = np.shape(radon_array)
+        plt.plot(self.selected_directions, l_1 * self._metrics['variances'] /
+                 np.max(self._metrics['variances']), 'r')
+        if 'direction' in self.metrics:
+            subfigure.arrow(self.metrics['direction'], 0, 0, l_1)
+            plt.annotate(f"{self.metrics['direction']} °",
+                         (self.metrics['direction'] + 5, 10), color='orange')
+        plt.title('Radon matrix')
 
-            # Second diagram : correlation matrix
-            ax2 = fig.add_subplot(gs[0, 1])
-            imin = np.min(correlation_matrix)
-            imax = np.max(correlation_matrix)
-            ax2.imshow(correlation_matrix, norm=Normalize(vmin=imin, vmax=imax))
-            (l1, l2) = np.shape(correlation_matrix)
-            radius = min(l1, l2) / 3
-            ax2.arrow(l1 // 2, l2 // 2, radius * px, radius * py)
-            plt.title('Correlation matrix')
+    def show_sinogram(self) -> None:
+        """ Show sinogram for a debug point
+        """
+        # Fourth diagram : Sinogram & wave length computation
+        subfigure = self._figure.add_subplot(self._gs[2, :2])
+        sinogram_max_var = self.metrics['sinogram_max_var']
+        x_axis = np.arange(-(len(sinogram_max_var) // 2), len(sinogram_max_var) // 2 + 1)
+        wave_length_zeros = self.metrics['wave_length_zeros']
+        max_indices = self.metrics['max_indices']
+        subfigure.plot(x_axis, sinogram_max_var)
+        min_limit_x = np.min(x_axis)
+        min_limit_y = np.min(sinogram_max_var)
+        subfigure.plot(x_axis[wave_length_zeros],
+                       sinogram_max_var[wave_length_zeros], 'ro')
+        subfigure.plot(x_axis[max_indices],
+                       sinogram_max_var[max_indices], 'go')
 
-            # Third diagram : Radon transform & maximum variance
-            ax3 = fig.add_subplot(gs[1, :2])
-            radon_array, _ = metrics['radon_transform'].get_as_arrays()
-            s1, _ = radon_array.shape
-            directions = self.selected_directions
-            d1 = np.min(directions)
-            d2 = np.max(directions)
-            ax3.imshow(radon_array, interpolation='nearest', aspect='auto',
-                       origin='lower', extent=[d1, d2, 0, s1])
-            l1, _ = np.shape(radon_array)
-            plt.plot(self.selected_directions, l1 * metrics['variances'] /
-                     np.max(metrics['variances']), 'r')
-            ax3.arrow(wave_direction, 0, 0, l1)
-            plt.annotate('%d °' % wave_direction, (wave_direction + 5, 10), color='orange')
-            plt.title('Radon matrix')
+        if self.bathymetry_estimations:
+            subfigure.annotate(
+                f'depth = {self.bathymetry_estimations[0].depth}',
+                (min_limit_x,
+                 min_limit_y),
+                color='orange')
+        plt.title('Sinogram')
 
-            # Fourth diagram : Sinogram & wave length computation
-            ax4 = fig.add_subplot(gs[2, :2])
+    def show_failed_sinogram(self) -> None:
+        """ Show sinogram on which computaiton has failed
+        """
+        # Fourth diagram : Sinogram & wave length computation
+        subfigure = self._figure.add_subplot(self._gs[2, :2])
+        sinogram_max_var = self.metrics['sinogram_max_var']
+        x_axis = np.arange(-(len(sinogram_max_var) // 2), len(sinogram_max_var) // 2 + 1)
+        subfigure.plot(x_axis, sinogram_max_var)
 
-            ax4.plot(x, sinogram_max_var)
-            ax4.scatter(x[interval], sinogram_max_var[interval], s=4 *
-                        mpl.rcParams['lines.markersize'], c='orange')
-            min_limit_x = np.min(x)
-            min_limit_y = np.min(sinogram_max_var)
-            ax4.plot(x[metrics['wave_length_zeros']],
-                     sinogram_max_var[metrics['wave_length_zeros']], 'ro')
-            ax4.plot(x[metrics['max_indices']],
-                     sinogram_max_var[metrics['max_indices']], 'go')
+    def show_values(self) -> None:
+        """ Show physical values for a debug point
+        """
+        # Fifth  diagram
+        subfigure = self._figure.add_subplot(self._gs[3, :2])
+        subfigure.axis('off')
+        direction_estimations = self.metrics['direction_estimations']
+        celerities = direction_estimations.get_attribute('celerity')
+        celerities = [round(celerity, 2) for celerity in celerities]
+        distances = direction_estimations.get_attribute('delta_position')
+        linerities = direction_estimations.get_attribute('linearity')
+        linerities = [round(linearity, 2) for linearity in linerities]
+        if self.bathymetry_estimations:
+            subfigure.annotate(f'wave_length = {self.bathymetry_estimations[0].wavelength} \n'
+                               f' dx = {distances} \n'
+                               f' c = {celerities} \n ckg = {linerities}\n'
+                               f' chosen_celerity = {self.bathymetry_estimations[0].celerity}',
+                               (0, 0), color='g')
+        else:
+            subfigure.annotate(f'wave_length = {direction_estimations[0].wavelength} \n'
+                               f' dx = {distances} \n'
+                               f' c = {celerities} \n ckg = {linerities}\n'
+                               f' No estimations have been found', (0, 0), color='g')
 
-            ax4.annotate('depth = {:.2f}'.format(wave_depth),
-                         (min_limit_x, min_limit_y), color='orange')
-            plt.title('Sinogram')
+    def print_correlation_matrix_error(self) -> None:
+        """ Display a message for correlation matrix error in debug image
+        """
+        subfigure = self._figure.add_subplot(self._gs[1, :2])
+        subfigure.axis('off')
+        subfigure.annotate('Correlation can not be computed',
+                           (0, 0), color='g')
 
-            # Fifth  diagram
-            ax5 = fig.add_subplot(gs[3, :2])
-            ax5.axis('off')
-            distances = metrics['distances']
-            celerities = metrics['celerities']
-            linearity_coefficients = metrics['linearity_coefficients']
-            chain_celerities = ' '.join([f'{celerity:.2f} | ' for celerity in celerities])
-            chain_coefficients = ' '.join(
-                [f'{coefficient:.2f} | ' for coefficient in linearity_coefficients])
-            chain_dx = ' '.join([f'{distance:.2f} | ' for distance in distances])
-            ax5.annotate(f'wave_length = {wave_wavelength} \n dx = {chain_dx} \n'
-                         f' c = {chain_celerities} \n ckg = {chain_coefficients}\n'
-                         f' chosen_celerity = {wave_celerity}', (0, 0), color='g')
-            fig.savefig(os.path.join(
-                debug_path, f'Infos_point_{self.location.x}_{self.location.y}.png'), dpi=300)
-        except Exception as excp:
-            print(f'Bathymetry debug failed: {str(excp)}')
+    def dump_figure(self) -> None:
+        """ Save figure for a debug point
+        """
+        if self.global_estimator.debug_path:
+            self._figure.savefig(
+                os.path.join(
+                    self.global_estimator.debug_path,
+                    f'Infos_point_{self.location.x}_{self.location.y}.png'),
+                dpi=300)
+        plt.close()
+
+    def explore_results(self) -> None:
+        """ Full routine for debugging point
+        """
+        self.show_thumbnail()
+        self.show_correlation_matrix()
+        self.show_radon_matrix()
+        self.show_sinogram()
+        self.show_values()
+        self.dump_figure()
