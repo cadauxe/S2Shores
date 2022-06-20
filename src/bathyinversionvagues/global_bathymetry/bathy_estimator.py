@@ -4,19 +4,17 @@
 :author: GIROS Alain
 :created: 17/05/2021
 """
-from typing import List, Optional, Dict, Any  # @NoMove
 from pathlib import Path
-
-from shapely.geometry import Point
-import xarray as xr  # @NoMove
-from xarray import Dataset  # @NoMove
+from typing import Any, Dict, List, Optional  # @NoMove
 
 import numpy as np
+import xarray as xr  # @NoMove
+from shapely.geometry import Point
+from xarray import Dataset  # @NoMove
 
 from ..image.image_geometry_types import MarginsType
-from ..image.ortho_stack import OrthoStack, FramesIdsType
+from ..image.ortho_stack import FramesIdsType, OrthoStack
 from ..image.sampled_ortho_image import SampledOrthoImage
-
 from .bathy_estimator_parameters import BathyEstimatorParameters
 from .bathy_estimator_providers import BathyEstimatorProviders
 from .ortho_bathy_estimator import OrthoBathyEstimator
@@ -132,7 +130,8 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         title = 'Wave parameters and raw bathymetry derived from satellite imagery.'
         title += ' No tidal vertical adjustment.'
         infos = {'title': title,
-                 'institution': 'CNES-LEGOS'}
+                 'institution': 'CNES-LEGOS',
+                 'coordinates': 'spatial_ref'}
 
         # metadata from the parameters
         infos['waveEstimationMethod'] = self.local_estimator_code
