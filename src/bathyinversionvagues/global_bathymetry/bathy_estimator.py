@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional  # @NoMove
 
 import numpy as np
 import xarray as xr  # @NoMove
+from numpy import dtype
 from shapely.geometry import Point
 from xarray import Dataset  # @NoMove
 
@@ -104,8 +105,14 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         subtile_estimator = OrthoBathyEstimator(self, subtile)
         dataset = subtile_estimator.compute_bathy()
 
+        # Add spatial_ref variable to the Dataset
+        dataset = dataset.assign({'spatial_ref': 0})
+        # Assign relevant projection attribute of the spatial_ref variable
+        dataset.spatial_ref.attrs['spatial_ref'] = self._ortho_stack.build_spatial_ref()
+
         # Build the bathymetry dataset for the subtile.
         infos = self.build_infos()
+        # self._ortho_stack.build_spatial_ref()
         infos.update(self._ortho_stack.build_infos())
         for key, value in infos.items():
             dataset.attrs[key] = value
