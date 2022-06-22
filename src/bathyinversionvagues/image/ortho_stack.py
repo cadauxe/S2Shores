@@ -6,9 +6,9 @@
 """
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, Optional, List  # @NoMove
+from typing import Dict, List, Optional  # @NoMove
 
-from osgeo import gdal
+from osgeo import gdal, osr
 from shapely.geometry import Polygon
 
 from ..data_providers.delta_time_provider import DeltaTimeProvider
@@ -81,6 +81,14 @@ class OrthoStack(ABC, OrthoLayout):
         """ :returns: the approximate acquisition time of the stack. Typically the central frame
         acquisition date and time.
         """
+
+    def build_spatial_ref(self) -> str:
+        """ :returns: a string of metadata describing the projection information for spatial_ref variable
+        """
+        srs = osr.SpatialReference()
+        srs.ImportFromEPSG(self.epsg_code)
+
+        return srs.ExportToWkt()
 
     def build_infos(self) -> Dict[str, str]:
         """ :returns: a dictionary of metadata describing this ortho stack
