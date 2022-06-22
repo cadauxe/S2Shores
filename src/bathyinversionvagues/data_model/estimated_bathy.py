@@ -10,6 +10,7 @@ from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
 import numpy as np  # @NoMove
 from xarray import DataArray, Dataset  # @NoMove
 
+from ..image.ortho_stack import OrthoStack
 from ..image.sampling_2d import Sampling2D
 from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
