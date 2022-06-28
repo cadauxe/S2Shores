@@ -5,26 +5,26 @@
 :created: 14/05/2021
 """
 from datetime import datetime
-from typing import Mapping, Hashable, Any, Dict, List, Union, Tuple
+from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
 
 import numpy as np  # @NoMove
-from xarray import Dataset, DataArray  # @NoMove
+from xarray import DataArray, Dataset  # @NoMove
 
+from ..image.ortho_stack import OrthoStack
 from ..image.sampling_2d import Sampling2D
 from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
-
 
 DEBUG_LAYER = ['DEBUG']
 EXPERT_LAYER = DEBUG_LAYER + ['EXPERT']
 NOMINAL_LAYER = EXPERT_LAYER + ['NOMINAL']
 ALL_LAYERS_TYPES = NOMINAL_LAYER
 
-DIMS_Y_X_NKEEP_TIME = ['y', 'x', 'kKeep', 'time']
-DIMS_Y_X_TIME = ['y', 'x', 'time']
+DIMS_Y_X_NKEEP_TIME = ['time', 'kKeep', 'y', 'x']
+DIMS_Y_X_TIME = ['time', 'y', 'x']
 
 METERS_UNIT = 'Meters [m]'
-
+SPATIAL_REF = 'spatial_ref'
 
 # Provides a mapping from entries into the output dictionary of a local estimator to a netCDF layer.
 BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
@@ -45,7 +45,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
               'fill_value': np.nan,
               'precision': 2,
               'attrs': {'Dimension': METERS_UNIT,
-                        'long_name': 'Raw estimated depth'}},
+                        'long_name': 'Raw estimated depth',
+                        'grid_mapping': SPATIAL_REF,
+                        'coordinates': SPATIAL_REF}},
     'direction_from_north': {'layer_type': NOMINAL_LAYER,
                              'layer_name': 'Direction',
                              'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -54,7 +56,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                              'precision': 1,
                              'attrs': {'Dimension': 'degree',
                                        'long_name': 'Wave direction',
-                                       'comment': 'Direction from North'}},
+                                       'comment': 'Direction from North',
+                                       'grid_mapping': SPATIAL_REF,
+                                       'coordinates': SPATIAL_REF}},
     'celerity': {'layer_type': NOMINAL_LAYER,
                  'layer_name': 'Celerity',
                  'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -62,7 +66,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                  'fill_value': np.nan,
                  'precision': 2,
                  'attrs': {'Dimension': 'Meters per second [m/sec]',
-                           'long_name': 'Wave celerity'}},
+                           'long_name': 'Wave celerity',
+                           'grid_mapping': SPATIAL_REF,
+                           'coordinates': SPATIAL_REF}},
     'absolute_delta_position': {'layer_type': EXPERT_LAYER,
                                 'layer_name': 'Propagated distance',
                                 'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -72,7 +78,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                                 'attrs': {'Dimension': METERS_UNIT,
                                           'long_name': 'Distance used for measuring wave celerity',
                                           'comment': 'The actual sign of this quantity equals the '
-                                          'sign of Delta Acquisition Time'}},
+                                          'sign of Delta Acquisition Time',
+                                          'grid_mapping': SPATIAL_REF,
+                                          'coordinates': SPATIAL_REF}},
     'wavelength': {'layer_type': NOMINAL_LAYER,
                    'layer_name': 'Wavelength',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -80,7 +88,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'fill_value': np.nan,
                    'precision': 1,
                    'attrs': {'Dimension': METERS_UNIT,
-                             'long_name': 'Wavelength'}},
+                             'long_name': 'Wavelength',
+                             'grid_mapping': SPATIAL_REF,
+                             'coordinates': SPATIAL_REF}},
     'wavenumber': {'layer_type': EXPERT_LAYER,
                    'layer_name': 'Wavenumber',
                    'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -88,7 +98,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                    'fill_value': np.nan,
                    'precision': 5,
                    'attrs': {'Dimension': 'Per Meter [m-1]',
-                             'long_name': 'Wavenumber'}},
+                             'long_name': 'Wavenumber',
+                             'grid_mapping': SPATIAL_REF,
+                             'coordinates': SPATIAL_REF}},
     'period': {'layer_type': EXPERT_LAYER,
                'layer_name': 'Period',
                'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -96,7 +108,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'fill_value': np.nan,
                'precision': 2,
                'attrs': {'Dimension': 'Seconds [sec]',
-                         'long_name': 'Wave period'}},
+                         'long_name': 'Wave period',
+                         'grid_mapping': SPATIAL_REF,
+                         'coordinates': SPATIAL_REF}},
     'distance_to_shore': {'layer_type': EXPERT_LAYER,
                           'layer_name': 'Distoshore',
                           'dimensions': DIMS_Y_X_TIME,
@@ -104,7 +118,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                           'fill_value': np.nan,
                           'precision': 3,
                           'attrs': {'Dimension': 'Kilometers [km]',
-                                    'long_name': 'Distance to the shore'}},
+                                    'long_name': 'Distance to the shore',
+                                    'grid_mapping': SPATIAL_REF,
+                                    'coordinates': SPATIAL_REF}},
     'delta_celerity': {'layer_type': EXPERT_LAYER,
                        'layer_name': 'Delta Celerity',
                        'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -112,7 +128,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                        'fill_value': np.nan,
                        'precision': 2,
                        'attrs': {'Dimension': 'Meters per seconds2 [m/sec2]',
-                                 'long_name': 'delta celerity'}},
+                                 'long_name': 'delta celerity',
+                                 'grid_mapping': SPATIAL_REF,
+                                 'coordinates': SPATIAL_REF}},
     'absolute_delta_phase': {'layer_type': EXPERT_LAYER,
                              'layer_name': 'Delta Phase',
                              'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -122,7 +140,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                              'attrs': {'Dimension': 'Radians [rd]',
                                        'long_name': 'Delta Phase',
                                        'comment': 'The actual sign of this quantity equals the '
-                                       'sign of Delta Acquisition Time'}},
+                                       'sign of Delta Acquisition Time',
+                                       'grid_mapping': SPATIAL_REF,
+                                       'coordinates': SPATIAL_REF}},
     'gravity': {'layer_type': EXPERT_LAYER,
                 'layer_name': 'Gravity',
                 'dimensions': DIMS_Y_X_TIME,
@@ -130,7 +150,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                 'fill_value': np.nan,
                 'precision': 4,
                 'attrs': {'Dimension': 'Acceleration [m/s2]',
-                          'long_name': 'Gravity'}},
+                          'long_name': 'Gravity',
+                          'grid_mapping': SPATIAL_REF,
+                          'coordinates': SPATIAL_REF}},
     'delta_time': {'layer_type': EXPERT_LAYER,
                    'layer_name': 'Delta Acquisition Time',
                    'dimensions': DIMS_Y_X_TIME,
@@ -141,7 +163,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                              'long_name': 'Delta Time',
                              'comment': 'The time length of the sequence of images used for '
                                         'estimation. May be positive or negative to account for '
-                                        'the chronology of start and stop images'}},
+                                        'the chronology of start and stop images',
+                                        'grid_mapping': SPATIAL_REF,
+                                        'coordinates': SPATIAL_REF}},
     'absolute_stroboscopic_factor': {'layer_type': EXPERT_LAYER,
                                      'layer_name': 'Stroboscopic Factor',
                                      'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -149,7 +173,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                                      'fill_value': np.nan,
                                      'precision': 4,
                                      'attrs': {'Dimension': 'Unitless',
-                                               'long_name': '|delta_time| / period'}},
+                                               'long_name': '|delta_time| / period',
+                                               'grid_mapping': SPATIAL_REF,
+                                               'coordinates': SPATIAL_REF}},
     'absolute_stroboscopic_factor_offshore': {'layer_type': EXPERT_LAYER,
                                               'layer_name': 'Stroboscopic Factor Offshore',
                                               'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -158,7 +184,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                                               'precision': 4,
                                               'attrs': {'Dimension': 'Unitless',
                                                         'long_name': '|delta_time| / '
-                                                                     'period_offshore'}},
+                                                                     'period_offshore',
+                                                                     'grid_mapping': SPATIAL_REF,
+                                                                     'coordinates': SPATIAL_REF}},
     'linearity': {'layer_type': EXPERT_LAYER,
                   'layer_name': 'Wave Linearity',
                   'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -169,7 +197,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                             'long_name': 'linearity coefficient: c^2k/g',
                             'comment': 'Linear dispersion relation limits: transition from '
                                        'shallow water to intermediate water around 0.3, transition '
-                                       'from intermediate water to deep water around 0.9'}},
+                                       'from intermediate water to deep water around 0.9',
+                                       'grid_mapping': SPATIAL_REF,
+                                       'coordinates': SPATIAL_REF}},
     'period_offshore': {'layer_type': EXPERT_LAYER,
                         'layer_name': 'Period Offshore',
                         'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -177,7 +207,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                         'fill_value': np.nan,
                         'precision': 2,
                         'attrs': {'Dimension': 'Seconds [sec]',
-                                  'long_name': 'Period of the wave field if it was offshore'}},
+                                  'long_name': 'Period of the wave field if it was offshore',
+                                  'grid_mapping': SPATIAL_REF,
+                                  'coordinates': SPATIAL_REF}},
     'energy': {'layer_type': DEBUG_LAYER,
                'layer_name': 'Energy',
                'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -185,7 +217,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'fill_value': np.nan,
                'precision': 1,
                'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
-                         'long_name': 'Energy'}},
+                         'long_name': 'Energy',
+                         'grid_mapping': SPATIAL_REF,
+                         'coordinates': SPATIAL_REF}},
     'relative_period': {'layer_type': DEBUG_LAYER,
                         'layer_name': 'Relative Period',
                         'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -194,7 +228,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                         'precision': 3,
                         'attrs': {'Dimension': 'Unitless',
                                   'long_name': 'period_offshore / period',
-                                  'comment': 'Also known as the dimensionless period'}},
+                                  'comment': 'Also known as the dimensionless period',
+                                  'grid_mapping': SPATIAL_REF,
+                                  'coordinates': SPATIAL_REF}},
     'relative_wavelength': {'layer_type': DEBUG_LAYER,
                             'layer_name': 'Relative Wavelength',
                             'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -203,7 +239,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                             'precision': 3,
                             'attrs': {'Dimension': 'Unitless',
                                       'long_name': 'wavelength_offshore / wavelength',
-                                      'comment': 'Also known as the dimensionless wavelength'}},
+                                      'comment': 'Also known as the dimensionless wavelength',
+                                      'grid_mapping': SPATIAL_REF,
+                                      'coordinates': SPATIAL_REF}},
     'energy_ratio': {'layer_type': DEBUG_LAYER,
                      'layer_name': 'Energy Ratio',
                      'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -211,7 +249,9 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                      'fill_value': np.nan,
                      'precision': 3,
                      'attrs': {'Dimension': 'Joules per Meter2 [J/m2]',
-                               'long_name': 'energy_ratio'}},
+                               'long_name': 'energy_ratio',
+                               'grid_mapping': SPATIAL_REF,
+                               'coordinates': SPATIAL_REF}},
 }
 
 
@@ -227,7 +267,7 @@ class EstimatedBathy:
         """
         # data is stored as a 2D array of python objects, here a dictionary containing bathy fields.
         self.carto_sampling = carto_sampling
-        self.estimated_bathy = np.empty(self.carto_sampling.shape, dtype=np.object_)
+        self.estimated_bathy = np.empty(carto_sampling.shape, dtype=np.object_)
 
         timestamp = datetime(int(acq_time[:4]), int(acq_time[4:6]), int(acq_time[6:8]),
                              int(acq_time[9:11]), int(acq_time[11:13]), int(acq_time[13:15]))
@@ -286,7 +326,7 @@ class EstimatedBathy:
         dims = layer_definition['dimensions']
         layer_shape: Union[Tuple[int, int], Tuple[int, int, int]]
         if 'kKeep' in dims:
-            layer_shape = (nb_samples_y, nb_samples_x, nb_keep)
+            layer_shape = (nb_keep, nb_samples_y, nb_samples_x)
         else:
             layer_shape = (nb_samples_y, nb_samples_x)
         layer_data = np.full(layer_shape,
@@ -304,13 +344,16 @@ class EstimatedBathy:
         if not_found == nb_samples_x * nb_samples_y:
             raise WavesEstimationAttributeError(f'no values defined for: {sample_property}')
 
-        layer_data.round(layer_definition['precision'])
+        rounded_layer = layer_data.round(decimals=layer_definition['precision'])
+
         # Add a dimension at the end for time singleton
-        array = np.expand_dims(layer_data, axis=layer_data.ndim)
+        array = np.expand_dims(rounded_layer, axis=0)
+
         return DataArray(array, coords=self._get_coords(dims, nb_keep),
                          dims=dims, attrs=layer_definition['attrs'])
 
     # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
+
     def _fill_array(self, sample_property: str, layer_data: np.ndarray,
                     y_index: int, x_index: int) -> None:
         bathymetry_estimations = self.estimated_bathy[y_index, x_index]
@@ -319,24 +362,26 @@ class EstimatedBathy:
         if layer_data.ndim == 2:
             layer_data[y_index, x_index] = np.array(bathy_property)
         else:
-            nb_keep = layer_data.shape[2]
+            nb_keep = layer_data.shape[0]
             if len(bathy_property) > nb_keep:
                 bathy_property = bathy_property[:nb_keep]
             elif len(bathy_property) < nb_keep:
                 bathy_property += [np.nan] * (nb_keep - len(bathy_property))
-            layer_data[y_index, x_index, :] = np.array(bathy_property)
+            layer_data[:, y_index, x_index] = np.array(bathy_property)
 
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         dict_coords: Dict[Hashable, Any] = {}
         value: Union[np.ndarray, List[datetime]]
         for element in dims:
             if element == 'y':
-                value = self.carto_sampling.y_samples
+                value = self.carto_sampling._y_samples
             elif element == 'x':
-                value = self.carto_sampling.x_samples
+                value = self.carto_sampling._x_samples
             elif element == 'kKeep':
                 value = np.arange(1, nb_keep + 1)
-            else:
+            elif element == 'time':
                 value = self.timestamps
+            else:
+                raise ValueError('Unknown dimension in netcdf bathy description')
             dict_coords[element] = value
         return dict_coords
