@@ -18,6 +18,7 @@ def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
     :param image1 : matrix image1
     :param image2 : matrix image2
     :return: cross correlation matrix
+    :raises ValueError : when cross_correlation can not be computed
     """
     # Rowwise mean of input arrays & subtract from input arrays themselves
     image1_c = image1 - image1.mean(1)[:, None]
@@ -26,9 +27,13 @@ def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:
     # Sum of squares across rows
     ss1 = (image1_c ** 2).sum(1)
     ss2 = (image2_c ** 2).sum(1)
+    product_deviation = np.sqrt(np.dot(ss1[:, None], ss2[None]))
+    if np.any(product_deviation == 0):
+        raise ValueError(
+            'Cross correlation can not be computed because of standard deviation of 0')
 
     # Finally get corr coeff
-    return np.dot(image1_c, image2_c.T) / np.sqrt(np.dot(ss1[:, None], ss2[None]))
+    return np.divide(np.dot(image1_c, image2_c.T), product_deviation)
 
 
 def normxcorr2(template: np.ndarray, image: np.ndarray, mode: str = 'full') -> np.ndarray:

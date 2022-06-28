@@ -34,6 +34,16 @@ class SequenceImagesError(WavesException):
     """
 
 
+class NotExploitableSinogram(WavesException):
+    """ Exception raised when sinogram can not be exploited
+    """
+
+
+class CorrelationComputationError(WavesException):
+    """ Exception raised when correlation can not be computed
+    """
+
+
 class DebugDisplayError(WavesException):
     """ Exception raised when debug display fails
     """
