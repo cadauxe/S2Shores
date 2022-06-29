@@ -8,6 +8,8 @@
 from functools import lru_cache
 
 from scipy.signal import convolve2d
+
+from bathyinversionvagues.generic_utils.numpy_utils import circular_mask
 import numpy as np
 
 
@@ -162,3 +164,8 @@ def smooth2(M: np.ndarray, nx: int, ny: int) -> np.ndarray:
                         np.tile(S[:, -1], (ny, 1)).transpose()), axis=1)
 
     return smoothc(T, nx, ny)
+
+
+def circular_masking(image_array: np.ndarray) -> np.ndarray:
+    mask = circular_mask(image_array.shape[0], image_array.shape[1], image_array.dtype)
+    return image_array * mask

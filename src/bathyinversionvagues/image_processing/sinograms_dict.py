@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, List, Tuple, Any  # @NoMove
+from typing import Optional, List, Tuple, Any, cast  # @NoMove
 
 import numpy as np  # @NoMove
 
@@ -20,8 +20,16 @@ class SinogramsDict(QuantizedDirectionsDict):
     knowledge of the image
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, directions_quantization: Optional[float] = None) -> None:
+        """ Constructor
+
+        :param directions_quantization: the step to use for quantizing direction angles, for
+                                        indexing purposes. Direction quantization is such that the
+                                        0 degree direction is used as the origin, and any direction
+                                        angle is transformed to the nearest quantized angle for
+                                        indexing that direction in the radon transform.
+        """
+        super().__init__(directions_quantization)
         self._nb_samples = -1
 
     # +++++++++++++++++++ Sinograms management part +++++++++++++++++++
@@ -94,7 +102,7 @@ class SinogramsDict(QuantizedDirectionsDict):
         if directions is None:
             selected_directions = np.array(self.sorted_directions)
         else:
-            selected_directions_array = self.quantizer.quantize(directions)
+            selected_directions_array = cast(np.ndarray, self.quantizer.quantize(directions))
             selected_directions = np.array(sorted(selected_directions_array.tolist()))
 
         # Build array by selecting the requested directions

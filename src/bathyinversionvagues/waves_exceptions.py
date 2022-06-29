@@ -34,6 +34,16 @@ class SequenceImagesError(WavesException):
     """
 
 
+class NotExploitableSinogram(WavesException):
+    """ Exception raised when sinogram can not be exploited
+    """
+
+
+class CorrelationComputationError(WavesException):
+    """ Exception raised when correlation can not be computed
+    """
+
+
 class DebugDisplayError(WavesException):
     """ Exception raised when debug display fails
     """
@@ -44,8 +54,8 @@ class ProductNotFound(WavesException):
     """
 
 
-class WavesEstimationIndexingError(WavesException):
-    """ Exception raised when an estimation cannot be found with its coordinates.
+class WavesIndexingError(WavesException):
+    """ Exception raised when a point cannot be found in the sampling with its coordinates.
     """
 
 

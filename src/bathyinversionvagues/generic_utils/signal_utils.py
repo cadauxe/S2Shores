@@ -4,11 +4,15 @@
 :created: 25/08/2021
 :author: Romain Degoul
 """
+from functools import lru_cache
+from typing import Tuple  # @NoMove
 
-from typing import Tuple
+from scipy.signal import find_peaks
 
 import numpy as np
-from scipy.signal import find_peaks
+
+from .numpy_utils import HashableNdArray
+from ..waves_exceptions import WavesEstimationError
 
 
 def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]:
@@ -25,6 +29,8 @@ def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, 
     demiperiods = np.diff(zeros)
     cond = demiperiods > (min_period / 2)
     demiperiods = demiperiods[cond]
+    if not demiperiods.any():
+        raise ValueError('No demiperiod have been found on the signal')
     period = 2 * float(np.mean(demiperiods))
     return period, np.concatenate((np.array([zeros[0]]), zeros[1:][cond]))
 
@@ -60,12 +66,16 @@ def find_dephasing(signal: np.ndarray, period: float) -> Tuple[float, np.ndarray
     return dephasing, signal_period
 
 
-def get_unity_roots(frequencies: np.ndarray, number_of_roots: int) -> np.ndarray:
+@lru_cache()
+def get_unity_roots(wrapped_frequencies: HashableNdArray, number_of_roots: int) -> np.ndarray:
     """ Compute complex roots of the unity for some frequencies
 
     :param frequencies: 1D array of normalized frequencies where roots are needed
     :param number_of_roots: Number of unity roots to compute, starting from 0
     :returns: number_of_roots complex roots of the unity corresponding to fr frequencies
     """
+    frequencies = wrapped_frequencies.unwrap()
     n = np.arange(number_of_roots)
-    return np.exp(-2j * np.pi * frequencies * n)
+    working_frequencies = np.expand_dims(frequencies, axis=1)
+    unity_roots = np.exp(-2j * np.pi * working_frequencies * n)
+    return unity_roots

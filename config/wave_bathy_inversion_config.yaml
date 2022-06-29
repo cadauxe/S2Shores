@@ -39,12 +39,11 @@ SPATIAL_DFT:
 
 #temporal_correlation
 TEMPORAL_CORRELATION:
-  RESOLUTION:
-    TIME_INTERPOLATION: 0.5 # resolution in second for temporal signal
-  TEMPORAL_LAG: 1  # number of frames to let wave propagation happen (example 3 for a 1Hz sequence)
+  TEMPORAL_LAG: 1  # number of intervals between frames to let wave propagation happen (example 3 for a 1Hz sequence)
   PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation
-  HOPS_NUMBER: 3 # number of correlation peaks used to determine celerity
   TUNING:
+    PEAK_DETECTION_HEIGHT_RATIO: 0.3
+    PEAK_DETECTION_DISTANCE_RATIO: 0.5
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
     MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
@@ -52,5 +51,5 @@ TEMPORAL_CORRELATION:
 #spatial_correlation
 SPATIAL_CORRELATION:
   CORRELATION_MODE: 'full' # np.correlate mode
-  AUGMENTED_RADON_FACTOR: 0.1 # radon_augmentation - augment the resolution of the radon transform
+  AUGMENTED_RADON_FACTOR: 0.01 # radon_augmentation - augment the resolution of the radon transform
   PEAK_POSITION_MAX_FACTOR: 0.8 # peak_position - factor tunning for the maximum peak position

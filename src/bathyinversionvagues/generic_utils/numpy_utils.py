@@ -5,6 +5,8 @@
 :author: Alain Giros
 """
 from functools import lru_cache
+from hashlib import sha1
+
 from typing import List
 
 import numpy as np
@@ -12,8 +14,8 @@ import numpy.typing as npt
 
 
 def sc_all(array: np.ndarray) -> bool:
-    for x in array.flat:
-        if not x:
+    for value in array.flat:
+        if not value:
             return False
     return True
 
@@ -46,15 +48,16 @@ def circular_mask(nb_lines: int, nb_columns: int, dtype: npt.DTypeLike) -> np.nd
     """
     inscribed_diameter = min(nb_lines, nb_columns)
     radius = inscribed_diameter // 2
-    image = np.zeros((nb_lines, nb_columns), dtype=dtype)
+    circle_in_rect = np.zeros((nb_lines, nb_columns), dtype=dtype)
     center_line = nb_lines // 2
     center_column = nb_columns // 2
     for line in range(nb_lines):
         for column in range(nb_columns):
             dist_to_center = (line - center_line)**2 + (column - center_column)**2
             if dist_to_center <= radius**2:
-                image[line][column] = 1  # used integral 1 to allow casting to the desired dtype
-    return image
+                # used integral 1 to allow casting to the desired dtype
+                circle_in_rect[line][column] = 1
+    return circle_in_rect
 
 
 def split_samples(samples: np.ndarray, nb_parts: int) -> List[np.ndarray]:
@@ -79,3 +82,29 @@ def dump_numpy_variable(variable: np.ndarray, variable_name: str) -> None:
     if variable is not None:
         print(f'{variable_name} {variable.shape} {variable.dtype}')
     print(variable)
+
+
+class HashableNdArray:
+    """ Hashable wrapper for ndarray objects.
+    """
+
+    def __init__(self, array: np.ndarray) -> None:
+        """ Creates a new hashable object encapsulating an ndarray.
+
+        :param array: The ndarray to encapsulate.
+        """
+        self._encapsulated_array = array
+        self._hash = int(sha1(array.view()).hexdigest(), 16)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, HashableNdArray):
+            return False
+        return all(self._encapsulated_array == other._encapsulated_array)
+
+    def __hash__(self) -> int:
+        return self._hash
+
+    def unwrap(self) -> np.ndarray:
+        """ Returns the encapsulated ndarray.
+        """
+        return self._encapsulated_array

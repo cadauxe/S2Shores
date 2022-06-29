@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-module -- Class encapsulating an image onto which waves estimation will be made
+""" Class encapsulating an image onto which wave field estimation will be made
 
 
 :author: Alain Giros
@@ -14,13 +13,12 @@ from typing import Tuple, Callable, List, Any
 import numpy as np
 
 from ..generic_utils.numpy_utils import circular_mask
+from ..image.image_geometry_types import ImageWindowType
 
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 
 
-# TODO: add the management of the image position
-# TODO: add the azimuth of the image, if known
 class WavesImage:
     def __init__(self, pixels: np.ndarray, resolution: float) -> None:
         """ Constructor
@@ -29,25 +27,22 @@ class WavesImage:
         :param resolution: Image resolution in meters
         """
         self.resolution = resolution
+
+        # FIXME: introduced until there is a true image versions management
+        self.original_pixels = pixels.copy()
         self.pixels = pixels
 
-        # #FIXME: Disk masking
-        # self.pixels = self.pixels * self.circle_image
-
-    def apply_filters(self, processing_filters: ImageProcessingFilters) -> None:
-        """ Apply filters on the image pixels in place
+    def apply_filters(self, processing_filters: ImageProcessingFilters) -> 'WavesImage':
+        """ Apply filters on the image pixels and return a new WavesImage
 
         :param processing_filters: A list of functions together with their parameters to apply
                                    sequentially to the image pixels.
+        :returns: a WavesImage with the result of the filters application
         """
-
+        result = self.original_pixels.copy()
         for processing_filter, filter_parameters in processing_filters:
-            self.pixels = processing_filter(self.pixels, *filter_parameters)
-
-    @property
-    def sampling_frequency(self) -> float:
-        """ :returns: The spatial sampling frequency of this image (m-1)"""
-        return 1. / self.resolution
+            result = processing_filter(result, *filter_parameters)
+        return WavesImage(result, self.resolution)
 
     @property
     def energy(self) -> float:
@@ -65,3 +60,13 @@ class WavesImage:
         """ :returns: The inscribed disk"""
         # FIXME: Ratio of the disk area on the chip area should be closer to PI/4 (0.02 difference)
         return circular_mask(self.pixels.shape[0], self.pixels.shape[1], self.pixels.dtype)
+
+    def extract_sub_image(self, window: ImageWindowType) -> 'WavesImage':
+        """ :param window: the window to extract from this image
+        :returns: a new WavesImage defined by a window inside this image.
+        """
+        return WavesImage(self.pixels[window[0]:window[1] + 1, window[2]:window[3] + 1],
+                          self.resolution)
+
+    def __str__(self) -> str:
+        return f'Resolution: {self.resolution}  Shape: {self.pixels.shape}:\n{self.pixels}'
