@@ -47,11 +47,10 @@ def sensitivity_indicator(wavelength: float, celerity: float, gravity: float) ->
         mu = d/dGAMMA / tanh(GAMMA)
         and the sensitivity is then 1 / mu:
     '''
-    sensitivity = np.full_like(gamma, np.nan)
-    cond_arctanh = np.where(abs(gamma) < 1.)
-    gamma=gamma[cond_arctanh]
-    sensitivity[not cond_arctanh] = SENSITIVITY_PRECISION
-    sensitivity[cond_arctanh]  = (1 / ((np.arctanh(gamma) + (gamma/(1-(gamma**2)))) / np.tanh(gamma) ) )
+    if abs(gamma) >= 1.:
+        sensitivity = SENSITIVITY_PRECISION
+    else:
+        sensitivity = (1 / ((np.arctanh(gamma) + (gamma/(1-(gamma**2)))) / np.tanh(gamma) ) )
     return sensitivity
 
 
