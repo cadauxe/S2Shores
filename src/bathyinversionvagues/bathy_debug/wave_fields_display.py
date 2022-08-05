@@ -9,17 +9,16 @@ Class managing the computation of wave fields from two images taken at a small t
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
+from typing import TYPE_CHECKING, List, Optional, Tuple  # @NoMove
 
-
-from matplotlib.axes import Axes
-from matplotlib.colors import Normalize
-
-from bathyinversionvagues.image_processing.waves_radon import WavesRadon
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.colors import Normalize
+from matplotlib.figure import Figure
 
+from bathyinversionvagues.image_processing.waves_radon import WavesRadon
 
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_dft_bathy_estimator \
@@ -122,6 +121,107 @@ def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     build_directional_2d_display(axs[0, 2], 'first radon transform', values, directions)
     values, directions = second_radon_transform.get_as_arrays()
     build_directional_2d_display(axs[1, 2], 'second radon transform', values, directions)
+    plt.show()
+
+
+def build_display_plot1(fig: Figure, axes: Axes, title: str, image: np.ndarray,
+                        directions: Optional[List[Tuple[float, float]]] = None,
+                        cmap: Optional[str] = None) -> None:
+    imin = np.min(image)
+    imax = np.max(image)
+    axes.tick_params(axis='both', labelsize=8)
+    imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
+    (l1, l2) = np.shape(image)
+    # Normalization of arrows length
+    coeff_length_max = np.max((list(zip(*directions))[1]))
+    radius = min(l1, l2) / 2
+    if directions is not None:
+        for direction, coeff_length in directions:
+            arrow_length = radius * coeff_length / coeff_length_max
+            dir_rad = np.deg2rad(direction)
+            axes.arrow(l1 // 2, l2 // 2,
+                       np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
+                       head_width=2, head_length=3, color='r')
+    axes.set_title(title, fontsize=8)
+    fig.colorbar(imsh, ax=axes, location='right', shrink=1.0)
+
+
+def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -> str:
+    title = f'{local_estimator.global_estimator._ortho_stack.short_name} {local_estimator.location}'
+    smooth_kernel_xsize = local_estimator.global_estimator.smoothing_lines_size
+    smooth_kernel_ysize = local_estimator.global_estimator.smoothing_columns_size
+    filter_info = ''
+    if smooth_kernel_xsize == 0 and smooth_kernel_ysize == 0:
+        filter_info = f' (i.e. Smoothing Filter DEACTIVATED!)'
+
+    return title + \
+        f'\n Smoothing Kernel Size = [{2 * smooth_kernel_xsize + 1}px*{2 * smooth_kernel_ysize + 1}px]' + filter_info
+
+
+def display_plot1(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+    plt.close('all')
+    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(12, 8))
+    fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    first_image = local_estimator.ortho_sequence[0]
+    #spatial_ref = local_estimator.global_estimator._ortho_stack.build_spatial_ref()
+    #epsg_code = local_estimator.global_estimator._ortho_stack.epsg_code
+    #up_left = local_estimator.global_estimator._ortho_stack._upper_left_corner
+    #low_right = local_estimator.global_estimator._ortho_stack._lower_right_corner
+    second_image = local_estimator.ortho_sequence[1]
+    # First Plot line = Image1 / pseudoRGB / Image2
+    build_display_plot1(fig, axs[0, 0], 'Image1 [RAW]', first_image.original_pixels,
+                        directions=arrows, cmap='gray')
+    build_display_plot1(fig, axs[0, 1], 'Image1 [RAW] - Image2 [RAW]', first_image.original_pixels - second_image.original_pixels,
+                        directions=arrows, cmap='cool')
+    build_display_plot1(fig, axs[0, 2], 'Image2 [RAW]', second_image.original_pixels,
+                        directions=arrows, cmap='gray')
+    # Second Plot line = Image1 Filtered / pseudoRGB Filtered/ Image2 Filtered
+    build_display_plot1(fig, axs[1, 0], 'Image1 Filtered', first_image.pixels,
+                        directions=arrows, cmap='gray')
+    build_display_plot1(fig, axs[1, 1], 'Image1 Filtered - Image2 Filtered', first_image.pixels - second_image.pixels,
+                        directions=arrows, cmap='cool')
+    build_display_plot1(fig, axs[1, 2], 'Image2 Filtered', second_image.pixels,
+                        directions=arrows, cmap='gray')
+    # Third Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
+    image1_circle_filtered = first_image.pixels * first_image.circle_image
+    image2_circle_filtered = second_image.pixels * second_image.circle_image
+    build_display_plot1(fig, axs[2, 0], 'Image1 Circle Filtered', image1_circle_filtered,
+                        directions=arrows, cmap='gray')
+    build_display_plot1(fig, axs[2, 1], 'Image1 Circle Filtered - Image2 Circle Filtered', image1_circle_filtered - image2_circle_filtered,
+                        directions=arrows, cmap='cool')
+    build_display_plot1(fig, axs[2, 2], 'Image2 Circle Filtered', image2_circle_filtered,
+                        directions=arrows, cmap='gray')
+    plt.show()
+
+
+def display_plot2(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+    plt.close('all')
+    fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
+    fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    first_image = local_estimator.ortho_sequence[0]
+    second_image = local_estimator.ortho_sequence[1]
+    # First Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
+    image1_circle_filtered = first_image.pixels * first_image.circle_image
+    image2_circle_filtered = second_image.pixels * second_image.circle_image
+    build_display_plot1(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
+                        directions=arrows, cmap='gray')
+    build_display_plot1(fig, axs[0, 1], 'Image1 Circle Filtered - Image2 Circle Filtered', image1_circle_filtered - image2_circle_filtered,
+                        directions=arrows, cmap='cool')
+    build_display_plot1(fig, axs[0, 2], 'Image2 Circle Filtered', image2_circle_filtered,
+                        directions=arrows, cmap='gray')
+    # Second Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
+    first_radon_transform = local_estimator.radon_transforms[0]
+    values1, directions1 = first_radon_transform.get_as_arrays()
+    second_radon_transform = local_estimator.radon_transforms[1]
+    values2, directions2 = second_radon_transform.get_as_arrays()
+    radon_difference = np.abs(values2 - values1)
+
+    build_directional_2d_display(axs[1, 0], 'first radon transform', values1, directions1)
+    build_directional_2d_display(axs[1, 1], 'radon2 - radon1', radon_difference, directions2)
+    build_directional_2d_display(axs[1, 2], 'second radon transform', values2, directions2)
+
     plt.show()
 
 

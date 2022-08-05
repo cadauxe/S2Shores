@@ -10,10 +10,12 @@
 import numpy as np
 
 from ..generic_utils.numpy_utils import dump_numpy_variable
-from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
-
+from ..local_bathymetry.spatial_dft_bathy_estimator import \
+    SpatialDFTBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .wave_fields_display import display_initial_data, display_radon_transforms, display_context
+from .wave_fields_display import (display_context, display_initial_data,
+                                  display_plot1, display_plot2,
+                                  display_radon_transforms)
 
 
 class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
@@ -27,10 +29,12 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         print(self.bathymetry_estimations)
 
         # Displays
-        display_initial_data(self)
-        display_radon_transforms(self)
-        display_radon_transforms(self, refinement_phase=True)
-        display_context(self)
+        # display_initial_data(self)
+        display_plot1(self)
+        display_plot2(self)
+        # display_radon_transforms(self)
+        #display_radon_transforms(self, refinement_phase=True)
+        # display_context(self)
 
     def print_variables(self) -> None:
         metrics = self.metrics
