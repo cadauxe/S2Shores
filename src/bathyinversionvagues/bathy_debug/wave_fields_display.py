@@ -86,9 +86,9 @@ def build_directional_2d_display(axes: Axes, title: str, values: np.ndarray,
     imin = np.min(values)
     imax = np.max(values)
     axes.imshow(values, norm=Normalize(vmin=imin, vmax=imax), extent=extent, **kwargs)
-    axes.set_xticks(directions[::20])
+    axes.set_xticks(directions[::40])
     plt.setp(axes.get_xticklabels(), fontsize=8)
-    axes.set_title(title)
+    axes.set_title(title, fontsize=10)
 
 
 def build_directional_curve_display(axes: Axes, title: str,
@@ -124,28 +124,6 @@ def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.show()
 
 
-def build_display_plot1(fig: Figure, axes: Axes, title: str, image: np.ndarray,
-                        directions: Optional[List[Tuple[float, float]]] = None,
-                        cmap: Optional[str] = None) -> None:
-    imin = np.min(image)
-    imax = np.max(image)
-    axes.tick_params(axis='both', labelsize=8)
-    imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
-    (l1, l2) = np.shape(image)
-    # Normalization of arrows length
-    coeff_length_max = np.max((list(zip(*directions))[1]))
-    radius = min(l1, l2) / 2
-    if directions is not None:
-        for direction, coeff_length in directions:
-            arrow_length = radius * coeff_length / coeff_length_max
-            dir_rad = np.deg2rad(direction)
-            axes.arrow(l1 // 2, l2 // 2,
-                       np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
-                       head_width=2, head_length=3, color='r')
-    axes.set_title(title, fontsize=8)
-    fig.colorbar(imsh, ax=axes, location='right', shrink=1.0)
-
-
 def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -> str:
     title = f'{local_estimator.global_estimator._ortho_stack.short_name} {local_estimator.location}'
     smooth_kernel_xsize = local_estimator.global_estimator.smoothing_lines_size
@@ -158,7 +136,67 @@ def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -
         f'\n Smoothing Kernel Size = [{2 * smooth_kernel_xsize + 1}px*{2 * smooth_kernel_ysize + 1}px]' + filter_info
 
 
-def display_plot1(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+def create_pseudorgb(image1: np.ndarray, image2: np.ndarray,) -> np.ndarray:
+    ps_rgb = np.dstack((image2, image1, image2))
+    ps_rgb = ps_rgb - ps_rgb.min()
+    return ps_rgb / ps_rgb.max()
+
+
+def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarray,
+                            resolution: float,
+                            directions: Optional[List[Tuple[float, float]]] = None,
+                            cmap: Optional[str] = None) -> None:
+    imin = np.min(image)
+    imax = np.max(image)
+    #imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
+    axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
+    (l1, l2, l3) = np.shape(image)
+    xmax = f'{l1}px \n {np.round((l1-1)*resolution)}m'
+    axes.set_xticks([0, l1 - 1], ['0', xmax], fontsize=8)
+    ymax = f'{l2}px \n {np.round((l2-1)*resolution)}m'
+    axes.set_yticks([0, l2 - 1], [ymax, '0'], fontsize=8)
+    # Normalization of arrows length
+    coeff_length_max = np.max((list(zip(*directions))[1]))
+    radius = min(l1, l2) / 2
+    if directions is not None:
+        for direction, coeff_length in directions:
+            arrow_length = radius * coeff_length / coeff_length_max
+            dir_rad = np.deg2rad(direction)
+            axes.arrow(l1 // 2, l2 // 2,
+                       np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
+                       head_width=2, head_length=3, color='r')
+    axes.set_title(title, fontsize=8)
+    #fig.colorbar(imsh, ax=axes, location='right', shrink=1.0)
+
+
+def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.ndarray,
+                              resolution: float,
+                              directions: Optional[List[Tuple[float, float]]] = None,
+                              cmap: Optional[str] = None) -> None:
+    imin = np.min(image)
+    imax = np.max(image)
+    #imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
+    axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
+    (l1, l2) = np.shape(image)
+    xmax = f'{l1}px \n {np.round((l1-1)*resolution)}m'
+    axes.set_xticks([0, l1 - 1], ['0', xmax], fontsize=8)
+    ymax = f'{l2}px \n {np.round((l2-1)*resolution)}m'
+    axes.set_yticks([0, l2 - 1], [ymax, '0'], fontsize=8)
+    # Normalization of arrows length
+    coeff_length_max = np.max((list(zip(*directions))[1]))
+    radius = min(l1, l2) / 2
+    if directions is not None:
+        for direction, coeff_length in directions:
+            arrow_length = radius * coeff_length / coeff_length_max
+            dir_rad = np.deg2rad(direction)
+            axes.arrow(l1 // 2, l2 // 2,
+                       np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
+                       head_width=2, head_length=3, color='r')
+    axes.set_title(title, fontsize=8)
+    #fig.colorbar(imsh, ax=axes, location='right', shrink=1.0)
+
+
+def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.close('all')
     fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
@@ -169,33 +207,79 @@ def display_plot1(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     #up_left = local_estimator.global_estimator._ortho_stack._upper_left_corner
     #low_right = local_estimator.global_estimator._ortho_stack._lower_right_corner
     second_image = local_estimator.ortho_sequence[1]
+    pseudo_rgb = create_pseudorgb(first_image.original_pixels, second_image.original_pixels)
     # First Plot line = Image1 / pseudoRGB / Image2
-    build_display_plot1(fig, axs[0, 0], 'Image1 [RAW]', first_image.original_pixels,
-                        directions=arrows, cmap='gray')
-    build_display_plot1(fig, axs[0, 1], 'Image1 [RAW] - Image2 [RAW]', first_image.original_pixels - second_image.original_pixels,
-                        directions=arrows, cmap='cool')
-    build_display_plot1(fig, axs[0, 2], 'Image2 [RAW]', second_image.original_pixels,
-                        directions=arrows, cmap='gray')
+    build_display_waves_image(fig, axs[0, 0], 'Image1', first_image.original_pixels,
+                              resolution=first_image.resolution,
+                              directions=arrows, cmap='gray', )
+    build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB', pseudo_rgb,
+                            resolution=first_image.resolution,
+                            directions=arrows)
+    build_display_waves_image(fig, axs[0, 2], 'Image2', second_image.original_pixels,
+                              resolution=second_image.resolution,
+                              directions=arrows, cmap='gray')
     # Second Plot line = Image1 Filtered / pseudoRGB Filtered/ Image2 Filtered
-    build_display_plot1(fig, axs[1, 0], 'Image1 Filtered', first_image.pixels,
-                        directions=arrows, cmap='gray')
-    build_display_plot1(fig, axs[1, 1], 'Image1 Filtered - Image2 Filtered', first_image.pixels - second_image.pixels,
-                        directions=arrows, cmap='cool')
-    build_display_plot1(fig, axs[1, 2], 'Image2 Filtered', second_image.pixels,
-                        directions=arrows, cmap='gray')
+    pseudo_rgb_filtered = create_pseudorgb(first_image.pixels, second_image.pixels)
+    build_display_waves_image(fig, axs[1, 0], 'Image1 Filtered', first_image.pixels,
+                              resolution=first_image.resolution,
+                              directions=arrows, cmap='gray')
+    build_display_pseudorgb(fig, axs[1, 1], 'Pseudo RGB Filtered', pseudo_rgb_filtered,
+                            resolution=first_image.resolution,
+                            directions=arrows)
+    build_display_waves_image(fig, axs[1, 2], 'Image2 Filtered', second_image.pixels,
+                              resolution=second_image.resolution,
+                              directions=arrows, cmap='gray')
     # Third Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
     image2_circle_filtered = second_image.pixels * second_image.circle_image
-    build_display_plot1(fig, axs[2, 0], 'Image1 Circle Filtered', image1_circle_filtered,
-                        directions=arrows, cmap='gray')
-    build_display_plot1(fig, axs[2, 1], 'Image1 Circle Filtered - Image2 Circle Filtered', image1_circle_filtered - image2_circle_filtered,
-                        directions=arrows, cmap='cool')
-    build_display_plot1(fig, axs[2, 2], 'Image2 Circle Filtered', image2_circle_filtered,
-                        directions=arrows, cmap='gray')
+    pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
+    build_display_waves_image(fig, axs[2, 0], 'Image1 Circle Filtered', image1_circle_filtered,
+                              resolution=first_image.resolution,
+                              directions=arrows, cmap='gray')
+    build_display_pseudorgb(fig, axs[2, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
+                            resolution=first_image.resolution,
+                            directions=arrows)
+    build_display_waves_image(fig, axs[2, 2], 'Image2 Circle Filtered', image2_circle_filtered,
+                              resolution=second_image.resolution,
+                              directions=arrows, cmap='gray')
     plt.show()
 
 
-def display_plot2(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+def build_sinogram_display(axes: Axes, title: str, values: np.ndarray, directions: np.ndarray,
+                           ordonate: bool=True, **kwargs: dict) -> None:
+    extent = [np.min(directions), np.max(directions), 0, values.shape[0]]
+    imin = np.min(values)
+    imax = np.max(values)
+    axes.imshow(values, norm=Normalize(vmin=imin, vmax=imax), extent=extent, **kwargs)
+    axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
+    # axes.set_xticks(directions[::90])
+    axes.set_xticks(np.arange(-180, 181, 90))
+    if ordonate:
+        axes.set_ylabel(r'$\rho$ [pixels]', fontsize=8)
+    else:
+        axes.yaxis.set_ticklabels([])
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+    axes.set_title(title, fontsize=10)
+    axes.tick_params(axis='both', which='major', labelsize=8)
+
+
+def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray,
+                                      directions: np.ndarray, cmap: Optional[str] = None,
+                                      **kwargs: dict) -> None:
+    extent = [np.min(directions), np.max(directions), 0, values.shape[0]]
+    imin = np.min(values)
+    imax = np.max(values)
+    axes.imshow(values, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap, extent=extent, **kwargs)
+    axes.grid(lw=0.5, color='black', alpha=0.7, linestyle='-')
+    axes.yaxis.set_ticklabels([])
+    # axes.set_xticks(directions[::90])
+    axes.set_xticks(np.arange(-180, 181, 90))
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+    axes.set_title(title, fontsize=10)
+    axes.tick_params(axis='both', which='major', labelsize=8)
+
+
+def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.close('all')
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
@@ -205,24 +289,89 @@ def display_plot2(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     # First Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
     image2_circle_filtered = second_image.pixels * second_image.circle_image
-    build_display_plot1(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
-                        directions=arrows, cmap='gray')
-    build_display_plot1(fig, axs[0, 1], 'Image1 Circle Filtered - Image2 Circle Filtered', image1_circle_filtered - image2_circle_filtered,
-                        directions=arrows, cmap='cool')
-    build_display_plot1(fig, axs[0, 2], 'Image2 Circle Filtered', image2_circle_filtered,
-                        directions=arrows, cmap='gray')
+    pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
+    build_display_waves_image(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
+                              resolution=first_image.resolution,
+                              directions=arrows, cmap='gray')
+    build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
+                            resolution=first_image.resolution,
+                            directions=arrows)
+    build_display_waves_image(fig, axs[0, 2], 'Image2 Circle Filtered', image2_circle_filtered,
+                              resolution=second_image.resolution,
+                              directions=arrows, cmap='gray')
     # Second Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
+    first_radon_transform = local_estimator.radon_transforms[0]
+    sinogram1, directions1 = first_radon_transform.get_as_arrays()
+    second_radon_transform = local_estimator.radon_transforms[1]
+    sinogram2, directions2 = second_radon_transform.get_as_arrays()
+    radon_difference = np.abs(sinogram2 - sinogram1)
+
+    build_sinogram_display(
+        axs[1, 0], 'Sinogram1 [Radon Transform on Image1]', sinogram1, directions1)
+    build_sinogram_difference_display(
+        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, cmap='bwr')
+    build_sinogram_display(
+        axs[1, 2], 'Sinogram2 [Radon Transform on Image2]', sinogram2, directions2, ordonate=False)
+
+    plt.show()
+
+
+def display_plot3(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+    plt.close('all')
+    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(12, 8))
+    fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    first_image = local_estimator.ortho_sequence[0]
+    second_image = local_estimator.ortho_sequence[1]
+    # First Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
     first_radon_transform = local_estimator.radon_transforms[0]
     values1, directions1 = first_radon_transform.get_as_arrays()
     second_radon_transform = local_estimator.radon_transforms[1]
     values2, directions2 = second_radon_transform.get_as_arrays()
     radon_difference = np.abs(values2 - values1)
 
-    build_directional_2d_display(axs[1, 0], 'first radon transform', values1, directions1)
-    build_directional_2d_display(axs[1, 1], 'radon2 - radon1', radon_difference, directions2)
-    build_directional_2d_display(axs[1, 2], 'second radon transform', values2, directions2)
+    build_directional_2d_display(axs[0, 0], 'first radon transform', values1, directions1)
+    build_directional_2d_display(axs[0, 1], 'radon2 - radon1', radon_difference, directions2)
+    build_directional_2d_display(axs[0, 2], 'second radon transform', values2, directions2)
+    # Second Plot line = Spectral amplitude sinogram 1 / CSM Amplitude /
+    # Spectral amplitude sinogram 2
+    sino1_fft = first_radon_transform.get_sinograms_standard_dfts()
+    sino2_fft = second_radon_transform.get_sinograms_standard_dfts()
+    build_directional_2d_display(
+        axs[1, 0], 'Spectral Amplitude Sinograms1 DFT', np.abs(sino1_fft), directions1)
+    build_correl_spectrum_plot3(axs[1, 1], local_estimator, sino1_fft,
+                                sino2_fft, 'Cross correlation spectrum')
+    build_directional_2d_display(axs[1, 2], 'Spectral Amplitude Sinograms2 DFT', np.abs(
+        sino2_fft), directions2)
+    # Third Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
 
     plt.show()
+
+
+def build_correl_spectrum_plot3(axs: Axes, local_estimator: 'SpatialDFTBathyEstimator', sino1_fft: np.ndarray, sino2_fft: np.ndarray,
+                                title: str, refinement_phase: bool=False) -> None:
+    radon_transform = local_estimator.radon_transforms[0]
+    if not refinement_phase:
+        _, directions = radon_transform.get_as_arrays()
+    else:
+        directions = radon_transform.directions_interpolated_dft
+    metrics = local_estimator.metrics
+    key = 'interpolated_dft' if refinement_phase else 'standard_dft'
+    sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
+    total_spectrum = metrics[key]['total_spectrum']
+    total_spectrum_normalized = metrics[key]['total_spectrum_normalized']
+    max_heta = metrics[key]['max_heta']
+    phase_shift, spectrum_amplitude, sinograms_correlation_fft = \
+        local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
+
+    # build_directional_2d_display(axs[1], 'Sinograms correlation DFT module',
+    #                             np.abs(sinograms_correlation_fft), directions)
+    # build_directional_2d_display(axs[2], 'Sinograms correlation DFT Phase',
+    #                             np.angle(sinograms_correlation_fft), directions)
+    # build_directional_2d_display(axs[4], 'Sinograms correlation total spectrum',
+    #                             total_spectrum, directions)
+    build_directional_curve_display(axs[5], 'Sinograms correlation total spectrum normalized',
+                                    total_spectrum_normalized, directions)
 
 
 def display_radon_transforms(local_estimator: 'SpatialDFTBathyEstimator',
