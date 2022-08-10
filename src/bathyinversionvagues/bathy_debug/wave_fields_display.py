@@ -144,13 +144,28 @@ def create_pseudorgb(image1: np.ndarray, image2: np.ndarray,) -> np.ndarray:
 
 def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarray,
                             resolution: float,
+                            subplot_pos: [float, float, float],
                             directions: Optional[List[Tuple[float, float]]] = None,
                             cmap: Optional[str] = None) -> None:
+
+    (l1, l2, l3) = np.shape(image)
     imin = np.min(image)
     imax = np.max(image)
     #imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
     axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
-    (l1, l2, l3) = np.shape(image)
+    axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
+    # create polar axes in the foreground and remove its background to see through
+    subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
+    ax_polar = fig.add_subplot(subplot_locator, polar=True)
+    ax_polar.set_yticklabels([])
+    polar_ticks = np.arange(4) * np.pi / 2.
+    polar_labels = ['0°', '90°', '180°', '-90°']
+
+    plt.xticks(polar_ticks, polar_labels, size=9, color='blue')
+    for i, label in enumerate(ax_polar.get_xticklabels()):
+        label.set_rotation(i * 45)
+    ax_polar.set_facecolor("None")
+
     xmax = f'{l1}px \n {np.round((l1-1)*resolution)}m'
     axes.set_xticks([0, l1 - 1], ['0', xmax], fontsize=8)
     ymax = f'{l2}px \n {np.round((l2-1)*resolution)}m'
@@ -165,19 +180,37 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
             axes.arrow(l1 // 2, l2 // 2,
                        np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
                        head_width=2, head_length=3, color='r')
-    axes.set_title(title, fontsize=8)
+
+    axes.xaxis.tick_top()
+    axes.set_title(title, fontsize=9, loc='left')
     #fig.colorbar(imsh, ax=axes, location='right', shrink=1.0)
+    # Manage blank spaces
+    plt.tight_layout()
 
 
 def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.ndarray,
                               resolution: float,
+                              subplot_pos: [float, float, float],
                               directions: Optional[List[Tuple[float, float]]] = None,
                               cmap: Optional[str] = None) -> None:
+
+    (l1, l2) = np.shape(image)
     imin = np.min(image)
     imax = np.max(image)
     #imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
     axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
-    (l1, l2) = np.shape(image)
+    # create polar axes in the foreground and remove its background to see through
+    subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
+    ax_polar = fig.add_subplot(subplot_locator, polar=True)
+    ax_polar.set_yticklabels([])
+    polar_ticks = np.arange(4) * np.pi / 2.
+    polar_labels = ['0°', '90°', '180°', '-90°']
+
+    plt.xticks(polar_ticks, polar_labels, size=9, color='blue')
+    for i, label in enumerate(ax_polar.get_xticklabels()):
+        label.set_rotation(i * 45)
+    ax_polar.set_facecolor("None")
+
     xmax = f'{l1}px \n {np.round((l1-1)*resolution)}m'
     axes.set_xticks([0, l1 - 1], ['0', xmax], fontsize=8)
     ymax = f'{l2}px \n {np.round((l2-1)*resolution)}m'
@@ -192,13 +225,18 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
             axes.arrow(l1 // 2, l2 // 2,
                        np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
                        head_width=2, head_length=3, color='r')
-    axes.set_title(title, fontsize=8)
-    #fig.colorbar(imsh, ax=axes, location='right', shrink=1.0)
+
+    axes.xaxis.tick_top()
+    axes.set_title(title, fontsize=9, loc='left')
+    # Manage blank spaces
+    plt.tight_layout()
 
 
 def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.close('all')
-    fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(12, 8))
+    nrows = 3
+    ncols = 3
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
@@ -211,23 +249,29 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     # First Plot line = Image1 / pseudoRGB / Image2
     build_display_waves_image(fig, axs[0, 0], 'Image1', first_image.original_pixels,
                               resolution=first_image.resolution,
+                              subplot_pos=[nrows, ncols, 1],
                               directions=arrows, cmap='gray', )
     build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB', pseudo_rgb,
                             resolution=first_image.resolution,
+                            subplot_pos=[nrows, ncols, 2],
                             directions=arrows)
     build_display_waves_image(fig, axs[0, 2], 'Image2', second_image.original_pixels,
                               resolution=second_image.resolution,
+                              subplot_pos=[nrows, ncols, 3],
                               directions=arrows, cmap='gray')
     # Second Plot line = Image1 Filtered / pseudoRGB Filtered/ Image2 Filtered
     pseudo_rgb_filtered = create_pseudorgb(first_image.pixels, second_image.pixels)
     build_display_waves_image(fig, axs[1, 0], 'Image1 Filtered', first_image.pixels,
                               resolution=first_image.resolution,
+                              subplot_pos=[nrows, ncols, 4],
                               directions=arrows, cmap='gray')
     build_display_pseudorgb(fig, axs[1, 1], 'Pseudo RGB Filtered', pseudo_rgb_filtered,
                             resolution=first_image.resolution,
+                            subplot_pos=[nrows, ncols, 5],
                             directions=arrows)
     build_display_waves_image(fig, axs[1, 2], 'Image2 Filtered', second_image.pixels,
                               resolution=second_image.resolution,
+                              subplot_pos=[nrows, ncols, 6],
                               directions=arrows, cmap='gray')
     # Third Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
@@ -235,12 +279,15 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
     build_display_waves_image(fig, axs[2, 0], 'Image1 Circle Filtered', image1_circle_filtered,
                               resolution=first_image.resolution,
+                              subplot_pos=[nrows, ncols, 7],
                               directions=arrows, cmap='gray')
     build_display_pseudorgb(fig, axs[2, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
                             resolution=first_image.resolution,
+                            subplot_pos=[nrows, ncols, 8],
                             directions=arrows)
     build_display_waves_image(fig, axs[2, 2], 'Image2 Circle Filtered', image2_circle_filtered,
                               resolution=second_image.resolution,
+                              subplot_pos=[nrows, ncols, 9],
                               directions=arrows, cmap='gray')
     plt.show()
 
@@ -281,7 +328,9 @@ def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray
 
 def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.close('all')
-    fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
+    nrows = 2
+    ncols = 3
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
@@ -291,13 +340,16 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     image2_circle_filtered = second_image.pixels * second_image.circle_image
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
     build_display_waves_image(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
+                              subplot_pos=[nrows, ncols, 1],
                               resolution=first_image.resolution,
                               directions=arrows, cmap='gray')
     build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
                             resolution=first_image.resolution,
+                            subplot_pos=[nrows, ncols, 2],
                             directions=arrows)
     build_display_waves_image(fig, axs[0, 2], 'Image2 Circle Filtered', image2_circle_filtered,
                               resolution=second_image.resolution,
+                              subplot_pos=[nrows, ncols, 3],
                               directions=arrows, cmap='gray')
     # Second Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
     first_radon_transform = local_estimator.radon_transforms[0]
