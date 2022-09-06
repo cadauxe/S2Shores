@@ -30,7 +30,7 @@ def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, 
     cond = demiperiods > (min_period / 2)
     demiperiods = demiperiods[cond]
     if not demiperiods.any():
-        raise ValueError('No demiperiod have been found on the signal')
+        raise WavesEstimationError('No demiperiod have been found on the signal')
     period = 2 * float(np.mean(demiperiods))
     return period, np.concatenate((np.array([zeros[0]]), zeros[1:][cond]))
 
