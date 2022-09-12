@@ -9,6 +9,7 @@ Class managing the computation of wave fields from two images taken at a small t
 :license: see LICENSE file
 :created: 5 mars 2021
 """
+import os
 from typing import TYPE_CHECKING, List, Optional, Tuple  # @NoMove
 
 import matplotlib.animation as animation
@@ -305,6 +306,11 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
                               subplot_pos=[nrows, ncols, 9],
                               directions=arrows, cmap='gray', coordinates=False)
     plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            local_estimator.global_estimator._debug_path,
+            "display_waves_images.png"),
+        dpi=300)
     plt.show()
 
 
@@ -403,6 +409,11 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
         ordonate=False)
 
     plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            local_estimator.global_estimator._debug_path,
+            "display_sinograms.png"),
+        dpi=300)
     plt.show()
 
 
@@ -536,6 +547,11 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
         np.abs(sino2_fft) * csm_phase, directions2, kfft, ordonate=False)
 
     plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            local_estimator.global_estimator._debug_path,
+            "display_sinograms_spectral_analysis.png"),
+        dpi=300)
     plt.show()
 
 
