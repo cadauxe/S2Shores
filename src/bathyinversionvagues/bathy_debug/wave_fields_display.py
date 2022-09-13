@@ -321,8 +321,7 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     #imin = np.min(values1)
     #imax = np.max(values1)
     #axes.imshow(values1, norm=Normalize(vmin=imin, vmax=imax), extent=extent, **kwargs)
-    extent = [np.min(directions),
-              np.max(directions),
+    extent = [np.min(directions), np.max(directions),
               np.ceil(-values1.shape[0] / 2),
               np.floor(values1.shape[0] / 2)]
     axes.imshow(values1, aspect='auto', extent=extent, **kwargs)
@@ -334,8 +333,8 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
               color="white", lw=0.8)
 
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    # axes.set_xticks(directions[::90])
-    axes.set_xticks(np.arange(-180, 181, 90))
+    axes.set_xlim(-120, 120)
+    axes.set_xticks(np.arange(-120, 121, 40))
     if ordonate:
         axes.set_ylabel(r'$\rho$ [pixels]', fontsize=8)
     else:
@@ -352,15 +351,14 @@ def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray
     #imin = np.min(values)
     #imax = np.max(values)
     #axes.imshow(values, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap, extent=extent, **kwargs)
-    extent = [np.min(directions),
-              np.max(directions),
+    extent = [np.min(directions), np.max(directions),
               np.ceil(-values.shape[0] / 2),
               np.floor(values.shape[0] / 2)]
     axes.imshow(values, cmap=cmap, aspect='auto', extent=extent, **kwargs)
     axes.grid(lw=0.5, color='black', alpha=0.7, linestyle='-')
     axes.yaxis.set_ticklabels([])
-    # axes.set_xticks(directions[::90])
-    axes.set_xticks(np.arange(-180, 181, 90))
+    axes.set_xlim(-120, 120)
+    axes.set_xticks(np.arange(-120, 121, 40))
     plt.setp(axes.get_xticklabels(), fontsize=8)
     axes.set_title(title, fontsize=10)
     axes.tick_params(axis='both', which='major', labelsize=8)
@@ -425,8 +423,9 @@ def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
     axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
               color="white", lw=0.7)
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    # axes.set_xticks(directions[::90])
-    axes.set_xticks(np.arange(-180, 181, 90))
+    axes.set_xlim(-120, 120)
+    axes.set_xticks(np.arange(-120, 121, 40))
+
     if ordonate:
         axes.set_ylabel(r'Wavenumber $\nu$ [m$^{-1}$]', fontsize=8)
     else:
@@ -449,8 +448,8 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
                   color="orange", lw=0.7)
 
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    # axes.set_xticks(directions[::90])
-    axes.set_xticks(np.arange(-180, 181, 90))
+    axes.set_xlim(-120, 120)
+    axes.set_xticks(np.arange(-120, 121, 40))
     if ordonate:
         axes.set_ylabel(r'Wavenumber $\nu$ [m$^{-1}$]', fontsize=8)
     else:
