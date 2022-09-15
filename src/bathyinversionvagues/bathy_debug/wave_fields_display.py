@@ -316,7 +316,7 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
 def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
                            values2: np.ndarray,
-                           ordonate: bool=True, **kwargs: dict) -> None:
+                           ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
     #extent = [np.min(directions), np.max(directions), 0, values1.shape[0]]
     #imin = np.min(values1)
     #imax = np.max(values1)
@@ -327,25 +327,32 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     axes.imshow(values1, aspect='auto', extent=extent, **kwargs)
     axes.plot(directions,
               (np.var(values2, axis=0) / np.max(np.var(values2, axis=0)) - 0.5) * values2.shape[0],
-              color="red", lw=1, ls='--')
+              color="red", lw=1, ls='--', label='Normalized Variance \n Comparative Sinogram')
     axes.plot(directions,
               (np.var(values1, axis=0) / np.max(np.var(values1, axis=0)) - 0.5) * values1.shape[0],
-              color="white", lw=0.8)
-
+              color="white", lw=0.8, label='Normalized Variance \n Reference Sinogram')
+    legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
+    # Put a nicer background color on the legend.
+    legend.get_frame().set_facecolor('C0')
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    axes.set_xlim(-120, 120)
-    axes.set_xticks(np.arange(-120, 121, 40))
+    axes.set_xlim(-135, 135)
+    axes.set_xticks(np.arange(-135, 136, 45))
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+
     if ordonate:
         axes.set_ylabel(r'$\rho$ [pixels]', fontsize=8)
     else:
         axes.yaxis.set_ticklabels([])
-    plt.setp(axes.get_xticklabels(), fontsize=8)
+    if abscissa:
+        axes.set_xlabel(r'Direction Angle $\theta$ [degrees]', fontsize=8)
+
     axes.set_title(title, fontsize=10)
     axes.tick_params(axis='both', which='major', labelsize=8)
 
 
 def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray,
-                                      directions: np.ndarray, cmap: Optional[str] = None,
+                                      directions: np.ndarray,
+                                      abscissa: bool=True, cmap: Optional[str] = None,
                                       **kwargs: dict) -> None:
     #extent = [np.min(directions), np.max(directions), 0, values.shape[0]]
     #imin = np.min(values)
@@ -357,9 +364,13 @@ def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray
     axes.imshow(values, cmap=cmap, aspect='auto', extent=extent, **kwargs)
     axes.grid(lw=0.5, color='black', alpha=0.7, linestyle='-')
     axes.yaxis.set_ticklabels([])
-    axes.set_xlim(-120, 120)
-    axes.set_xticks(np.arange(-120, 121, 40))
+    axes.set_xlim(-135, 135)
+    axes.set_xticks(np.arange(-135, 136, 45))
     plt.setp(axes.get_xticklabels(), fontsize=8)
+
+    if abscissa:
+        axes.set_xlabel(r'Direction Angle $\theta$ [degrees]', fontsize=8)
+
     axes.set_title(title, fontsize=10)
     axes.tick_params(axis='both', which='major', labelsize=8)
 
@@ -417,51 +428,66 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
 
 def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
                                     directions: np.ndarray, kfft: np.ndarray,
-                                    ordonate: bool=True, **kwargs: dict) -> None:
+                                    ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
     extent = [np.min(directions), np.max(directions), 0, kfft.max()]
     axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
-    axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
-              color="white", lw=0.7)
+    # axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
+    #          color="white", lw=0.7)
+    axes.plot(directions, ((np.max(values, axis=0) / np.max(np.max(values, axis=0))) * kfft.max()),
+              color="white", lw=0.7, label='Normalized Maximum')
+    legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
+    # Put a nicer background color on the legend.
+    legend.get_frame().set_facecolor('C0')
+
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    axes.set_xlim(-120, 120)
-    axes.set_xticks(np.arange(-120, 121, 40))
+    axes.set_xlim(-135, 135)
+    axes.set_xticks(np.arange(-135, 136, 45))
+    plt.setp(axes.get_xticklabels(), fontsize=8)
 
     if ordonate:
         axes.set_ylabel(r'Wavenumber $\nu$ [m$^{-1}$]', fontsize=8)
     else:
         axes.yaxis.set_ticklabels([])
-    plt.setp(axes.get_xticklabels(), fontsize=8)
+    if abscissa:
+        axes.set_xlabel(r'Direction Angle $\theta$ [degrees]', fontsize=8)
+
     axes.set_title(title, fontsize=10)
     axes.tick_params(axis='both', which='major', labelsize=8)
 
 
 def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, directions: np.ndarray,
-                               kfft: np.ndarray, type: str, ordonate: bool=True,
-                               **kwargs: dict) -> None:
+                               kfft: np.ndarray, type: str,
+                               ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
 
     extent = [np.min(directions), np.max(directions), 0, kfft.max()]
     axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
     if type == 'amplitude':
         axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
-                  color="white", lw=0.7)
+                  color="white", lw=0.7, label='Normalized Variance')
         axes.plot(directions, ((np.max(values, axis=0) / np.max(np.max(values, axis=0))) * kfft.max()),
-                  color="orange", lw=0.7)
-
+                  color="orange", lw=0.7, label='Normalized Maximum')
+        legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
+        # Put a nicer background color on the legend.
+        legend.get_frame().set_facecolor('C0')
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    axes.set_xlim(-120, 120)
-    axes.set_xticks(np.arange(-120, 121, 40))
+    axes.set_xlim(-135, 135)
+    axes.set_xticks(np.arange(-135, 136, 45))
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+
     if ordonate:
         axes.set_ylabel(r'Wavenumber $\nu$ [m$^{-1}$]', fontsize=8)
     else:
         axes.yaxis.set_ticklabels([])
-    plt.setp(axes.get_xticklabels(), fontsize=8)
+    if abscissa:
+        axes.set_xlabel(r'Direction Angle $\theta$ [degrees]', fontsize=8)
+
     axes.set_title(title, fontsize=10)
     axes.tick_params(axis='both', which='major', labelsize=8)
 
 
 def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEstimator',
                                  sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
-                                 type: str, title: str, ordonate: bool=True,
+                                 type: str, title: str, ordonate: bool=True, abscissa: bool=True,
                                  refinement_phase: bool=False) -> None:
     radon_transform = local_estimator.radon_transforms[0]
     if not refinement_phase:
@@ -486,9 +512,10 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     if type == 'amplitude':
-        build_sinogram_fft_display(axes, title, csm_amplitude, directions, kfft, type, ordonate)
+        build_sinogram_fft_display(axes, title, csm_amplitude, directions, kfft,
+                                   type, abscissa=False)
     if type == 'phase':
-        build_sinogram_fft_display(axes, title, csm_phase, directions, kfft, type, ordonate)
+        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft, type)
 
 
 def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEstimator') -> None:
@@ -506,12 +533,14 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
     radon_difference = np.abs(sinogram2 - sinogram1)
 
     build_sinogram_display(
-        axs[0, 0], 'Sinogram1 [Radon Transform on Image1]', sinogram1, directions1, sinogram2)
+        axs[0, 0], 'Sinogram1 [Radon Transform on Image1]',
+        sinogram1, directions1, sinogram2, abscissa=False)
     build_sinogram_difference_display(
-        axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, cmap='bwr')
+        axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2,
+        abscissa=False, cmap='bwr')
     build_sinogram_display(
         axs[0, 2], 'Sinogram2 [Radon Transform on Image2]', sinogram2, directions2, sinogram1,
-        ordonate=False)
+        ordonate=False, abscissa=False)
 
     # Second Plot line = Spectral Amplitude Sinogram 1 / CSM Amplitude /
     # Spectral Amplitude Sinogram 2
@@ -522,13 +551,13 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
 
     build_sinogram_spectral_display(
         axs[1, 0], 'Spectral Amplitude Sinogram1 DFT',
-        np.abs(sino1_fft), directions1, kfft)
+        np.abs(sino1_fft), directions1, kfft, abscissa=False)
     build_correl_spectrum_matrix(
         axs[1, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'amplitude',
-        'Cross Spectral Matrix (Amplitude)', ordonate=False)
+        'Cross Spectral Matrix (Amplitude)', ordonate=False, abscissa=False)
     build_sinogram_spectral_display(
         axs[1, 2], 'Spectral Amplitude Sinogram2 DFT',
-        np.abs(sino2_fft), directions2, kfft, ordonate=False)
+        np.abs(sino2_fft), directions2, kfft, ordonate=False, abscissa=False)
 
     # Third Plot line = Spectral Amplitude  * CSM Phase Sinogram 1 / CSM Phase /
     # Spectral Amplitude * CSM Phase Sinogram 2
@@ -540,7 +569,7 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
         np.abs(sino1_fft) * csm_phase, directions1, kfft)
     build_correl_spectrum_matrix(
         axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'phase',
-        'Cross Spectral Matrix (Phase-shifts)', ordonate=False)
+        'Cross Spectral Matrix (Amplitude * Phase-shifts)', ordonate=False)
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude * CSM_Phase Sinogram2 DFT',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, ordonate=False)
