@@ -487,8 +487,7 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
 
 def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEstimator',
                                  sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
-                                 type: str, title: str, ordonate: bool=True, abscissa: bool=True,
-                                 refinement_phase: bool=False) -> None:
+                                 type: str, title: str, refinement_phase: bool=False) -> None:
     radon_transform = local_estimator.radon_transforms[0]
     if not refinement_phase:
         _, directions = radon_transform.get_as_arrays()
@@ -513,9 +512,10 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
 
     if type == 'amplitude':
         build_sinogram_fft_display(axes, title, csm_amplitude, directions, kfft,
-                                   type, abscissa=False)
+                                   type, ordonate=False, abscissa=False)
     if type == 'phase':
-        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft, type)
+        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft,
+                                   type, ordonate=False)
 
 
 def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEstimator') -> None:
@@ -554,7 +554,7 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
         np.abs(sino1_fft), directions1, kfft, abscissa=False)
     build_correl_spectrum_matrix(
         axs[1, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'amplitude',
-        'Cross Spectral Matrix (Amplitude)', ordonate=False, abscissa=False)
+        'Cross Spectral Matrix (Amplitude)')
     build_sinogram_spectral_display(
         axs[1, 2], 'Spectral Amplitude Sinogram2 DFT',
         np.abs(sino2_fft), directions2, kfft, ordonate=False, abscissa=False)
@@ -569,7 +569,7 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
         np.abs(sino1_fft) * csm_phase, directions1, kfft)
     build_correl_spectrum_matrix(
         axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'phase',
-        'Cross Spectral Matrix (Amplitude * Phase-shifts)', ordonate=False)
+        'Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude * CSM_Phase Sinogram2 DFT',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, ordonate=False)
