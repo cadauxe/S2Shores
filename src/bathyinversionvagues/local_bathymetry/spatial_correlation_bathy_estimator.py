@@ -147,8 +147,12 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         min_period_unitless = int(min_wavelength / self.augmented_resolution)
-        period, _ = find_period_from_zeros(correlation_signal, min_period_unitless)
-        wavelength = period * self.augmented_resolution
+        try:
+            period, _ = find_period_from_zeros(correlation_signal, min_period_unitless)
+            wavelength = period * self.augmented_resolution
+        except ValueError as excp:
+            raise NotExploitableSinogram('Wave length can not be computed from sinogram') from excp
+        
         return wavelength
 
     def compute_delta_position(self, correlation_signal: np.ndarray,
