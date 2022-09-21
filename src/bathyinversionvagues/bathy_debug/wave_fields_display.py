@@ -583,6 +583,101 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
     plt.show()
 
 
+def build_polar_display(fig: Figure, axes: Axes, title: str,
+                        local_estimator: 'SpatialDFTBathyEstimator',
+                        values: np.ndarray, kfft: np.ndarray,
+                        subplot_pos: [float, float, float],
+                        refinement_phase: bool=False, **kwargs: dict) -> None:
+
+    radon_transform = local_estimator.radon_transforms[0]
+    if not refinement_phase:
+        _, directions = radon_transform.get_as_arrays()
+    else:
+        directions = radon_transform.directions_interpolated_dft
+    metrics = local_estimator.metrics
+    key = 'interpolated_dft' if refinement_phase else 'standard_dft'
+    #sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
+    # equals sinograms_correlation_fft from
+    # local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
+
+    wavenumbers = np.arange(0, kfft.max(), kfft.max() / values.shape[0])
+
+    # create polar axes in the foreground and remove its background to see through
+    subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
+    ax_polar = plt.subplot(subplot_locator, polar=True)
+    ax_polar.set_theta_direction(-1)
+    ax_polar.set_theta_zero_location("N")
+    #ax_polar.set_yticklabels([], color='white')
+    ax_polar.set_yticklabels(np.arange(0, kfft.max(), 0.01), color='white')
+    polar_ticks = np.arange(8) * np.pi / 4.
+    polar_labels = ['0°', '45°', '90°', '135°', '180°', '225°', '270°', '315°']
+
+    plt.xticks(polar_ticks, polar_labels, size=9, color='black')
+    for i, label in enumerate(ax_polar.get_xticklabels()):
+        label.set_rotation(i * 45)
+    ax_polar.set_facecolor("None")
+    ax_polar.set_rlabel_position(45)                        # Moves the tick-labels
+    ax_polar.tick_params(axis='both', which='major', labelsize=8)
+    ax_polar.grid(linewidth=0.5)
+
+    levels = np.arange(0, kfft.max(), kfft.max() / 10)
+    ax_polar.contourf(directions * np.pi / 180,
+                      wavenumbers, np.abs(values) / np.max(np.abs(values)),
+                      levels=levels)
+
+    ax_polar.set_title(title, fontsize=9, loc='center')
+    ax_polar.tick_params(axis='both', which='major', labelsize=8)
+    axes.xaxis.tick_top()
+    axes.set_aspect('equal')
+    # Manage blank spaces
+    # plt.tight_layout()
+
+
+def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+    plt.close('all')
+    nrows = 1
+    ncols = 3
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 12))
+    fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    first_image = local_estimator.ortho_sequence[0]
+
+    # First Plot line = Image1 / pseudoRGB / Image2
+    build_display_waves_image(fig, axs[0], 'Image1', first_image.original_pixels,
+                              resolution=first_image.resolution,
+                              subplot_pos=[nrows, ncols, 1],
+                              directions=arrows, cmap='gray')
+
+    first_radon_transform = local_estimator.radon_transforms[0]
+    _, directions1 = first_radon_transform.get_as_arrays()
+    second_radon_transform = local_estimator.radon_transforms[1]
+    sino1_fft = first_radon_transform.get_sinograms_standard_dfts()
+    sino2_fft = second_radon_transform.get_sinograms_standard_dfts()
+    kfft = local_estimator._metrics['kfft']
+
+    csm_phase, spectrum_amplitude, sinograms_correlation_fft = \
+        local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
+    csm_amplitude = np.abs(sinograms_correlation_fft)
+
+    polar1 = csm_amplitude * csm_phase
+    build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts DFT',
+                        local_estimator, polar1, kfft,
+                        subplot_pos=[1, 3, 2])
+
+    polar2 = spectrum_amplitude * csm_phase
+    build_polar_display(fig, axs[2], 'Spectral Amplitude Sinogram1 * CSM Phase-Shifts DFT',
+                        local_estimator, polar2, kfft,
+                        subplot_pos=[1, 3, 3])
+
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            local_estimator.global_estimator._debug_path,
+            "display_polar_images.png"),
+        dpi=300)
+    plt.show()
+
+
 def display_radon_transforms(local_estimator: 'SpatialDFTBathyEstimator',
                              refinement_phase: bool=False) -> None:
     plt.close('all')
