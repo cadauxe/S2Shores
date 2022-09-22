@@ -600,7 +600,11 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     # equals sinograms_correlation_fft from
     # local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
 
-    wavenumbers = np.arange(0, kfft.max(), kfft.max() / values.shape[0])
+    # wavenumbers = np.arange(0, kfft.max(), kfft.max() / values.shape[0])
+    Nx              =       np.shape(local_estimator.radon_transforms[0])[0]
+    Fs              =       1 / float(dx)
+
+    wavenumbers = np.arange(0, Fs / 2 , Fs / Nx)
 
     # create polar axes in the foreground and remove its background to see through
     subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
