@@ -585,7 +585,7 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
 
 def build_polar_display(fig: Figure, axes: Axes, title: str,
                         local_estimator: 'SpatialDFTBathyEstimator',
-                        values: np.ndarray, kfft: np.ndarray,
+                        values: np.ndarray, kfft: np.ndarray, resolution: float,
                         subplot_pos: [float, float, float],
                         refinement_phase: bool=False, **kwargs: dict) -> None:
 
@@ -594,17 +594,16 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
         _, directions = radon_transform.get_as_arrays()
     else:
         directions = radon_transform.directions_interpolated_dft
-    metrics = local_estimator.metrics
-    key = 'interpolated_dft' if refinement_phase else 'standard_dft'
+    #metrics = local_estimator.metrics
+    #key = 'interpolated_dft' if refinement_phase else 'standard_dft'
     #sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
     # equals sinograms_correlation_fft from
     # local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
 
-    # wavenumbers = np.arange(0, kfft.max(), kfft.max() / values.shape[0])
-    Nx              =       np.shape(local_estimator.radon_transforms[0])[0]
-    Fs              =       1 / float(dx)
-
-    wavenumbers = np.arange(0, Fs / 2 , Fs / Nx)
+    # define wavenumbers according to image resolution
+    Fs = 1 / resolution
+    nb_wavenumbers = radon_transform.get_as_arrays()[0].shape[0]
+    wavenumbers = np.arange(0, Fs / 2, Fs / nb_wavenumbers)
 
     # create polar axes in the foreground and remove its background to see through
     subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
@@ -612,7 +611,8 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     ax_polar.set_theta_direction(-1)
     ax_polar.set_theta_zero_location("N")
     #ax_polar.set_yticklabels([], color='white')
-    ax_polar.set_yticklabels(np.arange(0, kfft.max(), 0.01), color='white')
+    #ax_polar.set_yticklabels(np.arange(0, kfft.max(), 0.01), color='white')
+    ax_polar.set_yticklabels(np.arange(0, 0.05, 0.01), color='white')
     polar_ticks = np.arange(8) * np.pi / 4.
     polar_labels = ['0°', '45°', '90°', '135°', '180°', '225°', '270°', '315°']
 
@@ -624,11 +624,11 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     ax_polar.tick_params(axis='both', which='major', labelsize=8)
     ax_polar.grid(linewidth=0.5)
 
-    levels = np.arange(0, kfft.max(), kfft.max() / 10)
+    #levels = np.arange(0, kfft.max(), kfft.max() / 10)
+    levels = np.arange(0, 0.05, 0.01)
     ax_polar.contourf(directions * np.pi / 180,
                       wavenumbers, np.abs(values) / np.max(np.abs(values)),
                       levels=levels)
-
     ax_polar.set_title(title, fontsize=9, loc='center')
     ax_polar.tick_params(axis='both', which='major', labelsize=8)
     axes.xaxis.tick_top()
@@ -665,12 +665,12 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     polar1 = csm_amplitude * csm_phase
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts DFT',
-                        local_estimator, polar1, kfft,
+                        local_estimator, polar1, kfft, first_image.resolution,
                         subplot_pos=[1, 3, 2])
 
     polar2 = spectrum_amplitude * csm_phase
-    build_polar_display(fig, axs[2], 'Spectral Amplitude Sinogram1 * CSM Phase-Shifts DFT',
-                        local_estimator, polar2, kfft,
+    build_polar_display(fig, axs[2], 'CSM Combined Spectrum Amplitude * CSM Phase-Shifts DFT',
+                        local_estimator, polar2, kfft, first_image.resolution,
                         subplot_pos=[1, 3, 3])
 
     plt.tight_layout()
