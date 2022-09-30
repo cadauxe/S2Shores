@@ -13,9 +13,12 @@ from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..local_bathymetry.spatial_dft_bathy_estimator import \
     SpatialDFTBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .wave_fields_display import (display_context, display_initial_data,
-                                  display_plot1, display_plot2,
-                                  display_radon_transforms)
+from .wave_fields_display import (display_context, display_dft_sinograms,
+                                  display_dft_sinograms_spectral_analysis,
+                                  display_initial_data,
+                                  display_polar_images_dft,
+                                  display_radon_transforms,
+                                  display_waves_images_dft)
 
 
 class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
@@ -30,8 +33,11 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
 
         # Displays
         # display_initial_data(self)
-        display_plot1(self)
-        display_plot2(self)
+        display_waves_images_dft(self)
+        display_dft_sinograms(self)
+        display_dft_sinograms_spectral_analysis(self)
+        display_polar_images_dft(self)
+       #display_plot3(self, refinement_phase=True)
         # display_radon_transforms(self)
         #display_radon_transforms(self, refinement_phase=True)
         # display_context(self)

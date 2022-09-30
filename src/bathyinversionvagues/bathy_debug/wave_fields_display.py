@@ -9,6 +9,7 @@ Class managing the computation of wave fields from two images taken at a small t
 :license: see LICENSE file
 :created: 5 mars 2021
 """
+import math
 import os
 from typing import TYPE_CHECKING, List, Optional, Tuple  # @NoMove
 
@@ -610,9 +611,6 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     ax_polar = plt.subplot(subplot_locator, polar=True)
     ax_polar.set_theta_direction(-1)
     ax_polar.set_theta_zero_location("N")
-    #ax_polar.set_yticklabels([], color='white')
-    #ax_polar.set_yticklabels(np.arange(0, kfft.max(), 0.01), color='white')
-    ax_polar.set_yticklabels(np.arange(0, 0.05, 0.01), color='white')
     polar_ticks = np.arange(8) * np.pi / 4.
     polar_labels = ['0°', '45°', '90°', '135°', '180°', '225°', '270°', '315°']
 
@@ -624,13 +622,16 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     ax_polar.tick_params(axis='both', which='major', labelsize=8)
     ax_polar.grid(linewidth=0.5)
 
-    #levels = np.arange(0, kfft.max(), kfft.max() / 10)
-    levels = np.arange(0, 0.05, 0.01)
+    # define levels range based on standard deviation (3Sigma)
+    plotval = np.abs(values) / np.max(np.abs(values))
+    stdv = 3.0 * np.std(plotval)
+    levelsup = math.ceil(stdv * 100) / 100
+    step = np.ceil(stdv) / 100
+    levels = np.arange(0, levelsup, step)
+    ax_polar.set_yticklabels(levels[1:], color='red')
     ax_polar.contourf(directions * np.pi / 180,
-                      wavenumbers, np.abs(values) / np.max(np.abs(values)),
-                      levels=levels)
+                      wavenumbers, plotval, levels=levels)
     ax_polar.set_title(title, fontsize=9, loc='center')
-    ax_polar.tick_params(axis='both', which='major', labelsize=8)
     axes.xaxis.tick_top()
     axes.set_aspect('equal')
     # Manage blank spaces
