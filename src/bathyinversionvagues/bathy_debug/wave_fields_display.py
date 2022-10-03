@@ -617,6 +617,12 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     plt.xticks(polar_ticks, polar_labels, size=9, color='black')
     for i, label in enumerate(ax_polar.get_xticklabels()):
         label.set_rotation(i * 45)
+
+    ksup = math.ceil(np.max(wavenumbers) * 100) / 100
+    kstep = (np.max(wavenumbers) - np.min(wavenumbers)) / \
+        5  # since only 5 concentric circles on contourf
+    ylabels = np.round(np.arange(0, ksup, kstep), 2)
+    ax_polar.set_yticklabels(ylabels[1:], color='red')
     ax_polar.set_facecolor("None")
     ax_polar.set_rlabel_position(45)                        # Moves the tick-labels
     ax_polar.tick_params(axis='both', which='major', labelsize=8)
@@ -628,7 +634,6 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     levelsup = math.ceil(stdv * 100) / 100
     step = np.ceil(stdv) / 100
     levels = np.arange(0, levelsup, step)
-    ax_polar.set_yticklabels(levels[1:], color='red')
     ax_polar.contourf(directions * np.pi / 180,
                       wavenumbers, plotval, levels=levels)
     ax_polar.set_title(title, fontsize=9, loc='center')
