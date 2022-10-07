@@ -17,7 +17,7 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.colors import Normalize
+from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
 
 from bathyinversionvagues.image_processing.waves_radon import WavesRadon
@@ -595,11 +595,6 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
         _, directions = radon_transform.get_as_arrays()
     else:
         directions = radon_transform.directions_interpolated_dft
-    #metrics = local_estimator.metrics
-    #key = 'interpolated_dft' if refinement_phase else 'standard_dft'
-    #sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
-    # equals sinograms_correlation_fft from
-    # local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
 
     # define wavenumbers according to image resolution
     Fs = 1 / resolution
@@ -609,33 +604,38 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     # create polar axes in the foreground and remove its background to see through
     subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
     ax_polar = plt.subplot(subplot_locator, polar=True)
-    ax_polar.set_theta_direction(-1)
-    ax_polar.set_theta_zero_location("N")
     polar_ticks = np.arange(8) * np.pi / 4.
-    polar_labels = ['0°', '45°', '90°', '135°', '180°', '225°', '270°', '315°']
+    # Xticks labels definition with 0° positioning to North with clockwise rotation
+    polar_labels = ['90°', '45°', '0°', '315°', '270°', '225°', '180°', '135°']
 
     plt.xticks(polar_ticks, polar_labels, size=9, color='black')
     for i, label in enumerate(ax_polar.get_xticklabels()):
         label.set_rotation(i * 45)
 
-    ksup = math.ceil(np.max(wavenumbers) * 100) / 100
-    kstep = (np.max(wavenumbers) - np.min(wavenumbers)) / \
-        5  # since only 5 concentric circles on contourf
-    ylabels = np.round(np.arange(0, ksup, kstep), 2)
-    ax_polar.set_yticklabels(ylabels[1:], color='red')
-    ax_polar.set_facecolor("None")
-    ax_polar.set_rlabel_position(45)                        # Moves the tick-labels
-    ax_polar.tick_params(axis='both', which='major', labelsize=8)
+    ax_polar.set_ylim(0, 0.1)
+    # Constrains the Wavenumber plotting interval
+    ax_polar.set_rlabel_position(70)            # Moves the tick-labels
+    ax_polar.set_rorigin(0)
+    ax_polar.tick_params(axis='both', which='major', labelrotation=0, labelsize=8)
     ax_polar.grid(linewidth=0.5)
+
+    # Define background color
+    norm = TwoSlopeNorm(vcenter=1, vmin=0, vmax=3)
+    ax_polar.set_facecolor(plt.cm.bwr_r(norm(0.0)))
 
     # define levels range based on standard deviation (3Sigma)
     plotval = np.abs(values) / np.max(np.abs(values))
-    stdv = 3.0 * np.std(plotval)
-    levelsup = math.ceil(stdv * 100) / 100
-    step = np.ceil(stdv) / 100
-    levels = np.arange(0, levelsup, step)
-    ax_polar.contourf(directions * np.pi / 180,
-                      wavenumbers, plotval, levels=levels)
+    #stdv = 3.0 * np.std(plotval)
+    #levelsup = math.ceil(stdv * 100) / 100
+    #step = np.ceil(stdv) / 100
+    #levels = np.arange(0, levelsup, step)
+
+    # Add the last element of the list to the list.
+    # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
+    directions = np.append(directions, directions[0])
+    plotval = np.concatenate((plotval, plotval[:, 0].reshape(plotval.shape[0], 1)), axis=1)
+
+    ax_polar.contourf(np.deg2rad(directions), wavenumbers, plotval)
     ax_polar.set_title(title, fontsize=9, loc='center')
     axes.xaxis.tick_top()
     axes.set_aspect('equal')
@@ -653,7 +653,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     first_image = local_estimator.ortho_sequence[0]
 
     # First Plot line = Image1 / pseudoRGB / Image2
-    build_display_waves_image(fig, axs[0], 'Image1', first_image.original_pixels,
+    build_display_waves_image(fig, axs[0], 'Image1 [Cartesian Projection]', first_image.original_pixels,
                               resolution=first_image.resolution,
                               subplot_pos=[nrows, ncols, 1],
                               directions=arrows, cmap='gray')
@@ -670,14 +670,9 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     polar1 = csm_amplitude * csm_phase
-    build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts DFT',
+    build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts DFT [Polar Projection]',
                         local_estimator, polar1, kfft, first_image.resolution,
                         subplot_pos=[1, 3, 2])
-
-    polar2 = spectrum_amplitude * csm_phase
-    build_polar_display(fig, axs[2], 'CSM Combined Spectrum Amplitude * CSM Phase-Shifts DFT',
-                        local_estimator, polar2, kfft, first_image.resolution,
-                        subplot_pos=[1, 3, 3])
 
     plt.tight_layout()
     plt.savefig(
