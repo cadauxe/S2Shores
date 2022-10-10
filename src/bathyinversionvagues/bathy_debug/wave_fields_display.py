@@ -586,7 +586,7 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
 
 def build_polar_display(fig: Figure, axes: Axes, title: str,
                         local_estimator: 'SpatialDFTBathyEstimator',
-                        values: np.ndarray, kfft: np.ndarray, resolution: float,
+                        values: np.ndarray, resolution: float,
                         subplot_pos: [float, float, float],
                         refinement_phase: bool=False, **kwargs: dict) -> None:
 
@@ -623,12 +623,8 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     norm = TwoSlopeNorm(vcenter=1, vmin=0, vmax=3)
     ax_polar.set_facecolor(plt.cm.bwr_r(norm(0.0)))
 
-    # define levels range based on standard deviation (3Sigma)
+    # Values to be plotted
     plotval = np.abs(values) / np.max(np.abs(values))
-    #stdv = 3.0 * np.std(plotval)
-    #levelsup = math.ceil(stdv * 100) / 100
-    #step = np.ceil(stdv) / 100
-    #levels = np.arange(0, levelsup, step)
 
     # Add the last element of the list to the list.
     # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
@@ -646,7 +642,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
 def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.close('all')
     nrows = 1
-    ncols = 3
+    ncols = 2
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 12))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
@@ -669,10 +665,10 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
         local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
-    polar1 = csm_amplitude * csm_phase
-    build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts DFT [Polar Projection]',
-                        local_estimator, polar1, kfft, first_image.resolution,
-                        subplot_pos=[1, 3, 2])
+    polar = csm_amplitude * csm_phase
+    build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
+                        local_estimator, polar, first_image.resolution,
+                        subplot_pos=[1, 2, 2], threshold=False)
 
     plt.tight_layout()
     plt.savefig(
