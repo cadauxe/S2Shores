@@ -612,8 +612,13 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     for i, label in enumerate(ax_polar.get_xticklabels()):
         label.set_rotation(i * 45)
 
-    ax_polar.set_ylim(0, 0.1)
     # Constrains the Wavenumber plotting interval
+    ax_polar.set_ylim(0, 0.1)
+    rticks = np.arange(0.0, 0.11, 0.01)[1:]
+    # Convert Wavenumber ticks into Wavelength ones
+    ax_polar.set_rgrids(rticks, labels=(1.0 / rticks).round(2), fontsize=12, angle=180, color='red')
+    ax_polar.text(np.radians(50), ax_polar.get_rmax() * 1.25, r'Wavelength $\lambda$ [m]',
+                  rotation=0, ha='center', va='center', color='red')
     ax_polar.set_rlabel_position(70)            # Moves the tick-labels
     ax_polar.set_rorigin(0)
     ax_polar.tick_params(axis='both', which='major', labelrotation=0, labelsize=8)
@@ -633,6 +638,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
 
     ax_polar.contourf(np.deg2rad(directions), wavenumbers, plotval)
     ax_polar.set_title(title, fontsize=9, loc='center')
+
     axes.xaxis.tick_top()
     axes.set_aspect('equal')
     # Manage blank spaces
