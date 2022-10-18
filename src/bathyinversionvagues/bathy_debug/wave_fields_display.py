@@ -20,6 +20,8 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
 
+from bathyinversionvagues.data_model.wave_field_sample_geometry import \
+    WaveFieldSampleGeometry
 from bathyinversionvagues.image_processing.waves_radon import WavesRadon
 
 if TYPE_CHECKING:
@@ -612,11 +614,37 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     for i, label in enumerate(ax_polar.get_xticklabels()):
         label.set_rotation(i * 45)
 
-    # Constrains the Wavenumber plotting interval
-    ax_polar.set_ylim(0, 0.1)
-    rticks = np.arange(0.0, 0.11, 0.01)[1:]
+    # get relevant attributes
+    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
+    main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'wavelength')[0]
+    main_wavenumber = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'wavenumber')[0]
+
+    # Constrains the Wavenumber plotting interval according to wavelength limitation set to 50m
+    ax_polar.set_ylim(0, 0.02)
+    requested_labels = np.array([500, 200, 100, 50, 25, main_wavelength]).round(2)
+    requested_labels = np.flip(np.sort(requested_labels))
+    rticks = 1 / requested_labels
+
+    # Main information display
+    ax_polar.plot(np.radians(main_direction + 180), 1 / main_wavelength, '*', color='black')
+    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, $\lambda$={:.2f}m]'.format(90 - main_direction, main_wavelength),
+                      xy=[np.radians(main_direction + 180), (1 / main_wavelength)],  # theta, radius
+                      xytext=(0.5, 0.65),    # fraction, fraction
+                      textcoords='figure fraction',
+                      arrowprops=dict(facecolor='blue', shrink=0.02),
+                      horizontalalignment='left',
+                      verticalalignment='bottom',
+                      fontsize=10, color='blue')
+
+    # ax_polar.text(np.radians(main_direction), (1 / main_wavelength) * 1.25, r'Peak Wavelength $\lambda$ = {main_wavelength} [m]',
+    #              rotation=0, ha='center', va='center', color='green')
+    #rticks = np.arange(0.0, 0.11, 0.01)[1:]
     # Convert Wavenumber ticks into Wavelength ones
-    ax_polar.set_rgrids(rticks, labels=(1.0 / rticks).round(2), fontsize=12, angle=180, color='red')
+    #ax_polar.set_rgrids(rticks, labels=(1.0 / rticks).round(2), fontsize=12, angle=180, color='red')
+    ax_polar.set_rgrids(rticks, labels=requested_labels, fontsize=12, angle=180, color='red')
     ax_polar.text(np.radians(50), ax_polar.get_rmax() * 1.25, r'Wavelength $\lambda$ [m]',
                   rotation=0, ha='center', va='center', color='red')
     ax_polar.set_rlabel_position(70)            # Moves the tick-labels
@@ -626,7 +654,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
 
     # Define background color
     norm = TwoSlopeNorm(vcenter=1, vmin=0, vmax=3)
-    ax_polar.set_facecolor(plt.cm.bwr_r(norm(0.0)))
+    ax_polar.set_facecolor(plt.cm.bwr_r(norm(3.0)))
 
     # Values to be plotted
     plotval = np.abs(values) / np.max(np.abs(values))
@@ -636,7 +664,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     directions = np.append(directions, directions[0])
     plotval = np.concatenate((plotval, plotval[:, 0].reshape(plotval.shape[0], 1)), axis=1)
 
-    ax_polar.contourf(np.deg2rad(directions), wavenumbers, plotval)
+    ax_polar.contourf(np.deg2rad(directions), wavenumbers, plotval, cmap="gist_ncar")
     ax_polar.set_title(title, fontsize=9, loc='center')
 
     axes.xaxis.tick_top()
