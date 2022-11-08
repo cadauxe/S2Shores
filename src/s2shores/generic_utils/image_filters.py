@@ -9,7 +9,7 @@ from functools import lru_cache
 
 from scipy.signal import convolve2d
 
-from bathyinversionvagues.generic_utils.numpy_utils import circular_mask
+from .numpy_utils import circular_mask
 import numpy as np
 
 

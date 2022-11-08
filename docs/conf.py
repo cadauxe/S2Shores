@@ -37,7 +37,7 @@ except ImportError:
     from sphinx import apidoc
 
 output_dir = os.path.join(__location__, "api")
-module_dir = os.path.join(__location__, "../src/bathyinversionvagues")
+module_dir = os.path.join(__location__, "../src/s2shores")
 try:
     shutil.rmtree(output_dir)
 except FileNotFoundError:
@@ -91,8 +91,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "BathyInversionVagues"
-copyright = "2022, CNES-Labo OT"
+project = "S2SHORES"
+copyright = "2022, CNES-LEGOS"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -161,7 +161,7 @@ html_theme_options = {
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 try:
-    from bathyinversionvagues import __version__ as version
+    from s2shores import __version__ as version
 except ImportError:
     pass
 else:
@@ -226,7 +226,7 @@ html_static_path = ["_static"]
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "bathyinversionvagues-doc"
+htmlhelp_basename = "s2shores-doc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -243,7 +243,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "user_guide.tex", "BathyInversionVagues Documentation", "Alexia Mondot", "manual")
+    ("index", "user_guide.tex", "S2Shores Documentation", "Alexia Mondot", "manual")
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
