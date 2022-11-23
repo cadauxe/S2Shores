@@ -12,7 +12,6 @@ from scipy.signal import find_peaks
 import numpy as np
 
 from .numpy_utils import HashableNdArray
-from ..waves_exceptions import WavesEstimationError
 
 
 def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, np.ndarray]:
