@@ -1,8 +1,8 @@
 ====================
-BathyInversionVagues
+S2Shores
 ====================
 
-This is the documentation of **BathyInversionVagues**.
+This is the documentation of **S2Shores**.
 
 .. note::
 
