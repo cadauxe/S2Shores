@@ -20,9 +20,9 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
 
-from ...s2shores.data_model.wave_field_sample_geometry import \
+from s2shores.data_model.wave_field_sample_geometry import \
     WaveFieldSampleGeometry
-from ...s2shores.image_processing.waves_radon import WavesRadon
+from s2shores.image_processing.waves_radon import WavesRadon
 
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_dft_bathy_estimator \
