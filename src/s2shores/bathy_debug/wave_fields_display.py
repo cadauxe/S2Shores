@@ -13,6 +13,14 @@ import math
 import os
 from typing import TYPE_CHECKING, List, Optional, Tuple  # @NoMove
 
+<<<<<<< HEAD:src/bathyinversionvagues/bathy_debug/wave_fields_display.py
+=======
+
+from matplotlib.axes import Axes
+from matplotlib.colors import Normalize
+
+from ..image_processing.waves_radon import WavesRadon
+>>>>>>> develop:src/s2shores/bathy_debug/wave_fields_display.py
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
