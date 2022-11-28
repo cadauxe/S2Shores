@@ -13,14 +13,6 @@ import math
 import os
 from typing import TYPE_CHECKING, List, Optional, Tuple  # @NoMove
 
-<<<<<<< HEAD:src/bathyinversionvagues/bathy_debug/wave_fields_display.py
-=======
-
-from matplotlib.axes import Axes
-from matplotlib.colors import Normalize
-
-from ..image_processing.waves_radon import WavesRadon
->>>>>>> develop:src/s2shores/bathy_debug/wave_fields_display.py
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,9 +20,9 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
 
-from bathyinversionvagues.data_model.wave_field_sample_geometry import \
+from ...s2shores.data_model.wave_field_sample_geometry import \
     WaveFieldSampleGeometry
-from bathyinversionvagues.image_processing.waves_radon import WavesRadon
+from ...s2shores.image_processing.waves_radon import WavesRadon
 
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_dft_bathy_estimator \
