@@ -27,6 +27,8 @@ from s2shores.image_processing.waves_radon import WavesRadon
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_dft_bathy_estimator \
         import SpatialDFTBathyEstimator  # @UnusedImport
+    from ..local_bathymetry.spatial_correlation_bathy_estimator \
+        import SpatialCorrelationBathyEstimator  # @UnusedImport
 
 
 def display_curve(data: np.ndarray, legend: str) -> None:
@@ -262,6 +264,77 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     #low_right = local_estimator.global_estimator._ortho_stack._lower_right_corner
     second_image = local_estimator.ortho_sequence[1]
     pseudo_rgb = create_pseudorgb(first_image.original_pixels, second_image.original_pixels)
+
+    # First Plot line = Image1 / pseudoRGB / Image2
+    build_display_waves_image(fig, axs[0, 0], 'Image1', first_image.original_pixels,
+                              resolution=first_image.resolution,
+                              subplot_pos=[nrows, ncols, 1],
+                              directions=arrows, cmap='gray')
+    build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB', pseudo_rgb,
+                            resolution=first_image.resolution,
+                            subplot_pos=[nrows, ncols, 2],
+                            directions=arrows, coordinates=False)
+    build_display_waves_image(fig, axs[0, 2], 'Image2', second_image.original_pixels,
+                              resolution=second_image.resolution,
+                              subplot_pos=[nrows, ncols, 3],
+                              directions=arrows, cmap='gray', coordinates=False)
+
+    # Second Plot line = Image1 Filtered / pseudoRGB Filtered/ Image2 Filtered
+    pseudo_rgb_filtered = create_pseudorgb(first_image.pixels, second_image.pixels)
+    build_display_waves_image(fig, axs[1, 0], 'Image1 Filtered', first_image.pixels,
+                              resolution=first_image.resolution,
+                              subplot_pos=[nrows, ncols, 4],
+                              directions=arrows, cmap='gray')
+    build_display_pseudorgb(fig, axs[1, 1], 'Pseudo RGB Filtered', pseudo_rgb_filtered,
+                            resolution=first_image.resolution,
+                            subplot_pos=[nrows, ncols, 5],
+                            directions=arrows, coordinates=False)
+    build_display_waves_image(fig, axs[1, 2], 'Image2 Filtered', second_image.pixels,
+                              resolution=second_image.resolution,
+                              subplot_pos=[nrows, ncols, 6],
+                              directions=arrows, cmap='gray', coordinates=False)
+
+    # Third Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
+    image1_circle_filtered = first_image.pixels * first_image.circle_image
+    image2_circle_filtered = second_image.pixels * second_image.circle_image
+    pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
+    build_display_waves_image(fig, axs[2, 0], 'Image1 Circle Filtered', image1_circle_filtered,
+                              resolution=first_image.resolution,
+                              subplot_pos=[nrows, ncols, 7],
+                              directions=arrows, cmap='gray')
+    build_display_pseudorgb(fig, axs[2, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
+                            resolution=first_image.resolution,
+                            subplot_pos=[nrows, ncols, 8],
+                            directions=arrows, coordinates=False)
+    build_display_waves_image(fig, axs[2, 2], 'Image2 Circle Filtered', image2_circle_filtered,
+                              resolution=second_image.resolution,
+                              subplot_pos=[nrows, ncols, 9],
+                              directions=arrows, cmap='gray', coordinates=False)
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            local_estimator.global_estimator._debug_path,
+            "display_waves_images.png"),
+        dpi=300)
+    plt.show()
+
+
+def display_waves_images_spatial_correl(
+        local_estimator: 'SpatialCorrelationBathyEstimation') -> None:
+    plt.close('all')
+    nrows = 3
+    ncols = 3
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
+    fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+    #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    first_image = local_estimator.ortho_sequence[0]
+    second_image = local_estimator.ortho_sequence[1]
+    pseudo_rgb = create_pseudorgb(first_image.original_pixels, second_image.original_pixels)
+
+    # Since wfe.eneergy_ratio not available for SpatialCorrelation
+    default_arrow_length = np.shape(first_image.original_pixels)[0]
+    arrows = [(wfe.direction, default_arrow_length)
+              for wfe in local_estimator.bathymetry_estimations]
 
     # First Plot line = Image1 / pseudoRGB / Image2
     build_display_waves_image(fig, axs[0, 0], 'Image1', first_image.original_pixels,

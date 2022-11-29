@@ -7,21 +7,24 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-from typing import Dict, Optional, Type, TYPE_CHECKING  # @NoMove
+from typing import TYPE_CHECKING, Dict, Optional, Type  # @NoMove
 
-from shapely.geometry import Point
 import numpy as np
+from shapely.geometry import Point
 
-from ..bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstimatorDebug
+from ..bathy_debug.spatial_correlation_bathy_estimator_debug import \
+    SpatialCorrelationBathyEstimatorDebug
+from ..bathy_debug.spatial_dft_bathy_estimator_debug import \
+    SpatialDFTBathyEstimatorDebug
 from ..bathy_debug.temporal_correlation_bathy_estimator_debug import \
     TemporalCorrelationBathyEstimatorDebug
 from ..image.ortho_sequence import OrthoSequence
-
 from .local_bathy_estimator import LocalBathyEstimator
-from .spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
+from .spatial_correlation_bathy_estimator import \
+    SpatialCorrelationBathyEstimator
 from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
-from .temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
-
+from .temporal_correlation_bathy_estimator import \
+    TemporalCorrelationBathyEstimator
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -35,7 +38,7 @@ LOCAL_BATHY_ESTIMATION_CLS = {'SPATIAL_DFT': SpatialDFTBathyEstimator,
 
 LOCAL_BATHY_ESTIMATION_CLS_DEBUG = {'SPATIAL_DFT': SpatialDFTBathyEstimatorDebug,
                                     'TEMPORAL_CORRELATION': TemporalCorrelationBathyEstimatorDebug,
-                                    'SPATIAL_CORRELATION': SpatialCorrelationBathyEstimator}
+                                    'SPATIAL_CORRELATION': SpatialCorrelationBathyEstimatorDebug}
 
 
 def local_bathy_estimator_factory(location: Point, ortho_sequence: OrthoSequence,
