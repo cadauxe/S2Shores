@@ -10,10 +10,13 @@
 import numpy as np
 
 from ..generic_utils.numpy_utils import dump_numpy_variable
+from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..local_bathymetry.spatial_correlation_bathy_estimator import \
     SpatialCorrelationBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .wave_fields_display import display_waves_images_spatial_correl
+from .wave_fields_display import (display_sinograms_spatial_correlation,
+                                  display_sinograms_spectral_analysis_spatial_correlation,
+                                  display_waves_images_spatial_correl)
 
 
 class SpatialCorrelationBathyEstimatorDebug(
@@ -30,13 +33,12 @@ class SpatialCorrelationBathyEstimatorDebug(
         # Displays
         # display_initial_data(self)
         display_waves_images_spatial_correl(self)
-        # display_dft_sinograms(self)
-        # display_dft_sinograms_spectral_analysis(self)
+        display_sinograms_spatial_correlation(self)
+        display_sinograms_spectral_analysis_spatial_correlation(self)
         # display_polar_images_dft(self)
        #display_plot3(self, refinement_phase=True)
         # display_radon_transforms(self)
         #display_radon_transforms(self, refinement_phase=True)
-        # display_context(self)
 
     def print_variables(self) -> None:
         metrics = self.metrics

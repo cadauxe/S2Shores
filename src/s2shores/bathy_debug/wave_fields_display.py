@@ -24,6 +24,8 @@ from s2shores.data_model.wave_field_sample_geometry import \
     WaveFieldSampleGeometry
 from s2shores.image_processing.waves_radon import WavesRadon
 
+from ..bathy_physics import wavenumber_offshore
+
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_dft_bathy_estimator \
         import SpatialDFTBathyEstimator  # @UnusedImport
@@ -331,7 +333,7 @@ def display_waves_images_spatial_correl(
     second_image = local_estimator.ortho_sequence[1]
     pseudo_rgb = create_pseudorgb(first_image.original_pixels, second_image.original_pixels)
 
-    # Since wfe.eneergy_ratio not available for SpatialCorrelation
+    # Since wfe.eneergy_ratio not available for SpatialCorrelation:
     default_arrow_length = np.shape(first_image.original_pixels)[0]
     arrows = [(wfe.direction, default_arrow_length)
               for wfe in local_estimator.bathymetry_estimations]
@@ -502,6 +504,72 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.show()
 
 
+def display_sinograms_spatial_correlation(
+        local_estimator: 'SpatialCorrelationBathyEstimator') -> None:
+    plt.close('all')
+    nrows = 2
+    ncols = 3
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
+    fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+    #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    first_image = local_estimator.ortho_sequence[0]
+    second_image = local_estimator.ortho_sequence[1]
+
+    # Since wfe.eneergy_ratio not available for SpatialCorrelation:
+    default_arrow_length = np.shape(first_image.original_pixels)[0]
+    arrows = [(wfe.direction, default_arrow_length)
+              for wfe in local_estimator.bathymetry_estimations]
+
+    # First Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
+    image1_circle_filtered = first_image.pixels * first_image.circle_image
+    image2_circle_filtered = second_image.pixels * second_image.circle_image
+    pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
+    build_display_waves_image(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
+                              subplot_pos=[nrows, ncols, 1],
+                              resolution=first_image.resolution,
+                              directions=arrows, cmap='gray')
+    build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
+                            resolution=first_image.resolution,
+                            subplot_pos=[nrows, ncols, 2],
+                            directions=arrows, coordinates=False)
+    build_display_waves_image(fig, axs[0, 2], 'Image2 Circle Filtered', image2_circle_filtered,
+                              resolution=second_image.resolution,
+                              subplot_pos=[nrows, ncols, 3],
+                              directions=arrows, cmap='gray', coordinates=False)
+
+    # Second Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
+    #first_radon_transform = local_estimator.radon_transforms[0]
+    first_radon_transform = WavesRadon(first_image)
+    #print('AUGMENTATION RADON FACTOR = ', local_estimator.radon_augmentation_factor)
+    first_radon_augmented = first_radon_transform.radon_augmentation(
+        local_estimator.radon_augmentation_factor)
+    sinogram1, directions1 = first_radon_transform.get_as_arrays()
+    #sinogram1, directions1 = first_radon_augmented.get_as_arrays()
+    #second_radon_transform = local_estimator.radon_transforms[1]
+    second_radon_transform = WavesRadon(second_image)
+    second_radon_augmented = second_radon_transform.radon_augmentation(
+        local_estimator.radon_augmentation_factor)
+    sinogram2, directions2 = second_radon_transform.get_as_arrays()
+    #sinogram2, directions2 = second_radon_augmented.get_as_arrays()
+    radon_difference = np.abs(sinogram2 - sinogram1)
+
+    build_sinogram_display(
+        axs[1, 0], 'Sinogram1 [Radon Transform on Image1]', sinogram1, directions1, sinogram2)
+    build_sinogram_difference_display(
+        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, cmap='bwr')
+    build_sinogram_display(
+        axs[1, 2], 'Sinogram2 [Radon Transform on Image2]', sinogram2, directions2, sinogram1,
+        ordonate=False)
+
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            local_estimator.global_estimator._debug_path,
+            "display_sinograms.png"),
+        dpi=300)
+    plt.show()
+
+
 def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
                                     directions: np.ndarray, kfft: np.ndarray,
                                     ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
@@ -569,8 +637,6 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
         _, directions = radon_transform.get_as_arrays()
     else:
         directions = radon_transform.directions_interpolated_dft
-    metrics = local_estimator.metrics
-    key = 'interpolated_dft' if refinement_phase else 'standard_dft'
     #sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
     # equals sinograms_correlation_fft from
     # local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
@@ -618,36 +684,143 @@ def display_dft_sinograms_spectral_analysis(local_estimator: 'SpatialDFTBathyEst
         axs[0, 2], 'Sinogram2 [Radon Transform on Image2]', sinogram2, directions2, sinogram1,
         ordonate=False, abscissa=False)
 
-    # Second Plot line = Spectral Amplitude Sinogram 1 / CSM Amplitude /
-    # Spectral Amplitude Sinogram 2
+    # Second Plot line = Spectral Amplitude of Sinogram1 [after DFT] / CSM Amplitude /
+    # Spectral Amplitude of Sinogram2 [after DFT]
 
     sino1_fft = first_radon_transform.get_sinograms_standard_dfts()
     sino2_fft = second_radon_transform.get_sinograms_standard_dfts()
     kfft = local_estimator._metrics['kfft']
 
     build_sinogram_spectral_display(
-        axs[1, 0], 'Spectral Amplitude Sinogram1 DFT',
+        axs[1, 0], 'Spectral Amplitude Sinogram1 [DFT]',
         np.abs(sino1_fft), directions1, kfft, abscissa=False)
     build_correl_spectrum_matrix(
         axs[1, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'amplitude',
         'Cross Spectral Matrix (Amplitude)')
     build_sinogram_spectral_display(
-        axs[1, 2], 'Spectral Amplitude Sinogram2 DFT',
+        axs[1, 2], 'Spectral Amplitude Sinogram2 [DFT]',
         np.abs(sino2_fft), directions2, kfft, ordonate=False, abscissa=False)
 
-    # Third Plot line = Spectral Amplitude  * CSM Phase Sinogram 1 / CSM Phase /
-    # Spectral Amplitude * CSM Phase Sinogram 2
+    # Third Plot line = Spectral Amplitude of Sinogram1 [after DFT] * CSM Phase /
+    # CSM Amplitude * CSM Phase / Spectral Amplitude of Sinogram2 [after DFT] * CSM Phase
     # Manage blank spaces"
     csm_phase, spectrum_amplitude, sinograms_correlation_fft = \
         local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
     build_sinogram_spectral_display(
-        axs[2, 0], 'Spectral Amplitude * CSM_Phase Sinogram1 DFT',
+        axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
         np.abs(sino1_fft) * csm_phase, directions1, kfft)
     build_correl_spectrum_matrix(
         axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'phase',
         'Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
-        axs[2, 2], 'Spectral Amplitude * CSM_Phase Sinogram2 DFT',
+        axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
+        np.abs(sino2_fft) * csm_phase, directions2, kfft, ordonate=False)
+
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(
+            local_estimator.global_estimator._debug_path,
+            "display_sinograms_spectral_analysis.png"),
+        dpi=300)
+    plt.show()
+
+
+def build_correl_spectrum_matrix_spatial_correlation(axes: Axes, local_estimator: 'SpatialCorrelationBathyEstimator',
+                                                     sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
+                                                     type: str, title: str, refinement_phase: bool=False) -> None:
+    """ Computes the cross correlation spectrum of the radon transforms of the images, possibly
+        restricted to a limited set of directions.
+
+        :param ilocal_estimator
+        :param sino1_fft: the DFT of the first sinogram, either standard or interpolated
+        :param sino2_fft: the DFT of the second sinogram, either standard or interpolated
+        :returns: A tuple of 2 numpy arrays and a dictionary with:
+                  - the phase shifts
+                  - the spectrum amplitude
+                  - a dictionary containing intermediate results for debugging purposes
+    """
+    radon_transform = WavesRadon(local_estimator.ortho_sequence[0])
+    if not refinement_phase:
+        _, directions = radon_transform.get_as_arrays()
+    else:
+        directions = radon_transform.directions_interpolated_dft
+
+    sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
+    csm_phase = np.angle(sinograms_correlation_fft)
+    csm_amplitude = np.abs(sinograms_correlation_fft)
+
+    if type == 'amplitude':
+        build_sinogram_fft_display(axes, title, csm_amplitude, directions, kfft,
+                                   type, ordonate=False, abscissa=False)
+    if type == 'phase':
+        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft,
+                                   type, ordonate=False)
+
+
+def display_sinograms_spectral_analysis_spatial_correlation(
+        local_estimator: 'SpatialCorrelationBathyEstimator') -> None:
+    plt.close('all')
+    nrows = 3
+    ncols = 3
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
+    fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+
+    first_image = local_estimator.ortho_sequence[0]
+    second_image = local_estimator.ortho_sequence[1]
+
+    # First Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
+    first_radon_transform = WavesRadon(first_image)
+    sinogram1, directions1 = first_radon_transform.get_as_arrays()
+    second_radon_transform = WavesRadon(second_image)
+    sinogram2, directions2 = second_radon_transform.get_as_arrays()
+    radon_difference = np.abs(sinogram2 - sinogram1)
+
+    build_sinogram_display(
+        axs[0, 0], 'Sinogram1 [Radon Transform on Image1]',
+        sinogram1, directions1, sinogram2, abscissa=False)
+    build_sinogram_difference_display(
+        axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2,
+        abscissa=False, cmap='bwr')
+    build_sinogram_display(
+        axs[0, 2], 'Sinogram2 [Radon Transform on Image2]', sinogram2, directions2, sinogram1,
+        ordonate=False, abscissa=False)
+
+    # Second Plot line = Spectral Amplitude of Sinogram1 [after DFT] / CSM Amplitude /
+    # Spectral Amplitude of Sinogram2 [after DFT]
+    sino1_fft = first_radon_transform.get_sinograms_standard_dfts()
+    sino2_fft = second_radon_transform.get_sinograms_standard_dfts()
+
+    # Plotting extent needs kfft.max information with kfft containig all the wavenumbers
+    # (i.e. the sampling of the sinogram FFT) constrained by the gravity constant &
+    # the MAX_T, MIN_T parameters given as part of the wave_bathy_inversion_config.yaml file
+    gravity = local_estimator._bathymetry_estimations.gravity
+    waves_period_min = local_estimator.global_estimator.waves_period_min
+    wavenumber_max = 2.0 * np.pi / (gravity * waves_period_min**2)
+    kfft = np.array([wavenumber_max])
+
+    build_sinogram_spectral_display(
+        axs[1, 0], 'Spectral Amplitude of Sinogram1 [DFT]',
+        np.abs(sino1_fft), directions1, kfft, abscissa=False)
+    build_correl_spectrum_matrix_spatial_correlation(
+        axs[1, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'amplitude',
+        'Cross Spectral Matrix (Amplitude)')
+    build_sinogram_spectral_display(
+        axs[1, 2], 'Spectral Amplitude of Sinogram2 [DFT]',
+        np.abs(sino2_fft), directions2, kfft, ordonate=False, abscissa=False)
+
+    # Third Plot line = Spectral Amplitude of Sinogram1 [after DFT] * CSM Phase /
+    # CSM Amplitude * CSM Phase / Spectral Amplitude of Sinogram2 [after DFT] * CSM Phase
+    sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
+    csm_phase = np.angle(sinograms_correlation_fft)
+
+    build_sinogram_spectral_display(
+        axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
+        np.abs(sino1_fft) * csm_phase, directions1, kfft)
+    build_correl_spectrum_matrix_spatial_correlation(
+        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'phase',
+        'Cross Spectral Matrix (Amplitude * Phase-shifts)')
+    build_sinogram_spectral_display(
+        axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, ordonate=False)
 
     plt.tight_layout()
@@ -702,9 +875,9 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     rticks = 1 / requested_labels
 
     # Main information display
-    ax_polar.plot(np.radians(main_direction + 180), 1 / main_wavelength, '*', color='black')
+    ax_polar.plot(np.radians(main_direction), 1 / main_wavelength, '*', color='black')
     ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, $\lambda$={:.2f}m]'.format(90 - main_direction, main_wavelength),
-                      xy=[np.radians(main_direction + 180), (1 / main_wavelength)],  # theta, radius
+                      xy=[np.radians(main_direction), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',
                       arrowprops=dict(facecolor='blue', shrink=0.02),
@@ -773,6 +946,8 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     polar = csm_amplitude * csm_phase
+    # set negative values to 0 to avoid mirror display
+    polar[polar < 0] = 0
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
                         local_estimator, polar, first_image.resolution,
                         subplot_pos=[1, 2, 2], threshold=False)
