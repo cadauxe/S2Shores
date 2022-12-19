@@ -193,7 +193,7 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
     if directions is not None:
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
-            dir_rad = np.deg2rad(direction)
+            dir_rad = np.deg2rad(direction) + np.pi
             axes.arrow(l1 // 2, l2 // 2,
                        np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
                        head_width=2, head_length=3, color='r')
@@ -244,7 +244,7 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
     if directions is not None:
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
-            dir_rad = np.deg2rad(direction)
+            dir_rad = np.deg2rad(direction) + np.pi
             axes.arrow(l1 // 2, l2 // 2,
                        np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
                        head_width=2, head_length=3, color='r')
@@ -439,7 +439,9 @@ def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray
     extent = [np.min(directions), np.max(directions),
               np.ceil(-values.shape[0] / 2),
               np.floor(values.shape[0] / 2)]
+
     axes.imshow(values, cmap=cmap, aspect='auto', extent=extent, **kwargs)
+
     axes.grid(lw=0.5, color='black', alpha=0.7, linestyle='-')
     axes.yaxis.set_ticklabels([])
     axes.set_xlim(-135, 135)
@@ -485,7 +487,8 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     sinogram1, directions1 = first_radon_transform.get_as_arrays()
     second_radon_transform = local_estimator.radon_transforms[1]
     sinogram2, directions2 = second_radon_transform.get_as_arrays()
-    radon_difference = np.abs(sinogram2 - sinogram1)
+    radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
+        (sinogram1 / np.max(np.abs(sinogram1)))
 
     # get main direction
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
@@ -546,8 +549,8 @@ def display_sinograms_spatial_correlation(
     sinogram1, directions1 = first_radon_transform.get_as_arrays()
     second_radon_transform = WavesRadon(second_image)
     sinogram2, directions2 = second_radon_transform.get_as_arrays()
-    radon_difference = np.abs(sinogram2 - sinogram1)
-
+    radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
+        (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         0]
@@ -673,8 +676,8 @@ def display_dft_sinograms_spectral_analysis(
     sinogram1, directions1 = first_radon_transform.get_as_arrays()
     second_radon_transform = local_estimator.radon_transforms[1]
     sinogram2, directions2 = second_radon_transform.get_as_arrays()
-    radon_difference = np.abs(sinogram2 - sinogram1)
-
+    radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
+        (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         0]
@@ -769,7 +772,7 @@ def build_sinogram_1D_display(axes: Axes, title: str, values1: np.ndarray, direc
     theta_label = 'Sinogram 1D along \n$\Theta$={:.1f}°'.format(main_theta)
     nb_pixels = np.shape(values1[:, index_theta])[0]
     absc = np.arange(-nb_pixels / 2, nb_pixels / 2)
-    axes.plot(absc, np.flip((values1[:, index_theta] / np.max(values1[:, index_theta]))),
+    axes.plot(absc, np.flip((values1[:, index_theta] / np.max(np.abs(values1[:, index_theta])))),
               color="orange", lw=0.8, label=theta_label)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
@@ -803,7 +806,7 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     theta_label1 = 'Sinogram1 1D'  # along \n$\Theta$={:.1f}°'.format(main_theta)
     nb_pixels1 = np.shape(values1[:, index_theta1])[0]
     absc = np.arange(-nb_pixels1 / 2, nb_pixels1 / 2)
-    axes.plot(absc, np.flip((values1[:, index_theta1] / np.max(values1[:, index_theta1]))),
+    axes.plot(absc, np.flip((values1[:, index_theta1] / np.max(np.abs(values1[:, index_theta1])))),
               color="orange", lw=0.8, label=theta_label1)
 
     index_theta2 = np.int(main_theta - np.min(directions2))
@@ -812,7 +815,7 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     theta_label2 = 'Sinogram2 1D'  # along \n$\Theta$={:.1f}°'.format(main_theta)
     nb_pixels2 = np.shape(values2[:, index_theta2])[0]
     absc2 = np.arange(-nb_pixels2 / 2, nb_pixels2 / 2)
-    axes.plot(absc2, np.flip((values2[:, index_theta2] / np.max(values2[:, index_theta2]))),
+    axes.plot(absc2, np.flip((values2[:, index_theta2] / np.max(np.abs(values2[:, index_theta2])))),
               color="black", lw=0.8, ls='--', label=theta_label2)
 
     # Compute Cross-Correlation between Sino1 & Sino2
@@ -845,11 +848,69 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     axes.tick_params(axis='both', which='major', labelsize=8)
 
 
+def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndarray,
+                                        directions1: np.ndarray, main_theta: float,
+                                        values2: np.ndarray,
+                                        correl_mode: str, choice: str, ordonate: bool=True,
+                                        abscissa: bool=True, cmap: Optional[str] = None,
+                                        **kwargs: dict) -> None:
+
+    extent = [np.min(directions1), np.max(directions1),
+              np.ceil(-values1.shape[0] / 2),
+              np.floor(values1.shape[0] / 2)]
+
+    if choice == 'one_dir':
+        index_theta1 = np.int(main_theta - np.min(directions1))
+        # get 1D-sinogram1 along relevant direction
+        sino1_1D = values1[:, index_theta1]
+        # Proceed with 1D-Correlation between Sino1(main_dir) and Sino2(all_dir)
+        values3 = np.transpose(values2).copy()
+        index = 0
+
+        for sino2_1D in zip(*values2):
+            norm_cross_correl = normalized_cross_correlation(sino1_1D, sino2_1D, correl_mode)
+            values3[index] = norm_cross_correl
+            index += 1
+
+    if choice == 'all_dir':
+        # get 1D-sinogram1 along relevant direction
+        sino1_2D = np.transpose(values1)
+        # Proceed with 1D-Correlation between Sino1(main_dir) and Sino2(all_dir)
+        values3 = np.transpose(values2).copy()
+        index = 0
+
+        for sino2_1D in zip(*values2):
+            norm_cross_correl = normalized_cross_correlation(sino1_2D[index], sino2_1D, correl_mode)
+            values3[index] = norm_cross_correl
+            index += 1
+
+    axes.imshow(np.transpose(values3), cmap=cmap, aspect='auto', extent=extent, **kwargs)
+
+    theta_label = '$\Theta$={:.1f}°'.format(main_theta)
+    axes.axvline(main_theta, np.ceil(-values1.shape[0] / 2), np.floor(values1.shape[0] / 2),
+                 color='yellow', ls='--', lw=2, label=theta_label)
+
+    axes.grid(lw=0.5, color='black', alpha=0.7, linestyle='-')
+    axes.set_xlim(-135, 135)
+    axes.set_xticks(np.arange(-135, 136, 45))
+    plt.setp(axes.get_xticklabels(), fontsize=8)
+
+    if ordonate:
+        axes.set_ylabel(r'$\rho$ [pixels]', fontsize=8)
+    else:
+        axes.yaxis.set_ticklabels([])
+    if abscissa:
+        axes.set_xlabel(r'Direction Angle $\theta$ [degrees]', fontsize=8)
+
+    axes.set_title(title, fontsize=10)
+    axes.tick_params(axis='both', which='major', labelsize=8)
+
+
 def display_sinograms_1D_analysis_spatial_correlation(
         local_estimator: 'SpatialCorrelationBathyEstimator') -> None:
 
     plt.close('all')
-    nrows = 2
+    nrows = 3
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
@@ -862,11 +923,12 @@ def display_sinograms_1D_analysis_spatial_correlation(
     sinogram1, directions1 = first_radon_transform.get_as_arrays()
     second_radon_transform = WavesRadon(second_image)
     sinogram2, directions2 = second_radon_transform.get_as_arrays()
-    radon_difference = np.abs(sinogram2 - sinogram1)
-
+    radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
+        (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         0]
+
     build_sinogram_display(
         axs[0, 0], 'Sinogram1 [Radon Transform on Image1]',
         sinogram1, directions1, sinogram2, main_direction, abscissa=False)
@@ -891,6 +953,25 @@ def display_sinograms_1D_analysis_spatial_correlation(
     build_sinogram_1D_display(
         axs[1, 2], title_sino2,
         sinogram2, directions2, main_direction, ordonate=False)
+
+    # Third Plot line = Image [2D] Cross correl Sino1[main dir] with Sino2 all directions /
+    # Image [2D] of Cross correlation 1D between SINO1 & SINO 2 for each direction /
+    # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
+    title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={:.1f}°] and Sino2[All Directions]'.format(
+        main_direction)
+    title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
+        main_direction)
+    title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n Sino1 and Sino2 for Each Direction'
+
+    build_sinogram_2D_cross_correlation(
+        axs[2, 0], title_cross_correl1, sinogram1, directions1, main_direction,
+        sinogram2, correl_mode, choice='one_dir')
+    build_sinogram_2D_cross_correlation(
+        axs[2, 1], title_cross_correl_2D, sinogram1, directions1, main_direction,
+        sinogram2, correl_mode, choice='all_dir', ordonate=False)
+    build_sinogram_2D_cross_correlation(
+        axs[2, 2], title_cross_correl2, sinogram2, directions2, main_direction,
+        sinogram1, correl_mode, choice='one_dir', ordonate=False)
 
     plt.tight_layout()
     plt.savefig(
@@ -949,7 +1030,6 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
                       xy=[np.radians(main_direction), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',
-                      arrowprops=dict(facecolor='blue', shrink=0.02),
                       horizontalalignment='left',
                       verticalalignment='bottom',
                       fontsize=10, color='blue')
