@@ -987,7 +987,8 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
         xmax = directions1[pos_max[1]]
         ymax = np.floor(values1.shape[0] / 2) - pos_max[0]
         axes.scatter(xmax, ymax, c='r', s=20)
-        axes.annotate('Local Maximum', xy=(xmax, ymax), xytext=(xmax + 10, ymax + 10), color='red')
+        notation = 'Local Maximum \n [$\Theta$={:.1f}°]'.format(xmax[0])
+        axes.annotate(notation, xy=(xmax, ymax), xytext=(xmax + 10, ymax + 10), color='red')
 
     if ordonate:
         axes.set_ylabel(r'$\rho$ [pixels]', fontsize=8)
