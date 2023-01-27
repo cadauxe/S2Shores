@@ -972,11 +972,35 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
             values3[index] = norm_cross_correl
             index += 1
 
+        # Compute variance associated to np.transpose(values3)
+        normalized_var_val3 = (np.var(np.transpose(values3), axis=0) /
+                               np.max(np.var(np.transpose(values3), axis=0)) - 0.5) * np.transpose(values3).shape[0]
+
+        axes.plot(directions1, normalized_var_val3,
+                  color="white", lw=1, ls='--', label='Normalized Variance', zorder=5)
+
+        # Find position of the local maximum of the normalized variance of values3
+        pos_val3 = np.where(normalized_var_val3 == np.max(normalized_var_val3))
+        max_var_pos = directions1[pos_val3][0]
+
+        # Check coherence of main direction between Master / Slave
+        if directions1[pos_val3][0] * main_theta < 0:
+            max_var_pos = directions1[pos_val3][0] % (np.sign(main_theta) * 180.0)
+
+        max_var_label = '$\Theta$={:.1f}° [Variance Max]'.format(max_var_pos)
+        axes.axvline(max_var_pos, np.ceil(-values1.shape[0] / 2), np.floor(values1.shape[0] / 2),
+                     color='red', ls='--', lw=1, label=max_var_label, zorder=10)
+
+    # Main 2D-plot
     axes.imshow(np.transpose(values3), cmap=cmap, aspect='auto', extent=extent, **kwargs)
 
     theta_label = '$\Theta$={:.1f}°'.format(main_theta)
     axes.axvline(main_theta, np.ceil(-values1.shape[0] / 2), np.floor(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
+
+    legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
+    # Put a nicer background color on the legend.
+    legend.get_frame().set_facecolor('C0')
 
     axes.grid(lw=0.5, color='black', alpha=0.7, linestyle='-')
     axes.set_xlim(-135, 135)
