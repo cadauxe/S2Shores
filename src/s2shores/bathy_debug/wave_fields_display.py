@@ -163,7 +163,7 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
     imin = np.min(image)
     imax = np.max(image)
     #imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
-    axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
+    #axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
     axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
     # create polar axes in the foreground and remove its background to see through
     subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
