@@ -80,10 +80,11 @@ def build_image_display(axes: Axes, title: str, image: np.ndarray,
     imax = np.max(image)
     axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
     (l1, l2) = np.shape(image)
-    radius = min(l1, l2) / 2
+    coeff_length_max = np.max((list(zip(*directions))[1])) + 1
+    radius = np.floor(min(l1, l2) / 2) - 1
     if directions is not None:
         for direction, coeff_length in directions:
-            arrow_length = radius * coeff_length
+            arrow_length = radius * coeff_length / coeff_length_max
             dir_rad = np.deg2rad(direction)
             axes.arrow(l1 // 2, l2 // 2,
                        np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
@@ -188,8 +189,8 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
         axes.set_xticks([0, l1 - 1], ['\n', ' \n'], fontsize=8)
 
     # Normalization of arrows length
-    coeff_length_max = np.max((list(zip(*directions))[1]))
-    radius = min(l1, l2) / 2
+    coeff_length_max = np.max((list(zip(*directions))[1])) + 1
+    radius = np.floor(min(l1, l2) / 2) - 1
     if directions is not None:
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
@@ -239,8 +240,8 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
         axes.set_xticks([0, l1 - 1], ['\n', ' \n'], fontsize=8)
 
     # Normalization of arrows length
-    coeff_length_max = np.max((list(zip(*directions))[1]))
-    radius = min(l1, l2) / 2
+    coeff_length_max = np.max((list(zip(*directions))[1])) + 1
+    radius = np.floor(min(l1, l2) / 2) - 1
     if directions is not None:
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
