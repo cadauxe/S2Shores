@@ -189,8 +189,8 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
         axes.set_xticks([0, l1 - 1], ['\n', ' \n'], fontsize=8)
 
     # Normalization of arrows length
-    coeff_length_max = np.max((list(zip(*directions))[1])) + 1
-    radius = np.floor(min(l1, l2) / 2) - 1
+    coeff_length_max = np.max((list(zip(*directions))[1])) + 2
+    radius = np.floor(min(l1, l2) / 2) - 2
     if directions is not None:
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
@@ -240,8 +240,8 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
         axes.set_xticks([0, l1 - 1], ['\n', ' \n'], fontsize=8)
 
     # Normalization of arrows length
-    coeff_length_max = np.max((list(zip(*directions))[1])) + 1
-    radius = np.floor(min(l1, l2) / 2) - 1
+    coeff_length_max = np.max((list(zip(*directions))[1])) + 2
+    radius = np.floor(min(l1, l2) / 2) - 2
     if directions is not None:
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
