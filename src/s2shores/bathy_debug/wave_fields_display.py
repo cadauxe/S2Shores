@@ -316,10 +316,12 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
                               subplot_pos=[nrows, ncols, 9],
                               directions=arrows, cmap='gray', coordinates=False)
     plt.tight_layout()
+    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_waves_images.png"),
+            "display_waves_images_debug_point_" + point_id + ".png"),
         dpi=300)
     plt.show()
 
@@ -331,6 +333,7 @@ def display_waves_images_spatial_correl(
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+
     #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
     second_image = local_estimator.ortho_sequence[1]
@@ -387,10 +390,11 @@ def display_waves_images_spatial_correl(
                               subplot_pos=[nrows, ncols, 9],
                               directions=arrows, cmap='gray', coordinates=False)
     plt.tight_layout()
+    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_waves_images.png"),
+            "display_waves_images_debug_point_" + point_id + ".png"),
         dpi=300)
     plt.show()
 
@@ -400,8 +404,8 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
                            ordonate: bool=True, abscissa: bool=True, master: bool=True,
                            **kwargs: dict) -> None:
     extent = [np.min(directions), np.max(directions),
-              np.ceil(-values1.shape[0] / 2),
-              np.floor(values1.shape[0] / 2)]
+              np.floor(-values1.shape[0] / 2),
+              np.ceil(values1.shape[0] / 2)]
     axes.imshow(values1, aspect='auto', extent=extent, **kwargs)
     normalized_var1 = (np.var(values1, axis=0) /
                        np.max(np.var(values1, axis=0)) - 0.5) * values1.shape[0]
@@ -419,7 +423,7 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
         main_theta = directions[pos1][0] % (np.sign(main_theta) * 180.0)
     theta_label = '$\Theta$={:.1f}°'.format(main_theta)
 
-    axes.axvline(main_theta, np.ceil(-values1.shape[0] / 2), np.floor(values1.shape[0] / 2),
+    axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
@@ -447,8 +451,8 @@ def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray
                                       **kwargs: dict) -> None:
 
     extent = [np.min(directions), np.max(directions),
-              np.ceil(-values.shape[0] / 2),
-              np.floor(values.shape[0] / 2)]
+              np.floor(-values.shape[0] / 2),
+              np.ceil(values.shape[0] / 2)]
 
     axes.imshow(values, cmap=cmap, aspect='auto', extent=extent, **kwargs)
 
@@ -514,10 +518,11 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
         main_direction, ordonate=False)
 
     plt.tight_layout()
+    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms.png"),
+            "display_sinograms_debug_point_" + point_id + ".png"),
         dpi=300)
     plt.show()
 
@@ -575,10 +580,12 @@ def display_sinograms_spatial_correlation(
         main_direction, ordonate=False)
 
     plt.tight_layout()
+    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms.png"),
+            "display_sinograms_debug_point_" + point_id + ".png"),
         dpi=300)
     plt.show()
 
@@ -735,10 +742,12 @@ def display_dft_sinograms_spectral_analysis(
         np.abs(sino2_fft) * csm_phase, directions2, kfft, ordonate=False)
 
     plt.tight_layout()
+    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_spectral_analysis.png"),
+            "display_sinograms_spectral_analysis_debug_point_" + point_id + ".png"),
         dpi=300)
     plt.show()
 
@@ -812,6 +821,7 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, 
     normalized_var = (np.var(values, axis=0) /
                       np.max(np.var(values, axis=0)) - 0.5) * values.shape[0]
     pos = np.where(normalized_var == np.max(normalized_var))
+    main_theta_slave = directions[pos][0]
 
     # Check coherence of main direction between Master / Slave
     if directions[pos][0] * main_theta < 0:
@@ -858,7 +868,7 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     normalized_var = (np.var(values2, axis=0) /
                       np.max(np.var(values2, axis=0)) - 0.5) * values2.shape[0]
     pos2 = np.where(normalized_var == np.max(normalized_var))
-
+    main_theta_slave = directions2[pos2][0]
     # Check coherence of main direction between Master / Slave
     if directions2[pos2][0] * main_theta < 0:
         main_theta_slave = directions2[pos2][0] % (np.sign(main_theta) * 180.0)
@@ -930,8 +940,8 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
                                         **kwargs: dict) -> None:
 
     extent = [np.min(directions1), np.max(directions1),
-              np.ceil(-values1.shape[0] / 2),
-              np.floor(values1.shape[0] / 2)]
+              np.floor(-values1.shape[0] / 2),
+              np.ceil(values1.shape[0] / 2)]
 
     if imgtype == 'slave':
         normalized_var = (np.var(values1, axis=0) /
@@ -988,14 +998,14 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
             max_var_pos = directions1[pos_val3][0] % (np.sign(main_theta) * 180.0)
 
         max_var_label = '$\Theta$={:.1f}° [Variance Max]'.format(max_var_pos)
-        axes.axvline(max_var_pos, np.ceil(-values1.shape[0] / 2), np.floor(values1.shape[0] / 2),
+        axes.axvline(max_var_pos, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                      color='red', ls='--', lw=1, label=max_var_label, zorder=10)
 
     # Main 2D-plot
     axes.imshow(np.transpose(values3), cmap=cmap, aspect='auto', extent=extent, **kwargs)
 
     theta_label = '$\Theta$={:.1f}°'.format(main_theta)
-    axes.axvline(main_theta, np.ceil(-values1.shape[0] / 2), np.floor(values1.shape[0] / 2),
+    axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
@@ -1093,10 +1103,12 @@ def display_sinograms_1D_analysis_spatial_correlation(
         sinogram1, correl_mode, choice='one_dir', imgtype='slave', ordonate=False)
 
     plt.tight_layout()
+    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_1D_analysis.png"),
+            "display_sinograms_1D_analysis_debug_point_" + point_id + ".png"),
         dpi=300)
     plt.show()
 
@@ -1221,10 +1233,12 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
                         subplot_pos=[1, 2, 2], threshold=False)
 
     plt.tight_layout()
+    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_polar_images.png"),
+            "display_polar_images_debug_point_" + point_id + ".png"),
         dpi=300)
     plt.show()
 
