@@ -422,6 +422,9 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     # Check coherence of main direction between Master / Slave
     if directions[pos1][0] * main_theta < 0:
         main_theta = directions[pos1][0] % (np.sign(main_theta) * 180.0)
+    # Check if the main direction belongs to the plotting interval [-135:135]
+    if main_theta < -135.0 or main_theta > 135.0:
+        main_theta %= -np.sign(main_theta) * 180.0
     theta_label = '$\Theta$={:.1f}°'.format(main_theta)
 
     axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
@@ -789,6 +792,9 @@ def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray
                                      main_theta: float,
                                      ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
     index_theta = np.int(main_theta - np.min(directions))
+    # Check if the main direction belongs to the plotting interval [-135:135]
+    if main_theta < -135.0 or main_theta > 135.0:
+        main_theta %= -np.sign(main_theta) * 180.0
     theta_label = 'Sinogram 1D along \n$\Theta$={:.1f}°'.format(main_theta)
     nb_pixels = np.shape(values1[:, index_theta])[0]
     absc = np.arange(-nb_pixels / 2, nb_pixels / 2)
@@ -831,6 +837,11 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, 
     index_theta_master = np.int(main_theta - np.min(directions))
     index_theta_slave = np.int(main_theta_slave - np.min(directions))
 
+    # Check if the main direction belongs to the plotting interval [-135:135]
+    if main_theta < -135.0 or main_theta > 135.0:
+        main_theta %= -np.sign(main_theta) * 180.0
+    if main_theta_slave < -135.0 or main_theta_slave > 135.0:
+        main_theta_slave %= -np.sign(main_theta_slave) * 180.0
     theta_label_master = 'along Master Main Direction\n$\Theta$={:.1f}°'.format(main_theta)
     theta_label_slave = 'along Slave Main Direction\n$\Theta$={:.1f}°'.format(main_theta_slave)
     nb_pixels = np.shape(values[:, index_theta_master])[0]
@@ -894,11 +905,21 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # axes.plot(absc2, np.flip((values2[:, index_theta2_master] / np.max(np.abs(values2[:, index_theta2_master])))),
     #          color="black", lw=0.8, ls='--', label=theta_label2_master)
 
+    # Check if the main direction belongs to the plotting interval [-135:135]
+    if main_theta < -135.0 or main_theta > 135.0:
+        main_theta_label = main_theta % (-np.sign(main_theta) * 180.0)
+    else:
+        main_theta_label = main_theta
+    if main_theta_slave < -135.0 or main_theta_slave > 135.0:
+        main_theta_slave_label = main_theta_slave % (-np.sign(main_theta_slave) * 180.0)
+    else:
+        main_theta_slave_label = main_theta_slave
+
     # Compute Cross-Correlation between Sino1 [Master Man Direction] & Sino2 [Master Main Direction]
     sino_cross_corr_norm_master = normalized_cross_correlation(
         np.flip(sino1_1D), np.flip(sino2_1D_master), correl_mode)
     label_correl_master = 'Sino1_1D[$\Theta$={:.1f}°] vs Sino2_1D[$\Theta$={:.1f}°]'.format(
-        main_theta, main_theta)
+        main_theta_label, main_theta_label)
     axes.plot(absc, sino_cross_corr_norm_master, color="red", lw=0.8, label=label_correl_master)
 
     sino2_1D_slave = values2[:, index_theta2_slave]
@@ -908,8 +929,9 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # Compute Cross-Correlation between Sino1 [Master Main Direction& Sino2 [Slave Main Direction]
     sino_cross_corr_norm_slave = normalized_cross_correlation(
         np.flip(sino1_1D), np.flip(sino2_1D_slave), correl_mode)
+
     label_correl_slave = 'Sino1_1D[$\Theta$={:.1f}°] vs Sino2_1D[$\Theta$={:.1f}°]'.format(
-        main_theta, main_theta_slave)
+        main_theta_label, main_theta_slave_label)
     axes.plot(absc, sino_cross_corr_norm_slave, color="black", ls='--', lw=0.8,
               label=label_correl_slave)
 
@@ -952,9 +974,14 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
         # Check coherence of main direction between Master / Slave
         if directions1[pos][0] * main_theta < 0:
             main_theta = directions1[pos][0] % (np.sign(main_theta) * 180.0)
+        # Check if the main direction belongs to the plotting interval [-135:135]
+        if main_theta < -135.0 or main_theta > 135.0:
+            main_theta_label = main_theta % (-np.sign(main_theta) * 180.0)
+        else:
+            main_theta_label = main_theta
 
         title = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
-            main_theta)
+            main_theta_label)
 
     if choice == 'one_dir':
         index_theta1 = np.int(main_theta - np.min(directions1))
@@ -997,6 +1024,9 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
         # Check coherence of main direction between Master / Slave
         if directions1[pos_val3][0] * main_theta < 0:
             max_var_pos = directions1[pos_val3][0] % (np.sign(main_theta) * 180.0)
+        # Check if the main direction belongs to the plotting interval [-135:135]
+        if max_var_pos < -135.0 or max_var_pos > 135.0:
+            max_var_pos %= -np.sign(max_var_pos) * 180.0
 
         max_var_label = '$\Theta$={:.1f}° [Variance Max]'.format(max_var_pos)
         axes.axvline(max_var_pos, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
@@ -1005,6 +1035,9 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # Main 2D-plot
     axes.imshow(np.transpose(values3), cmap=cmap, aspect='auto', extent=extent, **kwargs)
 
+    # Check if the main direction belongs to the plotting interval [-135:135]
+    if main_theta < -135.0 or main_theta > 135.0:
+        main_theta %= -np.sign(main_theta) * 180.0
     theta_label = '$\Theta$={:.1f}°'.format(main_theta)
     axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
@@ -1071,8 +1104,13 @@ def display_sinograms_1D_analysis_spatial_correlation(
 
     # Second Plot line = SINO_1 [1D along estimated direction] / Cross-Correlation Signal /
     # SINO_2 [1D along estimated direction resulting from Image1]
-    title_sino1 = '[Master Image] Sinogram 1D along $\Theta$={:.1f}° '.format(main_direction)
-    title_sino2 = '[Slave Image] Sinogram 1D'.format(main_direction)
+    # Check if the main direction belongs to the plotting interval [-135:135]
+    if main_direction < -135.0 or main_direction > 135.0:
+        theta_label = main_direction % (-np.sign(main_direction) * 180.0)
+    else:
+        theta_label = main_direction
+    title_sino1 = '[Master Image] Sinogram 1D along $\Theta$={:.1f}° '.format(theta_label)
+    title_sino2 = '[Slave Image] Sinogram 1D'.format(theta_label)
     correl_mode = local_estimator.global_estimator.local_estimator_params['CORRELATION_MODE']
 
     build_sinogram_1D_display_master(
@@ -1087,10 +1125,15 @@ def display_sinograms_1D_analysis_spatial_correlation(
     # Third Plot line = Image [2D] Cross correl Sino1[main dir] with Sino2 all directions /
     # Image [2D] of Cross correlation 1D between SINO1 & SINO 2 for each direction /
     # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
+    # Check if the main direction belongs to the plotting interval [-135:135]
+    if main_direction < -135.0 or main_direction > 135.0:
+        main_theta_label = main_direction % (-np.sign(main_direction) * 180.0)
+    else:
+        main_theta_label = main_direction
     title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={:.1f}°] and Sino2[All Directions]'.format(
-        main_direction)
+        main_theta_label)
     title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
-        main_direction)
+        main_theta_label)
     title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n Sino1 and Sino2 for Each Direction'
 
     build_sinogram_2D_cross_correlation(
