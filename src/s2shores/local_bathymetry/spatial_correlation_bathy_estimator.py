@@ -23,7 +23,7 @@ from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
-from ..waves_exceptions import WavesEstimationError
+from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_bathy_estimation import SpatialCorrelationBathyEstimation
