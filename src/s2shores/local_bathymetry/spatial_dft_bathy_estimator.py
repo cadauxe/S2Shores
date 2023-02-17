@@ -7,23 +7,21 @@
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING, cast  # @NoMove
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Tuple,  # @NoMove
+                    cast)
 
+import numpy as np
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 
-import numpy as np
-
 from ..bathy_physics import wavenumber_offshore
-from ..generic_utils.image_filters import detrend, desmooth
-from ..image.ortho_sequence import OrthoSequence, FrameIdType
+from ..generic_utils.image_filters import desmooth, detrend
+from ..image.ortho_sequence import FrameIdType, OrthoSequence
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
-
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_bathy_estimation import SpatialDFTBathyEstimation
-
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -273,17 +271,10 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                   - the spectrum amplitude
                   - a dictionary containing intermediate results for debugging purposes
         """
-        nb_wavenumbers = sino1_fft.shape[0]
 
         sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
         phase_shift = np.angle(sinograms_correlation_fft)
-
-        amplitude_sino1 = np.abs(sino1_fft) ** 2
-        amplitude_sino2 = np.abs(sino2_fft) ** 2
-        combined_amplitude = (amplitude_sino1 + amplitude_sino2)
-
-        # Find maximum total energy per direction theta and normalize by the greater one
-        spectrum_amplitude = np.abs(combined_amplitude) / (nb_wavenumbers**4)
+        spectrum_amplitude = np.abs(sinograms_correlation_fft)
 
         return phase_shift, spectrum_amplitude, sinograms_correlation_fft
 

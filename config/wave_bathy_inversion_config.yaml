@@ -17,7 +17,8 @@ GLOBAL_ESTIMATOR:
   
   # window parameters
   WINDOW: 800.0 # thumbnail size - meters - ex. PHR : 400
-  SM_LENGTH: 10 # smoothing filter size - pixels
+  SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image. 
+                # Kernel size = 2*SM_LENGTH+1. Deactivation of the desmoothing filter with SM_LENGTH = 0.
 
   # physical constraints
   MIN_D: 2 #minimal depth - meters

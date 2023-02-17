@@ -15,7 +15,7 @@ from typing import Optional, List, Tuple, TYPE_CHECKING  # @NoMove
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
-from bathyinversionvagues.image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
