@@ -14,7 +14,8 @@ from shapely.geometry import Point
 
 
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
-from ..data_model.estimated_bathy import EstimatedBathy
+from ..data_model.estimated_carto_bathy import EstimatedCartoBathy
+from ..data_model.estimated_points_bathy import EstimatedPointsBathy
 from ..image.ortho_sequence import OrthoSequence
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
@@ -50,9 +51,6 @@ class OrthoBathyEstimator:
         # Will disappear when true Wave Fields will be identified and implemented.
         nb_keep = self.parent_estimator.nb_max_wave_fields
 
-        estimated_bathy = EstimatedBathy(self.sampled_ortho.carto_sampling,
-                                         self.sampled_ortho.ortho_stack.acquisition_time)
-
         # subtile reading
         sub_tile_images = OrthoSequence(self.parent_estimator.delta_time_provider)
         for frame_id in self.parent_estimator.selected_frames:
@@ -61,15 +59,25 @@ class OrthoBathyEstimator:
 
         start = time.time()
         computed_points = 0
-        for estimation_point in self.sampled_ortho.carto_sampling.x_y_sampling():
-            bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, estimation_point)
-            if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
-                computed_points += 1
+        if self.parent_estimator._debug_samples:
+            estimated_bathy = EstimatedPointsBathy(self.sampled_ortho.ortho_stack.acquisition_time)
+            for sample in self.parent_estimator._debug_samples:
+                print(sample)
+                bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
+                if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
+                    computed_points += 1
+        else:
+            estimated_bathy = EstimatedCartoBathy(self.sampled_ortho.carto_sampling,
+                                         self.sampled_ortho.ortho_stack.acquisition_time)
+            for estimation_point in self.sampled_ortho.carto_sampling.x_y_sampling():
+                bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, estimation_point)
+                if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
+                    computed_points += 1
 
-            # Store bathymetry sample estimations
-            estimated_bathy.store_estimations(bathy_estimations)
+                # Store bathymetry sample estimations
+                estimated_bathy.store_estimations(bathy_estimations)
 
-        total_points = self.sampled_ortho.carto_sampling.nb_samples
+        total_points = len(self.parent_estimator._debug_samples)
         comput_time = time.time() - start
         print(f'Computed {computed_points}/{total_points} points in: {comput_time:.2f} s')
 
