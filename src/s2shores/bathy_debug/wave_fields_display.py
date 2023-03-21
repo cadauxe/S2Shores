@@ -181,7 +181,7 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
     xmax = f'{l1}px \n {np.round((l1-1)*resolution)}m'
     axes.set_xticks([0, l1 - 1], ['0', xmax], fontsize=8)
     ymax = f'{l2}px \n {np.round((l2-1)*resolution)}m'
-    #axes.set_yticks([0, l2 - 1], [ymax, '0'], fontsize=8)
+
     if coordinates:
         axes.set_yticks([0, l2 - 1], [ymax, '0'], fontsize=8)
     else:
