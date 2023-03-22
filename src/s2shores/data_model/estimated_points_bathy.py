@@ -14,7 +14,6 @@ from xarray import DataArray  # @NoMove
 from ..data_model.estimated_bathy import EstimatedBathy, \
                                          DEBUG_LAYER, EXPERT_LAYER, NOMINAL_LAYER, \
                                          METERS_UNIT, SPATIAL_REF
-from ..image.sampling_2d import Sampling2D
 from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
@@ -287,7 +286,7 @@ class EstimatedPointsBathy(EstimatedBathy):
         :raises WavesEstimationAttributeError: when the requested property cannot be found in the
                                                estimations attributes.
         """
-        nb_samples = self.estimated_bathy.shape
+        nb_samples = len(self.estimated_bathy)
 
         dims = layer_definition['dimensions']
         layer_shape: Union[Tuple[int], Tuple[int, int]]
@@ -302,7 +301,7 @@ class EstimatedPointsBathy(EstimatedBathy):
         not_found = 0
         for index in range(nb_samples):
                 try:
-                    self._fill_array(sample_property, layer_data, index)
+                    self._fill_array(sample_property, layer_data, [index])
                 except WavesEstimationAttributeError:
                     not_found += 1
                     continue
@@ -323,8 +322,7 @@ class EstimatedPointsBathy(EstimatedBathy):
         index = index[0]
         bathymetry_estimations = self.estimated_bathy[index]
         bathy_property = bathymetry_estimations.get_attribute(sample_property)
-
-        if layer_data.ndim == 2:
+        if layer_data.ndim == 1:
             layer_data[index] = np.array(bathy_property)
         else:
             nb_keep = layer_data.shape[0]

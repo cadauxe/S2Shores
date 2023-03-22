@@ -304,7 +304,7 @@ class EstimatedCartoBathy(EstimatedBathy):
         for y_index in range(nb_samples_y):
             for x_index in range(nb_samples_x):
                 try:
-                    self._fill_array(sample_property, layer_data, y_index, x_index)
+                    self._fill_array(sample_property, layer_data, [y_index, x_index])
                 except WavesEstimationAttributeError:
                     not_found += 1
                     continue
@@ -322,7 +322,7 @@ class EstimatedCartoBathy(EstimatedBathy):
     # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
 
     def _fill_array(self, sample_property: str, layer_data: np.ndarray, index: List[int]) -> None:
-        [x_index, y_index] = index
+        [y_index, x_index] = index
         bathymetry_estimations = self.estimated_bathy[y_index, x_index]
         bathy_property = bathymetry_estimations.get_attribute(sample_property)
 

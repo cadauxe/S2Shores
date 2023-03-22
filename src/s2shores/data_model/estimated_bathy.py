@@ -33,7 +33,6 @@ class EstimatedBathy():
         """ Define dimensions for which the estimated bathymetry samples will be defined.
         :param acq_time: the time at which the bathymetry samples are estimated
         """
-        print('init estimated_bathy')
         timestamp = datetime(int(acq_time[:4]), int(acq_time[4:6]), int(acq_time[6:8]),
                              int(acq_time[9:11]), int(acq_time[11:13]), int(acq_time[13:15]))
         self.timestamps = [timestamp]
