@@ -113,20 +113,16 @@ class GeotiffDisToShoreProvider(DisToShoreProvider):
         :param point: a tuple containing the X and Y coordinates in the SRS of the client
         :returns: the distance to the nearest shore (km)
         """
-        if self._distoshore is None:
-            distoshore_dataset = gdal.Open(str(self._distoshore_file_path), gdal.GA_ReadOnly)
-            xsize = distoshore_dataset.RasterXSize
-            ysize = distoshore_dataset.RasterYSize
-            projection = distoshore_dataset.GetProjection()
-            self.provider_epsg_code = int(projection.split(',')[-1][1:-3])
+        distoshore_dataset = gdal.Open(str(self._distoshore_file_path), gdal.GA_ReadOnly)
+        projection = distoshore_dataset.GetProjection()
+        self.provider_epsg_code = int(projection.split(',')[-1][1:-3])
 
-            self._geotransform = GeoTransform(distoshore_dataset.GetGeoTransform())
+        self._geotransform = GeoTransform(distoshore_dataset.GetGeoTransform())
 
-            image = distoshore_dataset.GetRasterBand(1)
-            self._distoshore = image.ReadAsArray(0, 0, xsize, ysize)
+        image = distoshore_dataset.GetRasterBand(1)
 
         provider_point = self.transform_point((point.x, point.y), 0.)
         image_point = self._geotransform.image_coordinates(Point(provider_point[0:2]))
-        result = self._distoshore[round(image_point.y)][round(image_point.x)]
+        result = image.ReadAsArray(round(image_point.x), round(image_point.y), 1, 1)
 
         return result
