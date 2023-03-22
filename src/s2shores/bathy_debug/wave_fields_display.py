@@ -21,11 +21,9 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
 
-from s2shores.data_model.wave_field_sample_geometry import \
-    WaveFieldSampleGeometry
-from s2shores.generic_utils.image_utils import (cross_correlation,
+from ..generic_utils.image_utils import (cross_correlation,
                                                 normalized_cross_correlation)
-from s2shores.image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon
 
 from ..bathy_physics import wavenumber_offshore
 

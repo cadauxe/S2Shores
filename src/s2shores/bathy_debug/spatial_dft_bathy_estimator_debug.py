@@ -37,7 +37,6 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         display_dft_sinograms(self)
         display_dft_sinograms_spectral_analysis(self)
         display_polar_images_dft(self)
-       #display_plot3(self, refinement_phase=True)
         # display_radon_transforms(self)
         #display_radon_transforms(self, refinement_phase=True)
         # display_context(self)
