@@ -59,25 +59,27 @@ class OrthoBathyEstimator:
 
         start = time.time()
         computed_points = 0
+        
         if self.parent_estimator._debug_samples:
-            estimated_bathy = EstimatedPointsBathy(self.sampled_ortho.ortho_stack.acquisition_time)
-            for sample in self.parent_estimator._debug_samples:
-                print(sample)
-                bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
-                if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
-                    computed_points += 1
+            # Estimate bathy on points
+            estimated_bathy = EstimatedPointsBathy(len(self.parent_estimator._debug_samples), 
+                                         self.sampled_ortho.ortho_stack.acquisition_time)
+            samples = self.parent_estimator._debug_samples
+            total_points = len(self.parent_estimator._debug_samples)
         else:
+            # Estimate bathy over a grid
             estimated_bathy = EstimatedCartoBathy(self.sampled_ortho.carto_sampling,
                                          self.sampled_ortho.ortho_stack.acquisition_time)
-            for estimation_point in self.sampled_ortho.carto_sampling.x_y_sampling():
-                bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, estimation_point)
-                if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
-                    computed_points += 1
+            samples = self.sampled_ortho.carto_sampling.x_y_sampling()
+            total_points = len(self.parent_estimator._debug_samples)
+        
+        for index, sample in enumerate(samples):
+            bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
+            if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
+                computed_points += 1
+            # Store bathymetry sample estimations
+            estimated_bathy.store_estimations(index, bathy_estimations)            
 
-                # Store bathymetry sample estimations
-                estimated_bathy.store_estimations(bathy_estimations)
-
-        total_points = len(self.parent_estimator._debug_samples)
         comput_time = time.time() - start
         print(f'Computed {computed_points}/{total_points} points in: {comput_time:.2f} s')
 
