@@ -39,9 +39,10 @@ class EstimatedBathy():
 
     @classmethod
     @abstractmethod
-    def store_estimations(self, bathy_estimations: BathymetrySampleEstimations) -> None:
+    def store_estimations(self, index:int, bathy_estimations: BathymetrySampleEstimations) -> None:
         """ Store a set of bathymetry estimations at some location
 
+        :param index: index where to store the estimations
         :param bathy_estimations: the whole set of bathy estimations data at one point.
         """
     

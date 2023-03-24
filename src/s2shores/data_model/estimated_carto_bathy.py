@@ -267,11 +267,8 @@ class EstimatedCartoBathy(EstimatedBathy):
         self.carto_sampling = carto_sampling
         self.estimated_bathy = np.empty(carto_sampling.shape, dtype=np.object_)
 
-    def store_estimations(self, bathy_estimations: BathymetrySampleEstimations) -> None:
-        """ Store a set of bathymetry estimations at some location
-
-        :param bathy_estimations: the whole set of bathy estimations data at one point.
-        """
+    def store_estimations(self, index: int, bathy_estimations: BathymetrySampleEstimations) -> None:
+        """ Store a set of bathymetry estimations at some location """
         index_x, index_y = self.carto_sampling.index_point(bathy_estimations.location)
         self.estimated_bathy[index_y, index_x] = bathy_estimations
         
