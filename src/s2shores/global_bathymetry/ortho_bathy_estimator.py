@@ -71,7 +71,7 @@ class OrthoBathyEstimator:
             estimated_bathy = EstimatedCartoBathy(self.sampled_ortho.carto_sampling,
                                          self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.sampled_ortho.carto_sampling.x_y_sampling()
-            total_points = len(self.parent_estimator._debug_samples)
+            total_points = self.sampled_ortho.carto_sampling.nb_samples
         
         for index, sample in enumerate(samples):
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
