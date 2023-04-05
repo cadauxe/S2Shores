@@ -259,8 +259,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self._correlation_matrix = cross_correlation(self._time_series[:, :-self.nb_lags],
                                                              self._time_series[:, self.nb_lags:])
             except ValueError as excp:
-                raise CorrelationComputationError(
-                    'Cross correlation can not be computed because of standard deviation of 0') from excp
+                raise CorrelationComputationError('Cross correlation can not be computed because '
+                                                  'of standard deviation of 0') from excp
         return self._correlation_matrix
 
     @property

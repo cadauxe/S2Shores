@@ -20,8 +20,10 @@ import numpy as np
 
 from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence
-from ..local_bathymetry.temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
-from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram, CorrelationComputationError
+from ..local_bathymetry.temporal_correlation_bathy_estimator import \
+    TemporalCorrelationBathyEstimator
+from ..waves_exceptions import (WavesEstimationError, NotExploitableSinogram,
+                                CorrelationComputationError)
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 
 
