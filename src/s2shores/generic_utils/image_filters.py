@@ -11,8 +11,9 @@ from functools import lru_cache
 
 from scipy.signal import convolve2d
 
-from .numpy_utils import circular_mask
 import numpy as np
+
+from .numpy_utils import circular_mask
 
 
 def clipping(image_array: np.ndarray, ratio_size: float) -> np.ndarray:

@@ -10,7 +10,6 @@
 from copy import deepcopy
 from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
-
 import pandas
 from scipy.signal import find_peaks
 from shapely.geometry import Point
@@ -25,10 +24,9 @@ from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
-from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
-from ..waves_exceptions import CorrelationComputationError, SequenceImagesError
 from ..image_processing.waves_sinogram import SignalProcessingFilters
-
+from ..waves_exceptions import CorrelationComputationError, SequenceImagesError
+from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
 

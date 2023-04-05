@@ -9,10 +9,9 @@
 :created: 7 april 2022
 """
 from datetime import datetime
-
-from shapely.geometry import Point
 from typing import Tuple, List, Union
 
+from shapely.geometry import Point
 
 from ..data_providers.delta_time_provider import DeltaTimeProvider
 from ..image_processing.waves_image import WavesImage

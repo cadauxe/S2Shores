@@ -11,15 +11,13 @@ from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Optional, Any  # @NoMove
 
+from osgeo import gdal
 from shapely.geometry import Point
 
-from osgeo import gdal
+import numpy as np
 import xarray as xr  # @NoMove
 
-import numpy as np
-
 from ..image.geo_transform import GeoTransform
-
 from .localized_data_provider import LocalizedDataProvider
 
 

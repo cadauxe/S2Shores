@@ -2,10 +2,11 @@
 from osgeo import gdal
 from scipy.io import loadmat
 
+import numpy as np
+
 from bathycommun.config.config_bathy import ConfigBathy
 from s2shores.generic_utils.numpy_utils import permute_axes
 from s2shores.local_bathymetry_estimation import wave_parameters_and_bathy_estimation
-import numpy as np
 
 
 yaml_file = 'config/wave_bathy_inversion_config.yaml'

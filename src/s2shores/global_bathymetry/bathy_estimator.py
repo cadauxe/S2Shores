@@ -10,10 +10,12 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional  # @NoMove
 
-import numpy as np
-import xarray as xr  # @NoMove
 from numpy import dtype
 from shapely.geometry import Point
+
+import numpy as np
+
+import xarray as xr  # @NoMove
 from xarray import Dataset  # @NoMove
 
 from ..image.image_geometry_types import MarginsType

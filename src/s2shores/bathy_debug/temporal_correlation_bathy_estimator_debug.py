@@ -9,7 +9,6 @@
 """
 
 import os
-import numpy as np
 from typing import Optional, TYPE_CHECKING
 
 from matplotlib import gridspec
@@ -17,12 +16,14 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from ..local_bathymetry.temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
+import numpy as np
+
 from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence
+from ..local_bathymetry.temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
 from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram, CorrelationComputationError
-
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
+
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
