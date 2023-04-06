@@ -10,7 +10,6 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional  # @NoMove
 
-from numpy import dtype
 from shapely.geometry import Point
 
 import numpy as np
@@ -174,15 +173,15 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
                            (oversize factor will lead to a single point)
 
         """
-        x_samples = np.array([])
-        y_samples = np.array([])
+        x_samples: np.ndarray = np.array([])
+        y_samples: np.ndarray = np.array([])
         for subtile in self.subtiles:
             x_samples = np.concatenate((x_samples, subtile.carto_sampling.x_samples))
             y_samples = np.concatenate((y_samples, subtile.carto_sampling.y_samples))
-        x_samples_filtered = x_samples[np.logical_and(
-            x_samples > bottom_left_corner.x, x_samples < top_right_corner.x)][::decimation]
-        y_samples_filtered = y_samples[np.logical_and(
-            y_samples > bottom_left_corner.y, y_samples < top_right_corner.y)][::decimation]
+        x_samples_filtered = x_samples[np.logical_and(x_samples > bottom_left_corner.x,
+                                                      x_samples < top_right_corner.x)][::decimation]
+        y_samples_filtered = y_samples[np.logical_and(y_samples > bottom_left_corner.y,
+                                                      y_samples < top_right_corner.y)][::decimation]
         list_samples = []
         for x_coord in x_samples_filtered:
             for y_coord in y_samples_filtered:

@@ -117,9 +117,9 @@ class BathymetrySampleEstimations(list):
         """
         try:
             return [getattr(estimation, attribute_name) for estimation in self]
-        except AttributeError:
+        except AttributeError as excp:
             err_msg = f'Attribute {attribute_name} undefined for some wave field estimation'
-            raise WavesEstimationAttributeError(err_msg)
+            raise WavesEstimationAttributeError(err_msg) from excp
 
     def remove_unphysical_wave_fields(self) -> None:
         """  Remove unphysical wave fields
