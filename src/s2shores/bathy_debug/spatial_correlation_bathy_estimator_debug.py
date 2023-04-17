@@ -34,7 +34,3 @@ class SpatialCorrelationBathyEstimatorDebug(
         waves_image.show()
         dft_sinograms.show()
         dft_sino_spectral.show()
-        keyboardClick = False
-        while keyboardClick != True:
-            keyboardClick = plt.waitforbuttonpress()
-            plt.close('all')
