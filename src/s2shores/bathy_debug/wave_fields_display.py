@@ -314,6 +314,8 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
+    plt_boundary = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
@@ -586,7 +588,7 @@ def display_sinograms_spatial_correlation(
 def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
                                     directions: np.ndarray, kfft: np.ndarray,
                                     ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
-    extent = [np.min(directions), np.max(directions), 0, kfft.max()]
+    extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
     axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
     # axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
     #          color="white", lw=0.7)
@@ -616,7 +618,7 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
                                kfft: np.ndarray, type: str,
                                ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
 
-    extent = [np.min(directions), np.max(directions), 0, kfft.max()]
+    extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
     axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
     #loc_transect = np.where(directions == -29.0)
     #transect = values[:, loc_transect[0]]
@@ -690,7 +692,7 @@ def display_dft_sinograms_spectral_analysis(
     # plt.close('all')
     nrows = 4
     ncols = 3
-    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 15))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
 
     # First Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
