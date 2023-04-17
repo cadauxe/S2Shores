@@ -17,13 +17,16 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as scp
+import scipy.ndimage.filters as filters
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
 
-from ..generic_utils.image_utils import (cross_correlation,
+from s2shores.data_model.wave_field_sample_geometry import \
+    WaveFieldSampleGeometry
+from s2shores.generic_utils.image_utils import (cross_correlation,
                                                 normalized_cross_correlation)
-from ..image_processing.waves_radon import WavesRadon
+from s2shores.image_processing.waves_radon import WavesRadon
 
 from ..bathy_physics import wavenumber_offshore
 
@@ -147,9 +150,12 @@ def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -
 
 
 def create_pseudorgb(image1: np.ndarray, image2: np.ndarray,) -> np.ndarray:
-    ps_rgb = np.dstack((image2, image1, image2))
+    normalized_im2 = (image2 - image2.min()) / (image2.max() - image2.min())
+    normalized_im1 = (image1 - image1.min()) / (image1.max() - image1.min())
+
+    ps_rgb = np.dstack((normalized_im2, normalized_im1, normalized_im2))
     ps_rgb = ps_rgb - ps_rgb.min()
-    return ps_rgb / ps_rgb.max()
+    return ps_rgb / (ps_rgb.max() - ps_rgb.min())
 
 
 def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarray,
@@ -186,10 +192,10 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
         axes.set_yticks([0, l2 - 1], ['', ''], fontsize=8)
         axes.set_xticks([0, l1 - 1], ['\n', ' \n'], fontsize=8)
 
-    # Normalization of arrows length
-    coeff_length_max = np.max((list(zip(*directions))[1])) + 2
-    radius = np.floor(min(l1, l2) / 2) - 2
     if directions is not None:
+        # Normalization of arrows length
+        coeff_length_max = np.max((list(zip(*directions))[1]))
+        radius = np.floor(min(l1, l2) / 2) - 5
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
             dir_rad = np.deg2rad(direction) + np.pi
@@ -237,10 +243,10 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
         axes.set_yticks([0, l2 - 1], ['', ''], fontsize=8)
         axes.set_xticks([0, l1 - 1], ['\n', ' \n'], fontsize=8)
 
-    # Normalization of arrows length
-    coeff_length_max = np.max((list(zip(*directions))[1])) + 2
-    radius = np.floor(min(l1, l2) / 2) - 2
     if directions is not None:
+        # Normalization of arrows length
+        coeff_length_max = np.max((list(zip(*directions))[1]))
+        radius = np.floor(min(l1, l2) / 2) - 5
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
             dir_rad = np.deg2rad(direction) + np.pi
@@ -255,12 +261,12 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
 
 
 def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
-    plt.close('all')
+    # plt.close('all')
     nrows = 3
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
-    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
     #spatial_ref = local_estimator.global_estimator._ortho_stack.build_spatial_ref()
     #epsg_code = local_estimator.global_estimator._ortho_stack.epsg_code
@@ -272,31 +278,25 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     # First Plot line = Image1 / pseudoRGB / Image2
     build_display_waves_image(fig, axs[0, 0], 'Image1', first_image.original_pixels,
                               resolution=first_image.resolution,
-                              subplot_pos=[nrows, ncols, 1],
-                              directions=arrows, cmap='gray')
+                              subplot_pos=[nrows, ncols, 1], cmap='gray')
     build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB', pseudo_rgb,
                             resolution=first_image.resolution,
-                            subplot_pos=[nrows, ncols, 2],
-                            directions=arrows, coordinates=False)
+                            subplot_pos=[nrows, ncols, 2], coordinates=False)
     build_display_waves_image(fig, axs[0, 2], 'Image2', second_image.original_pixels,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 3],
-                              directions=arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 3], cmap='gray', coordinates=False)
 
     # Second Plot line = Image1 Filtered / pseudoRGB Filtered/ Image2 Filtered
     pseudo_rgb_filtered = create_pseudorgb(first_image.pixels, second_image.pixels)
     build_display_waves_image(fig, axs[1, 0], 'Image1 Filtered', first_image.pixels,
                               resolution=first_image.resolution,
-                              subplot_pos=[nrows, ncols, 4],
-                              directions=arrows, cmap='gray')
+                              subplot_pos=[nrows, ncols, 4], cmap='gray')
     build_display_pseudorgb(fig, axs[1, 1], 'Pseudo RGB Filtered', pseudo_rgb_filtered,
                             resolution=first_image.resolution,
-                            subplot_pos=[nrows, ncols, 5],
-                            directions=arrows, coordinates=False)
+                            subplot_pos=[nrows, ncols, 5], coordinates=False)
     build_display_waves_image(fig, axs[1, 2], 'Image2 Filtered', second_image.pixels,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 6],
-                              directions=arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 6], cmap='gray', coordinates=False)
 
     # Third Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
@@ -304,16 +304,13 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
     build_display_waves_image(fig, axs[2, 0], 'Image1 Circle Filtered', image1_circle_filtered,
                               resolution=first_image.resolution,
-                              subplot_pos=[nrows, ncols, 7],
-                              directions=arrows, cmap='gray')
+                              subplot_pos=[nrows, ncols, 7], cmap='gray')
     build_display_pseudorgb(fig, axs[2, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
                             resolution=first_image.resolution,
-                            subplot_pos=[nrows, ncols, 8],
-                            directions=arrows, coordinates=False)
+                            subplot_pos=[nrows, ncols, 8], coordinates=False)
     build_display_waves_image(fig, axs[2, 2], 'Image2 Circle Filtered', image2_circle_filtered,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 9],
-                              directions=arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 9], cmap='gray', coordinates=False)
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
@@ -322,12 +319,13 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
             local_estimator.global_estimator._debug_path,
             "display_waves_images_debug_point_" + point_id + ".png"),
         dpi=300)
-    plt.show()
+    waves_image = plt.figure(1)
+    return waves_image
 
 
 def display_waves_images_spatial_correl(
         local_estimator: 'SpatialCorrelationBathyEstimation') -> None:
-    plt.close('all')
+    # plt.close('all')
     nrows = 3
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
@@ -339,38 +337,32 @@ def display_waves_images_spatial_correl(
     pseudo_rgb = create_pseudorgb(first_image.original_pixels, second_image.original_pixels)
 
     # Since wfe.eneergy_ratio not available for SpatialCorrelation:
-    default_arrow_length = np.shape(first_image.original_pixels)[0]
-    arrows = [(wfe.direction, default_arrow_length)
-              for wfe in local_estimator.bathymetry_estimations]
+    #default_arrow_length = np.shape(first_image.original_pixels)[0]
+    # arrows = [(wfe.direction, default_arrow_length)
+    #          for wfe in local_estimator.bathymetry_estimations]
 
     # First Plot line = Image1 / pseudoRGB / Image2
     build_display_waves_image(fig, axs[0, 0], 'Image1', first_image.original_pixels,
                               resolution=first_image.resolution,
-                              subplot_pos=[nrows, ncols, 1],
-                              directions=arrows, cmap='gray')
+                              subplot_pos=[nrows, ncols, 1], cmap='gray')
     build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB', pseudo_rgb,
                             resolution=first_image.resolution,
-                            subplot_pos=[nrows, ncols, 2],
-                            directions=arrows, coordinates=False)
+                            subplot_pos=[nrows, ncols, 2], coordinates=False)
     build_display_waves_image(fig, axs[0, 2], 'Image2', second_image.original_pixels,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 3],
-                              directions=arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 3], cmap='gray', coordinates=False)
 
     # Second Plot line = Image1 Filtered / pseudoRGB Filtered/ Image2 Filtered
     pseudo_rgb_filtered = create_pseudorgb(first_image.pixels, second_image.pixels)
     build_display_waves_image(fig, axs[1, 0], 'Image1 Filtered', first_image.pixels,
                               resolution=first_image.resolution,
-                              subplot_pos=[nrows, ncols, 4],
-                              directions=arrows, cmap='gray')
+                              subplot_pos=[nrows, ncols, 4], cmap='gray')
     build_display_pseudorgb(fig, axs[1, 1], 'Pseudo RGB Filtered', pseudo_rgb_filtered,
                             resolution=first_image.resolution,
-                            subplot_pos=[nrows, ncols, 5],
-                            directions=arrows, coordinates=False)
+                            subplot_pos=[nrows, ncols, 5], coordinates=False)
     build_display_waves_image(fig, axs[1, 2], 'Image2 Filtered', second_image.pixels,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 6],
-                              directions=arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 6], cmap='gray', coordinates=False)
 
     # Third Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
@@ -378,16 +370,13 @@ def display_waves_images_spatial_correl(
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
     build_display_waves_image(fig, axs[2, 0], 'Image1 Circle Filtered', image1_circle_filtered,
                               resolution=first_image.resolution,
-                              subplot_pos=[nrows, ncols, 7],
-                              directions=arrows, cmap='gray')
+                              subplot_pos=[nrows, ncols, 7], cmap='gray')
     build_display_pseudorgb(fig, axs[2, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
                             resolution=first_image.resolution,
-                            subplot_pos=[nrows, ncols, 8],
-                            directions=arrows, coordinates=False)
+                            subplot_pos=[nrows, ncols, 8], coordinates=False)
     build_display_waves_image(fig, axs[2, 2], 'Image2 Circle Filtered', image2_circle_filtered,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 9],
-                              directions=arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 9], cmap='gray', coordinates=False)
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
     plt.savefig(
@@ -395,7 +384,9 @@ def display_waves_images_spatial_correl(
             local_estimator.global_estimator._debug_path,
             "display_waves_images_debug_point_" + point_id + ".png"),
         dpi=300)
-    plt.show()
+    # plt.show()
+    waves_image = plt.figure(5)
+    return waves_image
 
 
 def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
@@ -472,12 +463,12 @@ def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray
 
 
 def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
-    plt.close('all')
+    # plt.close('all')
     nrows = 2
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
-    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
     second_image = local_estimator.ortho_sequence[1]
 
@@ -487,16 +478,13 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
     build_display_waves_image(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
                               subplot_pos=[nrows, ncols, 1],
-                              resolution=first_image.resolution,
-                              directions=arrows, cmap='gray')
+                              resolution=first_image.resolution, cmap='gray')
     build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
                             resolution=first_image.resolution,
-                            subplot_pos=[nrows, ncols, 2],
-                            directions=arrows, coordinates=False)
+                            subplot_pos=[nrows, ncols, 2], coordinates=False)
     build_display_waves_image(fig, axs[0, 2], 'Image2 Circle Filtered', image2_circle_filtered,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 3],
-                              directions=arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 3], cmap='gray', coordinates=False)
 
     # Second Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
     first_radon_transform = local_estimator.radon_transforms[0]
@@ -526,12 +514,13 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
             local_estimator.global_estimator._debug_path,
             "display_sinograms_debug_point_" + point_id + ".png"),
         dpi=300)
-    plt.show()
+    dft_sino = plt.figure(2)
+    return dft_sino
 
 
 def display_sinograms_spatial_correlation(
         local_estimator: 'SpatialCorrelationBathyEstimator') -> None:
-    plt.close('all')
+    # plt.close('all')
     nrows = 2
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
@@ -589,7 +578,9 @@ def display_sinograms_spatial_correlation(
             local_estimator.global_estimator._debug_path,
             "display_sinograms_debug_point_" + point_id + ".png"),
         dpi=300)
-    plt.show()
+    # plt.show()
+    dft_sino = plt.figure(2)
+    return dft_sino
 
 
 def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
@@ -627,6 +618,14 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
 
     extent = [np.min(directions), np.max(directions), 0, kfft.max()]
     axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
+    #loc_transect = np.where(directions == -29.0)
+    #transect = values[:, loc_transect[0]]
+    #print('TRANSECT = ', transect)
+    #neighborhood_size = 10
+    #val_max = filters.maximum_filter(values, neighborhood_size)
+    #val_min = filters.minimum_filter(values, neighborhood_size)
+    #axes.imshow(val_min, aspect='auto', origin="lower", extent=extent, **kwargs)
+
     if type == 'amplitude':
         axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
                   color="white", lw=0.7, label='Normalized Variance')
@@ -680,12 +679,16 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
     if type == 'phase':
         build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft,
                                    type, ordonate=False)
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
+    if type == 'phase_corrected':
+        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
+                                   directions, kfft, type, ordonate=False)
 
 
 def display_dft_sinograms_spectral_analysis(
         local_estimator: 'SpatialDFTBathyEstimator') -> None:
-    plt.close('all')
-    nrows = 3
+    # plt.close('all')
+    nrows = 4
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
@@ -743,6 +746,11 @@ def display_dft_sinograms_spectral_analysis(
         axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, ordonate=False)
 
+    # Add Cross Spectral Matrix display according to the Delta_Time sign
+    build_correl_spectrum_matrix(
+        axs[3, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'phase_corrected',
+        'CSM_Amplitude * CSM_Phase with $\Delta$t sign correction')
+
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
@@ -751,7 +759,8 @@ def display_dft_sinograms_spectral_analysis(
             local_estimator.global_estimator._debug_path,
             "display_sinograms_spectral_analysis_debug_point_" + point_id + ".png"),
         dpi=300)
-    plt.show()
+    dft_sino_spectral = plt.figure(3)
+    return dft_sino_spectral
 
 
 def build_correl_spectrum_matrix_spatial_correlation(axes: Axes, local_estimator: 'SpatialCorrelationBathyEstimator',
@@ -1070,7 +1079,7 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
 def display_sinograms_1D_analysis_spatial_correlation(
         local_estimator: 'SpatialCorrelationBathyEstimator') -> None:
 
-    plt.close('all')
+    # plt.close('all')
     nrows = 3
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
@@ -1152,7 +1161,9 @@ def display_sinograms_1D_analysis_spatial_correlation(
             local_estimator.global_estimator._debug_path,
             "display_sinograms_1D_analysis_debug_point_" + point_id + ".png"),
         dpi=300)
-    plt.show()
+    # plt.show()
+    dft_sino_spectral = plt.figure(3)
+    return dft_sino_spectral
 
 
 def build_polar_display(fig: Figure, axes: Axes, title: str,
@@ -1188,8 +1199,12 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
         0]
     main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute(
         'wavelength')[0]
-    main_wavenumber = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'wavenumber')[0]
+    direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'direction_from_north')[0]
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'delta_time')[0]
+    delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'delta_phase')[0]
 
     # Constrains the Wavenumber plotting interval according to wavelength limitation set to 50m
     ax_polar.set_ylim(0, 0.02)
@@ -1198,8 +1213,19 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     rticks = 1 / requested_labels
 
     # Main information display
+    # First check sign of delta_time * delta_phase to know if direction nversion has been activated
+    # if so, direction corresponding to the local maximum has to be shifted from 180°
+    print('MAIN DIRECTION', main_direction)
+    if np.sign(delta_phase) < 0:
+        main_direction += 180
+        print('Polar Plot: Direction of Local Maximum reinverted!')
     ax_polar.plot(np.radians(main_direction), 1 / main_wavelength, '*', color='black')
-    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, $\lambda$={:.2f}m]'.format(90 - main_direction, main_wavelength),
+    print('DIRECTION FROM NORTH', direc_from_north)
+    print("REFINED MAIN DIRECTION", main_direction)
+    print('DELTA TIME', delta_time)
+    print('DELTA PHASE', delta_phase)
+
+    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, $\lambda$={:.2f}m]'.format((90 - main_direction) % 360, main_wavelength),
                       xy=[np.radians(main_direction), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',
@@ -1242,12 +1268,23 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
 
 
 def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
-    plt.close('all')
+    # plt.close('all')
     nrows = 1
     ncols = 2
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 12))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+
+    # According to Delta_Time sign, proceed with arrow's direction inversion
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
+    corrected_arrows = []
+    if np.sign(delta_time) < 0:
+        print('Display_polar_images_dft: inversion of arrows direction!')
+        for arrow_dir, arrow_ener in arrows:
+            arrow_dir %= 180
+            corrected_arrows.append((arrow_dir, arrow_ener))
+            arrows = corrected_arrows
+
     first_image = local_estimator.ortho_sequence[0]
 
     # First Plot line = Image1 / pseudoRGB / Image2
@@ -1268,6 +1305,8 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     polar = csm_amplitude * csm_phase
+    ind_max = np.where(polar == np.max(polar))
+    ind_min = np.where(polar == np.min(polar))
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
@@ -1282,7 +1321,8 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
             local_estimator.global_estimator._debug_path,
             "display_polar_images_debug_point_" + point_id + ".png"),
         dpi=300)
-    plt.show()
+    polar_plot = plt.figure(4)
+    return polar_plot
 
 
 def display_radon_transforms(local_estimator: 'SpatialDFTBathyEstimator',
