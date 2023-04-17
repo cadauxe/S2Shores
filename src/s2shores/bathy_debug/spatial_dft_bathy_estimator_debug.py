@@ -8,6 +8,7 @@
 :created: 5 mars 2021
 """
 import numpy as np
+from matplotlib import pyplot as plt
 
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..local_bathymetry.spatial_dft_bathy_estimator import \
@@ -33,13 +34,19 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
 
         # Displays
         # display_initial_data(self)
-        display_waves_images_dft(self)
-        display_dft_sinograms(self)
-        display_dft_sinograms_spectral_analysis(self)
-        display_polar_images_dft(self)
-        # display_radon_transforms(self)
-        #display_radon_transforms(self, refinement_phase=True)
-        # display_context(self)
+        waves_image = display_waves_images_dft(self)
+        dft_sinograms = display_dft_sinograms(self)
+        dft_sino_spectral = display_dft_sinograms_spectral_analysis(self)
+        polar_plot = display_polar_images_dft(self)
+        waves_image.show()
+        dft_sinograms.show()
+        dft_sino_spectral.show()
+        polar_plot.show()
+        # plt.pause(15)
+        keyboardClick = False
+        while keyboardClick != True:
+            keyboardClick = plt.waitforbuttonpress()
+            plt.close('all')
 
     def print_variables(self) -> None:
         metrics = self.metrics

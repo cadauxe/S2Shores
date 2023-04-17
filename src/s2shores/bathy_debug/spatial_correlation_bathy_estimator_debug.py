@@ -7,6 +7,7 @@
 :license: see LICENSE file
 :created: 28 novembre 2022
 """
+from matplotlib import pyplot as plt
 
 from ..local_bathymetry.spatial_correlation_bathy_estimator import \
     SpatialCorrelationBathyEstimator
@@ -27,6 +28,13 @@ class SpatialCorrelationBathyEstimatorDebug(
         print(self.bathymetry_estimations)
 
         # Displays
-        display_waves_images_spatial_correl(self)
-        display_sinograms_spatial_correlation(self)
-        display_sinograms_1D_analysis_spatial_correlation(self)
+        waves_image = display_waves_images_spatial_correl(self)
+        dft_sinograms = display_sinograms_spatial_correlation(self)
+        dft_sino_spectral = display_sinograms_1D_analysis_spatial_correlation(self)
+        waves_image.show()
+        dft_sinograms.show()
+        dft_sino_spectral.show()
+        keyboardClick = False
+        while keyboardClick != True:
+            keyboardClick = plt.waitforbuttonpress()
+            plt.close('all')
