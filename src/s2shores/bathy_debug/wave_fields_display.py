@@ -385,7 +385,7 @@ def display_waves_images_spatial_correl(
             "display_waves_images_debug_point_" + point_id + ".png"),
         dpi=300)
     # plt.show()
-    waves_image = plt.figure(5)
+    waves_image = plt.figure(1)
     return waves_image
 
 
