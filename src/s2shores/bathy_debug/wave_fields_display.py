@@ -392,7 +392,7 @@ def display_waves_images_spatial_correl(
 
 
 def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
-                           values2: np.ndarray, main_theta: float,
+                           values2: np.ndarray, main_theta: float, plt_rng: float,
                            ordonate: bool=True, abscissa: bool=True, master: bool=True,
                            **kwargs: dict) -> None:
     extent = [np.min(directions), np.max(directions),
@@ -413,8 +413,8 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     # Check coherence of main direction between Master / Slave
     if directions[pos1][0] * main_theta < 0:
         main_theta = directions[pos1][0] % (np.sign(main_theta) * 180.0)
-    # Check if the main direction belongs to the plotting interval [-135:135]
-    if main_theta < -135.0 or main_theta > 135.0:
+    # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+    if main_theta < -plt_rng or main_theta > plt_rng:
         main_theta %= -np.sign(main_theta) * 180.0
     theta_label = '$\Theta$={:.1f}°'.format(main_theta)
 
@@ -425,8 +425,8 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     # Put a nicer background color on the legend.
     legend.get_frame().set_facecolor('C0')
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    axes.set_xlim(-135, 135)
-    axes.set_xticks(np.arange(-135, 136, 45))
+    axes.set_xlim(-plt_rng, plt_rng)
+    axes.set_xticks(np.arange(-plt_rng, plt_rng + 1, 45))
     plt.setp(axes.get_xticklabels(), fontsize=8)
 
     if ordonate:
@@ -441,7 +441,7 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
 
 
 def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray,
-                                      directions: np.ndarray,
+                                      directions: np.ndarray, plt_rng: float,
                                       abscissa: bool=True, cmap: Optional[str] = None,
                                       **kwargs: dict) -> None:
 
@@ -453,8 +453,8 @@ def build_sinogram_difference_display(axes: Axes, title: str, values: np.ndarray
 
     axes.grid(lw=0.5, color='black', alpha=0.7, linestyle='-')
     axes.yaxis.set_ticklabels([])
-    axes.set_xlim(-135, 135)
-    axes.set_xticks(np.arange(-135, 136, 45))
+    axes.set_xlim(-plt_rng, plt_rng)
+    axes.set_xticks(np.arange(-plt_rng, plt_rng + 1, 45))
     plt.setp(axes.get_xticklabels(), fontsize=8)
 
     if abscissa:
@@ -499,15 +499,16 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     # get main direction
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         0]
+    plt_range = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
 
     build_sinogram_display(
         axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1, sinogram2,
-        main_direction)
+        main_direction, plt_range)
     build_sinogram_difference_display(
-        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, cmap='bwr')
+        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_range, cmap='bwr')
     build_sinogram_display(
         axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, ordonate=False)
+        main_direction, plt_range, ordonate=False)
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
@@ -562,15 +563,16 @@ def display_sinograms_spatial_correlation(
     # get main direction
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         0]
+    plt_range = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
 
     build_sinogram_display(
         axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1, sinogram2,
-        main_direction)
+        main_direction, plt_range)
     build_sinogram_difference_display(
-        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, cmap='bwr')
+        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_range, cmap='bwr')
     build_sinogram_display(
         axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, ordonate=False)
+        main_direction, plt_range, ordonate=False)
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
@@ -586,7 +588,7 @@ def display_sinograms_spatial_correlation(
 
 
 def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
-                                    directions: np.ndarray, kfft: np.ndarray,
+                                    directions: np.ndarray, kfft: np.ndarray, plt_rng: float,
                                     ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
     extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
     axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
@@ -599,8 +601,8 @@ def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
     legend.get_frame().set_facecolor('C0')
 
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    axes.set_xlim(-135, 135)
-    axes.set_xticks(np.arange(-135, 136, 45))
+    axes.set_xlim(-plt_rng, plt_rng)
+    axes.set_xticks(np.arange(-plt_rng, plt_rng + 1, 45))
     plt.setp(axes.get_xticklabels(), fontsize=8)
 
     if ordonate:
@@ -615,7 +617,7 @@ def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
 
 
 def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, directions: np.ndarray,
-                               kfft: np.ndarray, type: str,
+                               kfft: np.ndarray, plt_rng: float, type: str,
                                ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
 
     extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
@@ -637,8 +639,8 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
         # Put a nicer background color on the legend.
         legend.get_frame().set_facecolor('C0')
     axes.grid(lw=0.5, color='white', alpha=0.7, linestyle='-')
-    axes.set_xlim(-135, 135)
-    axes.set_xticks(np.arange(-135, 136, 45))
+    axes.set_xlim(-plt_rng, plt_rng)
+    axes.set_xticks(np.arange(-plt_rng, plt_rng + 1, 45))
     plt.setp(axes.get_xticklabels(), fontsize=8)
 
     if ordonate:
@@ -654,7 +656,8 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
 
 def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEstimator',
                                  sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
-                                 type: str, title: str, refinement_phase: bool=False) -> None:
+                                 plt_rng: float, type: str, title: str,
+                                 refinement_phase: bool=False) -> None:
     radon_transform = local_estimator.radon_transforms[0]
     if not refinement_phase:
         _, directions = radon_transform.get_as_arrays()
@@ -676,15 +679,15 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     if type == 'amplitude':
-        build_sinogram_fft_display(axes, title, csm_amplitude, directions, kfft,
+        build_sinogram_fft_display(axes, title, csm_amplitude, directions, kfft, plt_rng,
                                    type, ordonate=False, abscissa=False)
     if type == 'phase':
-        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft,
+        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft, plt_rng,
                                    type, ordonate=False, abscissa=False)
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
     if type == 'phase_corrected':
         build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
-                                   directions, kfft, type, ordonate=False)
+                                   directions, kfft, plt_rng, type, ordonate=False)
 
 
 def display_dft_sinograms_spectral_analysis(
@@ -706,16 +709,17 @@ def display_dft_sinograms_spectral_analysis(
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         0]
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
+    plt_range = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
 
     build_sinogram_display(
         axs[0, 0], 'Sinogram1 [Radon Transform on Master Image]',
-        sinogram1, directions1, sinogram2, main_direction, abscissa=False)
+        sinogram1, directions1, sinogram2, main_direction, plt_range, abscissa=False)
     build_sinogram_difference_display(
-        axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2,
+        axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_range,
         abscissa=False, cmap='bwr')
     build_sinogram_display(
         axs[0, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, ordonate=False, abscissa=False)
+        main_direction, plt_range, ordonate=False, abscissa=False)
 
     # Second Plot line = Spectral Amplitude of Sinogram1 [after DFT] / CSM Amplitude /
     # Spectral Amplitude of Sinogram2 [after DFT]
@@ -724,15 +728,17 @@ def display_dft_sinograms_spectral_analysis(
     sino2_fft = second_radon_transform.get_sinograms_standard_dfts()
     kfft = local_estimator._metrics['kfft']
 
+    plt_range = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
+
     build_sinogram_spectral_display(
         axs[1, 0], 'Spectral Amplitude Sinogram1 [DFT]',
-        np.abs(sino1_fft), directions1, kfft, abscissa=False)
+        np.abs(sino1_fft), directions1, kfft, plt_range, abscissa=False)
     build_correl_spectrum_matrix(
-        axs[1, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'amplitude',
+        axs[1, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'amplitude',
         'Cross Spectral Matrix (Amplitude)')
     build_sinogram_spectral_display(
         axs[1, 2], 'Spectral Amplitude Sinogram2 [DFT]',
-        np.abs(sino2_fft), directions2, kfft, ordonate=False, abscissa=False)
+        np.abs(sino2_fft), directions2, kfft, plt_range, ordonate=False, abscissa=False)
 
     # Third Plot line = Spectral Amplitude of Sinogram1 [after DFT] * CSM Phase /
     # CSM Amplitude * CSM Phase / Spectral Amplitude of Sinogram2 [after DFT] * CSM Phase
@@ -741,24 +747,24 @@ def display_dft_sinograms_spectral_analysis(
         local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
     build_sinogram_spectral_display(
         axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase, directions1, kfft, abscissa=False)
+        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_range, abscissa=False)
     build_correl_spectrum_matrix(
-        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'phase',
+        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'phase',
         'Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
-        np.abs(sino2_fft) * csm_phase, directions2, kfft, ordonate=False, abscissa=False)
+        np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_range, ordonate=False, abscissa=False)
 
     # Add Cross Spectral Matrix display according to the Delta_Time sign
     build_sinogram_spectral_display(
         axs[3, 0], 'Same Graph as above with $\Delta$t sign correction',
-        np.abs(sino1_fft) * csm_phase * np.sign(delta_time), directions1, kfft)
+        np.abs(sino1_fft) * csm_phase * np.sign(delta_time), directions1, kfft, plt_range)
     build_correl_spectrum_matrix(
-        axs[3, 1], local_estimator, sino1_fft, sino2_fft, kfft, 'phase_corrected',
+        axs[3, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'phase_corrected',
         'Same Graph as above with $\Delta$t sign correction')
     build_sinogram_spectral_display(
         axs[3, 2], 'Same Graph as above with $\Delta$t sign correction',
-        np.abs(sino2_fft) * csm_phase * np.sign(delta_time), directions2, kfft, ordonate=False)
+        np.abs(sino2_fft) * csm_phase * np.sign(delta_time), directions2, kfft, plt_range, ordonate=False)
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
@@ -804,11 +810,11 @@ def build_correl_spectrum_matrix_spatial_correlation(axes: Axes, local_estimator
 
 
 def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
-                                     main_theta: float,
+                                     main_theta: float, plt_rng: float,
                                      ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
     index_theta = np.int(main_theta - np.min(directions))
-    # Check if the main direction belongs to the plotting interval [-135:135]
-    if main_theta < -135.0 or main_theta > 135.0:
+    # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+    if main_theta < -plt_rng or main_theta > plt_rng:
         main_theta %= -np.sign(main_theta) * 180.0
     theta_label = 'Sinogram 1D along \n$\Theta$={:.1f}°'.format(main_theta)
     nb_pixels = np.shape(values1[:, index_theta])[0]
@@ -837,7 +843,7 @@ def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray
 
 
 def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, directions: np.ndarray,
-                                    main_theta: float,
+                                    main_theta: float, plt_rng: float,
                                     ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
 
     normalized_var = (np.var(values, axis=0) /
@@ -852,10 +858,10 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, 
     index_theta_master = np.int(main_theta - np.min(directions))
     index_theta_slave = np.int(main_theta_slave - np.min(directions))
 
-    # Check if the main direction belongs to the plotting interval [-135:135]
-    if main_theta < -135.0 or main_theta > 135.0:
+    # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+    if main_theta < -plt_rng or main_theta > plt_rng:
         main_theta %= -np.sign(main_theta) * 180.0
-    if main_theta_slave < -135.0 or main_theta_slave > 135.0:
+    if main_theta_slave < -plt_rng or main_theta_slave > plt_rng:
         main_theta_slave %= -np.sign(main_theta_slave) * 180.0
     theta_label_master = 'along Master Main Direction\n$\Theta$={:.1f}°'.format(main_theta)
     theta_label_slave = 'along Slave Main Direction\n$\Theta$={:.1f}°'.format(main_theta_slave)
@@ -889,8 +895,8 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, 
 def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndarray,
                                         directions1: np.ndarray, main_theta: float,
                                         values2: np.ndarray, directions2: np.ndarray,
-                                        correl_mode: str, ordonate: bool=True, abscissa: bool=True,
-                                        **kwargs: dict) -> None:
+                                        plt_rng: float, correl_mode: str, ordonate: bool=True,
+                                        abscissa: bool=True, **kwargs: dict) -> None:
 
     normalized_var = (np.var(values2, axis=0) /
                       np.max(np.var(values2, axis=0)) - 0.5) * values2.shape[0]
@@ -920,12 +926,12 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # axes.plot(absc2, np.flip((values2[:, index_theta2_master] / np.max(np.abs(values2[:, index_theta2_master])))),
     #          color="black", lw=0.8, ls='--', label=theta_label2_master)
 
-    # Check if the main direction belongs to the plotting interval [-135:135]
-    if main_theta < -135.0 or main_theta > 135.0:
+    # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+    if main_theta < -plt_rng or main_theta > plt_rng:
         main_theta_label = main_theta % (-np.sign(main_theta) * 180.0)
     else:
         main_theta_label = main_theta
-    if main_theta_slave < -135.0 or main_theta_slave > 135.0:
+    if main_theta_slave < -plt_rng or main_theta_slave > plt_rng:
         main_theta_slave_label = main_theta_slave % (-np.sign(main_theta_slave) * 180.0)
     else:
         main_theta_slave_label = main_theta_slave
@@ -972,9 +978,9 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
 
 def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndarray,
                                         directions1: np.ndarray, main_theta: float,
-                                        values2: np.ndarray, correl_mode: str, choice: str,
-                                        imgtype: str, ordonate: bool=True, abscissa: bool=True,
-                                        cmap: Optional[str] = None,
+                                        values2: np.ndarray, plt_rng: float, correl_mode: str,
+                                        choice: str, imgtype: str, ordonate: bool=True,
+                                        abscissa: bool=True, cmap: Optional[str] = None,
                                         **kwargs: dict) -> None:
 
     extent = [np.min(directions1), np.max(directions1),
@@ -989,8 +995,8 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
         # Check coherence of main direction between Master / Slave
         if directions1[pos][0] * main_theta < 0:
             main_theta = directions1[pos][0] % (np.sign(main_theta) * 180.0)
-        # Check if the main direction belongs to the plotting interval [-135:135]
-        if main_theta < -135.0 or main_theta > 135.0:
+        # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+        if main_theta < -plt_rng or main_theta > plt_rng:
             main_theta_label = main_theta % (-np.sign(main_theta) * 180.0)
         else:
             main_theta_label = main_theta
@@ -1039,8 +1045,8 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
         # Check coherence of main direction between Master / Slave
         if directions1[pos_val3][0] * main_theta < 0:
             max_var_pos = directions1[pos_val3][0] % (np.sign(main_theta) * 180.0)
-        # Check if the main direction belongs to the plotting interval [-135:135]
-        if max_var_pos < -135.0 or max_var_pos > 135.0:
+        # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+        if max_var_pos < -plt_rng or max_var_pos > plt_rng:
             max_var_pos %= -np.sign(max_var_pos) * 180.0
 
         max_var_label = '$\Theta$={:.1f}° [Variance Max]'.format(max_var_pos)
@@ -1050,8 +1056,8 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # Main 2D-plot
     axes.imshow(np.transpose(values3), cmap=cmap, aspect='auto', extent=extent, **kwargs)
 
-    # Check if the main direction belongs to the plotting interval [-135:135]
-    if main_theta < -135.0 or main_theta > 135.0:
+    # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+    if main_theta < -plt_rng or main_theta > plt_rng:
         main_theta %= -np.sign(main_theta) * 180.0
     theta_label = '$\Theta$={:.1f}°'.format(main_theta)
     axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
@@ -1062,8 +1068,8 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     legend.get_frame().set_facecolor('C0')
 
     axes.grid(lw=0.5, color='black', alpha=0.7, linestyle='-')
-    axes.set_xlim(-135, 135)
-    axes.set_xticks(np.arange(-135, 136, 45))
+    axes.set_xlim(-plt_rng, plt_rng)
+    axes.set_xticks(np.arange(-plt_rng, plt_rng + 1, 45))
     plt.setp(axes.get_xticklabels(), fontsize=8)
 
     if choice == 'one_dir':
@@ -1106,21 +1112,22 @@ def display_sinograms_1D_analysis_spatial_correlation(
     # get main direction
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         0]
+    plt_range = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
 
     build_sinogram_display(
         axs[0, 0], 'Sinogram1 [Radon Transform on Master Image]',
-        sinogram1, directions1, sinogram2, main_direction, abscissa=False)
+        sinogram1, directions1, sinogram2, main_direction, plt_range, abscissa=False)
     build_sinogram_difference_display(
-        axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2,
+        axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_range,
         abscissa=False, cmap='bwr')
     build_sinogram_display(
         axs[0, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, ordonate=False, abscissa=False)
+        main_direction, plt_range, ordonate=False, abscissa=False)
 
     # Second Plot line = SINO_1 [1D along estimated direction] / Cross-Correlation Signal /
     # SINO_2 [1D along estimated direction resulting from Image1]
-    # Check if the main direction belongs to the plotting interval [-135:135]
-    if main_direction < -135.0 or main_direction > 135.0:
+    # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+    if main_direction < -plt_range or main_direction > plt_range:
         theta_label = main_direction % (-np.sign(main_direction) * 180.0)
     else:
         theta_label = main_direction
@@ -1128,20 +1135,22 @@ def display_sinograms_1D_analysis_spatial_correlation(
     title_sino2 = '[Slave Image] Sinogram 1D'.format(theta_label)
     correl_mode = local_estimator.global_estimator.local_estimator_params['CORRELATION_MODE']
 
+    plt_range = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
+
     build_sinogram_1D_display_master(
-        axs[1, 0], title_sino1, sinogram1, directions1, main_direction)
+        axs[1, 0], title_sino1, sinogram1, directions1, main_direction, plt_range)
     build_sinogram_1D_cross_correlation(
         axs[1, 1], 'Normalized Cross-Correlation Signal', sinogram1, directions1, main_direction,
-        sinogram2, directions2, correl_mode, ordonate=False)
+        sinogram2, directions2, plt_range, correl_mode, ordonate=False)
     build_sinogram_1D_display_slave(
         axs[1, 2], title_sino2,
-        sinogram2, directions2, main_direction, ordonate=False)
+        sinogram2, directions2, main_direction, plt_range, ordonate=False)
 
     # Third Plot line = Image [2D] Cross correl Sino1[main dir] with Sino2 all directions /
     # Image [2D] of Cross correlation 1D between SINO1 & SINO 2 for each direction /
     # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
-    # Check if the main direction belongs to the plotting interval [-135:135]
-    if main_direction < -135.0 or main_direction > 135.0:
+    # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
+    if main_direction < -plt_range or main_direction > plt_range:
         main_theta_label = main_direction % (-np.sign(main_direction) * 180.0)
     else:
         main_theta_label = main_direction
@@ -1151,15 +1160,17 @@ def display_sinograms_1D_analysis_spatial_correlation(
         main_theta_label)
     title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n Sino1 and Sino2 for Each Direction'
 
+    plt_range = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
+
     build_sinogram_2D_cross_correlation(
         axs[2, 0], title_cross_correl1, sinogram1, directions1, main_direction,
-        sinogram2, correl_mode, choice='one_dir', imgtype='master')
+        sinogram2, plt_range, correl_mode, choice='one_dir', imgtype='master')
     build_sinogram_2D_cross_correlation(
         axs[2, 1], title_cross_correl_2D, sinogram1, directions1, main_direction,
-        sinogram2, correl_mode, choice='all_dir', imgtype='master', ordonate=False)
+        sinogram2, plt_range, correl_mode, choice='all_dir', imgtype='master', ordonate=False)
     build_sinogram_2D_cross_correlation(
         axs[2, 2], title_cross_correl2, sinogram2, directions2, main_direction,
-        sinogram1, correl_mode, choice='one_dir', imgtype='slave', ordonate=False)
+        sinogram1, plt_range, correl_mode, choice='one_dir', imgtype='slave', ordonate=False)
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'

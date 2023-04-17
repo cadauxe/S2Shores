@@ -28,6 +28,7 @@ class SpatialCorrelationBathyEstimatorDebug(
         print(self.bathymetry_estimations)
 
         # Displays
+        plt.show()
         waves_image = display_waves_images_spatial_correl(self)
         dft_sinograms = display_sinograms_spatial_correlation(self)
         dft_sino_spectral = display_sinograms_1D_analysis_spatial_correlation(self)
