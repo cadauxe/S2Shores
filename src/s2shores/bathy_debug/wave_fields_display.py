@@ -536,6 +536,17 @@ def display_sinograms_spatial_correlation(
     arrows = [(wfe.direction, default_arrow_length)
               for wfe in local_estimator.bathymetry_estimations]
 
+    # According to Delta_Time sign, proceed with arrow's direction inversion
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
+    #print('DELTA TIME', delta_time)
+    corrected_arrows = []
+    if np.sign(delta_time) < 0:
+        print('Display_polar_images_dft: inversion of arrows direction!')
+        for arrow_dir, arrow_ener in arrows:
+            arrow_dir %= 180
+            corrected_arrows.append((arrow_dir, arrow_ener))
+            arrows = corrected_arrows
+
     # First Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
     image2_circle_filtered = second_image.pixels * second_image.circle_image
@@ -1290,7 +1301,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     # plt.close('all')
     nrows = 1
     ncols = 2
-    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 12))
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 6))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
 
