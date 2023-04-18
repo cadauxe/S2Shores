@@ -553,16 +553,13 @@ def display_sinograms_spatial_correlation(
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
     build_display_waves_image(fig, axs[0, 0], 'Master Image Circle Filtered', image1_circle_filtered,
                               subplot_pos=[nrows, ncols, 1],
-                              resolution=first_image.resolution,
-                              directions=arrows, cmap='gray')
+                              resolution=first_image.resolution, cmap='gray')
     build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
                             resolution=first_image.resolution,
-                            subplot_pos=[nrows, ncols, 2],
-                            directions=arrows, coordinates=False)
+                            subplot_pos=[nrows, ncols, 2], coordinates=False)
     build_display_waves_image(fig, axs[0, 2], 'Slave Image Circle Filtered', image2_circle_filtered,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 3],
-                              directions=arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 3], cmap='gray', coordinates=False)
 
     # Second Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
     first_radon_transform = WavesRadon(first_image)
