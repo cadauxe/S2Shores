@@ -314,12 +314,14 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
-    plt_boundary = local_estimator.global_estimator.local_estimator_params['TUNING']['PLOT_RANGE']
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
+    theta_id = f'{np.int(main_dir)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_waves_images_debug_point_" + point_id + ".png"),
+            "display_waves_images_debug_point_" + point_id + "_theta_" + theta_id + ".png"),
         dpi=300)
     waves_image = plt.figure(1)
     return waves_image
@@ -381,10 +383,13 @@ def display_waves_images_spatial_correl(
                               subplot_pos=[nrows, ncols, 9], cmap='gray', coordinates=False)
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
+    theta_id = f'{np.int(main_dir)}'
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_waves_images_debug_point_" + point_id + ".png"),
+            "display_waves_images_debug_point_" + point_id + "_theta_" + theta_id + ".png"),
         dpi=300)
     # plt.show()
     waves_image = plt.figure(1)
@@ -512,10 +517,14 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
+    theta_id = f'{np.int(main_dir)}'
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_debug_point_" + point_id + ".png"),
+            "display_sinograms_debug_point_" + point_id + "_theta_" + theta_id + ".png"),
         dpi=300)
     dft_sino = plt.figure(2)
     return dft_sino
@@ -584,11 +593,14 @@ def display_sinograms_spatial_correlation(
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
+    theta_id = f'{np.int(main_dir)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_debug_point_" + point_id + ".png"),
+            "display_sinograms_debug_point_" + point_id + "_theta_" + theta_id + ".png"),
         dpi=300)
     # plt.show()
     dft_sino = plt.figure(2)
@@ -775,11 +787,14 @@ def display_dft_sinograms_spectral_analysis(
         np.abs(sino2_fft) * csm_phase * np.sign(delta_time), directions2, kfft, plt_range, ordonate=False)
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
+    theta_id = f'{np.int(main_dir)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_spectral_analysis_debug_point_" + point_id + ".png"),
+            "display_sinograms_spectral_analysis_debug_point_" + point_id + "_theta_" + theta_id + ".png"),
         dpi=300)
     dft_sino_spectral = plt.figure(3)
     return dft_sino_spectral
@@ -1182,11 +1197,14 @@ def display_sinograms_1D_analysis_spatial_correlation(
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
+    theta_id = f'{np.int(main_dir)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_1D_analysis_debug_point_" + point_id + ".png"),
+            "display_sinograms_1D_analysis_debug_point_" + point_id + "_theta_" + theta_id + ".png"),
         dpi=300)
     # plt.show()
     dft_sino_spectral = plt.figure(3)
@@ -1304,6 +1322,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     # According to Delta_Time sign, proceed with arrow's direction inversion
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
+
     corrected_arrows = []
     if np.sign(delta_time) < 0:
         print('Display_polar_images_dft: inversion of arrows direction!')
@@ -1342,11 +1361,14 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
+    theta_id = f'{np.int(main_dir)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_polar_images_debug_point_" + point_id + ".png"),
+            "display_polar_images_debug_point_" + point_id + "_theta_" + theta_id + ".png"),
         dpi=300)
     polar_plot = plt.figure(4)
     return polar_plot
