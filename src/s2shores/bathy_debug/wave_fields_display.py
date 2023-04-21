@@ -404,6 +404,7 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
               np.floor(-values1.shape[0] / 2),
               np.ceil(values1.shape[0] / 2)]
     axes.imshow(values1, aspect='auto', extent=extent, **kwargs)
+    orig_main_theta = main_theta
     normalized_var1 = (np.var(values1, axis=0) /
                        np.max(np.var(values1, axis=0)) - 0.5) * values1.shape[0]
     normalized_var2 = (np.var(values2, axis=0) /
@@ -421,10 +422,14 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     # Check if the main direction belongs to the plotting interval [-plt_range:plt_range]
     if main_theta < -plt_rng or main_theta > plt_rng:
         main_theta %= -np.sign(main_theta) * 180.0
-    theta_label = '$\Theta$={:.1f}°'.format(main_theta)
+    theta_label = '$\Theta${:.1f}° [Variance Max]'.format(main_theta)
+    theta_label_orig = '$\Theta${:.1f}° [Main Direction]'.format(orig_main_theta)
 
     axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
+
+    axes.axvline(orig_main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
+                 color='blue', ls='--', lw=1, label=theta_label_orig)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
     # Put a nicer background color on the legend.
