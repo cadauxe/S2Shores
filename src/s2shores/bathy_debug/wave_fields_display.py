@@ -249,9 +249,9 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
         radius = np.floor(min(l1, l2) / 2) - 5
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
-            dir_rad = np.deg2rad(direction) + np.pi
+            dir_rad = np.deg2rad(direction)  # + np.pi
             axes.arrow(l1 // 2, l2 // 2,
-                       np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
+                       -np.sin(dir_rad) * arrow_length, np.cos(dir_rad) * arrow_length,
                        head_width=2, head_length=3, color='r')
 
     axes.xaxis.tick_top()
@@ -1266,7 +1266,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     # First check sign of delta_time * delta_phase to know if direction nversion has been activated
     # if so, direction corresponding to the local maximum has to be shifted from 180°
     print('MAIN DIRECTION', main_direction)
-    if np.sign(delta_phase) < 0:
+    if np.sign(delta_time) * np.sign(delta_phase) < 0:
         main_direction += 180
         print('Polar Plot: Direction of Local Maximum reinverted!')
     ax_polar.plot(np.radians(main_direction), 1 / main_wavelength, '*', color='black')
@@ -1327,13 +1327,21 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     # According to Delta_Time sign, proceed with arrow's direction inversion
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-
+    delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'delta_phase')[0]
     corrected_arrows = []
-    if np.sign(delta_time) < 0:
-        print('Display_polar_images_dft: inversion of arrows direction!')
+    arrows_from_north = []
+    for arrow_dir, arrow_ener in arrows:
+        arrow_dir_from_north = (270 - arrow_dir)
+        arrows_from_north.append((arrow_dir_from_north, arrow_ener))
+        arrows = arrows_from_north
+    print(' ARROW DIRECTIONS FROM NORTH =', arrows)
+
+    if np.sign(delta_time * delta_phase) < 0:
+        print('Display_polar_images_dft: inversion of arrows direction!!!!!!')
         for arrow_dir, arrow_ener in arrows:
             arrow_dir %= 180
-            corrected_arrows.append((arrow_dir, arrow_ener))
+            corrected_arrows.append((arrow_dir_from_north, arrow_ener))
             arrows = corrected_arrows
 
     first_image = local_estimator.ortho_sequence[0]
