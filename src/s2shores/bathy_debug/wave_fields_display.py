@@ -480,6 +480,7 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+
     #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
     second_image = local_estimator.ortho_sequence[1]
@@ -488,6 +489,28 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     image1_circle_filtered = first_image.pixels * first_image.circle_image
     image2_circle_filtered = second_image.pixels * second_image.circle_image
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
+
+    # According to Delta_Time sign, proceed with arrow's direction inversion
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
+    delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'delta_phase')[0]
+    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+
+    corrected_arrows = []
+    arrows_from_north = []
+    for arrow_dir, arrow_ener in arrows:
+        arrow_dir_from_north = (270 - arrow_dir)
+        arrows_from_north.append((arrow_dir_from_north, arrow_ener))
+        arrows = arrows_from_north
+    print(' ARROW DIRECTIONS FROM NORTH =', arrows)
+
+    if np.sign(delta_time * delta_phase) < 0:
+        print('Display_polar_images_dft: inversion of arrows direction!!!!!!')
+        for arrow_dir, arrow_ener in arrows:
+            arrow_dir %= 180
+            corrected_arrows.append((arrow_dir_from_north, arrow_ener))
+            arrows = corrected_arrows
+
     build_display_waves_image(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
                               subplot_pos=[nrows, ncols, 1],
                               resolution=first_image.resolution, cmap='gray')
@@ -1263,20 +1286,15 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     rticks = 1 / requested_labels
 
     # Main information display
-    # First check sign of delta_time * delta_phase to know if direction nversion has been activated
-    # if so, direction corresponding to the local maximum has to be shifted from 180°
     print('MAIN DIRECTION', main_direction)
-    if np.sign(delta_time) * np.sign(delta_phase) < 0:
-        main_direction += 180
-        print('Polar Plot: Direction of Local Maximum reinverted!')
-    ax_polar.plot(np.radians(main_direction), 1 / main_wavelength, '*', color='black')
     print('DIRECTION FROM NORTH', direc_from_north)
-    print("REFINED MAIN DIRECTION", main_direction)
     print('DELTA TIME', delta_time)
     print('DELTA PHASE', delta_phase)
 
-    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, $\lambda$={:.2f}m]'.format((90 - main_direction) % 360, main_wavelength),
-                      xy=[np.radians(main_direction), (1 / main_wavelength)],  # theta, radius
+    ax_polar.plot(np.radians((main_direction % 180)), 1 / main_wavelength, '*', color='black')
+
+    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, $\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
+                      xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',
                       horizontalalignment='left',
@@ -1357,15 +1375,17 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     second_radon_transform = local_estimator.radon_transforms[1]
     sino1_fft = first_radon_transform.get_sinograms_standard_dfts()
     sino2_fft = second_radon_transform.get_sinograms_standard_dfts()
-    kfft = local_estimator._metrics['kfft']
 
     csm_phase, spectrum_amplitude, sinograms_correlation_fft = \
         local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     polar = csm_amplitude * csm_phase
-    ind_max = np.where(polar == np.max(polar))
-    ind_min = np.where(polar == np.min(polar))
+
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
+    theta_id = f'{np.int(main_dir)}'
+    # Get the relevant contribution of the CSM_Ampl * CSM_Phase according to Delta_time sign
+    polar *= -delta_time
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
@@ -1374,9 +1394,6 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
-    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
-    theta_id = f'{np.int(main_dir)}'
 
     plt.savefig(
         os.path.join(
