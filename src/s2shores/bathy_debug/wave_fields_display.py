@@ -1291,7 +1291,10 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     print('DELTA TIME', delta_time)
     print('DELTA PHASE', delta_phase)
 
-    ax_polar.plot(np.radians((main_direction % 180)), 1 / main_wavelength, '*', color='black')
+    if (direc_from_north <= 270.0) and (0 < main_direction <= 180.0):
+        ax_polar.plot(np.radians((main_direction % -180)), 1 / main_wavelength, '*', color='black')
+    else:
+        ax_polar.plot(np.radians((main_direction % 180)), 1 / main_wavelength, '*', color='black')
 
     ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, $\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
                       xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
@@ -1347,10 +1350,14 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
     delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
         'delta_phase')[0]
+    direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'direction_from_north')[0]
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute(
+        'direction')[0]
     corrected_arrows = []
     arrows_from_north = []
     for arrow_dir, arrow_ener in arrows:
-        arrow_dir_from_north = (270 - arrow_dir)
+        arrow_dir_from_north = (270 - arrow_dir) % 360
         arrows_from_north.append((arrow_dir_from_north, arrow_ener))
         arrows = arrows_from_north
     print(' ARROW DIRECTIONS FROM NORTH =', arrows)
@@ -1381,11 +1388,13 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     polar = csm_amplitude * csm_phase
+    if (direc_from_north <= 270.0) and (0 < main_dir <= 180.0):
+        polar *= -1.0
 
     main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
     theta_id = f'{np.int(main_dir)}'
     # Get the relevant contribution of the CSM_Ampl * CSM_Phase according to Delta_time sign
-    polar *= -delta_time
+    polar *= -np.sign(delta_time)
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
