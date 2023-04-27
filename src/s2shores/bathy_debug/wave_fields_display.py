@@ -499,17 +499,10 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     corrected_arrows = []
     arrows_from_north = []
     for arrow_dir, arrow_ener in arrows:
-        arrow_dir_from_north = (270 - arrow_dir)
+        arrow_dir_from_north = (270 - arrow_dir) % 360
         arrows_from_north.append((arrow_dir_from_north, arrow_ener))
         arrows = arrows_from_north
     print(' ARROW DIRECTIONS FROM NORTH =', arrows)
-
-    if np.sign(delta_time * delta_phase) < 0:
-        print('Display_polar_images_dft: inversion of arrows direction!!!!!!')
-        for arrow_dir, arrow_ener in arrows:
-            arrow_dir %= 180
-            corrected_arrows.append((arrow_dir_from_north, arrow_ener))
-            arrows = corrected_arrows
 
     build_display_waves_image(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
                               subplot_pos=[nrows, ncols, 1],
@@ -1345,29 +1338,22 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 6))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    inversion_status = [(wfe.inversion_done) for wfe in local_estimator.bathymetry_estimations]
 
     # According to Delta_Time sign, proceed with arrow's direction inversion
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-    delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'delta_phase')[0]
+    # delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
+    #    'delta_phase')[0]
     direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
         'direction_from_north')[0]
     main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute(
         'direction')[0]
-    corrected_arrows = []
     arrows_from_north = []
     for arrow_dir, arrow_ener in arrows:
         arrow_dir_from_north = (270 - arrow_dir) % 360
         arrows_from_north.append((arrow_dir_from_north, arrow_ener))
         arrows = arrows_from_north
     print(' ARROW DIRECTIONS FROM NORTH =', arrows)
-
-    if np.sign(delta_time * delta_phase) < 0:
-        print('Display_polar_images_dft: inversion of arrows direction!!!!!!')
-        for arrow_dir, arrow_ener in arrows:
-            arrow_dir %= 180
-            corrected_arrows.append((arrow_dir_from_north, arrow_ener))
-            arrows = corrected_arrows
 
     first_image = local_estimator.ortho_sequence[0]
 
@@ -1394,6 +1380,10 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
     theta_id = f'{np.int(main_dir)}'
     # Get the relevant contribution of the CSM_Ampl * CSM_Phase according to Delta_time sign
+    if inversion_status[0]:
+        print('PHASE sHIFT AND DIRECTION INVERSIONS HAVE BEEN PERFORMED!')
+        polar *= -1
+    # Get relevant component of the spectrum according to the delta_time sign
     polar *= -np.sign(delta_time)
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
