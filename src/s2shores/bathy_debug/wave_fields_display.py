@@ -697,7 +697,7 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
 
 def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEstimator',
                                  sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
-                                 plt_rng: float, type: str, title: str,
+                                 plt_rng: float, type: str, title: str, inversion_status: bool=False,
                                  refinement_phase: bool=False) -> None:
     radon_transform = local_estimator.radon_transforms[0]
     if not refinement_phase:
@@ -727,8 +727,12 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
                                    type, ordonate=False, abscissa=False)
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
     if type == 'phase_corrected':
-        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
-                                   directions, kfft, plt_rng, type, ordonate=False)
+        if not inversion_status:
+            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
+                                       directions, kfft, plt_rng, type, ordonate=False)
+        else:
+            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase,
+                                       directions, kfft, plt_rng, type, ordonate=False)
 
 
 def display_dft_sinograms_spectral_analysis(
@@ -797,12 +801,14 @@ def display_dft_sinograms_spectral_analysis(
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_range, ordonate=False, abscissa=False)
 
     # Add Cross Spectral Matrix display according to the Delta_Time sign
+    inversion_status = [(wfe.inversion_done) for wfe in local_estimator.bathymetry_estimations]
+
     build_sinogram_spectral_display(
         axs[3, 0], 'Same Graph as above with $\Delta$t sign correction',
         np.abs(sino1_fft) * csm_phase * np.sign(delta_time), directions1, kfft, plt_range)
     build_correl_spectrum_matrix(
         axs[3, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'phase_corrected',
-        'Same Graph as above with $\Delta$t sign correction')
+        'Same Graph as above with $\Delta$t sign correction', inversion_status)
     build_sinogram_spectral_display(
         axs[3, 2], 'Same Graph as above with $\Delta$t sign correction',
         np.abs(sino2_fft) * csm_phase * np.sign(delta_time), directions2, kfft, plt_range, ordonate=False)
