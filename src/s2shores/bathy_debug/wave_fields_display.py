@@ -728,10 +728,10 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
     if type == 'phase_corrected':
         if not inversion_status:
-            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
+            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * -np.sign(delta_time),
                                        directions, kfft, plt_rng, type, ordonate=False)
         else:
-            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase,
+            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
                                        directions, kfft, plt_rng, type, ordonate=False)
 
 
@@ -1240,7 +1240,7 @@ def display_sinograms_1D_analysis_spatial_correlation(
 
 def build_polar_display(fig: Figure, axes: Axes, title: str,
                         local_estimator: 'SpatialDFTBathyEstimator',
-                        values: np.ndarray, resolution: float,
+                        values: np.ndarray, resolution: float, dfn_max: float, max_wvlgth: float,
                         subplot_pos: [float, float, float],
                         refinement_phase: bool=False, **kwargs: dict) -> None:
 
@@ -1267,12 +1267,16 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
         label.set_rotation(i * 45)
 
     # get relevant attributes
-    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
-    main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'wavelength')[0]
-    direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'direction_from_north')[0]
+    direc_from_north = dfn_max
+    main_direction = 270 - dfn_max
+    main_wavelength = max_wvlgth
+    # main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+    #    0]
+    # main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute(
+    #    'wavelength')[0]
+    # direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
+    #    'direction_from_north')[0]
+
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute(
         'delta_time')[0]
     delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
@@ -1343,23 +1347,29 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     ncols = 2
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 6))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
-    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
-    inversion_status = [(wfe.inversion_done) for wfe in local_estimator.bathymetry_estimations]
+    arrows_arg = [(wfe.direction, wfe.energy_ratio, wfe.inversion_done, wfe.wavelength)
+                  for wfe in local_estimator.bathymetry_estimations]
 
     # According to Delta_Time sign, proceed with arrow's direction inversion
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-    # delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
-    #    'delta_phase')[0]
-    direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'direction_from_north')[0]
-    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'direction')[0]
-    arrows_from_north = []
-    for arrow_dir, arrow_ener in arrows:
+    # direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
+    #    'direction_from_north')[0]
+    # main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute(
+    #    'direction')[0]
+
+    arrows = []
+    arrow_max = []
+    energy_init = 0
+    for arrow_dir, arrow_ener, inv_status, arrow_wvlgth in arrows_arg:
         arrow_dir_from_north = (270 - arrow_dir) % 360
-        arrows_from_north.append((arrow_dir_from_north, arrow_ener))
-        arrows = arrows_from_north
-    print(' ARROW DIRECTIONS FROM NORTH =', arrows)
+        arrows.append((arrow_dir_from_north, arrow_ener))
+        if arrow_ener > energy_init:
+            ener_max = arrow_ener
+            main_wavelength = arrow_wvlgth
+            inversion_status = inv_status
+            dir_max = arrow_dir_from_north
+            energy_init = ener_max
+    print('-->ARROW DIRECTIONS FROM NORTH =', arrows)
 
     first_image = local_estimator.ortho_sequence[0]
 
@@ -1379,14 +1389,19 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
         local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
+    # Retrieve arguments corresponding to the arrow with the maximum energy
+    arrow_max.append((dir_max, ener_max, inversion_status, main_wavelength))
+    direc_from_north_max = dir_max
+    main_dir_max = 270 - direc_from_north_max
+    theta_id = f'{np.int(main_dir_max)}'
+
+    print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, INVERSION, WAVELENGTH]]=', arrow_max)
     polar = csm_amplitude * csm_phase
-    if (direc_from_north <= 270.0) and (0 < main_dir <= 180.0):
+    if (direc_from_north_max <= 270.0) and (0 < main_dir_max <= 180.0):
         polar *= -1.0
 
-    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
-    theta_id = f'{np.int(main_dir)}'
     # Get the relevant contribution of the CSM_Ampl * CSM_Phase according to Delta_time sign
-    if inversion_status[0]:
+    if inversion_status:
         print('PHASE sHIFT AND DIRECTION INVERSIONS HAVE BEEN PERFORMED!')
         polar *= -1
     # Get relevant component of the spectrum according to the delta_time sign
@@ -1394,7 +1409,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
-                        local_estimator, polar, first_image.resolution,
+                        local_estimator, polar, first_image.resolution, direc_from_north_max, main_wavelength,
                         subplot_pos=[1, 2, 2], threshold=False)
 
     plt.tight_layout()
