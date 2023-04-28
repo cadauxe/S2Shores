@@ -167,8 +167,6 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
     (l1, l2, l3) = np.shape(image)
     imin = np.min(image)
     imax = np.max(image)
-    #imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
-    #axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax))
     axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
     # create polar axes in the foreground and remove its background to see through
     subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
@@ -205,9 +203,6 @@ def build_display_pseudorgb(fig: Figure, axes: Axes, title: str, image: np.ndarr
 
     axes.xaxis.tick_top()
     axes.set_title(title, fontsize=9, loc='center')
-    #fig.colorbar(imsh, ax=axes, location='right', shrink=1.0)
-    # Manage blank spaces
-    # plt.tight_layout()
 
 
 def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.ndarray,
@@ -219,7 +214,6 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
     (l1, l2) = np.shape(image)
     imin = np.min(image)
     imax = np.max(image)
-    #imsh = axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
     axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
     # create polar axes in the foreground and remove its background to see through
     subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
@@ -236,7 +230,6 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
     xmax = f'{l1}px \n {np.round((l1-1)*resolution)}m'
     axes.set_xticks([0, l1 - 1], ['0', xmax], fontsize=8)
     ymax = f'{l2}px \n {np.round((l2-1)*resolution)}m'
-    #axes.set_yticks([0, l2 - 1], [ymax, '0'], fontsize=8)
     if coordinates:
         axes.set_yticks([0, l2 - 1], [ymax, '0'], fontsize=8)
     else:
@@ -266,12 +259,7 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
-    #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
-    #spatial_ref = local_estimator.global_estimator._ortho_stack.build_spatial_ref()
-    #epsg_code = local_estimator.global_estimator._ortho_stack.epsg_code
-    #up_left = local_estimator.global_estimator._ortho_stack._upper_left_corner
-    #low_right = local_estimator.global_estimator._ortho_stack._lower_right_corner
     second_image = local_estimator.ortho_sequence[1]
     pseudo_rgb = create_pseudorgb(first_image.original_pixels, second_image.original_pixels)
 
@@ -335,15 +323,9 @@ def display_waves_images_spatial_correl(
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(10, 10))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
 
-    #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
     second_image = local_estimator.ortho_sequence[1]
     pseudo_rgb = create_pseudorgb(first_image.original_pixels, second_image.original_pixels)
-
-    # Since wfe.eneergy_ratio not available for SpatialCorrelation:
-    #default_arrow_length = np.shape(first_image.original_pixels)[0]
-    # arrows = [(wfe.direction, default_arrow_length)
-    #          for wfe in local_estimator.bathymetry_estimations]
 
     # First Plot line = Image1 / pseudoRGB / Image2
     build_display_waves_image(fig, axs[0, 0], 'Image1', first_image.original_pixels,
@@ -481,7 +463,6 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 8))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
 
-    #arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
     first_image = local_estimator.ortho_sequence[0]
     second_image = local_estimator.ortho_sequence[1]
 
@@ -491,12 +472,8 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
 
     # According to Delta_Time sign, proceed with arrow's direction inversion
-    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-    delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'delta_phase')[0]
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
 
-    corrected_arrows = []
     arrows_from_north = []
     for arrow_dir, arrow_ener in arrows:
         arrow_dir_from_north = (270 - arrow_dir) % 360
@@ -568,7 +545,6 @@ def display_sinograms_spatial_correlation(
 
     # According to Delta_Time sign, proceed with arrow's direction inversion
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-    #print('DELTA TIME', delta_time)
     corrected_arrows = []
     if np.sign(delta_time) < 0:
         print('Display_polar_images_dft: inversion of arrows direction!')
@@ -1270,12 +1246,6 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     direc_from_north = dfn_max
     main_direction = 270 - dfn_max
     main_wavelength = max_wvlgth
-    # main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-    #    0]
-    # main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute(
-    #    'wavelength')[0]
-    # direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
-    #    'direction_from_north')[0]
 
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute(
         'delta_time')[0]
@@ -1307,11 +1277,6 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
                       verticalalignment='bottom',
                       fontsize=10, color='blue')
 
-    # ax_polar.text(np.radians(main_direction), (1 / main_wavelength) * 1.25, r'Peak Wavelength $\lambda$ = {main_wavelength} [m]',
-    #              rotation=0, ha='center', va='center', color='green')
-    #rticks = np.arange(0.0, 0.11, 0.01)[1:]
-    # Convert Wavenumber ticks into Wavelength ones
-    #ax_polar.set_rgrids(rticks, labels=(1.0 / rticks).round(2), fontsize=12, angle=180, color='red')
     ax_polar.set_rgrids(rticks, labels=requested_labels, fontsize=12, angle=180, color='red')
     ax_polar.text(np.radians(50), ax_polar.get_rmax() * 1.25, r'Wavelength $\lambda$ [m]',
                   rotation=0, ha='center', va='center', color='red')
@@ -1352,10 +1317,6 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     # According to Delta_Time sign, proceed with arrow's direction inversion
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-    # direc_from_north = local_estimator._bathymetry_estimations.get_estimations_attribute(
-    #    'direction_from_north')[0]
-    # main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute(
-    #    'direction')[0]
 
     arrows = []
     arrow_max = []
@@ -1445,7 +1406,6 @@ def build_radon_transform_display(axs: Axes, transform: WavesRadon, title: str,
     dft_amplitudes = np.abs(sino_fft)
     dft_phases = np.angle(sino_fft)
     variances = transform.get_sinograms_variances()
-    energies = transform.get_sinograms_energies()
 
     build_directional_2d_display(axs[0], title, values, directions, aspect='auto', cmap='gray')
     build_directional_2d_display(axs[1], 'Sinograms DFT amplitude', dft_amplitudes, directions)
@@ -1466,7 +1426,6 @@ def build_correl_spectrum_display(axs: Axes, local_estimator: 'SpatialDFTBathyEs
     sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
     total_spectrum = metrics[key]['total_spectrum']
     total_spectrum_normalized = metrics[key]['total_spectrum_normalized']
-    max_heta = metrics[key]['max_heta']
 
     build_directional_2d_display(axs[1], 'Sinograms correlation DFT module',
                                  np.abs(sinograms_correlation_fft), directions)
