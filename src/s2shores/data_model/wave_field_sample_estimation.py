@@ -31,14 +31,14 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
         self._delta_position = np.nan
         self._delta_phase = np.nan
         self._period_range = period_range
+        # Get track of delta_phase and directions inversion
+        self.inversion_done = False
 
         self._updating_wavelength = False
         self.register_wavelength_change(self.wavelength_change_in_estimation)
 
         self._updating_period = False
         self.register_period_change(self.period_change_in_estimation)
-        # Get track of delt_phase and directions inversiob
-        self.inversion_done = False
 
     def is_wave_field_valid(self, stroboscopic_factor_range: Tuple[float, float]) -> bool:
         """  Check if a wave field estimation satisfies physical constraints.
