@@ -704,10 +704,10 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
     if type == 'phase_corrected':
         if not inversion_status:
-            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * -np.sign(delta_time),
+            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
                                        directions, kfft, plt_rng, type, ordonate=False)
         else:
-            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
+            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * -np.sign(delta_time),
                                        directions, kfft, plt_rng, type, ordonate=False)
 
 
@@ -777,17 +777,32 @@ def display_dft_sinograms_spectral_analysis(
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_range, ordonate=False, abscissa=False)
 
     # Add Cross Spectral Matrix display according to the Delta_Time sign
-    inversion_status = [(wfe.inversion_done) for wfe in local_estimator.bathymetry_estimations]
+    arrows_arg = [(wfe.energy_ratio, wfe.inversion_done)
+                  for wfe in local_estimator.bathymetry_estimations]
+
+    # Get inversion status corresponding to arrow signing the maximum of eneergy
+    energy_init = 0
+    for arrow_ener, inv_status in arrows_arg:
+        if arrow_ener > energy_init:
+            ener_max = arrow_ener
+            inversion_status = inv_status
+            energy_init = ener_max
+    print('-----> INVERSION STATUS FOR SPECTRAL ANALYSIS=', inversion_status)
+
+    if inversion_status:
+        corr_factor = -np.sign(delta_time)
+    else:
+        corr_factor = np.sign(delta_time)
 
     build_sinogram_spectral_display(
         axs[3, 0], 'Same Graph as above with $\Delta$t sign correction',
-        np.abs(sino1_fft) * csm_phase * np.sign(delta_time), directions1, kfft, plt_range)
+        np.abs(sino1_fft) * csm_phase * corr_factor, directions1, kfft, plt_range)
     build_correl_spectrum_matrix(
         axs[3, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'phase_corrected',
         'Same Graph as above with $\Delta$t sign correction', inversion_status)
     build_sinogram_spectral_display(
         axs[3, 2], 'Same Graph as above with $\Delta$t sign correction',
-        np.abs(sino2_fft) * csm_phase * np.sign(delta_time), directions2, kfft, plt_range, ordonate=False)
+        np.abs(sino2_fft) * csm_phase * corr_factor, directions2, kfft, plt_range, ordonate=False)
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
     main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
