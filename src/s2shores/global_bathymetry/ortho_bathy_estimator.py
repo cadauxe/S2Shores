@@ -60,18 +60,20 @@ class OrthoBathyEstimator:
         start = time.time()
         computed_points = 0
         
-        if self.parent_estimator._debug_samples:
+        if self.parent_estimator.output_format == 'POINT':
             # Estimate bathy on points
             estimated_bathy = EstimatedPointsBathy(len(self.parent_estimator._debug_samples), 
                                          self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.parent_estimator._debug_samples
             total_points = len(self.parent_estimator._debug_samples)
-        else:
+        elif self.parent_estimator.output_format == 'GRID':
             # Estimate bathy over a grid
             estimated_bathy = EstimatedCartoBathy(self.sampled_ortho.carto_sampling,
-                                         self.sampled_ortho.ortho_stack.acquisition_time)
+                                                  self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.sampled_ortho.carto_sampling.x_y_sampling()
             total_points = self.sampled_ortho.carto_sampling.nb_samples
+        else:
+            raise ValueError("Output format must be one of the proposed one in the config file.")
         
         for index, sample in enumerate(samples):
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)

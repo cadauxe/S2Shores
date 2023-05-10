@@ -27,6 +27,12 @@ class BathyEstimatorParameters:
         return self._waveparams['GLOBAL_ESTIMATOR']
 
     @property
+    def output_format(self) -> str:
+        """ :returns: the output format to use
+        """
+        return self._global_estimator_params['OUTPUT_FORMAT']
+
+    @property
     def chains_versions(self) -> str:
         """ :returns: the versions of the packages used in the chain
         """

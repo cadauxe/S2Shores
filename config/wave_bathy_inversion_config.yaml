@@ -10,6 +10,7 @@ GLOBAL_ESTIMATOR:
   - "B04"
   
   # product characteristics
+  OUTPUT_FORMAT: "GRID" # format of the output, among GRID and POINT
   DXP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
   DYP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
