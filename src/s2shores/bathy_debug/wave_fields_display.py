@@ -714,7 +714,7 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
 def display_dft_sinograms_spectral_analysis(
         local_estimator: 'SpatialDFTBathyEstimator') -> None:
     # plt.close('all')
-    nrows = 4
+    nrows = 3
     ncols = 3
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 15))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
@@ -766,17 +766,20 @@ def display_dft_sinograms_spectral_analysis(
     # Manage blank spaces"
     csm_phase, spectrum_amplitude, sinograms_correlation_fft = \
         local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
-    build_sinogram_spectral_display(
-        axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_range, abscissa=False)
-    build_correl_spectrum_matrix(
-        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'phase',
-        'Cross Spectral Matrix (Amplitude * Phase-shifts)')
-    build_sinogram_spectral_display(
-        axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
-        np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_range, ordonate=False, abscissa=False)
+#    build_sinogram_spectral_display(
+#        axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
+#       np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_range, abscissa=False)
+#    build_correl_spectrum_matrix(
+#        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'phase',
+#        'Cross Spectral Matrix (Amplitude * Phase-shifts)')
+#    build_sinogram_spectral_display(
+#        axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
+# np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_range,
+# ordonate=False, abscissa=False)
 
-    # Add Cross Spectral Matrix display according to the Delta_Time sign
+    # Third Plot line = Spectral Amplitude of Sinogram1 [after DFT] * CSM Phase /
+    # CSM Amplitude * CSM Phase / Spectral Amplitude of Sinogram2 [after DFT] * CSM Phase
+    # taking into account inversion status
     arrows_arg = [(wfe.energy_ratio, wfe.inversion_done)
                   for wfe in local_estimator.bathymetry_estimations]
 
@@ -795,18 +798,21 @@ def display_dft_sinograms_spectral_analysis(
         corr_factor = np.sign(delta_time)
 
     build_sinogram_spectral_display(
-        axs[3, 0], 'Same Graph as above with $\Delta$t sign correction',
-        np.abs(sino1_fft) * csm_phase * corr_factor, directions1, kfft, plt_range)
+        axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
+        np.abs(sino1_fft) * csm_phase * corr_factor, directions1, kfft, plt_range, abscissa=False)
     build_correl_spectrum_matrix(
-        axs[3, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'phase_corrected',
-        'Same Graph as above with $\Delta$t sign correction', inversion_status)
+        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_range, 'phase_corrected',
+        'Cross Spectral Matrix (Amplitude * Phase-shifts)', inversion_status)
     build_sinogram_spectral_display(
-        axs[3, 2], 'Same Graph as above with $\Delta$t sign correction',
-        np.abs(sino2_fft) * csm_phase * corr_factor, directions2, kfft, plt_range, ordonate=False)
+        axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
+        np.abs(sino2_fft) * csm_phase * corr_factor, directions2, kfft, plt_range,
+        ordonate=False, abscissa=False)
+
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
     main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         0]
+
     theta_id = f'{np.int(main_dir)}'
 
     plt.savefig(
