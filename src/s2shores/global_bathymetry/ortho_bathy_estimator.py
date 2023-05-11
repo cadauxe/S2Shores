@@ -62,6 +62,8 @@ class OrthoBathyEstimator:
         
         if self.parent_estimator.output_format == 'POINT':
             # Estimate bathy on points
+            if len(self.parent_estimator._debug_samples)==0:
+                raise ValueError('User must give a list of points if OUTPUT_FORMAT is POINT.')
             estimated_bathy = EstimatedPointsBathy(len(self.parent_estimator._debug_samples), 
                                          self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.parent_estimator._debug_samples
