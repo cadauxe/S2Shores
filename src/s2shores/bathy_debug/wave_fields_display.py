@@ -302,10 +302,14 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
+    sorted_estimations_args = local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
+    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        sorted_estimations_args[0]]
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_waves_images_debug_point_" + point_id + ".png"),
+            "display_waves_images_debug_point_" + point_id + "_theta_" + f'{np.int(main_direction)}' +".png"),
         dpi=300)
     waves_image = plt.figure(1)
     return waves_image
@@ -382,7 +386,6 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
               np.floor(-values1.shape[0] / 2),
               np.ceil(values1.shape[0] / 2)]
     axes.imshow(values1, aspect='auto', extent=extent, **kwargs)
-    orig_main_theta = main_theta
     normalized_var1 = (np.var(values1, axis=0) /
                        np.max(np.var(values1, axis=0)) - 0.5) * values1.shape[0]
     normalized_var2 = (np.var(values2, axis=0) /
@@ -393,20 +396,20 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
               color="white", lw=0.8, label='Normalized Variance \n Reference Sinogram')
 
     pos1 = np.where(normalized_var1 == np.max(normalized_var1))
+    max_var_theta = directions[pos1][0] 
+    # Check coherence of main direction between Master / Slave  
+    if max_var_theta * main_theta < 0:
+        max_var_theta = max_var_theta % (np.sign(main_theta) * 180.0)
+    # Check if the direction belongs to the plotting interval [plt_min:plt_max]
+    if max_var_theta < plt_min or max_var_theta > plt_max:
+        max_var_theta %= -np.sign(max_var_theta) * 180.0
+    theta_label = '$\Theta${:.1f}° [Variance Max]'.format(max_var_theta)
+    theta_label_orig = '$\Theta${:.1f}° [Main Direction]'.format(main_theta)
 
-    # Check coherence of main direction between Master / Slave
-    if directions[pos1][0] * main_theta < 0:
-        main_theta = directions[pos1][0] % (np.sign(main_theta) * 180.0)
-    # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
-    if main_theta < plt_min or main_theta > plt_max:
-        main_theta %= -np.sign(main_theta) * 180.0
-    theta_label = '$\Theta${:.1f}° [Variance Max]'.format(main_theta)
-    theta_label_orig = '$\Theta${:.1f}° [Main Direction]'.format(orig_main_theta)
-
-    axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
+    axes.axvline(max_var_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
 
-    axes.axvline(orig_main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
+    axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='blue', ls='--', lw=1, label=theta_label_orig)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
@@ -467,16 +470,6 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     image2_circle_filtered = second_image.pixels * second_image.circle_image
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
 
-    # According to Delta_Time sign, proceed with arrow's direction inversion
-    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
-
-    arrows_from_north = []
-    for arrow_dir, arrow_ener in arrows:
-        arrow_dir_from_north = (270 - arrow_dir) % 360
-        arrows_from_north.append((arrow_dir_from_north, arrow_ener))
-        arrows = arrows_from_north
-    print(' ARROW DIRECTIONS FROM NORTH =', arrows)
-
     build_display_waves_image(fig, axs[0, 0], 'Image1 Circle Filtered', image1_circle_filtered,
                               subplot_pos=[nrows, ncols, 1],
                               resolution=first_image.resolution, cmap='gray')
@@ -495,9 +488,11 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
         (sinogram1 / np.max(np.abs(sinogram1)))
 
-    # get main direction
+    # get main direction 
+    sorted_estimations_args = local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
+
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
+        sorted_estimations_args[0]]
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
     
@@ -516,7 +511,7 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_debug_point_" + point_id + ".png"),
+            "display_sinograms_debug_point_" + point_id + "_theta_"+ f'{np.int(main_direction)}' + ".png"),
         dpi=300)
     dft_sino = plt.figure(2)
     return dft_sino
@@ -541,7 +536,7 @@ def display_sinograms_spatial_correlation(
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
     corrected_arrows = []
     if np.sign(delta_time) < 0:
-        print('Display_polar_images_dft: inversion of arrows direction!')
+        print('Display_sinograms_spatial_correlation : inversion of arrows direction!')
         for arrow_dir, arrow_ener in arrows:
             arrow_dir %= 180
             corrected_arrows.append((arrow_dir, arrow_ener))
@@ -722,9 +717,11 @@ def display_dft_sinograms_spectral_analysis(
     radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
         (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
+    sorted_estimations_args = local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
-    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
+        sorted_estimations_args[0]]
+
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[sorted_estimations_args[0]]
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
 
@@ -763,17 +760,8 @@ def display_dft_sinograms_spectral_analysis(
     # Third Plot line = Spectral Amplitude of Sinogram1 [after DFT] * CSM Phase /
     # CSM Amplitude * CSM Phase / Spectral Amplitude of Sinogram2 [after DFT] * CSM Phase
     # taking into account inversion status
-    arrows_arg = [(wfe.energy_ratio, wfe.inversion_done)
-                  for wfe in local_estimator.bathymetry_estimations]
-
-    # Get inversion status corresponding to arrow signing the maximum of eneergy
-    energy_init = 0
-    for arrow_ener, inv_status in arrows_arg:
-        if arrow_ener > energy_init:
-            ener_max = arrow_ener
-            inversion_status = inv_status
-            energy_init = ener_max
-    print('-----> INVERSION STATUS FOR SPECTRAL ANALYSIS=', inversion_status)
+    inversion_status = local_estimator._bathymetry_estimations.get_estimations_attribute('inversion_done')[
+        sorted_estimations_args[0]]    
 
     if inversion_status:
         corr_factor = -np.sign(delta_time)
@@ -797,7 +785,7 @@ def display_dft_sinograms_spectral_analysis(
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_spectral_analysis_debug_point_" + point_id + ".png"),
+            "display_sinograms_spectral_analysis_debug_point_" + point_id + "_theta_"+ f'{np.int(main_direction)}' + ".png"),
         dpi=300)
     dft_sino_spectral = plt.figure(3)
     return dft_sino_spectral
@@ -1309,25 +1297,19 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     ncols = 2
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 6))
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
-    arrows_arg = [(wfe.direction, wfe.energy_ratio, wfe.inversion_done, wfe.wavelength)
-                  for wfe in local_estimator.bathymetry_estimations]
 
-    # According to Delta_Time sign, proceed with arrow's direction inversion
-    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-
-    arrows = []
-    arrow_max = []
-    energy_init = 0
-    for arrow_dir, arrow_ener, inv_status, arrow_wvlgth in arrows_arg:
-        arrow_dir_from_north = (270 - arrow_dir) % 360
-        arrows.append((arrow_dir_from_north, arrow_ener))
-        if arrow_ener > energy_init:
-            ener_max = arrow_ener
-            main_wavelength = arrow_wvlgth
-            inversion_status = inv_status
-            dir_max = arrow_dir_from_north
-            energy_init = ener_max
-    print('-->ARROW DIRECTIONS FROM NORTH =', arrows)
+    sorted_estimations_args = local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
+    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
+        sorted_estimations_args[0]]
+    ener_max = local_estimator._bathymetry_estimations.get_estimations_attribute('energy_ratio')[
+        sorted_estimations_args[0]]
+    main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute('wavelength')[
+        sorted_estimations_args[0]]
+    inversion_status = local_estimator._bathymetry_estimations.get_estimations_attribute('inversion_done')[
+        sorted_estimations_args[0]]
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[sorted_estimations_args[0]]
+    dir_max_from_north = (270 - main_direction) % 360	
+    arrows = [((270 - wfe.direction)%360, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
 
     first_image = local_estimator.ortho_sequence[0]
 
@@ -1348,14 +1330,13 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     # Retrieve arguments corresponding to the arrow with the maximum energy
-    arrow_max.append((dir_max, ener_max, inversion_status, main_wavelength))
-    direc_from_north_max = dir_max
-    main_dir_max = 270 - direc_from_north_max
+    arrow_max = (dir_max_from_north, ener_max, inversion_status, main_wavelength)
+    main_dir_max = 270 - dir_max_from_north
     theta_id = f'{np.int(main_dir_max)}'
 
     print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, INVERSION, WAVELENGTH]]=', arrow_max)
     polar = csm_amplitude * csm_phase
-    if (direc_from_north_max <= 270.0) and (0 < main_dir_max <= 180.0):
+    if (dir_max_from_north <= 270.0) and (0 < main_dir_max <= 180.0):
         polar *= -1.0
 
     # Get the relevant contribution of the CSM_Ampl * CSM_Phase according to Delta_time sign
@@ -1367,7 +1348,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
-                        local_estimator, polar, first_image.resolution, direc_from_north_max, main_wavelength,
+                        local_estimator, polar, first_image.resolution, dir_max_from_north, main_wavelength,
                         subplot_pos=[1, 2, 2], threshold=False)
 
     plt.tight_layout()

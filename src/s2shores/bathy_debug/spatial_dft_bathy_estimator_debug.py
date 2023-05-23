@@ -29,7 +29,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
     def explore_results(self) -> None:
 
         self.print_variables()
-        print(f'estimations after direction refinement :')
+        print(f'estimations after direction refinement, before physical constraint filtering and before sorting :')
         print(self.bathymetry_estimations)
 
         # Displays
