@@ -37,6 +37,10 @@ SPATIAL_DFT:
   UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period (S2 : False)
   ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
   STEP_T: 0.05 # step for period sampling - seconds - 
+  DEBUG:
+    PLOT_MAX: 135
+    PLOT_MIN: -135 # Indication of the range in which the output should be displayed 
+                     # (i.e. in the[PLOT_MIN:PLOT_MAX] interval)- degrees
 
 #temporal_correlation
 TEMPORAL_CORRELATION:
@@ -54,3 +58,7 @@ SPATIAL_CORRELATION:
   CORRELATION_MODE: 'full' # np.correlate mode
   AUGMENTED_RADON_FACTOR: 0.01 # radon_augmentation - augment the resolution of the radon transform
   PEAK_POSITION_MAX_FACTOR: 0.8 # peak_position - factor tunning for the maximum peak position
+  DEBUG:
+    PLOT_MAX: 135
+    PLOT_MIN: -135   # Indication of the range in which the output should be displayed 
+                     # (i.e. in the[PLOT_MIN:PLOT_MAX] interval)- degrees
