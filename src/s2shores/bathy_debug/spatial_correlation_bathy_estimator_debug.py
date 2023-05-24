@@ -30,8 +30,8 @@ class SpatialCorrelationBathyEstimatorDebug(
         # Displays
         plt.show()
         waves_image = display_waves_images_spatial_correl(self)
-        dft_sinograms = display_sinograms_spatial_correlation(self)
-        dft_sino_spectral = display_sinograms_1D_analysis_spatial_correlation(self)
+        spatial_correl_sinograms = display_sinograms_spatial_correlation(self)
+        spatial_correl_sino_analysis = display_sinograms_1D_analysis_spatial_correlation(self)
         waves_image.show()
-        dft_sinograms.show()
-        dft_sino_spectral.show()
+        spatial_correl_sinograms.show()
+        spatial_correl_sino_analysis.show()

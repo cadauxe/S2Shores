@@ -365,8 +365,9 @@ def display_waves_images_spatial_correl(
                               subplot_pos=[nrows, ncols, 9], cmap='gray', coordinates=False)
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
-    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
+
+    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
+
     theta_id = f'{np.int(main_dir)}'
     plt.savefig(
         os.path.join(
@@ -533,6 +534,7 @@ def display_sinograms_spatial_correlation(
               for wfe in local_estimator.bathymetry_estimations]
 
     # According to Delta_Time sign, proceed with arrow's direction inversion
+
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
     corrected_arrows = []
     if np.sign(delta_time) < 0:
@@ -564,8 +566,8 @@ def display_sinograms_spatial_correlation(
     radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
         (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
-    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
+    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
+
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
 
@@ -580,9 +582,8 @@ def display_sinograms_spatial_correlation(
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
-    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
-    theta_id = f'{np.int(main_dir)}'
+
+    theta_id = f'{np.int(main_direction)}'
 
     plt.savefig(
         os.path.join(
@@ -826,7 +827,10 @@ def build_correl_spectrum_matrix_spatial_correlation(axes: Axes, local_estimator
 def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
                                      main_theta: float, plt_min: float, plt_max: float,
                                      ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
-    index_theta = np.int(main_theta - np.min(directions))
+
+  #  index_theta = np.int(main_theta - np.min(directions))    
+    index_theta = np.where(directions == np.int(main_theta))[0]
+   
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
     if main_theta < plt_min or main_theta > plt_max:
         main_theta %= -np.sign(main_theta) * 180.0
@@ -869,8 +873,9 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, 
     if directions[pos][0] * main_theta < 0:
         main_theta_slave = directions[pos][0] % (np.sign(main_theta) * 180.0)
 
-    index_theta_master = np.int(main_theta - np.min(directions))
-    index_theta_slave = np.int(main_theta_slave - np.min(directions))
+    index_theta_master = np.where(directions == np.int(main_theta))[0]
+    index_theta_slave = pos[0]
+
 
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
     if main_theta < plt_min or main_theta > plt_max:
@@ -920,7 +925,7 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     if directions2[pos2][0] * main_theta < 0:
         main_theta_slave = directions2[pos2][0] % (np.sign(main_theta) * 180.0)
 
-    index_theta1 = np.int(main_theta - np.min(directions1))
+    index_theta1 = np.int(np.where(directions1 == np.int(main_theta))[0])
     # get 1D-sinogram1 along relevant direction
     sino1_1D = values1[:, index_theta1]
     # theta_label1 = 'Sinogram1 1D'  # along \n$\Theta$={:.1f}°'.format(main_theta)
@@ -929,8 +934,8 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # axes.plot(absc, np.flip((values1[:, index_theta1] / np.max(np.abs(values1[:, index_theta1])))),
     #          color="orange", lw=0.8, label=theta_label1)
 
-    index_theta2_master = np.int(main_theta - np.min(directions2))
-    index_theta2_slave = np.int(main_theta_slave - np.min(directions2))
+    index_theta2_master = np.int(np.where(directions2 == np.int(main_theta))[0])
+    index_theta2_slave = np.int(pos2[0])   
 
     # get 1D-sinogram2 along relevant direction
     sino2_1D_master = values2[:, index_theta2_master]
@@ -1005,21 +1010,20 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
         normalized_var = (np.var(values1, axis=0) /
                           np.max(np.var(values1, axis=0)) - 0.5) * values1.shape[0]
         pos = np.where(normalized_var == np.max(normalized_var))
-
+        slave_main_theta = directions1[pos][0] 
         # Check coherence of main direction between Master / Slave
-        if directions1[pos][0] * main_theta < 0:
-            main_theta = directions1[pos][0] % (np.sign(main_theta) * 180.0)
+        if slave_main_theta * main_theta < 0:
+            slave_main_theta = slave_main_theta % (np.sign(main_theta) * 180.0)
         # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
-        if main_theta < plt_min or main_theta > plt_max:
-            main_theta_label = main_theta % (-np.sign(main_theta) * 180.0)
-        else:
-            main_theta_label = main_theta
-
+        if slave_main_theta < plt_min or slave_main_theta > plt_max:
+            slave_main_theta = slave_main_theta % (-np.sign(slave_main_theta) * 180.0)
+        
+        main_theta = slave_main_theta
         title = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
-            main_theta_label)
+            main_theta)
 
     if choice == 'one_dir':
-        index_theta1 = np.int(main_theta - np.min(directions1))
+        index_theta1 = np.int(np.where(directions1 == np.int(main_theta))[0])
         # get 1D-sinogram1 along relevant direction
         sino1_1D = values1[:, index_theta1]
         # Proceed with 1D-Correlation between Sino1(main_dir) and Sino2(all_dir)
@@ -1124,8 +1128,8 @@ def display_sinograms_1D_analysis_spatial_correlation(
     radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
         (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
-    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
+    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
+
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
     
@@ -1163,14 +1167,11 @@ def display_sinograms_1D_analysis_spatial_correlation(
     # Image [2D] of Cross correlation 1D between SINO1 & SINO 2 for each direction /
     # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
     # Check if the main direction belongs to the plotting interval [plt_min:plt_ramax]
-    if main_direction < plt_min or main_direction > plt_max:
-        main_theta_label = main_direction % (-np.sign(main_direction) * 180.0)
-    else:
-        main_theta_label = main_direction
+
     title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={:.1f}°] and Sino2[All Directions]'.format(
-        main_theta_label)
+        theta_label)
     title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
-        main_theta_label)
+        0)
     title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n Sino1 and Sino2 for Each Direction'
 
     build_sinogram_2D_cross_correlation(
@@ -1185,9 +1186,7 @@ def display_sinograms_1D_analysis_spatial_correlation(
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
-    main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
-    theta_id = f'{np.int(main_dir)}'
+    theta_id = f'{np.int(main_direction)}'
 
     plt.savefig(
         os.path.join(
