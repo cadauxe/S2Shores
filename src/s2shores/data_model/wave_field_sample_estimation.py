@@ -129,7 +129,7 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
             else:
                 if self.delta_time * value > 0:  # delta_time and delta_phase have opposite signs
                     self._invert_direction()
-		else:
+                else:
                     value = -value
                     self.inversion_done = True
 		    
