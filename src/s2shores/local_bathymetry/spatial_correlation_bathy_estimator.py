@@ -189,7 +189,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         if pt_in_range.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
         argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
-        delta_position = (argmax_ac - argmax) * self.augmented_resolution
+        delta_position = (argmax - argmax_ac) * self.augmented_resolution
 
         return delta_position
 
