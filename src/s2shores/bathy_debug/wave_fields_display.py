@@ -890,7 +890,7 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     #          color="orange", lw=0.8, label=theta_label1)
 
     index_theta2_master = np.int(np.where(directions2 == np.int(main_theta))[0])
-    index_theta2_slave = np.int(pos2[0])   
+    index_theta2_slave = np.int(pos2[0][0])   
 
     # get 1D-sinogram2 along relevant direction
     sino2_1D_master = values2[:, index_theta2_master]
@@ -1229,10 +1229,11 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     plotval = np.abs(values) / np.max(np.abs(values))
 
     #convert the direction coordinates in the direction of the polar plot axis   
-    directions = (directions + 180)%360
+    directions = (directions + 360)%360
     # Add the last element of the list to the list.
     # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
     directions = np.append(directions, directions[0])
+
     plotval = np.concatenate((plotval, plotval[:, 0].reshape(plotval.shape[0], 1)), axis=1)
 
     ax_polar.contourf(np.deg2rad(directions), wavenumbers, plotval, cmap="gist_ncar")
