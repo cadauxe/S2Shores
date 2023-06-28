@@ -528,21 +528,10 @@ def display_sinograms_spatial_correlation(
     first_image = local_estimator.ortho_sequence[0]
     second_image = local_estimator.ortho_sequence[1]
 
-    # Since wfe.eneergy_ratio not available for SpatialCorrelation:
+    # Since wfe.energy_ratio not available for SpatialCorrelation:
     default_arrow_length = np.shape(first_image.original_pixels)[0]
     arrows = [(wfe.direction, default_arrow_length)
               for wfe in local_estimator.bathymetry_estimations]
-
-    # According to Delta_Time sign, proceed with arrow's direction inversion
-
-    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-    corrected_arrows = []
-    if np.sign(delta_time) < 0:
-        print('Display_sinograms_spatial_correlation : inversion of arrows direction!')
-        for arrow_dir, arrow_ener in arrows:
-            arrow_dir %= 180
-            corrected_arrows.append((arrow_dir, arrow_ener))
-            arrows = corrected_arrows
 
     # First Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
@@ -550,13 +539,13 @@ def display_sinograms_spatial_correlation(
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
     build_display_waves_image(fig, axs[0, 0], 'Master Image Circle Filtered', image1_circle_filtered,
                               subplot_pos=[nrows, ncols, 1],
-                              resolution=first_image.resolution, cmap='gray')
+                              resolution=first_image.resolution, directions = arrows, cmap='gray')
     build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
                             resolution=first_image.resolution,
                             subplot_pos=[nrows, ncols, 2], coordinates=False)
     build_display_waves_image(fig, axs[0, 2], 'Slave Image Circle Filtered', image2_circle_filtered,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 3], cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 3], directions = arrows, cmap='gray', coordinates=False)
 
     # Second Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
     first_radon_transform = WavesRadon(first_image)
