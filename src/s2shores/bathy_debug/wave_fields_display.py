@@ -231,7 +231,7 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
     axes.set_xticks([0, l1 - 1], ['0', xmax], fontsize=8)
     ymax = f'{l2}px \n {np.round((l2-1)*resolution)}m'
     if coordinates:
-        axes.set_yticks([0, l2 - 1], [ymax, '0'], fontsize=8)
+        axes.set_yticks([0, l2 - 1], ['0', ymax], fontsize=8)
     else:
         axes.set_yticks([0, l2 - 1], ['', ''], fontsize=8)
         axes.set_xticks([0, l1 - 1], ['\n', ' \n'], fontsize=8)
@@ -242,9 +242,9 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
         radius = np.floor(min(l1, l2) / 2) - 5
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
-            dir_rad = np.deg2rad(direction)  # + np.pi
+            dir_rad = np.deg2rad(direction)  
             axes.arrow(l1 // 2, l2 // 2,
-                       -np.sin(dir_rad) * arrow_length, np.cos(dir_rad) * arrow_length,
+                       np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
                        head_width=2, head_length=3, color='r')
 
     axes.xaxis.tick_top()
@@ -600,8 +600,7 @@ def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
                                     ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
     extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
     axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
-    # axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
-    #          color="white", lw=0.7)
+
     axes.plot(directions, ((np.max(values, axis=0) / np.max(np.max(values, axis=0))) * kfft.max()),
               color="white", lw=0.7, label='Normalized Maximum')
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
@@ -630,13 +629,6 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
 
     extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
     axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
-    #loc_transect = np.where(directions == -29.0)
-    #transect = values[:, loc_transect[0]]
-    #print('TRANSECT = ', transect)
-    #neighborhood_size = 10
-    #val_max = filters.maximum_filter(values, neighborhood_size)
-    #val_min = filters.minimum_filter(values, neighborhood_size)
-    #axes.imshow(val_min, aspect='auto', origin="lower", extent=extent, **kwargs)
 
     if type == 'amplitude':
         axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
@@ -664,26 +656,17 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
 
 def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEstimator',
                                  sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
-                                 plt_min: float, plt_max: float, type: str, title: str, inversion_status: bool=False,
+                                 plt_min: float, plt_max: float, type: str, title: str, 
                                  refinement_phase: bool=False) -> None:
     radon_transform = local_estimator.radon_transforms[0]
     if not refinement_phase:
         _, directions = radon_transform.get_as_arrays()
     else:
         directions = radon_transform.directions_interpolated_dft
-    #sinograms_correlation_fft = metrics[key]['sinograms_correlation_fft']
-    # equals sinograms_correlation_fft from
-    # local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
-    #total_spectrum = metrics[key]['total_spectrum']
-    #total_spectrum_normalized = metrics[key]['total_spectrum_normalized']
-    #max_heta = metrics[key]['max_heta']
+
     csm_phase, spectrum_amplitude, sinograms_correlation_fft = \
         local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
 
-    # EB method == sinograms_correlation_fft from
-    # local_estimator._cross_correl_spectrum(sino1_fft, sino2_fft)
-    #cross_spectral_matrix = sino2_fft * np.conj(sino1_fft)
-    #csm_amplitude = np.abs(cross_spectral_matrix)
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     if type == 'amplitude':
@@ -691,15 +674,7 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
                                    type, ordonate=False, abscissa=False)
     if type == 'phase':
         build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft, plt_min, plt_max,
-                                   type, ordonate=False, abscissa=False)
-    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[0]
-    if type == 'phase_corrected':
-        if not inversion_status:
-            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * np.sign(delta_time),
-                                       directions, kfft, plt_min, plt_max, type, ordonate=False)
-        else:
-            build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase * -np.sign(delta_time),
-                                       directions, kfft, plt_min, plt_max, type, ordonate=False)
+                                   type, ordonate=False)
 
 
 def display_dft_sinograms_spectral_analysis(
@@ -760,26 +735,17 @@ def display_dft_sinograms_spectral_analysis(
 
     # Third Plot line = Spectral Amplitude of Sinogram1 [after DFT] * CSM Phase /
     # CSM Amplitude * CSM Phase / Spectral Amplitude of Sinogram2 [after DFT] * CSM Phase
-    # taking into account inversion status
-    inversion_status = local_estimator._bathymetry_estimations.get_estimations_attribute('inversion_done')[
-        sorted_estimations_args[0]]    
-
-    if inversion_status:
-        corr_factor = -np.sign(delta_time)
-    else:
-        corr_factor = np.sign(delta_time)
 
     build_sinogram_spectral_display(
         axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase * corr_factor, directions1, kfft, plt_min, plt_max, abscissa=False)
+        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False)
     build_correl_spectrum_matrix(
-        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'phase_corrected',
-        'Cross Spectral Matrix (Amplitude * Phase-shifts)', inversion_status)
+        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'phase',
+        'Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
-        np.abs(sino2_fft) * csm_phase * corr_factor, directions2, kfft, plt_min, plt_max,
+        np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
         ordonate=False, abscissa=False)
-
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
@@ -1210,6 +1176,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     else:
         directions = radon_transform.directions_interpolated_dft
 
+
     # define wavenumbers according to image resolution
     Fs = 1 / resolution
     nb_wavenumbers = radon_transform.get_as_arrays()[0].shape[0]
@@ -1230,11 +1197,10 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     direc_from_north = dfn_max
     main_direction = 270 - dfn_max
     main_wavelength = max_wvlgth
-
-    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'delta_time')[0]
-    delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute(
-        'delta_phase')[0]
+    
+    sorted_estimations_args = local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[sorted_estimations_args[0]]
+    delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_phase')[sorted_estimations_args[0]]
 
     # Constrains the Wavenumber plotting interval according to wavelength limitation set to 50m
     ax_polar.set_ylim(0, 0.02)
@@ -1248,11 +1214,8 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     print('DELTA TIME', delta_time)
     print('DELTA PHASE', delta_phase)
 
-    if (direc_from_north <= 270.0) and (0 < main_direction <= 180.0):
-        ax_polar.plot(np.radians((main_direction % -180)), 1 / main_wavelength, '*', color='black')
-    else:
-        ax_polar.plot(np.radians((main_direction % 180)), 1 / main_wavelength, '*', color='black')
-
+    ax_polar.plot(np.radians((main_direction+180)%360), 1 / main_wavelength, '*', color='black')
+    
     ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, \n$\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
                       xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
@@ -1276,6 +1239,8 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     # Values to be plotted
     plotval = np.abs(values) / np.max(np.abs(values))
 
+    #convert the direction coordinates in the direction of the polar plot axis   
+    directions = (directions + 180)%360
     # Add the last element of the list to the list.
     # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
     directions = np.append(directions, directions[0])
@@ -1304,12 +1269,10 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
         sorted_estimations_args[0]]
     main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute('wavelength')[
         sorted_estimations_args[0]]
-    inversion_status = local_estimator._bathymetry_estimations.get_estimations_attribute('inversion_done')[
-        sorted_estimations_args[0]]
-    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[sorted_estimations_args[0]]
     dir_max_from_north = (270 - main_direction) % 360	
-    arrows = [((270 - wfe.direction)%360, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
+    arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
 
+    print("ARROWS",arrows)    
     first_image = local_estimator.ortho_sequence[0]
 
     # First Plot line = Image1 / pseudoRGB / Image2
@@ -1329,26 +1292,17 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     csm_amplitude = np.abs(sinograms_correlation_fft)
 
     # Retrieve arguments corresponding to the arrow with the maximum energy
-    arrow_max = (dir_max_from_north, ener_max, inversion_status, main_wavelength)
-    main_dir_max = 270 - dir_max_from_north
-    theta_id = f'{np.int(main_dir_max)}'
+    arrow_max = (dir_max_from_north, ener_max, main_wavelength)
+    theta_id = f'{np.int(main_direction)}'
 
-    print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, INVERSION, WAVELENGTH]]=', arrow_max)
+    print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, WAVELENGTH]]=', arrow_max)
     polar = csm_amplitude * csm_phase
-    if (dir_max_from_north <= 270.0) and (0 < main_dir_max <= 180.0):
-        polar *= -1.0
 
-    # Get the relevant contribution of the CSM_Ampl * CSM_Phase according to Delta_time sign
-    if inversion_status:
-        print('PHASE sHIFT AND DIRECTION INVERSIONS HAVE BEEN PERFORMED!')
-        polar *= -1
-    # Get relevant component of the spectrum according to the delta_time sign
-    polar *= -np.sign(delta_time)
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
                         local_estimator, polar, first_image.resolution, dir_max_from_north, main_wavelength,
-                        subplot_pos=[1, 2, 2], threshold=False)
+                        subplot_pos=[1, 2, 2])
 
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'

@@ -31,8 +31,6 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
         self._delta_position = np.nan
         self._delta_phase = np.nan
         self._period_range = period_range
-       # Get track of delta_phase and directions inversion
-        self.inversion_done = False
 
         self._updating_wavelength = False
         self.register_wavelength_change(self.wavelength_change_in_estimation)
@@ -106,7 +104,6 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
                 else:
 		    # delta_time and propagated distance have opposite signs
                     value = -value
-                    self.inversion_done = True
 		    
             self._delta_position = value
             self._solve_shift_equations()
@@ -131,7 +128,6 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
                     self._invert_direction()
                 else:
                     value = -value
-                    self.inversion_done = True
 		    
             self._delta_phase = value
             self._solve_shift_equations()
