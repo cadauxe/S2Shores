@@ -1228,12 +1228,11 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     # Values to be plotted
     plotval = np.abs(values) / np.max(np.abs(values))
 
-    #convert the direction coordinates in the direction of the polar plot axis   
-    directions = (directions + 360)%360
+    #convert the direction coordinates in the polar plot axis (from   
+    directions = (directions + 180)%360       
     # Add the last element of the list to the list.
     # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
     directions = np.append(directions, directions[0])
-
     plotval = np.concatenate((plotval, plotval[:, 0].reshape(plotval.shape[0], 1)), axis=1)
 
     ax_polar.contourf(np.deg2rad(directions), wavenumbers, plotval, cmap="gist_ncar")
@@ -1259,6 +1258,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
         sorted_estimations_args[0]]
     main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute('wavelength')[
         sorted_estimations_args[0]]
+    delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[sorted_estimations_args[0]]
     dir_max_from_north = (270 - main_direction) % 360	
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
 
@@ -1287,6 +1287,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, WAVELENGTH]]=', arrow_max)
     polar = csm_amplitude * csm_phase
+    polar *= -np.sign(delta_time)
 
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
