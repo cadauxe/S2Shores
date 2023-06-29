@@ -272,7 +272,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                   - a dictionary containing intermediate results for debugging purposes
         """
 
-        sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
+        sinograms_correlation_fft = sino1_fft * np.conj(sino2_fft)
         phase_shift = np.angle(sinograms_correlation_fft)
         spectrum_amplitude = np.abs(sinograms_correlation_fft)
 
