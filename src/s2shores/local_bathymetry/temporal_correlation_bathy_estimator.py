@@ -49,7 +49,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         super().__init__(location, ortho_sequence, global_estimator, selected_directions)
 
         if self.selected_directions is None:
-            # WHY -180 to 60 ???????? AK
+            # TODO: WHY should we go from -180 to 60 ? AK
             # self.selected_directions = linear_directions(-180., 60., 1.)
             self.selected_directions = linear_directions(-90., 90, 1.)
         # Processing attributes
@@ -114,7 +114,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ Run the local bathy estimator using correlation method
         """
         
-        # TODO: preprocess stack with dft filter and plot in debug 
         # Select random points on the frame stack 
         self.create_sequence_time_series()
         
@@ -171,6 +170,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         
         # Remove wave field estimations out of stroboscopic factor bounds and wave linearity bounds
         direction_estimations.remove_unphysical_wave_fields()
+        
+        if self.debug_sample:
+            self.metrics['status'] = direction_estimations.status
+            
         if not direction_estimations:
             raise WavesEstimationError('No correct wave field estimations have been found')
             
@@ -178,7 +181,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         # (Is it a good criteria ? AK)
         direction_estimations.sort_on_attribute('linearity', reverse=False)
         best_estimation = direction_estimations[0]
-
+            
         self.bathymetry_estimations.append(best_estimation)
         
 
