@@ -61,7 +61,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             
         except NotExploitableSinogram as excp:
             self.show_first_frame()
-            #self.show_first_frame_pre_processed() Not implemented
+            #self.show_first_frame_pre_processed() #Not implemented
             self.show_first_frame_selection()
             self.show_correlation_matrix()
             self.show_correlation_matrix_filled()
@@ -74,7 +74,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             
         except CorrelationComputationError as excp:
             self.show_first_frame()
-            #self.show_first_frame_pre_processed()
+            #self.show_first_frame_pre_processed() #Not implemented
             self.show_first_frame_selection()
             self.show_depth_esti_values()
             self.dump_figure()
@@ -506,7 +506,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Full routine for debugging point
         """
         self.show_first_frame()
-        self.show_first_frame_pre_processed()
+        #self.show_first_frame_pre_processed() #Not implemented
         self.show_first_frame_selection()
         self.show_correlation_matrix()
         self.show_correlation_matrix_filled()
