@@ -61,7 +61,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             
         except NotExploitableSinogram as excp:
             self.show_first_frame()
-            self.show_first_frame_pre_processed()
+            #self.show_first_frame_pre_processed() Not implemented
             self.show_first_frame_selection()
             self.show_correlation_matrix()
             self.show_correlation_matrix_filled()
@@ -74,7 +74,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             
         except CorrelationComputationError as excp:
             self.show_first_frame()
-            self.show_first_frame_pre_processed()
+            #self.show_first_frame_pre_processed()
             self.show_first_frame_selection()
             self.show_depth_esti_values()
             self.dump_figure()
@@ -106,12 +106,11 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.ylabel('Y (m)')
 
         # Draw an arrow in the wave direction
-        (l_1, l_2) = np.shape(first_image)
-        radius = min(l_1, l_2) / 3
+        radius = min(x_spatial_limits[1], y_spatial_limits[1]) / 3
         if 'direction' in self.metrics:
             cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
             cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
-            subfigure.arrow(l_1 // 2, l_2 // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
+            subfigure.arrow(x_spatial_limits[1] // 2, y_spatial_limits[1] // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
 
 
     def show_first_frame_pre_processed(self) -> None:
@@ -153,13 +152,13 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Plot in pixel positions
         subfigure = self._figure.add_subplot(self._gs[0, 2])
         #First frame displayed as background
-        subfigure.matshow(first_image, norm=Normalize(vmin=imin, vmax=imax), alpha=0.5)
+        #subfigure.matshow(first_image, norm=Normalize(vmin=imin, vmax=imax), alpha=0.5)
         #Put selected pixels in red + scatter (usefull for big windows)
-        subfigure.matshow(np.where(condition, condition, np.nan), cmap='autumn')
-        subfigure.scatter(y_position, x_position, c='r', s=0.5)
+        subfigure.matshow(np.where(condition, first_image, np.nan), interpolation='none')
+        #subfigure.scatter(y_position, x_position, c='r', s=0.5)
         plt.title('Selected pixels')
-        plt.xlabel('Pixel pos X')
-        plt.ylabel('Pixel pos Y')
+        plt.xlabel('Pixel ID X')
+        plt.ylabel('Pixel ID Y')
 
         
     def show_correlation_matrix(self) -> None:
@@ -239,8 +238,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.colorbar(pmc, cax=axins)
         
         # Draw an arrow in the wave direction
-        (l_1, l_2) = np.shape(correlation)
-        radius = min(l_1, l_2) / 3
+        radius = min(x_spatial_limits[1], y_spatial_limits[1]) / 2
         if 'direction' in self.metrics:
             cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
             cartesian_dir_y = np.sin(np.deg2rad(self.metrics['direction']))
@@ -258,8 +256,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Retrieve correlation spatial shape in meters
         spatial_res = self.metrics['spatial_resolution']
         wind_shape = self.ortho_sequence[0].pixels.shape
-        x_spatial_limits = np.array([-(wind_shape[1]), wind_shape[1] ])*spatial_res
-        y_spatial_limits = np.array([-(wind_shape[0]), wind_shape[0] ])*spatial_res  
+        x_spatial_limits = np.array([-(wind_shape[1]), wind_shape[1] ])*spatial_res*self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']
+        y_spatial_limits = np.array([-(wind_shape[0]), wind_shape[0] ])*spatial_res*self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']
         
         # Plot
         subfigure = self._figure.add_subplot(self._gs[1, 2])
@@ -291,7 +289,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         nb_directions, _ = radon_array.shape
         spatial_res = self.metrics['spatial_resolution']
         y_spatial_limits = np.array([-(nb_directions // 2), nb_directions // 2 ])*spatial_res
-        
+
         # Import directions
         directions = self.selected_directions
         min_dir = np.min(directions)
@@ -314,7 +312,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.title('Radon transform (sinogram)')
         plt.xticks(ticks=ang_ticks, labels=ang_labels)
         plt.grid(True, linestyle='--', linewidth=0.5)
-        plt.xlabel(r'$\theta$ ('+u'\N{DEGREE SIGN})')
+        plt.xlabel(r'$\theta$ ('+u'\N{DEGREE SIGN} from East)')
         plt.ylabel(r'$\rho$ (m)')        
         
         # Highlight max var angle corresponding to wave direction
@@ -332,7 +330,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """
         # Import sinogram
         sinogram_max_var = self.metrics['sinogram_max_var']
-
+        
         # Retreive axis of the sinogram value plot
         spatial_res = self.metrics['spatial_resolution']
         x_spatial_axis = np.arange(-(len(sinogram_max_var) // 2), len(sinogram_max_var) // 2 + 1)*spatial_res
@@ -380,7 +378,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         subfigure.axis('off')
 
         if self.bathymetry_estimations:
-            subfigure.annotate('Estimated wave:\n' +
+            subfigure.annotate('For time lag = {:.3f} s\n'.format(self.metrics['propagation_duration'])+ 
+                               'Estimated wave:\n' +
                                r'$\theta$ = {:.1f}°'.format(self.metrics['direction']) + '\n'+
                                'L = {:.2f} m \n'.format(self.bathymetry_estimations[0].wavelength) +
                                'T = {:.2f} s \n'.format(self.bathymetry_estimations[0].period)+
@@ -393,7 +392,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                bbox=dict(boxstyle='round', facecolor='white', edgecolor='red')
                               )
         else:
-            subfigure.annotate('ESTIMATION FAILED !',
+            subfigure.annotate('For time lag = {:.3f} s\n'.format(self.metrics['propagation_duration'])+ 
+                               'ESTIMATION FAILED !',
                                xy=(0, 0), 
                                xytext=(-0.5,0.42), 
                                color='r', 
@@ -424,62 +424,44 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         wind_size = tuple(['{:.3f} m'.format(val*spatial_res) for val in wind_shape])
         
         # Construct the log
+        
+        txt = ['Debug information: \n'+
+               '  S2Shore config: \n'+
+               '    Window size (m): {:.3f} m \n'.format(self.global_estimator.window_size_x)+
+               '    Lag number: {:d} frames\n'.format(self.local_estimator_params['TEMPORAL_LAG'])+
+               '    Percentage points: {:d} % \n \n'.format(self.local_estimator_params['PERCENTAGE_POINTS'])+
+               '  Image info:\n'+
+               '    center point: ' + str(direction_estimations.location) +'\n'+
+               '    Window size (m): '+str(wind_size) + '\n'+
+               '    Spatial res: {:.3f} m \n'.format(spatial_res)+
+               '    Window shape (px): '+str(wind_shape) + '\n \n'+
+               '  Temporal correlation info:\n'+
+               '    time lag: {:.2f} s \n'.format(time_lag) +
+               '    max var angle: {:.1f}° (direction from East)\n'.format(self.metrics['direction']) +
+               '    estimated wavelength: {:.2f} m\n'.format(direction_estimations[0].wavelength) + 
+               '    dx (m): {:s} \n'.format(distances_txt) + 
+               '    c (m/s): {:s} \n'.format(celerities_txt) +
+               '    gamma: {:s} \n'.format(linerities_txt) +
+               '    status: {:d}'.format(direction_estimations.status)+ 
+               ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI) \n \n'
+              ]
+        
         if self.bathymetry_estimations:
-            txt = ['Debug information: \n'+
-                   '  S2Shore config: \n'+
-                   '    Window size (m): {:.3f} m \n'.format(self.global_estimator.window_size_x)+
-                   '    Lag number: {:d} frames\n'.format(self.local_estimator_params['TEMPORAL_LAG'])+
-                   '    Percentage points: {:d} % \n \n'.format(self.local_estimator_params['PERCENTAGE_POINTS'])+
-                   '  Image info:\n'+
-                   '    center point: ' + str(direction_estimations.location) +'\n'+
-                   '    Window size (m): '+str(wind_size) + '\n'+
-                   '    Spatial res: {:.3f} m \n'.format(spatial_res)+
-                   '    Window shape (px): '+str(wind_shape) + '\n \n'+
-                   '  Temporal correlation info:\n'+
-                   '    time lag: {:.2f} s \n'.format(time_lag) +
-                   '    max var angle: {:.1f}° \n'.format(self.metrics['direction']) +
-                   '    estimated wavelength: {:.2f} m\n'.format(direction_estimations[0].wavelength) + 
-                   '    dx (m): {:s} \n'.format(distances_txt) + 
-                   '    c (m/s): {:s} \n'.format(celerities_txt) +
-                   '    gamma: {:s} \n'.format(linerities_txt) +
-                   '    status: {:d}'.format(direction_estimations.status)+ 
-                   ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI) \n'+
-                   '    chosen_celerity: {:.2f} m/s \n \n'.format(self.bathymetry_estimations[0].celerity)+
+            txt = [txt[0] +
                    '  Bathymetry estimation info:\n'+
                    '    gravity (m.s-2): {:.2f} \n'.format(self.bathymetry_estimations.get_attribute('gravity')) +
+                   '    wave direction: {:.1f}° (direction from North) \n'.format(self.bathymetry_estimations[0].direction_from_north)+ 
                    '    estimated wavelength (m): {:.2f} \n'.format(self.bathymetry_estimations[0].wavelength)+
                    '    wavenumber k (m-1): {:.6f} \n'.format(self.bathymetry_estimations[0].wavenumber) +
                    '    estimated celerity (m/s): {:.2f} \n'.format(self.bathymetry_estimations[0].celerity)+
                    '    estimated period (s): {:.2f}\n'.format(self.bathymetry_estimations[0].period)+
                    '    offshore wavelength (m): {:.2f} \n'.format(self.bathymetry_estimations[0].wavelength_offshore) +
                    '    stroboscopic factor: {:.2f} \n'.format(self.bathymetry_estimations[0].stroboscopic_factor)+
-                   '    estimated depth (m): {:.2f} \n'.format(self.bathymetry_estimations[0].depth) +
-                   'End of debug \n'
-                  ]
-        else:
-            txt = ['Debug information: \n'+
-                   '  S2Shore config: \n'+
-                   '    Window size (m): {:.3f} m \n'.format(self.global_estimator.window_size_x)+
-                   '    Lag number: {:d} frames\n'.format(self.local_estimator_params['TEMPORAL_LAG'])+
-                   '    Percentage points: {:d} % \n \n'.format(self.local_estimator_params['PERCENTAGE_POINTS'])+
-                   '  Image info:\n'+
-                   '    center point: ' + str(direction_estimations.location) +'\n'+
-                   '    Window size (m): '+str(wind_size) + '\n'+
-                   '    Spatial res: {:.3f} m \n'.format(spatial_res)+
-                   '    Window shape (px): '+str(wind_shape) + '\n \n'+
-                   '  Temporal correlation info:\n'+
-                   '    time lag: {:.2f} s \n'.format(time_lag) +
-                   '    max var angle: {:.1f}° \n'.format(self.metrics['direction']) +
-                   '    estimated wavelength: {:.2f} m\n'.format(direction_estimations[0].wavelength) + 
-                   '    dx (m): {:s} \n'.format(distances_txt) + 
-                   '    c (m/s): {:s} \n'.format(celerities_txt) +
-                   '    gamma: {:s} \n'.format(linerities_txt) +
-                   '    status: {:d}'.format(direction_estimations.status)+ 
-                   ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI) \n'+
-                   '    chosen_celerity: NaN \n \n'+
-                   'End of debug \n'
+                   '    estimated depth (m): {:.2f} \n'.format(self.bathymetry_estimations[0].depth)
                   ]
 
+        txt = [txt[0] + 'End of debug \n']
+        
         self._debug_log = txt[0]
         
         # Print the log
