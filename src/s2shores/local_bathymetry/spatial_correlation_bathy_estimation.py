@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """ Class handling the information describing a wave field sample..
 
-:author: Yannick Lasne
-:organization: THALES c/o CNES
-:copyright: 2021 CNES. All rights reserved.
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2022 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 29 novembre 2022
 """

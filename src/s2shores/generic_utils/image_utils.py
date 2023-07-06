@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """ Module gathering several tools about one dimension signal
 
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
 :created: 01/09/2021
-:author: Romain Degoul
 """
 
 from scipy.signal import fftconvolve
