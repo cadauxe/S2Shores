@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """ Definition of the RoiProvider classes
 
-:author: GIROS Alain
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
 :created: 07/12/2021
 """
 from abc import abstractmethod, ABC

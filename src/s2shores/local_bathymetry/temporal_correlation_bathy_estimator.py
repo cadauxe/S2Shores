@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Class performing bathymetry computation using temporal correlation method
 
-:author: Degoul Romain
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 18/06/2021
