@@ -49,9 +49,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         super().__init__(location, ortho_sequence, global_estimator, selected_directions)
 
         if self.selected_directions is None:
-            # TODO: WHY should we go from -180 to 60 ? AK
-            # self.selected_directions = linear_directions(-180., 60., 1.)
-            self.selected_directions = linear_directions(-90., 90, 1.)
+            # From -180 to 60 and not from -90,90 to handle correctly perpendicular waves
+            self.selected_directions = linear_directions(-180., 60., 1.)
         # Processing attributes
         self._correlation_matrix: Optional[np.ndarray] = None
         self._correlation_image: Optional[WavesImage] = None
