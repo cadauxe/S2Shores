@@ -61,6 +61,8 @@ class OrthoBathyEstimator:
         computed_points = 0
         
         if self.parent_estimator.output_format == 'POINT':
+            if self.parent_estimator.nb_subtiles>1:
+                raise ValueError('For the moment you must set nb_subtiles to 1 ')
             # Estimate bathy on points
             if len(self.parent_estimator._debug_samples)==0:
                 raise ValueError('User must give a list of points if OUTPUT_FORMAT is POINT.')
