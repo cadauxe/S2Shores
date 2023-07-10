@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """ Definition of several functions useful for building an image tiling
 
-:author: GIROS Alain
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
 :created: 05/05/2021
 """
 import math

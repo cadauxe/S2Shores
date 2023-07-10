@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """ Module gathering all image filters which can be applied on a 2D numpy array
 
-:author: Alain Giros
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
 :created: 24 août 2021
 """
 from functools import lru_cache

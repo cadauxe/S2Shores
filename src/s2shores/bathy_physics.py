@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """ Functions related to bathymetry physics.
 
-:authors: erwinbergsma, gregoirethoumyre
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2020 CNES. All rights reserved.
+:license: see LICENSE file
 :created: Mon Mar 23 2020
 """
 import math
