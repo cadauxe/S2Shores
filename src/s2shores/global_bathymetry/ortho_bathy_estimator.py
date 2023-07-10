@@ -82,7 +82,6 @@ class OrthoBathyEstimator:
 	            
 
         for index, sample in enumerate(samples):
-            # run local bathy estimator only for samples located in the image
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
             if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
                 computed_points += 1
@@ -105,25 +104,17 @@ class OrthoBathyEstimator:
             window = self.sampled_ortho.window_extent(estimation_point)
             ortho_sequence = sub_tile_images.extract_window(window)
             if self.parent_estimator.debug_sample:
-                if self.sampled_ortho.contains_window(window):
-                    for index, image_sequence in enumerate(ortho_sequence):
-                        print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
-                        print(f'Window inside ortho image coordinates: {window}')
-                        print(f'--{ortho_sequence._images_id[index]} imagette {image_sequence}')
-                else:
-                    print(f'Window {window} not in subtile')
-                    if self.sampled_ortho.contains_point(estimation_point):
-                        print(f'But point {estimation_point} is in. The computation of this point is not' \
-                               'possible with this nb_subtiles (point too close to the border of a subtile).' \
-                               'Check how the subtiles are created for paralelisation and change nb_subtiles' \
-                               'to make all your points fit, or just run sequentially with nb_subtiles set to 1.')
+                for index, image_sequence in enumerate(ortho_sequence):
+                    print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
+                    print(f'Window inside ortho image coordinates: {window}')
+                    print(f'--{ortho_sequence._images_id[index]} imagette {image_sequence}')
 		
             # TODO: use selected_directions argument
             local_bathy_estimator = local_bathy_estimator_factory(estimation_point, ortho_sequence,
                                                                   self.parent_estimator)
 
             bathy_estimations = local_bathy_estimator.bathymetry_estimations
-            if local_bathy_estimator.can_estimate_bathy() and self.sampled_ortho.contains_window(window):
+            if local_bathy_estimator.can_estimate_bathy() :
                 local_bathy_estimator.run()
                 bathy_estimations.remove_unphysical_wave_fields()
                 bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)

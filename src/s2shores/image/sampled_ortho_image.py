@@ -67,31 +67,6 @@ class SampledOrthoImage:
         return self.ortho_stack.window_pixels(carto_point, self._margins,
                                               self._line_start, self._col_start)
 
-    def contains_window(self, window: ImageWindowType):
-        """ Indicates if the given window is in the ortho sample.
-
-        :param window: a window defined within the shape of this images sequence:
-                       (line_start, line_stop, column_start, column_stop)
-
-        :returns: a boolean indicating if the given window is in the ortho sample
-        """
-
-        return (window[0]>=self._line_start) & (window[1]<=self._line_stop) & \
-               (window[2]>=self._col_start) & (window[3]<=self._col_stop)
-
-    def contains_point(self, estimated_point: Point):
-        """ Indicates if the given window is in the ortho sample.
-
-        :param estimated_point: the center point
-
-        :returns: a boolean indicating if the given point is in the ortho sample
-        """
-        
-        return (estimated_point.x>=self.carto_sampling.upper_left_sample.x) & \
-               (estimated_point.x<=self.carto_sampling.lower_right_sample.x) & \
-               (estimated_point.y>=self.carto_sampling.lower_right_sample.y) & \
-               (estimated_point.y<=self.carto_sampling.upper_left_sample.y)
-
     def __str__(self) -> str:
         msg = str(self.carto_sampling)
         msg += f' C[{self._col_start}, {self._col_stop}] * L[{self._line_start}, {self._line_stop}]'
