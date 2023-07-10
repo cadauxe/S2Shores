@@ -65,10 +65,10 @@ class OrthoBathyEstimator:
         
         if self.parent_estimator.output_format == 'POINT':
             # Estimate bathy on points
-            estimated_bathy = EstimatedPointsBathy(len(self.parent_estimator._debug_samples), 
-                                     self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.parent_estimator._debug_samples
-            total_points = len(self.parent_estimator._debug_samples)
+            total_points = len(samples)
+            estimated_bathy = EstimatedPointsBathy(total_points, 
+                                                   self.sampled_ortho.ortho_stack.acquisition_time)
         elif self.parent_estimator.output_format == 'GRID':
             # Estimate bathy over a grid
             estimated_bathy = EstimatedCartoBathy(self.sampled_ortho.carto_sampling,
@@ -80,11 +80,12 @@ class OrthoBathyEstimator:
 	            
 
         for index, sample in enumerate(samples):
+            # run local bathy estimator only for samples located in the image
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
             if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
                 computed_points += 1
             # Store bathymetry sample estimations
-            estimated_bathy.store_estimations(index, bathy_estimations)            
+            estimated_bathy.store_estimations(index, bathy_estimations)
 
         comput_time = time.time() - start
         print(f'Computed {computed_points}/{total_points} points in: {comput_time:.2f} s')
@@ -97,31 +98,43 @@ class OrthoBathyEstimator:
         self.parent_estimator.set_debug_flag(estimation_point)
 
         # computes the bathymetry at the specified position
-        try:
-            # Build the images sequence for the estimation point
-            window = self.sampled_ortho.window_extent(estimation_point)
-            ortho_sequence = sub_tile_images.extract_window(window)
-            if self.parent_estimator.debug_sample:
+        # Build the images sequence for the estimation point
+        window = self.sampled_ortho.window_extent(estimation_point)
+        ortho_sequence = sub_tile_images.extract_window(window)
+        if self.parent_estimator.debug_sample:
+            if self.sampled_ortho.contains_window(window):
                 for index, image_sequence in enumerate(ortho_sequence):
                     print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
                     print(f'Window inside ortho image coordinates: {window}')
                     print(f'--{ortho_sequence._images_id[index]} imagette {image_sequence}')
+            else:
+                print(f'Window {window} not in subtile')
+                if self.sampled_ortho.contains_point(estimation_point):
+                    print(f'But point {estimation_point} is in. The computation of this point is not' \
+                           'possible with this nb_subtiles (point too close to the border of a subtile).' \
+                           'Check how the subtiles are created for paralelisation and change nb_subtiles' \
+                           'to make all your points fit, or just run sequentially with nb_subtiles set to 1.')
 
-            # TODO: use selected_directions argument
-            local_bathy_estimator = local_bathy_estimator_factory(estimation_point, ortho_sequence,
-                                                                  self.parent_estimator)
 
-            bathy_estimations = local_bathy_estimator.bathymetry_estimations
-            if local_bathy_estimator.can_estimate_bathy():
+        # TODO: use selected_directions argument
+        local_bathy_estimator = local_bathy_estimator_factory(estimation_point, ortho_sequence,
+                                                            self.parent_estimator)
+
+        bathy_estimations = local_bathy_estimator.bathymetry_estimations
+        try:
+            if local_bathy_estimator.can_estimate_bathy() and self.sampled_ortho.contains_window(window):
                 local_bathy_estimator.run()
                 bathy_estimations.remove_unphysical_wave_fields()
                 bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)
                 if self.parent_estimator.debug_sample:
                     print(f'estimations after sorting :')
                     print(bathy_estimations)
+            # else:
+            #     bathy_estimations.clear()
         except WavesException as excp:
             warn_msg = f'Unable to estimate bathymetry: {str(excp)}'
             warnings.warn(warn_msg)
             bathy_estimations = local_bathy_estimator.bathymetry_estimations
             bathy_estimations.clear()
+        
         return bathy_estimations

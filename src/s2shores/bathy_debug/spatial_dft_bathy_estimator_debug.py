@@ -41,6 +41,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         plt.show()
 
 
+
     def print_variables(self) -> None:
         metrics = self.metrics
 
