@@ -34,16 +34,12 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
 
         # Displays
         # display_initial_data(self)
-        plt.show()
         waves_image = display_waves_images_dft(self)
         dft_sinograms = display_dft_sinograms(self)
         dft_sino_spectral = display_dft_sinograms_spectral_analysis(self)
         polar_plot = display_polar_images_dft(self)
-        waves_image.show()
-        dft_sinograms.show()
-        dft_sino_spectral.show()
-        polar_plot.show()
-        # plt.pause(15)
+        plt.show()
+
 
     def print_variables(self) -> None:
         metrics = self.metrics
