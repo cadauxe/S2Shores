@@ -64,13 +64,9 @@ class OrthoBathyEstimator:
         computed_points = 0
         
         if self.parent_estimator.output_format == 'POINT':
-            if self.parent_estimator.nb_subtiles>1:
-                raise ValueError('For the moment you must set nb_subtiles to 1 ')
             # Estimate bathy on points
-            if len(self.parent_estimator._debug_samples)==0:
-                raise ValueError('User must give a list of points if OUTPUT_FORMAT is POINT.')
             estimated_bathy = EstimatedPointsBathy(len(self.parent_estimator._debug_samples), 
-                                         self.sampled_ortho.ortho_stack.acquisition_time)
+                                     self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.parent_estimator._debug_samples
             total_points = len(self.parent_estimator._debug_samples)
         elif self.parent_estimator.output_format == 'GRID':
@@ -81,7 +77,8 @@ class OrthoBathyEstimator:
             total_points = self.sampled_ortho.carto_sampling.nb_samples
         else:
             raise ValueError("Output format must be one of the proposed one in the config file.")
-        
+	            
+
         for index, sample in enumerate(samples):
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
             if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
