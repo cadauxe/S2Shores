@@ -10,6 +10,7 @@
 
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 from typing import Optional, TYPE_CHECKING
 
 from matplotlib import gridspec
@@ -200,3 +201,5 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         self.show_sinogram()
         self.show_values()
         self.dump_figure()
+
+        plt.show()

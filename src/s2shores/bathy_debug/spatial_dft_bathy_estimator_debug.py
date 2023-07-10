@@ -45,6 +45,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         polar_plot.show()
         # plt.pause(15)
 
+
     def print_variables(self) -> None:
         metrics = self.metrics
 

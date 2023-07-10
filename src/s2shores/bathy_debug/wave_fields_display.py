@@ -41,7 +41,6 @@ def display_curve(data: np.ndarray, legend: str) -> None:
     _, ax = plt.subplots()
     ax.plot(data)
     ax.set_title(legend)
-    plt.show()
 
 
 def display_3curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray) -> None:
@@ -49,7 +48,6 @@ def display_3curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray) -> 
     ax[0].plot(data1)
     ax[1].plot(data2)
     ax[2].plot(data3)
-    plt.show()
 
 
 def display_4curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray,
@@ -59,14 +57,12 @@ def display_4curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray,
     ax[1, 0].plot(data2)
     ax[0, 1].plot(data3)
     ax[1, 1].plot(data4)
-    plt.show()
 
 
 def display_image(data: np.ndarray, legend: str) -> None:
     _, ax = plt.subplots()
     ax.imshow(data, aspect='auto', cmap='gray')
     ax.set_title(legend)
-    plt.show()
 
 
 def get_display_title(local_estimator: 'SpatialDFTBathyEstimator') -> str:
@@ -134,7 +130,6 @@ def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     build_directional_2d_display(axs[0, 2], 'first radon transform', values, directions)
     values, directions = second_radon_transform.get_as_arrays()
     build_directional_2d_display(axs[1, 2], 'second radon transform', values, directions)
-    plt.show()
 
 
 def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -> str:
@@ -1318,7 +1313,6 @@ def display_radon_transforms(local_estimator: 'SpatialDFTBathyEstimator',
                                   'second radon transform', refinement_phase)
     build_correl_spectrum_display(axs[:, 1], local_estimator,
                                   'Cross correlation spectrum', refinement_phase)
-    plt.show()
 
 
 def build_radon_transform_display(axs: Axes, transform: WavesRadon, title: str,
@@ -1368,7 +1362,6 @@ def display_energies(local_estimator: 'SpatialDFTBathyEstimator',
     image2_energy = local_estimator.ortho_sequence[1].energy_inner_disk
     ax.plot(radon1_obj.get_sinograms_energies() / image1_energy)
     ax.plot(radon2_obj.get_sinograms_energies() / image2_energy)
-    plt.show()
 
 
 def animate_sinograms(local_estimator: 'SpatialDFTBathyEstimator',
@@ -1403,7 +1396,6 @@ def animate_sinograms(local_estimator: 'SpatialDFTBathyEstimator',
 
     ani = animation.FuncAnimation(
         fig, animate, frames=radon1_obj.directions, interval=100, blit=True, save_count=50)
-    plt.show()
 
 
 def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:
@@ -1433,7 +1425,6 @@ def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     axs[0, 2].set_title('directions energies')
     axs[1, 2].imshow(delta_radon, aspect='auto', cmap='gray')
     axs[1, 2].set_title('radon1 - radon2')
-    plt.show()
     display_energies(local_estimator, radon1, radon2)
     animate_sinograms(local_estimator, radon1, radon2)
 
