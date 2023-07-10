@@ -2,9 +2,8 @@
 """ Class encapsulating the "sinogram" of a radon transform, i.e. the radon transform in a given
  direction
 
-
-:author: Alain Giros
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 4 mars 2021

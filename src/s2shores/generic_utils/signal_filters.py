@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """ Module gathering all image filters which can be applied on a 1D numpy array
 
-:author: Romain Degoul
-:organization: CNES
-:created: 26 août 2021
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
+:created: 26 aout 2021
 """
 from scipy.signal import medfilt
 

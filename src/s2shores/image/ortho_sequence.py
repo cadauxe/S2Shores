@@ -2,8 +2,8 @@
 """ Class encapsulating a list of superimposed images of the same size and resolution
 
 
-:author: Alain Giros
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2022 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 7 april 2022
