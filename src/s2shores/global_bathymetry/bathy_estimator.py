@@ -130,11 +130,8 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         bathy_subtiles_with_data = []
         for data in bathy_subtiles:
             if not data.Status.values.all():
-                print("c'est la bonne")
-                print(data)
                 bathy_subtiles_with_data.append(data)
         merged_bathy = xr.combine_by_coords(bathy_subtiles_with_data)
-        # merged_bathy = xr.combine_nested(bathy_subtiles, concat_dim='index')
         product_name = self._ortho_stack.full_name
         netcdf_output_path = (self._output_dir / product_name).with_suffix('.nc')
         merged_bathy.to_netcdf(path=netcdf_output_path, format='NETCDF4')
