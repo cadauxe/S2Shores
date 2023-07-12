@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Class handling the information describing the estimations done on a single location.
 
-:author: Alain Giros
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 11 sep 2021

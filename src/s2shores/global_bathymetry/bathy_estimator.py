@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """ Definition of the BathyEstimator abstract class
 
-:author: GIROS Alain
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
 :created: 17/05/2021
 """
 from pathlib import Path
@@ -189,7 +192,14 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
 
         :param samples: a list of (X,Y) tuples defining the points to debug
         """
-        self._debug_samples = samples
+        self._debug_samples = []
+        for sample in samples:
+            if self._ortho_stack.is_window_inside(sample, self.measure_extent):
+                self._debug_samples.append(sample)
+            else:
+                print(f'{sample} is not in roi-window_size/2.')
+        if self._debug_samples==[]:
+            raise ValueError("There is no point available to debug. Check your points' coordinates and the window size.")
 
     def set_debug_flag(self, sample: Point) -> None:
         """ Set or reset the debug flag for a given point depending on its presence into the set

@@ -1,33 +1,33 @@
 # -*- coding: utf-8 -*-
 """ Class performing bathymetry computation using spatial correlation method
 
-:author: Grégoire Thoumyre
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 20/09/2021
 """
-from typing import Optional, List, TYPE_CHECKING, cast  # @NoMove
+from typing import TYPE_CHECKING, List, Optional, cast  # @NoMove
 
+import numpy as np
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 
-import numpy as np
-
-from ..bathy_physics import celerity_offshore, wavelength_offshore, period_offshore
-from ..generic_utils.image_filters import detrend, desmooth
+from ..bathy_physics import (celerity_offshore, period_offshore,
+                             wavelength_offshore)
+from ..generic_utils.image_filters import desmooth, detrend
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
-from ..image.ortho_sequence import OrthoSequence, FrameIdType
+from ..image.ortho_sequence import FrameIdType, OrthoSequence
 from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
-from ..waves_exceptions import WavesEstimationError
+from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
 
 from .local_bathy_estimator import LocalBathyEstimator
-from .spatial_correlation_bathy_estimation import SpatialCorrelationBathyEstimation
-
+from .spatial_correlation_bathy_estimation import \
+    SpatialCorrelationBathyEstimation
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -152,7 +152,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
             wavelength = period * self.augmented_resolution
         except ValueError as excp:
             raise NotExploitableSinogram('Wave length can not be computed from sinogram') from excp
-        
+
         return wavelength
 
     def compute_delta_position(self, correlation_signal: np.ndarray,
@@ -189,7 +189,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         if pt_in_range.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
         argmax = pt_in_range[correlation_signal[pt_in_range].argmax()]
-        delta_position = (argmax_ac - argmax) * self.augmented_resolution
+        delta_position = (argmax - argmax_ac) * self.augmented_resolution
 
         return delta_position
 

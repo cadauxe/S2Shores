@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
 """ Class for debugging the Spatial DFT estimator.
 
-:author: Alain Giros
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 5 mars 2021
 """
 import numpy as np
+from matplotlib import pyplot as plt
 
 from ..generic_utils.numpy_utils import dump_numpy_variable
-from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
-
+from ..local_bathymetry.spatial_dft_bathy_estimator import \
+    SpatialDFTBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .wave_fields_display import display_initial_data, display_radon_transforms, display_context
+from .wave_fields_display import (display_context, display_dft_sinograms,
+                                  display_dft_sinograms_spectral_analysis,
+                                  display_initial_data,
+                                  display_polar_images_dft,
+                                  display_radon_transforms,
+                                  display_waves_images_dft)
 
 
 class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
@@ -23,14 +29,20 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
     def explore_results(self) -> None:
 
         self.print_variables()
-        print(f'estimations after direction refinement :')
+        print(f'estimations after direction refinement, before physical constraint filtering and before sorting :')
         print(self.bathymetry_estimations)
 
         # Displays
-        display_initial_data(self)
-        display_radon_transforms(self)
-        display_radon_transforms(self, refinement_phase=True)
-        display_context(self)
+        # display_initial_data(self)
+        if len(self.bathymetry_estimations) >0:
+            waves_image = display_waves_images_dft(self)
+            dft_sinograms = display_dft_sinograms(self)
+            dft_sino_spectral = display_dft_sinograms_spectral_analysis(self)
+            polar_plot = display_polar_images_dft(self)
+            plt.show()
+        else:
+            print('No estimation to display.')	
+
 
     def print_variables(self) -> None:
         metrics = self.metrics

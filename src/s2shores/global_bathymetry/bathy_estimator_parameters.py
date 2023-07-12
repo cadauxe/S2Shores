@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """ Definition of the BathyEstimatorParameters class
 
-:author: GIROS Alain
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
 :created: 17/05/2021
 """
 from typing import Optional, Tuple
@@ -25,6 +28,12 @@ class BathyEstimatorParameters:
         """ :returns: the set of parameters of the global estimator
         """
         return self._waveparams['GLOBAL_ESTIMATOR']
+
+    @property
+    def output_format(self) -> str:
+        """ :returns: the output format to use
+        """
+        return self._global_estimator_params['OUTPUT_FORMAT']
 
     @property
     def chains_versions(self) -> str:

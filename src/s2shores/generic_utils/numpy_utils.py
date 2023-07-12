@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """ Module gathering several functions using numpy for different data handling purposes
 
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
 :created: 16/06/2021
-:author: Alain Giros
 """
 from functools import lru_cache
 from hashlib import sha1

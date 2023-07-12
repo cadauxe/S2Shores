@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """ Class handling the information describing a wave field sample..
 
-:author: Grégoire Thoumyre
-:organization: CNES/LEGOS
-:copyright: 2021 CNES/LEGOS. All rights reserved.
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2022 CNES. All rights reserved.
 :license: see LICENSE file
-:created: 20 sep 2021
+:created: 29 novembre 2022
 """
-from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
+from ..data_model.bathymetry_sample_estimation import \
+    BathymetrySampleEstimation
 
 
 class SpatialCorrelationBathyEstimation(BathymetrySampleEstimation):

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Definition of the ConstrainedDict class
 
-:author: Alain Giros
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 12 oct 2021

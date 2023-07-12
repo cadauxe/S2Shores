@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """ Class handling the information describing a wave field sample..
 
-:author: Alain Giros
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 6 mars 2021
 """
 from typing import Tuple
-import numpy as np
 
+import numpy as np
 
 from .wave_field_sample_dynamics import WaveFieldSampleDynamics
 
@@ -99,10 +99,12 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
             if np.isnan(value) or value == 0:
                 value = np.nan
             else:
-                if self.delta_time * value < 0:
-                    # delta_time and propagated distance have opposite signs
-                    self._invert_direction()
-                    value = -value
+                if self.delta_time * value > 0:
+                    self._invert_direction()    
+                else:
+		    # delta_time and propagated distance have opposite signs
+                    value = -value		    
+
             self._delta_position = value
             self._solve_shift_equations()
 
@@ -122,9 +124,11 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
             if np.isnan(value) or value == 0:
                 value = np.nan
             else:
-                if self.delta_time * value < 0:  # delta_time and delta_phase have opposite signs
+                if self.delta_time * value > 0: 
                     self._invert_direction()
-                    value = -value
+                else:  # delta_time and delta_phase have opposite signs
+                    value = -value	    
+            
             self._delta_phase = value
             self._solve_shift_equations()
 

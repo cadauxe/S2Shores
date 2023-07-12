@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Class managing the computation of wave fields from two images taken at a small time interval.
 
-:author: Alain Giros
-:organization: CNES
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 5 mars 2021
@@ -272,7 +272,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                   - a dictionary containing intermediate results for debugging purposes
         """
 
-        sinograms_correlation_fft = sino2_fft * np.conj(sino1_fft)
+        sinograms_correlation_fft = sino1_fft * np.conj(sino2_fft)
         phase_shift = np.angle(sinograms_correlation_fft)
         spectrum_amplitude = np.abs(sinograms_correlation_fft)
 

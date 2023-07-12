@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 """ Definition of the OrthoLayout class
 
-:author: GIROS Alain
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
 :created: 05/08/2021
 """
 from typing import Optional  # @NoMove
 
 import numpy as np  # @NoMove
 from shapely.affinity import translate
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Point, Polygon
 
 from ..generic_utils.tiling_utils import modular_sampling
-from .geo_transform import GeoTransform, GdalGeoTransformType
-from .image_geometry_types import MarginsType, ImageWindowType
+from .geo_transform import GdalGeoTransformType, GeoTransform
+from .image_geometry_types import ImageWindowType, MarginsType
 from .sampling_2d import Sampling2D
 
 
