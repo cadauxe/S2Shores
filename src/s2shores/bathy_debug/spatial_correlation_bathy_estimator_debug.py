@@ -28,10 +28,13 @@ class SpatialCorrelationBathyEstimatorDebug(
         print(self.bathymetry_estimations)
 
         # Displays
-        waves_image = display_waves_images_spatial_correl(self)
-        spatial_correl_sinograms = display_sinograms_spatial_correlation(self)
-        spatial_correl_sino_analysis = display_sinograms_1D_analysis_spatial_correlation(self)
-        waves_image.show()
-        spatial_correl_sinograms.show()
-        spatial_correl_sino_analysis.show()
-        plt.show()
+        if len(self.bathymetry_estimations) >0:
+            waves_image = display_waves_images_spatial_correl(self)
+            spatial_correl_sinograms = display_sinograms_spatial_correlation(self)
+            spatial_correl_sino_analysis = display_sinograms_1D_analysis_spatial_correlation(self)
+            waves_image.show()
+            spatial_correl_sinograms.show()
+            spatial_correl_sino_analysis.show()
+            plt.show()
+        else:
+            print('No estimation to display.')	

@@ -34,12 +34,14 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
 
         # Displays
         # display_initial_data(self)
-        waves_image = display_waves_images_dft(self)
-        dft_sinograms = display_dft_sinograms(self)
-        dft_sino_spectral = display_dft_sinograms_spectral_analysis(self)
-        polar_plot = display_polar_images_dft(self)
-        plt.show()
-
+        if len(self.bathymetry_estimations) >0:
+            waves_image = display_waves_images_dft(self)
+            dft_sinograms = display_dft_sinograms(self)
+            dft_sino_spectral = display_dft_sinograms_spectral_analysis(self)
+            polar_plot = display_polar_images_dft(self)
+            plt.show()
+        else:
+            print('No estimation to display.')	
 
 
     def print_variables(self) -> None:
