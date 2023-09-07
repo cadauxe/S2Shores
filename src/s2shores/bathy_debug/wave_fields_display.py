@@ -722,14 +722,14 @@ def display_dft_sinograms_spectral_analysis(
 
     build_sinogram_spectral_display(
         axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False)
+        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False, cmap="gist_ncar")
     build_correl_spectrum_matrix(
         axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'phase',
         'Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
-        ordonate=False, abscissa=False)
+        ordonate=False, abscissa=False, cmap="gist_ncar")
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
