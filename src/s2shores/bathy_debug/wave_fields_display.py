@@ -21,6 +21,8 @@ import scipy.ndimage.filters as filters
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import cmcrameri.cm as cmc
 
 from s2shores.data_model.wave_field_sample_geometry import \
     WaveFieldSampleGeometry
@@ -722,14 +724,14 @@ def display_dft_sinograms_spectral_analysis(
 
     build_sinogram_spectral_display(
         axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False, cmap="gist_ncar")
+        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False)
     build_correl_spectrum_matrix(
         axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'phase',
         'Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
-        ordonate=False, abscissa=False, cmap="gist_ncar")
+        ordonate=False, abscissa=False)
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
@@ -1226,11 +1228,16 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     #convert the direction coordinates in the polar plot axis (from   
     directions = (directions + 180)%360       
     # Add the last element of the list to the list.
-    # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
-    directions = np.append(directions, directions[0])
+    # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.   
+    ddir = np.diff(directions).mean()
+    directions = np.append(directions, directions[-1:] + ddir)
+
     plotval = np.concatenate((plotval, plotval[:, 0].reshape(plotval.shape[0], 1)), axis=1)
 
-    ax_polar.contourf(np.deg2rad(directions), wavenumbers, plotval, cmap="gist_ncar")
+    a, r = np.meshgrid(np.deg2rad(directions), wavenumbers)
+    tcf = ax_polar.tricontourf(a.flatten(), r.flatten(), plotval.flatten(), 500, cmap="cmc.batlow")
+    plt.colorbar(tcf, ax=ax_polar)
+
     ax_polar.set_title(title, fontsize=9, loc='center')
 
     axes.xaxis.tick_top()
