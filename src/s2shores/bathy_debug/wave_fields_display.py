@@ -13,6 +13,7 @@ import math
 import os
 from typing import TYPE_CHECKING, List, Optional, Tuple  # @NoMove
 
+import cmcrameri.cm as cmc
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,7 +23,6 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-import cmcrameri.cm as cmc
 
 from s2shores.data_model.wave_field_sample_geometry import \
     WaveFieldSampleGeometry
@@ -33,10 +33,10 @@ from s2shores.image_processing.waves_radon import WavesRadon
 from ..bathy_physics import wavenumber_offshore
 
 if TYPE_CHECKING:
-    from ..local_bathymetry.spatial_dft_bathy_estimator \
-        import SpatialDFTBathyEstimator  # @UnusedImport
-    from ..local_bathymetry.spatial_correlation_bathy_estimator \
-        import SpatialCorrelationBathyEstimator  # @UnusedImport
+    from ..local_bathymetry.spatial_correlation_bathy_estimator import \
+        SpatialCorrelationBathyEstimator  # @UnusedImport
+    from ..local_bathymetry.spatial_dft_bathy_estimator import \
+        SpatialDFTBathyEstimator  # @UnusedImport
 
 
 def display_curve(data: np.ndarray, legend: str) -> None:
