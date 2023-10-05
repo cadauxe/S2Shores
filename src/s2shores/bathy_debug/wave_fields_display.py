@@ -585,10 +585,21 @@ def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
                                     directions: np.ndarray, kfft: np.ndarray, plt_min: float, plt_max: float,
                                     ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
     extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
-    axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
+    im = axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
 
     axes.plot(directions, ((np.max(values, axis=0) / np.max(np.max(values, axis=0))) * kfft.max()),
               color="white", lw=0.7, label='Normalized Maximum')
+    
+     # colorbar
+    cbbox = inset_axes(axes, '50%', '10%', loc = 'upper left')
+    [cbbox.spines[k].set_visible(False) for k in cbbox.spines]
+    cbbox.tick_params(axis='both', left=False, top=False, right=False, bottom=False, labelleft=False, labeltop=False, labelright=False, labelbottom=False)
+    cbbox.set_facecolor([1,1,1,0.7])
+    cbaxes = inset_axes(cbbox, '70%', '20%', loc = 'upper center')
+   
+    cbar = plt.colorbar(im, cax=cbaxes, ticks=[np.nanmin(values), np.nanmax(values)], orientation='horizontal')
+    cbar.ax.tick_params(labelsize=5)
+
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
     # Put a nicer background color on the legend.
     legend.get_frame().set_facecolor('C0')
