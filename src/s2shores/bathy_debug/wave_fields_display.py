@@ -295,7 +295,7 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
                               resolution=second_image.resolution,
                               subplot_pos=[nrows, ncols, 9], cmap='gray', coordinates=False)
     plt.tight_layout()
-    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
 
     sorted_estimations_args = local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
@@ -304,7 +304,7 @@ def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_waves_images_debug_point_" + point_id + "_theta_" + f'{np.int(main_direction)}' +".png"),
+            "display_waves_images_debug_point_" + point_id + "_theta_" + f'{int(main_direction)}' +".png"),
         dpi=300)
     waves_image = plt.figure(1)
     return waves_image
@@ -359,11 +359,11 @@ def display_waves_images_spatial_correl(
                               resolution=second_image.resolution,
                               subplot_pos=[nrows, ncols, 9], cmap='gray', coordinates=False)
     plt.tight_layout()
-    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
 
     main_dir = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
 
-    theta_id = f'{np.int(main_dir)}'
+    theta_id = f'{int(main_dir)}'
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
@@ -502,12 +502,12 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
         main_direction, plt_min, plt_max, ordonate=False)
 
     plt.tight_layout()
-    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_debug_point_" + point_id + "_theta_"+ f'{np.int(main_direction)}' + ".png"),
+            "display_sinograms_debug_point_" + point_id + "_theta_"+ f'{int(main_direction)}' + ".png"),
         dpi=300)
     dft_sino = plt.figure(2)
     return dft_sino
@@ -565,9 +565,9 @@ def display_sinograms_spatial_correlation(
         main_direction, plt_min, plt_max, ordonate=False)
 
     plt.tight_layout()
-    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
 
-    theta_id = f'{np.int(main_direction)}'
+    theta_id = f'{int(main_direction)}'
 
     plt.savefig(
         os.path.join(
@@ -731,12 +731,12 @@ def display_dft_sinograms_spectral_analysis(
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
         ordonate=False, abscissa=False)
     plt.tight_layout()
-    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_spectral_analysis_debug_point_" + point_id + "_theta_"+ f'{np.int(main_direction)}' + ".png"),
+            "display_sinograms_spectral_analysis_debug_point_" + point_id + "_theta_"+ f'{int(main_direction)}' + ".png"),
         dpi=300)
     dft_sino_spectral = plt.figure(3)
     return dft_sino_spectral
@@ -778,8 +778,8 @@ def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray
                                      main_theta: float, plt_min: float, plt_max: float,
                                      ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
 
-  #  index_theta = np.int(main_theta - np.min(directions))    
-    index_theta = np.where(directions == np.int(main_theta))[0]
+  #  index_theta = int(main_theta - np.min(directions))    
+    index_theta = np.where(directions == int(main_theta))[0]
    
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
     if main_theta < plt_min or main_theta > plt_max:
@@ -823,7 +823,7 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, 
     if directions[pos][0] * main_theta < 0:
         main_theta_slave = directions[pos][0] % (np.sign(main_theta) * 180.0)
 
-    index_theta_master = np.where(directions == np.int(main_theta))[0]
+    index_theta_master = np.where(directions == int(main_theta))[0]
     index_theta_slave = pos[0]
 
 
@@ -875,7 +875,7 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     if directions2[pos2][0] * main_theta < 0:
         main_theta_slave = directions2[pos2][0] % (np.sign(main_theta) * 180.0)
 
-    index_theta1 = np.int(np.where(directions1 == np.int(main_theta))[0])
+    index_theta1 = int(np.where(directions1 == int(main_theta))[0])
     # get 1D-sinogram1 along relevant direction
     sino1_1D = values1[:, index_theta1]
     # theta_label1 = 'Sinogram1 1D'  # along \n$\Theta$={:.1f}°'.format(main_theta)
@@ -884,8 +884,8 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # axes.plot(absc, np.flip((values1[:, index_theta1] / np.max(np.abs(values1[:, index_theta1])))),
     #          color="orange", lw=0.8, label=theta_label1)
 
-    index_theta2_master = np.int(np.where(directions2 == np.int(main_theta))[0])
-    index_theta2_slave = np.int(pos2[0][0])   
+    index_theta2_master = int(np.where(directions2 == int(main_theta))[0])
+    index_theta2_slave = int(pos2[0][0])   
 
     # get 1D-sinogram2 along relevant direction
     sino2_1D_master = values2[:, index_theta2_master]
@@ -973,7 +973,7 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
             main_theta)
 
     if choice == 'one_dir':
-        index_theta1 = np.int(np.where(directions1 == np.int(main_theta))[0])
+        index_theta1 = int(np.where(directions1 == int(main_theta))[0])
         # get 1D-sinogram1 along relevant direction
         sino1_1D = values1[:, index_theta1]
         # Proceed with 1D-Correlation between Sino1(main_dir) and Sino2(all_dir)
@@ -1135,8 +1135,8 @@ def display_sinograms_1D_analysis_spatial_correlation(
         sinogram1, plt_min, plt_max, correl_mode, choice='one_dir', imgtype='slave', ordonate=False)
 
     plt.tight_layout()
-    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
-    theta_id = f'{np.int(main_direction)}'
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
+    theta_id = f'{int(main_direction)}'
 
     plt.savefig(
         os.path.join(
@@ -1278,7 +1278,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     # Retrieve arguments corresponding to the arrow with the maximum energy
     arrow_max = (dir_max_from_north, ener_max, main_wavelength)
-    theta_id = f'{np.int(main_direction)}'
+    theta_id = f'{int(main_direction)}'
 
     print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, WAVELENGTH]]=', arrow_max)
     polar = csm_amplitude * csm_phase
@@ -1291,7 +1291,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
                         subplot_pos=[1, 2, 2])
 
     plt.tight_layout()
-    point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
 
     plt.savefig(
         os.path.join(
