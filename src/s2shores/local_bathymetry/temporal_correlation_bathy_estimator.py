@@ -18,7 +18,7 @@ from shapely.geometry import Point
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
-from ..generic_utils.image_filters import detrend, clipping, normalise
+from ..generic_utils.image_filters import detrend, clipping, normalise, gaussian_masking
 from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median, detrend_signal, butter_bandpass_filter
 from ..generic_utils.signal_utils import find_period_from_zeros
@@ -60,17 +60,24 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self._sampling_positions: Optional[Tuple[np.ndarray, np.ndarray]] = None
         self._time_series: Optional[np.ndarray] = None
 
-        # Filters
-        self.correlation_image_filters: ImageProcessingFilters = [(detrend, []), (
-            clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
+        # Correlation filters 
+        self.correlation_image_filters: ImageProcessingFilters = [(gaussian_masking, [2]),
+                                                                  (clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])] # Put sigma as general parameter
+        
+        # Radon filters
         self.radon_image_filters: SignalProcessingFilters = [
-            (remove_median,
-             [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
-            (filter_mean,
-             [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+            (remove_median, [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
+            (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
+        
+        # Check if time lag is valid
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.ortho_sequence):
             raise ValueError(
                 'The chosen number of lag frames is bigger than the number of available frames')
+            
+        if self.debug_sample:
+            self.metrics['propagation_duration'] = self.propagation_duration
+            self.metrics['spatial_resolution'] = self.spatial_resolution        
+
 
     @property
     def start_frame_id(self) -> FrameIdType:
@@ -141,16 +148,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         # Select random pixel position within the frame stack and extract Time-series 
         self.create_sequence_time_series()
         
-        if self.debug_sample:
-            self.metrics['propagation_duration'] = self.propagation_duration
-            self.metrics['spatial_resolution'] = self.spatial_resolution        
-        
-        # Pixel time-series Correlation + filter(detrend + clipping of corr_proj)
-        #filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
-        filtered_image = self.correlation_image
-        if self.debug_sample:
-            self.metrics['correlation'] = deepcopy(self.correlation_image.pixels)
-        self.correlation_image.pixels = filtered_image.pixels
+        # Compute correlation and apply a gaussian mask
+        filtered_correlation = self.correlation_image.apply_filters(self.correlation_image_filters)
+        self.correlation_image.pixels = filtered_correlation.pixels
         
         # Radon transform
         radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
