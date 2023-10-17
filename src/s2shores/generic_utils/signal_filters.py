@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 26 aout 2021
 """
-from scipy.signal import medfilt
+from scipy.signal import medfilt, detrend, butter, filtfilt
 
 import numpy as np
 
@@ -39,3 +39,42 @@ def remove_median(array: np.ndarray, kernel_ratio: float) -> np.ndarray:
     if (kernel_size % 2) == 0:
         kernel_size = kernel_size + 1
     return array - medfilt(array, kernel_size)
+
+
+def detrend_signal(array: np.ndarray, axis:int=0) -> np.ndarray:
+    """Performs a detrend process on a signal
+    
+    :param array: entry signal
+    :param axis: axis on which the detrend is applied (default axis=0)
+    :returns: detrended array
+    """
+    return detrend(array, axis=axis)
+    
+def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_period: float, fs: float, axis: int=0) -> np.ndarray:
+    """ Performs a Band-pass filtering using a Butterworth filter
+    
+    :param array: entry signal
+    :param lowcut_period: signal period in seconds defining low frequency cut-off
+    :param highcut_period: signal period in seconds defining high frequency cut-off
+    :param fs: signal sampling frequency (Hz)
+    :param axis: axis on which the filtering is applied (default axis=0)
+    :returns: filtered array
+    """
+    b, a = butter_bandpass(lowcut_period, highcut_period, fs)
+    filtered_array = filtfilt(b, a, array, axis=axis)#use filtfilt or lfilter (better took keep lfilter)
+    return filtered_array
+
+def butter_bandpass(lowcut_period: float, highcut_period: float, fs: float, order: int=5)-> list:
+    """ Compute the BP Butterworth filter coefficients
+    
+    :param lowcut_period: signal period in seconds defining low frequency cut-off
+    :param highcut_period: signal period in seconds defining high frequency cut-off
+    :param fs: signal sampling frequency (Hz)
+    :param order: fitler order (default=5)
+    :returns: filter coefficients
+    """
+    nyq = 0.5 * fs
+    low = (1/lowcut_period) / nyq
+    high = (1/highcut_period) / nyq
+    b, a = butter(order, [low, high], btype='band')
+    return b, a

@@ -18,9 +18,9 @@ from shapely.geometry import Point
 import numpy as np
 
 from ..bathy_physics import wavelength_offshore
-from ..generic_utils.image_filters import detrend, clipping
+from ..generic_utils.image_filters import detrend, clipping, normalise
 from ..generic_utils.image_utils import cross_correlation
-from ..generic_utils.signal_filters import filter_mean, remove_median
+from ..generic_utils.signal_filters import filter_mean, remove_median, detrend_signal, butter_bandpass_filter
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
@@ -85,21 +85,34 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ :returns: the number of lags (interval between 2 frames) to use
         """
         return self.local_estimator_params['TEMPORAL_LAG']
-
+    
+    @property
+    def preprocessing_filters(self) -> ImageProcessingFilters:
+        """ :returns: A list of functions together with their parameters to be applied
+        sequentially to all the images of the sequence before subsequent bathymetry estimation.
+        """
+        preprocessing_filters: ImageProcessingFilters = []
+        preprocessing_filters.append((normalise, []))
+        return preprocessing_filters
+    
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
-        To do this random points are selected within the sequence of image and a temporal serie
+        To do this random points are selected within the sequence of image and a temporal series
         is included in the np.array for each selected point
         """
         percentage_points = self.local_estimator_params['PERCENTAGE_POINTS']
         if percentage_points < 0 or percentage_points > 100:
             raise ValueError('Percentage must be between 0 and 100')
+
+        # Create frame stack
         merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
+        merge_array[np.isnan(merge_array)] = 0 # Set nan to 0
+        
+        # Select pixel positions randomly
         shape_y, shape_x = self.ortho_sequence.shape
         image_size = shape_x * shape_y
         time_series = np.reshape(merge_array, (image_size, -1))
-        # A seed is used here to reproduce same results
-        np.random.seed(0)
+        np.random.seed(0) # A seed is used here to reproduce same results
         nb_random_points = round(image_size * percentage_points / 100)
         random_indexes = np.random.randint(image_size, size=nb_random_points)
 
@@ -107,17 +120,34 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self._sampling_positions = (np.reshape(sampling_positions_x, (1, -1)),
                                     np.reshape(sampling_positions_y, (1, -1)))
 
-        self._time_series = time_series[random_indexes, :]
-
+        # Extract and detrend Time-series
+        time_series_detrend = detrend_signal(time_series[random_indexes, :], axis=1)
+        
+        # BP filtering
+        # LINK IT TO GENERAL PARAM
+        self._time_series = butter_bandpass_filter(time_series_detrend, lowcut_period=25, highcut_period=7, fs=5, axis=1)
+        
+        if self.debug_sample:
+            self.metrics['detrend_time_series'] = time_series_detrend[0,:]
+            self.metrics['filtered_time_series'] = deepcopy(self._time_series[0,:])
+            
+            
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
+        # Normalise each frame
+        self.preprocess_images()
         
-        # Select random points on the frame stack 
+        # Select random pixel position within the frame stack and extract Time-series 
         self.create_sequence_time_series()
         
+        if self.debug_sample:
+            self.metrics['propagation_duration'] = self.propagation_duration
+            self.metrics['spatial_resolution'] = self.spatial_resolution        
+        
         # Pixel time-series Correlation + filter(detrend + clipping of corr_proj)
-        filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
+        #filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
+        filtered_image = self.correlation_image
         if self.debug_sample:
             self.metrics['correlation'] = deepcopy(self.correlation_image.pixels)
         self.correlation_image.pixels = filtered_image.pixels
@@ -153,6 +183,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         # direction and only the best of them should be added in the final list
         # direction_estimation is empty at this point
         direction_estimations = deepcopy(self.bathymetry_estimations)
+        
         for distance in distances:
             estimation = self.create_bathymetry_estimation(direction_propagation,
                                                            wavelength)
@@ -193,14 +224,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             raise ValueError('Sampling positions are not defined')
         return self._sampling_positions
 
-    @property
-    def preprocessing_filters(self) -> ImageProcessingFilters:
-        """ :returns: A list of functions together with their parameters to be applied
-        sequentially to all the images of the sequence before subsequent bathymetry estimation.
-        """
-### TODO: Apply pre-processing filters
-        preprocessing_filters: ImageProcessingFilters = []
-        return preprocessing_filters
 
     def get_correlation_image(self) -> WavesImage:
         """ This function computes the correlation image by projecting the correlation matrix
