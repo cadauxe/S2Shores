@@ -187,7 +187,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                           )
         plt.colorbar(pmc, cax=axins)
 
-
+    # Not used anymore
     def show_correlation_matrix_filled(self) -> None:
         """ Show correlation matrix where no value is filled with mean of correlation for a debug point
         """
@@ -235,7 +235,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Show correlation matrix with filled values filtered before the radon transform for a debug point
         """
         # Import correlation
-        circular_corr = self.metrics['radon_input']
+        circular_corr = self.metrics['corr_radon_input']
         imin = np.min(circular_corr)
         imax = np.max(circular_corr)
         

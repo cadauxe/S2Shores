@@ -25,6 +25,7 @@ from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
+from ..image_processing.waves_sinogram import WavesSinogram
 from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
 from ..waves_exceptions import CorrelationComputationError, SequenceImagesError
 from ..image_processing.waves_sinogram import SignalProcessingFilters
@@ -55,6 +56,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self._correlation_matrix: Optional[np.ndarray] = None
         self._correlation_image: Optional[WavesImage] = None
         self.radon_transform: Optional[WavesRadon] = None
+        self.sinogram_maxvar: Optional[WavesSinogram] = None
         self._angles: Optional[np.ndarray] = None
         self._distances: Optional[np.ndarray] = None
         self._sampling_positions: Optional[Tuple[np.ndarray, np.ndarray]] = None
@@ -146,31 +148,13 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.create_sequence_time_series()
         
         # Compute correlation and apply a gaussian mask
-        filtered_correlation = self.correlation_image.apply_filters(self.correlation_image_filters)
-        self.correlation_image.pixels = filtered_correlation.pixels
+        self.compute_temporal_correlation()
         
-        # Radon transform (sinogram)
-        radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
-
-        # Compute propagation angle using sinogram max variance
-        direction_propagation, variances = radon_transform.get_direction_maximum_variance()
+        # Radon transform (sinogram) and get wave direction
+        direction_propagation = self.compute_radon_transform()
         
-        # Extract projected sinogram at max var ang from sinogram
-        sinogram_max_var_values = radon_transform[direction_propagation].values
-        
-        # Save radon metrics for debug display
-        if self.debug_sample:
-            self.metrics['radon_input'] = radon_transform.pixels
-            self.metrics['radon_transform'] = radon_transform
-            self.metrics['variances'] = variances
-            self.metrics['direction'] = direction_propagation
-            self.metrics['sinogram_max_var'] = sinogram_max_var_values
-        
-        # Extract wavelength from sinogram projected at max var angle (0-crossing)
-        wavelength = self.compute_wavelength(sinogram_max_var_values)
-        
-        # Extract delta_x of the wave within time_lag from sinogram projected at max var angle (peaks)
-        distances = self.compute_distances(sinogram_max_var_values, wavelength)
+        # Extract wavelength and delta_x
+        wavelength, distances = self.compute_wavefield()
 
         # Keep in mind that direction_estimations stores several estimations for a same
         # direction and only the best of them should be added in the final list
@@ -184,8 +168,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             direction_estimations.append(estimation)
             
         if self.debug_sample:
-            self.metrics['propagation_duration'] = self.propagation_duration
-            self.metrics['spatial_resolution'] = self.spatial_resolution
             self.metrics['direction_estimations'] = deepcopy(direction_estimations)
             
         ### AK: in fact the next steps are already done at the exit of local_bathy_estimator by the ortho_bathy_estimator
@@ -216,8 +198,38 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         if self._sampling_positions is None:
             raise ValueError('Sampling positions are not defined')
         return self._sampling_positions
+    
+    
+    def compute_temporal_correlation(self) -> None:
+        """ Compute the temporal correlation matrix using the created time-series sequence
+        """
+        filtered_correlation = self.correlation_image.apply_filters(self.correlation_image_filters)
+        self.correlation_image.pixels = filtered_correlation.pixels
+    
+    
+    def compute_radon_transform(self) -> float:
+        """Compute the Rason Transform from the correlation matrix and determine wave progation direction
+        
+        :returns: wave propagation direction
+        """
+        self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
 
-
+        # Compute propagation angle using sinogram max variance
+        direction_propagation, variances = self.radon_transform.get_direction_maximum_variance()
+        
+        # Extract projected sinogram at max var ang from sinogram
+        self.sinogram_maxvar = self.radon_transform[direction_propagation]
+        
+        if self.debug_sample:
+            self.metrics['corr_radon_input'] = self.radon_transform.pixels
+            self.metrics['radon_transform'] = self.radon_transform
+            self.metrics['variances'] = variances
+            self.metrics['direction'] = direction_propagation
+            self.metrics['sinogram_max_var'] = self.sinogram_maxvar.values
+            
+        return direction_propagation
+    
+    
     def get_correlation_image(self) -> WavesImage:
         """ This function computes the correlation image by projecting the correlation matrix
         on an array where axis are distances and center is the point where distance is 0.
@@ -306,25 +318,36 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 np.square((self.sampling_positions[1] - self.sampling_positions[1].T)))
         return self._distances
 
-    def compute_wavelength(self, sinogram: np.ndarray) -> float:
+    
+    def compute_wavefield(self) -> list:
+        # Extract wavelength from sinogram projected at max var angle (0-crossing)
+        wavelength, wave_length_zeros = self.compute_wavelength()
+        
+        # Extract delta_x of the wave within time_lag from sinogram projected at max var angle (peaks)
+        distances = self.compute_distances(wavelength)
+        
+        return wavelength, distances
+    
+    
+    def compute_wavelength(self) -> float:
         """ Wavelength computation (in meter)
         
         :param sinogram : sinogram used to compute wave length
-        :returns: wave length
+        :returns: wavelength and 0-crossing positions
         :raises NotExploitableSinogram: if wave length can not be computed from sinogram
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         try:
-            period, wave_length_zeros = find_period_from_zeros(sinogram, int(min_wavelength / self.spatial_resolution))
+            period, wave_length_zeros = find_period_from_zeros(self.sinogram_maxvar.values, int(min_wavelength / self.spatial_resolution))
         except ValueError as excp:
             raise NotExploitableSinogram('Wave length can not be computed from sinogram') from excp
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
             self.metrics['wave_length_zeros'] = wave_length_zeros
-        return wave_length
+        return wave_length, wave_length_zeros
 
-    def compute_distances(self, sinogram: np.ndarray, wavelength: float) -> np.ndarray:
+    def compute_distances(self, wavelength: float) -> np.ndarray:
         """ Propagated distance computation (in meter)
         Maxima are computed using peaks detection
 
@@ -332,6 +355,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         :param wavelength: wave_length computed on sinogram
         :returns: np.ndarray of size nb_hops containing computed distances
         """
+        sinogram = self.sinogram_maxvar.values
+        
         x_axis = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
         period = int(wavelength / self.spatial_resolution)
         max_sinogram = np.max(sinogram)
@@ -344,3 +369,4 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self.metrics['max_indices'] = peaks
         distances = x_axis[peaks] * self.spatial_resolution
         return distances
+
