@@ -324,13 +324,13 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         min_limit_y = np.min(sinogram_max_var)
 
         # Import zeros and max detections
-        wave_length_zeros = self.metrics['wave_length_zeros']
+        wave_length_zeros = self.metrics['wave_length_zeros']*spatial_res
         max_indices = self.metrics['max_indices']
         
         # Plot
         subfigure = self._figure.add_subplot(self._gs[4, 0])
         subfigure.plot(x_spatial_axis, sinogram_max_var)
-        subfigure.plot(x_spatial_axis[wave_length_zeros], sinogram_max_var[wave_length_zeros], 'ro')
+        subfigure.plot(wave_length_zeros, np.zeros((len(wave_length_zeros))), 'ro')
         subfigure.plot(x_spatial_axis[max_indices], sinogram_max_var[max_indices], 'go')
         plt.title(r'Projected sinogram at $\theta$'+'= {:.1f} °'.format(self.metrics['direction']))
         plt.xlabel(r'$\rho$ (m)')

@@ -166,7 +166,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self.metrics['direction'] = direction_propagation
             self.metrics['sinogram_max_var'] = sinogram_max_var_values
         
-        # Extract wavelength from non filtered sinogram projected at max var angle (0-crossing)
+        # Extract wavelength from sinogram projected at max var angle (0-crossing)
         wavelength = self.compute_wavelength(sinogram_max_var_values)
         
         # Extract delta_x of the wave within time_lag from sinogram projected at max var angle (peaks)
@@ -308,14 +308,14 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     def compute_wavelength(self, sinogram: np.ndarray) -> float:
         """ Wavelength computation (in meter)
+        
         :param sinogram : sinogram used to compute wave length
         :returns: wave length
         :raises NotExploitableSinogram: if wave length can not be computed from sinogram
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         try:
-            period, wave_length_zeros = find_period_from_zeros(
-                sinogram, int(min_wavelength / self.spatial_resolution))
+            period, wave_length_zeros = find_period_from_zeros(sinogram, int(min_wavelength / self.spatial_resolution))
         except ValueError as excp:
             raise NotExploitableSinogram('Wave length can not be computed from sinogram') from excp
         wave_length = period * self.spatial_resolution
