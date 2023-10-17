@@ -61,7 +61,7 @@ def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_peri
     :returns: filtered array
     """
     b, a = butter_bandpass(lowcut_period, highcut_period, fs)
-    filtered_array = filtfilt(b, a, array, axis=axis)#use filtfilt or lfilter (better took keep lfilter)
+    filtered_array = filtfilt(b, a, array, axis=axis)
     return filtered_array
 
 def butter_bandpass(lowcut_period: float, highcut_period: float, fs: float, order: int=5)-> list:
