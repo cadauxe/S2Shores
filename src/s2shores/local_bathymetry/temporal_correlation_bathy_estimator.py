@@ -70,6 +70,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 'The chosen number of lag frames is bigger than the number of available frames')
             
         if self.debug_sample:
+            self.metrics['sampling_duration'] = self.ortho_sequence.get_time_difference(self._location, 1, 2)
             self.metrics['propagation_duration'] = self.propagation_duration
             self.metrics['spatial_resolution'] = self.spatial_resolution        
 
@@ -127,7 +128,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         
         # BP filtering
         # LINK IT TO GENERAL PARAM
-        self._time_series = butter_bandpass_filter(time_series_detrend, lowcut_period=25, highcut_period=7, fs=5, axis=1)
+        fps = 1/self.ortho_sequence.get_time_difference(self._location, 1, 2) #Compute sampling frequency
+        self._time_series = butter_bandpass_filter(time_series_detrend, lowcut_period=25, highcut_period=7, fs=fps, axis=1)
         
         if self.debug_sample:
             self.metrics['detrend_time_series'] = time_series_detrend[0,:]
