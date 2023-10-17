@@ -64,11 +64,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self.correlation_image_filters: ImageProcessingFilters = [(gaussian_masking, [2]),
                                                                   (clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])] # Put sigma as general parameter
         
-        # Radon filters
-        self.radon_image_filters: SignalProcessingFilters = [
-            (remove_median, [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM']]),
-            (filter_mean, [self.local_estimator_params['TUNING']['MEAN_FILTER_KERNEL_SIZE_SINOGRAM']])]
-        
         # Check if time lag is valid
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.ortho_sequence):
             raise ValueError(
@@ -152,25 +147,21 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         filtered_correlation = self.correlation_image.apply_filters(self.correlation_image_filters)
         self.correlation_image.pixels = filtered_correlation.pixels
         
-        # Radon transform
+        # Radon transform (sinogram)
         radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
+
+        # Compute propagation angle using sinogram max variance
+        direction_propagation, variances = radon_transform.get_direction_maximum_variance()
+        
+        # Extract projected sinogram at max var ang from sinogram
+        sinogram_max_var_values = radon_transform[direction_propagation].values
+        
+        # Save radon metrics for debug display
         if self.debug_sample:
             self.metrics['radon_input'] = radon_transform.pixels
             self.metrics['radon_transform'] = radon_transform
-            
-        # Filter sinogram (remove_median, filter_mean), only used to compute propag direction 
-        filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
-        
-        # Compute angle with max variance in filtered sinogram
-        direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
-        if self.debug_sample:
             self.metrics['variances'] = variances
             self.metrics['direction'] = direction_propagation
-        
-        # Extract projected sinogram at max var ang from non filtered radon
-        sinogram_max_var = radon_transform[direction_propagation]
-        sinogram_max_var_values = sinogram_max_var.values
-        if self.debug_sample:
             self.metrics['sinogram_max_var'] = sinogram_max_var_values
         
         # Extract wavelength from non filtered sinogram projected at max var angle (0-crossing)
