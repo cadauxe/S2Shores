@@ -128,11 +128,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         # Plot in pixel positions
         subfigure = self._figure.add_subplot(self._gs[0, 1])
-        #First frame displayed as background
-        #subfigure.matshow(first_image, norm=Normalize(vmin=imin, vmax=imax), alpha=0.5)
-        #Put selected pixels in red + scatter (usefull for big windows)
         subfigure.matshow(np.where(condition, first_image, np.nan), interpolation='none')
-        #subfigure.scatter(y_position, x_position, c='r', s=0.5)
         plt.title('Selected pixels')
         plt.xlabel('Pixel ID X')
         plt.ylabel('Pixel ID Y')
@@ -276,10 +272,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         radon_array, _ = self.metrics['radon_transform'].get_as_arrays()
         
         # Retrieve rho axis of radon transform
-        nb_directions, _ = radon_array.shape
+        nb_rho, _ = radon_array.shape
         spatial_res = self.metrics['spatial_resolution']
-        y_spatial_limits = np.array([-(nb_directions // 2), nb_directions // 2 ])*spatial_res
-
+        y_spatial_limits = np.array([-(nb_rho // 2), nb_rho // 2 ])*spatial_res
+        
         # Import directions
         directions = self.selected_directions
         min_dir = np.min(directions)
@@ -296,7 +292,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                          extent=[min_dir, max_dir, y_spatial_limits[0], y_spatial_limits[1]]
                         )
         plt.plot(self.selected_directions,
-                 ((self._metrics['variances']/np.max(self._metrics['variances']))*(nb_directions-1)*spatial_res)+y_spatial_limits[0],
+                 ((self._metrics['variances']/np.max(self._metrics['variances']))*(nb_rho-1)*spatial_res)+y_spatial_limits[0],
                  'r'
                 )
         plt.title('Radon transform (sinogram)')
@@ -307,7 +303,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         
         # Highlight max var angle corresponding to wave direction
         if 'direction' in self.metrics:
-            subfigure.arrow(self.metrics['direction'], y_spatial_limits[0], 0, (nb_directions-2)*spatial_res, color='orange')
+            subfigure.arrow(self.metrics['direction'], y_spatial_limits[0], 0, (nb_rho-2)*spatial_res, color='orange')
             plt.annotate(f"{self.metrics['direction']}°",
                          (self.metrics['direction'] + 1, 10+y_spatial_limits[0]), 
                          color='orange', 
@@ -323,7 +319,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         
         # Retreive axis of the sinogram value plot
         spatial_res = self.metrics['spatial_resolution']
-        x_spatial_axis = np.arange(-(len(sinogram_max_var) // 2), len(sinogram_max_var) // 2 + 1)*spatial_res
+        x_spatial_axis = (np.arange(0, len(sinogram_max_var))-(len(sinogram_max_var) // 2))*spatial_res
         min_limit_x = np.min(x_spatial_axis)
         min_limit_y = np.min(sinogram_max_var)
 
