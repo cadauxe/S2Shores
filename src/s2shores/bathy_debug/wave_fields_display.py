@@ -588,17 +588,18 @@ def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
     im = axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
 
     axes.plot(directions, ((np.max(values, axis=0) / np.max(np.max(values, axis=0))) * kfft.max()),
-              color="white", lw=0.7, label='Normalized Maximum')
+              color="black", lw=0.7, label='Normalized Maximum')
     
-     # colorbar
+    # colorbar
     cbbox = inset_axes(axes, '50%', '10%', loc = 'upper left')
     [cbbox.spines[k].set_visible(False) for k in cbbox.spines]
     cbbox.tick_params(axis='both', left=False, top=False, right=False, bottom=False, labelleft=False, labeltop=False, labelright=False, labelbottom=False)
     cbbox.set_facecolor([1,1,1,0.7])
     cbaxes = inset_axes(cbbox, '70%', '20%', loc = 'upper center')
-   
+
     cbar = plt.colorbar(im, cax=cbaxes, ticks=[np.nanmin(values), np.nanmax(values)], orientation='horizontal')
     cbar.ax.tick_params(labelsize=5)
+    cbar.ax.xaxis.get_offset_text().set_fontsize(5)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
     # Put a nicer background color on the legend.
@@ -625,7 +626,18 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
                                ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
 
     extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
-    axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
+    im = axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
+
+    # colorbar
+    cbbox = inset_axes(axes, '50%', '10%', loc = 'upper left')
+    [cbbox.spines[k].set_visible(False) for k in cbbox.spines]
+    cbbox.tick_params(axis='both', left=False, top=False, right=False, bottom=False, labelleft=False, labeltop=False, labelright=False, labelbottom=False)
+    cbbox.set_facecolor([1,1,1,0.7])
+    cbaxes = inset_axes(cbbox, '70%', '20%', loc = 'upper center')
+   
+    cbar = plt.colorbar(im, cax=cbaxes, ticks=[np.nanmin(values), np.nanmax(values)], orientation='horizontal')
+    cbar.ax.tick_params(labelsize=5)
+    cbar.ax.xaxis.get_offset_text().set_fontsize(5)
 
     if type == 'amplitude':
         axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
@@ -717,13 +729,13 @@ def display_dft_sinograms_spectral_analysis(
 
     build_sinogram_spectral_display(
         axs[1, 0], 'Spectral Amplitude Sinogram1 [DFT]',
-        np.abs(sino1_fft), directions1, kfft, plt_min, plt_max, abscissa=False)
+        np.abs(sino1_fft), directions1, kfft, plt_min, plt_max, abscissa=False, cmap="cmc.batlow_r")
     build_correl_spectrum_matrix(
         axs[1, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'amplitude',
         'Cross Spectral Matrix (Amplitude)')
     build_sinogram_spectral_display(
         axs[1, 2], 'Spectral Amplitude Sinogram2 [DFT]',
-        np.abs(sino2_fft), directions2, kfft, plt_min, plt_max, ordonate=False, abscissa=False)
+        np.abs(sino2_fft), directions2, kfft, plt_min, plt_max, ordonate=False, abscissa=False, cmap="cmc.batlow_r")
 
 
     csm_phase, spectrum_amplitude, sinograms_correlation_fft = \
@@ -735,14 +747,14 @@ def display_dft_sinograms_spectral_analysis(
 
     build_sinogram_spectral_display(
         axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False)
+        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False, cmap="cmc.cork")
     build_correl_spectrum_matrix(
         axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'phase',
         'Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
-        ordonate=False, abscissa=False)
+        ordonate=False, abscissa=False, cmap="cmc.cork")
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
@@ -1239,14 +1251,14 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     #convert the direction coordinates in the polar plot axis (from   
     directions = (directions + 180)%360       
     # Add the last element of the list to the list.
-    # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.   
+    # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
     ddir = np.diff(directions).mean()
     directions = np.append(directions, directions[-1:] + ddir)
 
     plotval = np.concatenate((plotval, plotval[:, 0].reshape(plotval.shape[0], 1)), axis=1)
 
     a, r = np.meshgrid(np.deg2rad(directions), wavenumbers)
-    tcf = ax_polar.tricontourf(a.flatten(), r.flatten(), plotval.flatten(), 500, cmap="cmc.batlow")
+    tcf = ax_polar.tricontourf(a.flatten(), r.flatten(), plotval.flatten(), 500, cmap="cmc.batlow_r")
     plt.colorbar(tcf, ax=ax_polar)
 
     ax_polar.set_title(title, fontsize=9, loc='center')
