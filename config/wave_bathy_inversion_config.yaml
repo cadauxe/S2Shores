@@ -4,28 +4,26 @@
 GLOBAL_ESTIMATOR:
 
   # the local estimator and the selected frames to use
-  WAVE_EST_METHOD: "SPATIAL_DFT" # among SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
+  WAVE_EST_METHOD: "TEMPORAL_CORRELATION" # among SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
   SELECTED_FRAMES: # Leave this list empty or comment the parameter to select all usable frames
-  - "B02"
-  - "B04"
   
   # product characteristics
   OUTPUT_FORMAT: "GRID" # format of the output, among GRID and POINT
-  DXP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
-  DYP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
+  DXP: 20.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
+  DYP: 20.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
-  NKEEP: 3 # number of main waves directions to keep in the product
+  NKEEP: 1 # number of main waves directions to keep in the product
   
   # window parameters
-  WINDOW: 800.0 # thumbnail size - meters - ex. PHR : 400
+  WINDOW: 200 # thumbnail size - meters - ex. PHR : 400
   SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image. 
                 # Kernel size = 2*SM_LENGTH+1. Deactivation of the desmoothing filter with SM_LENGTH = 0.
 
   # physical constraints
-  MIN_D: 2 #minimal depth - meters
+  MIN_D: 1 #minimal depth - meters
   MIN_T: 3 # minimal wave period - seconds
   MAX_T: 25 # maximal wave period - seconds
-  MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
+  MIN_WAVES_LINEARITY: 0.1 # minimal wave linearity - unitless
   MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
   
   # depth inversion
@@ -45,14 +43,14 @@ SPATIAL_DFT:
 
 #temporal_correlation
 TEMPORAL_CORRELATION:
-  TEMPORAL_LAG: 1  # number of intervals between frames to let wave propagation happen (example 3 for a 1Hz sequence)
-  PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation
+  TEMPORAL_LAG: 15  # number of intervals between frames to let wave propagation happen (example 3 for a 1Hz sequence)
+  PERCENTAGE_POINTS: 5 # percentage of selected points in the window for the computation
   TUNING:
-    PEAK_DETECTION_HEIGHT_RATIO: 0.3
-    PEAK_DETECTION_DISTANCE_RATIO: 0.5
+    LOWCUT_PERIOD: 25 # seconds
+    HIGHCUT_PERIOD: 8 # seconds
+    SIGMA_CORRELATION_MASK: 2 # sigma value of the gaussian filter
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
-    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
-    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
+    MEDIAN_FILTER_KERNEL: 5 # kernel size used in the median filter applied to the projected sinogram
 
 #spatial_correlation
 SPATIAL_CORRELATION:

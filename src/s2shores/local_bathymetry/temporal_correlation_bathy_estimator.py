@@ -57,10 +57,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         # Correlation filters 
         self.correlation_image_filters: ImageProcessingFilters = [(detrend, []),
-                                                                  (gaussian_masking, [2]),
-                                                                  (clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])] # Put sigma as general parameter
+                                                                  (gaussian_masking, [self.local_estimator_params['TUNING']['SIGMA_CORRELATION_MASK']]),
+                                                                  (clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
         # Projected sinogram filter
-        self.sinogram_max_var_filters: SignalProcessingFilters = [(filter_median,[5])]
+        self.sinogram_max_var_filters: SignalProcessingFilters = [(filter_median,[self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL']])]
         
         # Check if time lag is valid
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.ortho_sequence):
@@ -220,11 +220,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         time_series_detrend = detrend_signal(time_series[random_indexes, :], axis=1)
         
         # BP filtering
-        # LINK IT TO GENERAL PARAM
         fps = 1/self.sampling_period
         self._time_series = butter_bandpass_filter(time_series_detrend, 
-                                                   lowcut_period=25, 
-                                                   highcut_period=8, 
+                                                   lowcut_period=self.local_estimator_params['TUNING']['LOWCUT_PERIOD'], 
+                                                   highcut_period=self.local_estimator_params['TUNING']['HIGHCUT_PERIOD'], 
                                                    fs=fps, 
                                                    axis=1)
         
@@ -287,6 +286,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         
         # Extract projected sinogram at max var ang from sinogram
         self.sinogram_maxvar = self.radon_transform[direction_propagation]
+        
+        # Median filtering of the projected sinogram
         filtered_sinogram_maxvar = self.sinogram_maxvar.apply_filters(self.sinogram_max_var_filters)
         self.sinogram_maxvar.values = filtered_sinogram_maxvar.values
         
