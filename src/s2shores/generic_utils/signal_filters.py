@@ -38,8 +38,16 @@ def remove_median(array: np.ndarray, kernel_ratio: float) -> np.ndarray:
     kernel_size = round(len(array) * kernel_ratio)
     if (kernel_size % 2) == 0:
         kernel_size = kernel_size + 1
-    return array - medfilt(array, kernel_size)
+    return array - filter_median(array, kernel_size)
 
+def filter_median(array: np.ndarray, kernel_size: int) -> np.ndarray:
+    """ Perform median filtering on a signal
+    
+    :param array: entry signal
+    :param kernel_size: size of the median kernel filtering the signal
+    :returns: filtered array
+    """
+    return medfilt(array, kernel_size)
 
 def detrend_signal(array: np.ndarray, axis:int=0) -> np.ndarray:
     """Performs a detrend process on a signal

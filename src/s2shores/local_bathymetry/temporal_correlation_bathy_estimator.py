@@ -16,7 +16,7 @@ from shapely.geometry import Point
 from ..bathy_physics import wavelength_offshore
 from ..generic_utils.image_filters import detrend, clipping, normalise, gaussian_masking
 from ..generic_utils.image_utils import cross_correlation
-from ..generic_utils.signal_filters import detrend_signal, butter_bandpass_filter
+from ..generic_utils.signal_filters import detrend_signal, butter_bandpass_filter, filter_median
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
@@ -56,8 +56,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self._sampling_period: Optional[float] = None
 
         # Correlation filters 
-        self.correlation_image_filters: ImageProcessingFilters = [(gaussian_masking, [2]),
+        self.correlation_image_filters: ImageProcessingFilters = [(detrend, []),
+                                                                  (gaussian_masking, [2]),
                                                                   (clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])] # Put sigma as general parameter
+        # Projected sinogram filter
+        self.sinogram_max_var_filters: SignalProcessingFilters = [(filter_median,[5])]
         
         # Check if time lag is valid
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.ortho_sequence):
@@ -284,6 +287,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         
         # Extract projected sinogram at max var ang from sinogram
         self.sinogram_maxvar = self.radon_transform[direction_propagation]
+        filtered_sinogram_maxvar = self.sinogram_maxvar.apply_filters(self.sinogram_max_var_filters)
+        self.sinogram_maxvar.values = filtered_sinogram_maxvar.values
         
         if self.debug_sample:
             self.metrics['corr_radon_input'] = self.radon_transform.pixels
@@ -349,7 +354,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         
         # Refine distance
         ref = [z1,z2][np.argmin(np.abs([z1,z2]))]
-        offset = np.sign(dx_in-ref)*np.mean(np.diff(zeros))/2
+        offset = np.sign(dx_in-ref)*(np.abs(z2-z1)/2)
         dx = ref + offset
         
         # Distance of the wave propagation
