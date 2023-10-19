@@ -324,14 +324,17 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         min_limit_y = np.min(sinogram_max_var)
 
         # Import zeros and max detections
-        wave_length_zeros = self.metrics['wave_length_zeros']*spatial_res
+        zeros = self.metrics['wave_spatial_zeros']
         max_indices = self.metrics['max_indices']
+        dx = self.metrics['wave_distance']
         
         # Plot
         subfigure = self._figure.add_subplot(self._gs[4, 0])
         subfigure.plot(x_spatial_axis, sinogram_max_var)
-        subfigure.plot(wave_length_zeros, np.zeros((len(wave_length_zeros))), 'ro')
-        subfigure.plot(x_spatial_axis[max_indices], sinogram_max_var[max_indices], 'go')
+        subfigure.plot(zeros, np.zeros((len(zeros))), 'ro')
+        subfigure.plot(x_spatial_axis[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices], 
+                       sinogram_max_var[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices], 'go')
+        subfigure.plot(dx, 0, 'ko')
         plt.title(r'Projected sinogram at $\theta$'+'= {:.1f} °'.format(self.metrics['direction']))
         plt.xlabel(r'$\rho$ (m)')
         plt.ylabel('Corr')
@@ -366,7 +369,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         if self.bathymetry_estimations:
             subfigure.annotate('For time lag = {:.3f} s\n'.format(self.metrics['propagation_duration'])+ 
                                'Estimated wave:\n' +
-                               r'$\theta$ = {:.1f}°'.format(self.metrics['direction']) + '\n'+
+                               r'$\theta$ = {:.1f}° from East'.format(self.metrics['direction']) + '\n'+
                                'L = {:.2f} m \n'.format(self.bathymetry_estimations[0].wavelength) +
                                'T = {:.2f} s \n'.format(self.bathymetry_estimations[0].period)+
                                'c = {:.2f} m/s \n'.format(self.bathymetry_estimations[0].celerity) +
@@ -394,16 +397,16 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """
         
         # Retreive values to add in the log
-        direction_estimations = self.metrics['direction_estimations']
+        bathymetry_estimation = self.metrics['bathymetry_estimation']
         time_lag = self.metrics['propagation_duration']
         
-        celerities = direction_estimations.get_attribute('celerity')
+        celerities = bathymetry_estimation.get_attribute('celerity')
         celerities_txt = str(["{:.2f}".format(elem) for elem in celerities])
         
-        distances = direction_estimations.get_attribute('delta_position')
+        distances = bathymetry_estimation.get_attribute('delta_position')
         distances_txt = str(["{:.2f}".format(elem) for elem in distances])
         
-        linerities = direction_estimations.get_attribute('linearity')
+        linerities = bathymetry_estimation.get_attribute('linearity')
         linerities_txt = str(["{:.2f}".format(elem) for elem in linerities])
         
         spatial_res = self.ortho_sequence[0].resolution
@@ -418,14 +421,14 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                '    Lag number: {:d} frames\n'.format(self.local_estimator_params['TEMPORAL_LAG'])+
                '    Percentage points: {:d} % \n \n'.format(self.local_estimator_params['PERCENTAGE_POINTS'])+
                '  Image info:\n'+
-               '    center point: ' + str(direction_estimations.location) +'\n'+
+               '    center point: ' + str(bathymetry_estimation.location) +'\n'+
                '    Window size (m): '+str(wind_size) + '\n'+
                '    Spatial res: {:.3f} m \n'.format(spatial_res)+
                '    Window shape (px): '+str(wind_shape) + '\n \n'+
                '  Temporal correlation info:\n'+
                '    time lag: {:.2f} s \n'.format(time_lag) +
                '    max var angle: {:.1f}° (direction from East)\n'.format(self.metrics['direction']) +
-               '    estimated wavelength: {:.2f} m\n'.format(direction_estimations[0].wavelength) + 
+               '    estimated wavelength: {:.2f} m\n'.format(bathymetry_estimation[0].wavelength) + 
                '    dx (m): {:s} \n'.format(distances_txt) + 
                '    c (m/s): {:s} \n'.format(celerities_txt) +
                '    gamma: {:s} \n'.format(linerities_txt) +

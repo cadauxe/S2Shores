@@ -50,8 +50,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         super().__init__(location, ortho_sequence, global_estimator, selected_directions)
 
         if self.selected_directions is None:
-            # From -180 to 60 and not from -90,90 to handle correctly perpendicular waves
-            self.selected_directions = linear_directions(-180., 60., 1.)
+            self.selected_directions = linear_directions(-90., 90., 1.)
         # Processing attributes
         self._correlation_matrix: Optional[np.ndarray] = None
         self._correlation_image: Optional[WavesImage] = None
@@ -154,40 +153,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         direction_propagation = self.compute_radon_transform()
         
         # Extract wavelength and delta_x
-        wavelength, distances = self.compute_wavefield()
+        wavelength, distance = self.compute_wavefield()
 
-        # Keep in mind that direction_estimations stores several estimations for a same
-        # direction and only the best of them should be added in the final list
-        # direction_estimation is empty at this point
-        direction_estimations = deepcopy(self.bathymetry_estimations)
-        
-        for distance in distances:
-            estimation = self.create_bathymetry_estimation(direction_propagation,
-                                                           wavelength)
-            estimation.delta_position = distance
-            direction_estimations.append(estimation)
-            
-        if self.debug_sample:
-            self.metrics['direction_estimations'] = deepcopy(direction_estimations)
-            
-        ### AK: in fact the next steps are already done at the exit of local_bathy_estimator by the ortho_bathy_estimator
-        # but 2nd sorting is disabled as no final_estimations_sorting class attribute is set here.
-        
-        # Remove wave field estimations out of stroboscopic factor bounds and wave linearity bounds
-        direction_estimations.remove_unphysical_wave_fields()
-        
-        if self.debug_sample:
-            self.metrics['status'] = direction_estimations.status
-            
-        if not direction_estimations:
-            raise WavesEstimationError('No correct wave field estimations have been found')
-            
-        # Select wave field estimation presenting the minimum linearity (i.e min gamma)
-        # (Is it a good criteria ? AK)
-        direction_estimations.sort_on_attribute('linearity', reverse=False)
-        best_estimation = direction_estimations[0]
-            
-        self.bathymetry_estimations.append(best_estimation)
+        # Save the estimation
+        self.save_wave_field_estimation(direction_propagation, wavelength, distance)
         
 
     @property
@@ -320,13 +289,17 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     
     def compute_wavefield(self) -> list:
+        """Extract wave chracteristics (wavelength and wave displacement) within the projected sinogram
+        
+        :returns: estimated wavelength and wave displacement
+        """
         # Extract wavelength from sinogram projected at max var angle (0-crossing)
         wavelength, wave_length_zeros = self.compute_wavelength()
         
         # Extract delta_x of the wave within time_lag from sinogram projected at max var angle (peaks)
-        distances = self.compute_distances(wavelength)
+        distance = self.compute_distance(wave_length_zeros)
         
-        return wavelength, distances
+        return wavelength, distance
     
     
     def compute_wavelength(self) -> float:
@@ -344,29 +317,60 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         wave_length = period * self.spatial_resolution
 
         if self.debug_sample:
-            self.metrics['wave_length_zeros'] = wave_length_zeros
+            self.metrics['wave_spatial_zeros'] = wave_length_zeros * self.spatial_resolution
         return wave_length, wave_length_zeros
 
-    def compute_distances(self, wavelength: float) -> np.ndarray:
+    
+    def compute_distance(self, zeros: float) -> np.ndarray:
         """ Propagated distance computation (in meter)
-        Maxima are computed using peaks detection
 
-        :param sinogram: sinogram having maximum variance
-        :param wavelength: wave_length computed on sinogram
-        :returns: np.ndarray of size nb_hops containing computed distances
+        :param zeros: 0-crossing positions
+        :returns: propagation distance of the wave
         """
         sinogram = self.sinogram_maxvar.values
+        x_axis = np.arange(0, len(sinogram)) - len(sinogram) // 2
         
-        x_axis = np.arange(-(len(sinogram) // 2), len(sinogram) // 2 + 1)
-        period = int(wavelength / self.spatial_resolution)
-        max_sinogram = np.max(sinogram)
-        tuning_parameters = self.local_estimator_params['TUNING']
-        peaks, _ = find_peaks(sinogram, height=tuning_parameters['PEAK_DETECTION_HEIGHT_RATIO']
-                              * max_sinogram,
-                              distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']
-                              * period)
-        if self.debug_sample:
-            self.metrics['max_indices'] = peaks
-        distances = x_axis[peaks] * self.spatial_resolution
-        return distances
+        # Find sinogram max peak within the 1st and last 0-crossing
+        i_max_sinogram = np.argmax(sinogram[(x_axis >= zeros[0]) & (x_axis < zeros[-1])])
+        
+        # Compute initial distance
+        dx_in = x_axis[(x_axis >= zeros[0]) & (x_axis < zeros[-1])][i_max_sinogram]
+        
+        # Find 0-crossing surrounding the peak
+        z1 = zeros[zeros>dx_in][0]
+        z2 = zeros[zeros<=dx_in][-1]
+        
+        # Refine distance
+        ref = [z1,z2][np.argmin(np.abs([z1,z2]))]
+        offset = np.sign(dx_in-ref)*np.mean(np.diff(zeros))/2
+        dx = ref + offset
+        
+        # Distance of the wave propagation
+        distance = dx * self.spatial_resolution
 
+        if self.debug_sample:
+            self.metrics['max_indices'] = i_max_sinogram
+            self.metrics['wave_distance'] = distance
+        
+        return distance
+
+    
+    def save_wave_field_estimation(self, estimated_direction: float, wavelength: float, distance: float) -> None:
+        """ Saves the wave_field_estimation
+
+        :param estimated_direction: the waves estimated propagation direction
+        :param wavelength: the wave length of the waves
+        :param distance: the distance propagated over time by the waves
+        """
+        bathymetry_estimation = cast(TemporalCorrelationBathyEstimation, 
+                                     self.create_bathymetry_estimation(estimated_direction, wavelength)
+                                    )
+        bathymetry_estimation.delta_position = distance
+            
+        self.bathymetry_estimations.append(bathymetry_estimation)
+        
+        if self.debug_sample:
+            self.metrics['bathymetry_estimation'] = self.bathymetry_estimations
+            self.metrics['status'] = self.bathymetry_estimations.status
+        
+        
