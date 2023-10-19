@@ -7,32 +7,25 @@
 :license: see LICENSE file
 :created: 18/06/2021
 """
-from copy import deepcopy
 from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
-
-import pandas
-from scipy.signal import find_peaks
-from shapely.geometry import Point
-
 import numpy as np
+import pandas
+from shapely.geometry import Point
 
 from ..bathy_physics import wavelength_offshore
 from ..generic_utils.image_filters import detrend, clipping, normalise, gaussian_masking
 from ..generic_utils.image_utils import cross_correlation
-from ..generic_utils.signal_filters import filter_mean, remove_median, detrend_signal, butter_bandpass_filter
+from ..generic_utils.signal_filters import detrend_signal, butter_bandpass_filter
 from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
-from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
-from ..waves_exceptions import CorrelationComputationError, SequenceImagesError
-from ..image_processing.waves_sinogram import SignalProcessingFilters
+from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram, CorrelationComputationError, SequenceImagesError
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
-
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -92,149 +85,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         return self.local_estimator_params['TEMPORAL_LAG']
     
     @property
-    def preprocessing_filters(self) -> ImageProcessingFilters:
-        """ :returns: A list of functions together with their parameters to be applied
-        sequentially to all the images of the sequence before subsequent bathymetry estimation.
-        """
-        preprocessing_filters: ImageProcessingFilters = []
-        preprocessing_filters.append((normalise, []))
-        return preprocessing_filters
-    
-    def create_sequence_time_series(self) -> None:
-        """ This function computes an np.array of time series.
-        To do this random points are selected within the sequence of image and a temporal series
-        is included in the np.array for each selected point
-        """
-        percentage_points = self.local_estimator_params['PERCENTAGE_POINTS']
-        if percentage_points < 0 or percentage_points > 100:
-            raise ValueError('Percentage must be between 0 and 100')
-
-        # Create frame stack
-        merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
-        merge_array[np.isnan(merge_array)] = 0 # Set nan to 0
-        
-        # Select pixel positions randomly
-        shape_y, shape_x = self.ortho_sequence.shape
-        image_size = shape_x * shape_y
-        time_series = np.reshape(merge_array, (image_size, -1))
-        np.random.seed(0) # A seed is used here to reproduce same results
-        nb_random_points = round(image_size * percentage_points / 100)
-        random_indexes = np.random.randint(image_size, size=nb_random_points)
-
-        sampling_positions_x, sampling_positions_y = np.unravel_index(random_indexes, self.ortho_sequence.shape)
-        self._sampling_positions = (np.reshape(sampling_positions_x, (1, -1)),
-                                    np.reshape(sampling_positions_y, (1, -1)))
-
-        # Extract and detrend Time-series
-        time_series_detrend = detrend_signal(time_series[random_indexes, :], axis=1)
-        
-        # BP filtering
-        # LINK IT TO GENERAL PARAM
-        fps = 1/self.sampling_period
-        self._time_series = butter_bandpass_filter(time_series_detrend, lowcut_period=25, highcut_period=7, fs=fps, axis=1)
-        
-        if self.debug_sample:
-            self.metrics['detrend_time_series'] = time_series_detrend[0,:]
-            self.metrics['filtered_time_series'] = deepcopy(self._time_series[0,:])
-            
-            
-    def run(self) -> None:
-        """ Run the local bathy estimator using correlation method
-        """
-        # Normalise each frame
-        self.preprocess_images()
-        
-        # Select random pixel position within the frame stack and extract Time-series 
-        self.create_sequence_time_series()
-        
-        # Compute correlation and apply a gaussian mask
-        self.compute_temporal_correlation()
-        
-        # Radon transform (sinogram) and get wave direction
-        direction_propagation = self.compute_radon_transform()
-        
-        # Extract wavelength and delta_x
-        wavelength, distance = self.compute_wavefield()
-
-        # Save the estimation
-        self.save_wave_field_estimation(direction_propagation, wavelength, distance)
-        
-
-    @property
-    def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
-        """ :returns: tuple of sampling positions
-        :raises ValueError: when sampling has not been defined
-        """
-        if self._sampling_positions is None:
-            raise ValueError('Sampling positions are not defined')
-        return self._sampling_positions
-    
-    
-    def compute_temporal_correlation(self) -> None:
-        """ Compute the temporal correlation matrix using the created time-series sequence
-        """
-        filtered_correlation = self.correlation_image.apply_filters(self.correlation_image_filters)
-        self.correlation_image.pixels = filtered_correlation.pixels
-    
-    
-    def compute_radon_transform(self) -> float:
-        """Compute the Rason Transform from the correlation matrix and determine wave progation direction
-        
-        :returns: wave propagation direction
-        """
-        self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
-
-        # Compute propagation angle using sinogram max variance
-        direction_propagation, variances = self.radon_transform.get_direction_maximum_variance()
-        
-        # Extract projected sinogram at max var ang from sinogram
-        self.sinogram_maxvar = self.radon_transform[direction_propagation]
-        
-        if self.debug_sample:
-            self.metrics['corr_radon_input'] = self.radon_transform.pixels
-            self.metrics['radon_transform'] = self.radon_transform
-            self.metrics['variances'] = variances
-            self.metrics['direction'] = direction_propagation
-            self.metrics['sinogram_max_var'] = self.sinogram_maxvar.values
-            
-        return direction_propagation
-    
-    
-    def get_correlation_image(self) -> WavesImage:
-        """ This function computes the correlation image by projecting the correlation matrix
-        on an array where axis are distances and center is the point where distance is 0.
-        If several points have same coordinates, the mean of correlation is taken for this position
-        """
-
-        indices_x = np.round(self.distances * np.cos(self.angles))
-        indices_x = np.array(indices_x - np.min(indices_x), dtype=int).T
-
-        indices_y = np.round(self.distances * np.sin(self.angles))
-        indices_y = np.array(indices_y - np.min(indices_y), dtype=int).T
-
-        xr_s = pandas.Series(indices_x.flatten())
-        yr_s = pandas.Series(indices_y.flatten())
-        values_s = pandas.Series(self.correlation_matrix.flatten())
-
-        # if two correlation values have same xr and yr mean of these values is taken
-        dataframe = pandas.DataFrame({'xr': xr_s, 'yr': yr_s, 'values': values_s})
-        dataframe_grouped = dataframe.groupby(by=['xr', 'yr']).mean().reset_index()
-        values = np.array(dataframe_grouped['values'])
-        indices_x = np.array(dataframe_grouped['xr'])
-        indices_y = np.array(dataframe_grouped['yr'])
-
-        projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
-            (np.max(indices_x) + 1, np.max(indices_y) + 1))
-        projected_matrix[indices_x, indices_y] = values
-        
-        if self.debug_sample:
-            self.metrics['corr_indices_x'] = indices_x
-            self.metrics['corr_indices_y'] = indices_y
-            self.metrics['projected_corr_raw'] = projected_matrix
-
-        return WavesImage(projected_matrix, self.spatial_resolution)
-
-    @property
     def sampling_period(self) -> float:
         """ Sampling period between each frame
         :return: Image sequence sampling period
@@ -243,6 +93,23 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self._sampling_period = self.ortho_sequence.get_time_difference(self._location, 1, 2)
         return self._sampling_period
     
+    @property
+    def preprocessing_filters(self) -> ImageProcessingFilters:
+        """ :returns: A list of functions together with their parameters to be applied
+        sequentially to all the images of the sequence before subsequent bathymetry estimation.
+        """
+        preprocessing_filters: ImageProcessingFilters = []
+        preprocessing_filters.append((normalise, []))
+        return preprocessing_filters
+    
+    @property
+    def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
+        """ :returns: tuple of sampling positions
+        :raises ValueError: when sampling has not been defined
+        """
+        if self._sampling_positions is None:
+            raise ValueError('Sampling positions are not defined')
+        return self._sampling_positions
     
     @property
     def correlation_image(self) -> WavesImage:
@@ -297,7 +164,136 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 np.square((self.sampling_positions[0] - self.sampling_positions[0].T)) +
                 np.square((self.sampling_positions[1] - self.sampling_positions[1].T)))
         return self._distances
+    
+    
+    def run(self) -> None:
+        """ Run the local bathy estimator using correlation method
+        """
+        # Normalise each frame
+        self.preprocess_images()
+        
+        # Select random pixel position within the frame stack and extract Time-series 
+        self.create_sequence_time_series()
+        
+        # Compute correlation and apply a gaussian mask
+        self.compute_temporal_correlation()
+        
+        # Radon transform (sinogram) and get wave direction
+        direction_propagation = self.compute_radon_transform()
+        
+        # Extract wavelength and delta_x
+        wavelength, distance = self.compute_wavefield()
 
+        # Save the estimation
+        self.save_wave_field_estimation(direction_propagation, wavelength, distance)
+        
+        
+    def create_sequence_time_series(self) -> None:
+        """ This function computes an np.array of time series.
+        To do this random points are selected within the sequence of image and a temporal series
+        is included in the np.array for each selected point
+        """
+        percentage_points = self.local_estimator_params['PERCENTAGE_POINTS']
+        if percentage_points < 0 or percentage_points > 100:
+            raise ValueError('Percentage must be between 0 and 100')
+
+        # Create frame stack
+        merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
+        merge_array[np.isnan(merge_array)] = 0 # Set nan to 0
+        
+        # Select pixel positions randomly
+        shape_y, shape_x = self.ortho_sequence.shape
+        image_size = shape_x * shape_y
+        time_series = np.reshape(merge_array, (image_size, -1))
+        np.random.seed(0) # A seed is used here to reproduce same results
+        nb_random_points = round(image_size * percentage_points / 100)
+        random_indexes = np.random.randint(image_size, size=nb_random_points)
+
+        sampling_positions_x, sampling_positions_y = np.unravel_index(random_indexes, self.ortho_sequence.shape)
+        self._sampling_positions = (np.reshape(sampling_positions_x, (1, -1)),
+                                    np.reshape(sampling_positions_y, (1, -1)))
+
+        # Extract and detrend Time-series
+        time_series_detrend = detrend_signal(time_series[random_indexes, :], axis=1)
+        
+        # BP filtering
+        # LINK IT TO GENERAL PARAM
+        fps = 1/self.sampling_period
+        self._time_series = butter_bandpass_filter(time_series_detrend, 
+                                                   lowcut_period=25, 
+                                                   highcut_period=8, 
+                                                   fs=fps, 
+                                                   axis=1)
+        
+        if self.debug_sample:
+            self.metrics['detrend_time_series'] = time_series_detrend[0,:]
+            self.metrics['filtered_time_series'] = self._time_series[0,:]
+
+    
+    def compute_temporal_correlation(self) -> None:
+        """ Compute the temporal correlation matrix using the created time-series sequence
+        """
+        filtered_correlation = self.correlation_image.apply_filters(self.correlation_image_filters)
+        self.correlation_image.pixels = filtered_correlation.pixels
+    
+    
+    def get_correlation_image(self) -> WavesImage:
+        """ This function computes the correlation image by projecting the correlation matrix
+        on an array where axis are distances and center is the point where distance is 0.
+        If several points have same coordinates, the mean of correlation is taken for this position
+        """
+
+        indices_x = np.round(self.distances * np.cos(self.angles))
+        indices_x = np.array(indices_x - np.min(indices_x), dtype=int).T
+
+        indices_y = np.round(self.distances * np.sin(self.angles))
+        indices_y = np.array(indices_y - np.min(indices_y), dtype=int).T
+
+        xr_s = pandas.Series(indices_x.flatten())
+        yr_s = pandas.Series(indices_y.flatten())
+        values_s = pandas.Series(self.correlation_matrix.flatten())
+
+        # if two correlation values have same xr and yr mean of these values is taken
+        dataframe = pandas.DataFrame({'xr': xr_s, 'yr': yr_s, 'values': values_s})
+        dataframe_grouped = dataframe.groupby(by=['xr', 'yr']).mean().reset_index()
+        values = np.array(dataframe_grouped['values'])
+        indices_x = np.array(dataframe_grouped['xr'])
+        indices_y = np.array(dataframe_grouped['yr'])
+
+        projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
+            (np.max(indices_x) + 1, np.max(indices_y) + 1))
+        projected_matrix[indices_x, indices_y] = values
+        
+        if self.debug_sample:
+            self.metrics['corr_indices_x'] = indices_x
+            self.metrics['corr_indices_y'] = indices_y
+            self.metrics['projected_corr_raw'] = projected_matrix
+
+        return WavesImage(projected_matrix, self.spatial_resolution)
+
+    
+    def compute_radon_transform(self) -> float:
+        """Compute the Rason Transform from the correlation matrix and determine wave progation direction
+        
+        :returns: wave propagation direction
+        """
+        self.radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
+
+        # Compute propagation angle using sinogram max variance
+        direction_propagation, variances = self.radon_transform.get_direction_maximum_variance()
+        
+        # Extract projected sinogram at max var ang from sinogram
+        self.sinogram_maxvar = self.radon_transform[direction_propagation]
+        
+        if self.debug_sample:
+            self.metrics['corr_radon_input'] = self.radon_transform.pixels
+            self.metrics['radon_transform'] = self.radon_transform
+            self.metrics['variances'] = variances
+            self.metrics['direction'] = direction_propagation
+            self.metrics['sinogram_max_var'] = self.sinogram_maxvar.values
+            
+        return direction_propagation
+    
     
     def compute_wavefield(self) -> list:
         """Extract wave chracteristics (wavelength and wave displacement) within the projected sinogram
