@@ -60,6 +60,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self._distances: Optional[np.ndarray] = None
         self._sampling_positions: Optional[Tuple[np.ndarray, np.ndarray]] = None
         self._time_series: Optional[np.ndarray] = None
+        self._sampling_period: Optional[float] = None
 
         # Correlation filters 
         self.correlation_image_filters: ImageProcessingFilters = [(gaussian_masking, [2]),
@@ -71,7 +72,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 'The chosen number of lag frames is bigger than the number of available frames')
             
         if self.debug_sample:
-            self.metrics['sampling_duration'] = self.ortho_sequence.get_time_difference(self._location, 1, 2)
+            self.metrics['sampling_duration'] = self.sampling_period
             self.metrics['propagation_duration'] = self.propagation_duration
             self.metrics['spatial_resolution'] = self.spatial_resolution        
 
@@ -129,7 +130,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         
         # BP filtering
         # LINK IT TO GENERAL PARAM
-        fps = 1/self.ortho_sequence.get_time_difference(self._location, 1, 2) #Compute sampling frequency
+        fps = 1/self.sampling_period
         self._time_series = butter_bandpass_filter(time_series_detrend, lowcut_period=25, highcut_period=7, fs=fps, axis=1)
         
         if self.debug_sample:
@@ -233,6 +234,16 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         return WavesImage(projected_matrix, self.spatial_resolution)
 
+    @property
+    def sampling_period(self) -> float:
+        """ Sampling period between each frame
+        :return: Image sequence sampling period
+        """
+        if self._sampling_period is None:
+            self._sampling_period = self.ortho_sequence.get_time_difference(self._location, 1, 2)
+        return self._sampling_period
+    
+    
     @property
     def correlation_image(self) -> WavesImage:
         """ Correlation image
