@@ -36,12 +36,13 @@ class BathymetrySampleEstimations(list):
     """
 
     def __init__(self, location: Point, gravity: float, delta_time: float,
-                 distance_to_shore: float, inside_roi: bool) -> None:
+                 distance_to_shore: float, max_offshore_distance:float , inside_roi: bool) -> None:
         super().__init__()
 
         self._location = location
         self._gravity = gravity
         self._distance_to_shore = distance_to_shore
+        self._max_offshore_distance = max_offshore_distance
         self._inside_roi = inside_roi
         self._delta_time = delta_time
 
@@ -143,6 +144,11 @@ class BathymetrySampleEstimations(list):
         return self._distance_to_shore
 
     @property
+    def max_offshore_distance(self) -> float:
+        """ :returns: Maximum allowed offshore distance from this estimation location (km)"""
+        return self._max_offshore_distance
+
+    @property
     def inside_roi(self) -> bool:
         """ :returns: True if the point is inside the defined ROI, False otherwise"""
         return self._inside_roi
@@ -183,6 +189,8 @@ class BathymetrySampleEstimations(list):
         status = SampleStatus.SUCCESS
         if self.distance_to_shore <= 0.:
             status = SampleStatus.ON_GROUND
+        elif self.distance_to_shore > self.max_offshore_distance :
+            status = SampleStatus.BEYOND_OFFSHORE_LIMIT  
         elif not self.inside_roi:
             status = SampleStatus.OUTSIDE_ROI
         elif not self.data_available:
