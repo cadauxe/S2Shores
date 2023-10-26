@@ -27,7 +27,8 @@ GLOBAL_ESTIMATOR:
   MAX_T: 25 # maximal wave period - seconds
   MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
   MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
-  
+  MAX_OFFSHORE_LIMIT: 10 # maximum offshore distance in kilometers from the coast
+
   # depth inversion
   DEPTH_EST_METHOD: "LINEAR" # among LINEAR
   
