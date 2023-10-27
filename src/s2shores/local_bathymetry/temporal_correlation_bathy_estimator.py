@@ -11,6 +11,7 @@ from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
 
 import numpy as np
 import pandas
+from scipy.signal import find_peaks
 from shapely.geometry import Point
 
 from ..bathy_physics import wavelength_offshore
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
 class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     """ Class performing temporal correlation to compute bathymetry
     """
+
     wave_field_estimation_cls = TemporalCorrelationBathyEstimation
 
     def __init__(self, location: Point, ortho_sequence: OrthoSequence,
@@ -172,25 +174,26 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
+        
         # Normalise each frame
         self.preprocess_images()
         
         # Select random pixel position within the frame stack and extract Time-series 
         self.create_sequence_time_series()
-        
+
         # Compute correlation and apply a gaussian mask
         self.compute_temporal_correlation()
-        
+
         # Radon transform (sinogram) and get wave direction
         direction_propagation = self.compute_radon_transform()
         
         # Extract wavelength and delta_x
-        wavelength, distance = self.compute_wavefield()
+        wavelength, distances = self.compute_wavefield()
 
         # Save the estimation
-        self.save_wave_field_estimation(direction_propagation, wavelength, distance)
-        
-        
+        self.save_wave_field_estimation(direction_propagation, wavelength, distances)
+            
+
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
         To do this random points are selected within the sequence of image and a temporal series
@@ -219,14 +222,17 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         # Extract and detrend Time-series
         time_series_detrend = detrend_signal(time_series[random_indexes, :], axis=1)
         
-        # BP filtering
-        fps = 1/self.sampling_period
-        self._time_series = butter_bandpass_filter(time_series_detrend, 
-                                                   lowcut_period=self.local_estimator_params['TUNING']['LOWCUT_PERIOD'], 
-                                                   highcut_period=self.local_estimator_params['TUNING']['HIGHCUT_PERIOD'], 
-                                                   fs=fps, 
-                                                   axis=1)
-        
+        # BP filtering, bypassed if low or high cutoff is set to 0
+        if self.local_estimator_params['TUNING']['LOWCUT_PERIOD']!=0 and self.local_estimator_params['TUNING']['HIGHCUT_PERIOD']!=0:
+            fps = 1/self.sampling_period
+            self._time_series = butter_bandpass_filter(time_series_detrend, 
+                                                       lowcut_period=self.local_estimator_params['TUNING']['LOWCUT_PERIOD'], 
+                                                       highcut_period=self.local_estimator_params['TUNING']['HIGHCUT_PERIOD'], 
+                                                       fs=fps, 
+                                                       axis=1)
+        else:
+            self._time_series = time_series_detrend                
+
         if self.debug_sample:
             self.metrics['detrend_time_series'] = time_series_detrend[0,:]
             self.metrics['filtered_time_series'] = self._time_series[0,:]
@@ -310,7 +316,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         wavelength, wave_length_zeros = self.compute_wavelength()
         
         # Extract delta_x of the wave within time_lag from sinogram projected at max var angle (peaks)
-        distance = self.compute_distance(wave_length_zeros)
+        distance = self.compute_distance(wavelength, wave_length_zeros)
         
         return wavelength, distance
     
@@ -334,53 +340,65 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         return wave_length, wave_length_zeros
 
     
-    def compute_distance(self, zeros: float) -> np.ndarray:
+    def compute_distance(self, wavelength: float, zeros: float) -> np.ndarray:
         """ Propagated distance computation (in meter)
 
-        :param zeros: 0-crossing positions
-        :returns: propagation distance of the wave
+        :param wavelength: wavelength estimated in the projected sinogram 
+        :param zeros: zeros-crossing positions
+        :returns: propagation distances of the wave
         """
         sinogram = self.sinogram_maxvar.values
-        x_axis = np.arange(0, len(sinogram)) - len(sinogram) // 2
+        x_axis = np.arange(0, len(sinogram))-(len(sinogram) // 2)
+        period = int(wavelength / self.spatial_resolution)
+        max_sinogram = np.max(sinogram[(x_axis >= zeros[0]) & (x_axis < zeros[-1])])
         
-        # Find sinogram max peak within the 1st and last 0-crossing
-        i_max_sinogram = np.argmax(sinogram[(x_axis >= zeros[0]) & (x_axis < zeros[-1])])
+        # Find peaks
+        tuning_parameters = self.local_estimator_params['TUNING']
+        peaks, _ = find_peaks(sinogram[(x_axis >= zeros[0]) & (x_axis < zeros[-1])], 
+                              height=tuning_parameters['PEAK_DETECTION_HEIGHT_RATIO']*max_sinogram,
+                              distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']*period)
         
         # Compute initial distance
-        dx_in = x_axis[(x_axis >= zeros[0]) & (x_axis < zeros[-1])][i_max_sinogram]
+        dx_in_list = x_axis[(x_axis >= zeros[0]) & (x_axis < zeros[-1])][peaks]
+        distances = []
         
-        # Find 0-crossing surrounding the peak
-        z1 = zeros[zeros>dx_in][0]
-        z2 = zeros[zeros<=dx_in][-1]
-        
-        # Refine distance
-        ref = [z1,z2][np.argmin(np.abs([z1,z2]))]
-        offset = np.sign(dx_in-ref)*(np.abs(z2-z1)/2)
-        dx = ref + offset
-        
-        # Distance of the wave propagation
-        distance = dx * self.spatial_resolution
+        for dx_in in dx_in_list:
+            # Find 0-crossing surrounding the peak
+            z1 = zeros[zeros>dx_in][0]
+            z2 = zeros[zeros<=dx_in][-1]
 
-        if self.debug_sample:
-            self.metrics['max_indices'] = i_max_sinogram
-            self.metrics['wave_distance'] = distance
+            # Refine distance
+            ref = [z1,z2][np.argmin(np.abs([z1,z2]))]
+            offset = np.sign(dx_in-ref)*(np.abs(z2-z1)/2)
+            dx = ref + offset
+            distances.append(dx)
+            
+        # Distance of the wave propagation
+        distances = np.array(distances) * self.spatial_resolution
         
-        return distance
+        if self.debug_sample:
+            self.metrics['max_indices'] = peaks
+            self.metrics['wave_distance'] = distances
+        
+        return distances
 
     
-    def save_wave_field_estimation(self, estimated_direction: float, wavelength: float, distance: float) -> None:
-        """ Saves the wave_field_estimation
+    def save_wave_field_estimation(self, estimated_direction: float, wavelength: float, distances: list) -> None:
+        """ Saves the wavefield estimations
 
         :param estimated_direction: the waves estimated propagation direction
         :param wavelength: the wave length of the waves
-        :param distance: the distance propagated over time by the waves
+        :param distances: the wave distances extracted from the projected sinogram
         """
-        bathymetry_estimation = cast(TemporalCorrelationBathyEstimation, 
-                                     self.create_bathymetry_estimation(estimated_direction, wavelength)
-                                    )
-        bathymetry_estimation.delta_position = distance
+
+        for distance in distances:
+            bathymetry_estimation = cast(TemporalCorrelationBathyEstimation, 
+                                         self.create_bathymetry_estimation(estimated_direction, wavelength)
+                                        )
+            bathymetry_estimation.delta_position = distance
             
-        self.bathymetry_estimations.append(bathymetry_estimation)
+            self.bathymetry_estimations.append(bathymetry_estimation)
+        self.bathymetry_estimations.sort_on_attribute('linearity', reverse=False)
         
         if self.debug_sample:
             self.metrics['bathymetry_estimation'] = self.bathymetry_estimations

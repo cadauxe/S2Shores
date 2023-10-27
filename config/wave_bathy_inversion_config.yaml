@@ -9,13 +9,13 @@ GLOBAL_ESTIMATOR:
   
   # product characteristics
   OUTPUT_FORMAT: "GRID" # format of the output, among GRID and POINT
-  DXP: 20.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
-  DYP: 20.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
+  DXP: 50.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
+  DYP: 50.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
   NKEEP: 1 # number of main waves directions to keep in the product
   
   # window parameters
-  WINDOW: 200 # thumbnail size - meters - ex. PHR : 400
+  WINDOW: 200.0 # thumbnail size - meters - ex. PHR : 400
   SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image. 
                 # Kernel size = 2*SM_LENGTH+1. Deactivation of the desmoothing filter with SM_LENGTH = 0.
 
@@ -46,12 +46,16 @@ TEMPORAL_CORRELATION:
   TEMPORAL_LAG: 15  # number of intervals between frames to let wave propagation happen (example 3 for a 1Hz sequence)
   PERCENTAGE_POINTS: 5 # percentage of selected points in the window for the computation
   TUNING:
-    LOWCUT_PERIOD: 25 # seconds
-    HIGHCUT_PERIOD: 8 # seconds
-    SIGMA_CORRELATION_MASK: 2 # sigma value of the gaussian filter
+    PEAK_DETECTION_HEIGHT_RATIO: 0.3
+    PEAK_DETECTION_DISTANCE_RATIO: 0.5
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
-    MEDIAN_FILTER_KERNEL: 5 # kernel size used in the median filter applied to the projected sinogram
-
+    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
+    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
+    LOWCUT_PERIOD: 25 #seconds, set to 0 to disable filter
+    HIGHCUT_PERIOD: 8 #seconds, set to 0 to disable filter
+    SIGMA_CORRELATION_MASK: 2 # sigma value of the gaussian mask
+    MEDIAN_FILTER_KERNEL: 5 # kernel size used in the median filter applied to the projected 
+    
 #spatial_correlation
 SPATIAL_CORRELATION:
   CORRELATION_MODE: 'full' # np.correlate mode

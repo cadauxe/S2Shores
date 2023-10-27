@@ -187,49 +187,6 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                           )
         plt.colorbar(pmc, cax=axins)
 
-    # Not used anymore
-    def show_correlation_matrix_filled(self) -> None:
-        """ Show correlation matrix where no value is filled with mean of correlation for a debug point
-        """
-        
-        # Import correlation
-        correlation = self.metrics['correlation']
-        imin = np.min(correlation)
-        imax = np.max(correlation)
-        
-        # Retrieve correlation spatial shape in meters
-        spatial_res = self.metrics['spatial_resolution']
-        wind_shape = self.ortho_sequence[0].pixels.shape
-        x_spatial_limits = np.array([-(wind_shape[1]), wind_shape[1] ])*spatial_res
-        y_spatial_limits = np.array([-(wind_shape[0]), wind_shape[0] ])*spatial_res  
-
-        # Plot
-        subfigure = self._figure.add_subplot(self._gs[1, 1])
-        pmc = subfigure.imshow(correlation, 
-                               norm=Normalize(vmin=imin, vmax=imax), 
-                               extent=[x_spatial_limits[0], x_spatial_limits[1], y_spatial_limits[0], y_spatial_limits[1]]
-                              )
-        plt.title('Filled correlation')
-        plt.xlabel('dX')
-        plt.ylabel('dY')
-        #create an axis for the colorbar
-        axins = inset_axes(subfigure, 
-                           width="5%", 
-                           height="100%",
-                           loc="lower left",
-                           bbox_to_anchor=(1.05, 0., 1, 1),
-                           bbox_transform=subfigure.transAxes,
-                           borderpad=0
-                          )
-        plt.colorbar(pmc, cax=axins)
-        
-        # Draw an arrow in the wave direction
-        radius = min(x_spatial_limits[1], y_spatial_limits[1]) / 2
-        if 'direction' in self.metrics:
-            cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
-            cartesian_dir_y = np.sin(np.deg2rad(self.metrics['direction']))
-            subfigure.arrow(0, 0, radius * cartesian_dir_x, radius * cartesian_dir_y)
-
 
     def show_correlation_matrix_filled_filtered(self) -> None:
         """ Show correlation matrix with filled values filtered before the radon transform for a debug point
@@ -334,7 +291,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         subfigure.plot(zeros, np.zeros((len(zeros))), 'ro')
         subfigure.plot(x_spatial_axis[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices], 
                        sinogram_max_var[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices], 'go')
-        subfigure.plot(dx, 0, 'ko')
+        subfigure.plot(dx, np.zeros(len(dx)), 'ko')
         plt.title(r'Projected sinogram at $\theta$'+'= {:.1f} °'.format(self.metrics['direction']))
         plt.xlabel(r'$\rho$ (m)')
         plt.ylabel('Corr')
@@ -362,6 +319,11 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
     def show_depth_esti_values(self) -> None:
         """ Show physical values for a debug point
         """
+        bathymetry_estimation = self.metrics['bathymetry_estimation']
+        
+        celerities_txt = str(["{:.2f}".format(elem) for elem in bathymetry_estimation.get_attribute('celerity')])
+        periods_txt = str(["{:.2f}".format(elem) for elem in bathymetry_estimation.get_attribute('period')])
+        depth_txt = str(["{:.2f}".format(elem) for elem in bathymetry_estimation.get_attribute('depth')])
         
         subfigure = self._figure.add_subplot(self._gs[4, 1])
         subfigure.axis('off')
@@ -371,12 +333,12 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                'Estimated wave:\n' +
                                r'$\theta$ = {:.1f}° from East'.format(self.metrics['direction']) + '\n'+
                                'L = {:.2f} m \n'.format(self.bathymetry_estimations[0].wavelength) +
-                               'T = {:.2f} s \n'.format(self.bathymetry_estimations[0].period)+
-                               'c = {:.2f} m/s \n'.format(self.bathymetry_estimations[0].celerity) +
-                               'H = {:.2f} m'.format(self.bathymetry_estimations[0].depth),
+                               'T = {:s} s \n'.format(periods_txt)+
+                               'c = {:s} m/s \n'.format(celerities_txt) +
+                               'H = {:s} m'.format(depth_txt),
                                xy=(0, 0), 
                                #xytext=(-0.25,0.25), 
-                               xytext=(0,0.15), 
+                               xytext=(0,0.05), 
                                color='r', 
                                fontweight='bold', 
                                bbox=dict(boxstyle='round', facecolor='white', edgecolor='red')
@@ -433,25 +395,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                '    c (m/s): {:s} \n'.format(celerities_txt) +
                '    gamma: {:s} \n'.format(linerities_txt) +
                '    status: {:d}'.format(self.metrics['status'])+ 
-               ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI) \n \n'
+               ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI) \n'+
+               'End of debug \n'
               ]
-        
-        if self.bathymetry_estimations:
-            txt = [txt[0] +
-                   '  Bathymetry estimation info:\n'+
-                   '    gravity (m.s-2): {:.2f} \n'.format(self.bathymetry_estimations.get_attribute('gravity')) +
-                   '    wave direction: {:.1f}° (direction from North) \n'.format(self.bathymetry_estimations[0].direction_from_north)+ 
-                   '    estimated wavelength (m): {:.2f} \n'.format(self.bathymetry_estimations[0].wavelength)+
-                   '    wavenumber k (m-1): {:.6f} \n'.format(self.bathymetry_estimations[0].wavenumber) +
-                   '    estimated celerity (m/s): {:.2f} \n'.format(self.bathymetry_estimations[0].celerity)+
-                   '    estimated period (s): {:.2f}\n'.format(self.bathymetry_estimations[0].period)+
-                   '    offshore wavelength (m): {:.2f} \n'.format(self.bathymetry_estimations[0].wavelength_offshore) +
-                   '    stroboscopic factor: {:.2f} \n'.format(self.bathymetry_estimations[0].stroboscopic_factor)+
-                   '    estimated depth (m): {:.2f} \n'.format(self.bathymetry_estimations[0].depth)
-                  ]
 
-        txt = [txt[0] + 'End of debug \n']
-        
         self._debug_log = txt[0]
         
         # Print the log
