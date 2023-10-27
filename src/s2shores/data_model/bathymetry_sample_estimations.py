@@ -38,13 +38,12 @@ class BathymetrySampleEstimations(list):
     """
 
     def __init__(self, location: Point, gravity: float, delta_time: float,
-                 distance_to_shore: float, max_offshore_distance:float , inside_roi: bool) -> None:
+                 distance_to_shore: float, inside_roi: bool) -> None:
         super().__init__()
 
         self._location = location
         self._gravity = gravity
         self._distance_to_shore = distance_to_shore
-        self._max_offshore_distance = max_offshore_distance
         self._inside_roi = inside_roi
         self._delta_time = delta_time
 
@@ -144,11 +143,6 @@ class BathymetrySampleEstimations(list):
     def distance_to_shore(self) -> float:
         """ :returns: The distance from this estimation location to the nearest shore (km)"""
         return self._distance_to_shore
-
-    @property
-    def max_offshore_distance(self) -> float:
-        """ :returns: Maximum allowed offshore distance from this estimation location (km)"""
-        return self._max_offshore_distance
 
     @property
     def inside_roi(self) -> bool:

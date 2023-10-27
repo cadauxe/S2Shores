@@ -15,7 +15,8 @@ GLOBAL_ESTIMATOR:
   DYP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
   NKEEP: 3 # number of main waves directions to keep in the product
-  
+  OFFSHORE_LIMIT: 10 # maximum offshore distance in kilometers from the coast
+
   # window parameters
   WINDOW: 800.0 # thumbnail size - meters - ex. PHR : 400
   SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image. 
@@ -27,8 +28,7 @@ GLOBAL_ESTIMATOR:
   MAX_T: 25 # maximal wave period - seconds
   MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
   MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
-  MAX_OFFSHORE_LIMIT: 10 # maximum offshore distance in kilometers from the coast
-
+  
   # depth inversion
   DEPTH_EST_METHOD: "LINEAR" # among LINEAR
   
