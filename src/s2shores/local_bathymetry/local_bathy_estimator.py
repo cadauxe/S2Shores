@@ -94,7 +94,7 @@ class LocalBathyEstimator(ABC):
                   available for that point, False otherwise.
         """
         return (self.bathymetry_estimations.distance_to_shore > 0 and
-                self.bathymetry_estimations.distance_to_shore < self._max_offshore_limit and 
+                self.bathymetry_estimations.distance_to_shore <= self._max_offshore_limit and 
                 self.bathymetry_estimations.inside_roi and
                 self.bathymetry_estimations.delta_time_available)
 
