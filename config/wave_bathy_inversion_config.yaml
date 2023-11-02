@@ -15,7 +15,7 @@ GLOBAL_ESTIMATOR:
   DYP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
   NKEEP: 3 # number of main waves directions to keep in the product
-  OFFSHORE_LIMIT: 10 # maximum offshore distance in kilometers from the coast
+  OFFSHORE_LIMIT: 200 # maximum offshore distance in kilometers from the coast
 
   # window parameters
   WINDOW: 800.0 # thumbnail size - meters - ex. PHR : 400
