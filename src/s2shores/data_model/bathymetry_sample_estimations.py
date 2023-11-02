@@ -28,6 +28,8 @@ class SampleStatus(IntEnum):
     NO_DATA = 3
     NO_DELTA_TIME = 4
     OUTSIDE_ROI = 5
+    BEYOND_OFFSHORE_LIMIT = 6
+
 
 
 class BathymetrySampleEstimations(list):
@@ -36,13 +38,14 @@ class BathymetrySampleEstimations(list):
     """
 
     def __init__(self, location: Point, gravity: float, delta_time: float,
-                 distance_to_shore: float, inside_roi: bool) -> None:
+                 distance_to_shore: float, inside_roi: bool, inside_offshore_limit: bool) -> None:
         super().__init__()
 
         self._location = location
         self._gravity = gravity
         self._distance_to_shore = distance_to_shore
         self._inside_roi = inside_roi
+        self._inside_offshore_limit = inside_offshore_limit	
         self._delta_time = delta_time
 
         self._data_available = True
@@ -148,6 +151,11 @@ class BathymetrySampleEstimations(list):
         return self._inside_roi
 
     @property
+    def inside_offshore_limit(self) -> bool:
+        """ :returns: True if the distance to shore is inferior or equal to the offshore limit, False otherwise"""
+        return self._inside_offshore_limit
+
+    @property
     def gravity(self) -> float:
         """ :returns: the acceleration of the gravity at this estimation location (m/s2)
         """
@@ -183,6 +191,8 @@ class BathymetrySampleEstimations(list):
         status = SampleStatus.SUCCESS
         if self.distance_to_shore <= 0.:
             status = SampleStatus.ON_GROUND
+        elif not self.inside_offshore_limit:
+            status = SampleStatus.BEYOND_OFFSHORE_LIMIT  
         elif not self.inside_roi:
             status = SampleStatus.OUTSIDE_ROI
         elif not self.data_available:
@@ -200,7 +210,7 @@ class BathymetrySampleEstimations(list):
         result += f' (data: {self.data_available}, delta time: {self.delta_time_available})\n'
         result += f'  STATUS: {self.status}'
         result += f' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME,'
-        result += f' 5: OUTSIDE_ROI)\n'
+        result += f' 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT)\n'
         result += f'{len(self)} estimations available:\n'
         for index, estimation in enumerate(self):
             result += f'---- estimation {index} ---- type: {type(estimation).__name__}\n'
