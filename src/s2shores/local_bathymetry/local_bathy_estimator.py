@@ -72,7 +72,7 @@ class LocalBathyEstimator(ABC):
         distance = self.global_estimator.get_distoshore(self.location)
         gravity = self.global_estimator.get_gravity(self.location, 0.)
         inside_roi = self.global_estimator.is_inside_roi(self.location)
-        inside_offshore_limit = True if distance <= self.global_estimator.max_offshore_distance else False
+        inside_offshore_limit = True if (distance <= self.global_estimator.max_offshore_distance or distance == np.Infinity) else False
 
         self._bathymetry_estimations = BathymetrySampleEstimations(self._location, gravity,
                                                                    np.nan,
