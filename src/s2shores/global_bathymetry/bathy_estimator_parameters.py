@@ -154,6 +154,13 @@ class BathyEstimatorParameters:
         return self._global_estimator_params['DEPTH_EST_METHOD']
 
     @property
+    def max_offshore_distance(self) -> int:
+        """ :returns: Maximum allowed offshore distance from this estimation location (km)
+        """
+        return self._global_estimator_params['OFFSHORE_LIMIT']
+        
+
+    @property
     def local_estimator_params(self) -> dict:
         """ :returns: the set of parameters specific to the currently defined local estimator
         """

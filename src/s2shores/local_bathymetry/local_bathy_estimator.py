@@ -65,17 +65,18 @@ class LocalBathyEstimator(ABC):
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.local_estimator_params
-
+    
         self.selected_directions = selected_directions
 
         # FIXME: distance to shore test should take into account windows sizes
         distance = self.global_estimator.get_distoshore(self.location)
         gravity = self.global_estimator.get_gravity(self.location, 0.)
         inside_roi = self.global_estimator.is_inside_roi(self.location)
+        inside_offshore_limit = True if distance <= self.global_estimator.max_offshore_distance else False
 
         self._bathymetry_estimations = BathymetrySampleEstimations(self._location, gravity,
                                                                    np.nan,
-                                                                   distance, inside_roi)
+                                                                   distance, inside_roi, inside_offshore_limit)
         try:
             propagation_duration = self.ortho_sequence.get_time_difference(self._location,
                                                                            self.start_frame_id,
@@ -93,6 +94,7 @@ class LocalBathyEstimator(ABC):
                   available for that point, False otherwise.
         """
         return (self.bathymetry_estimations.distance_to_shore > 0 and
+                self.bathymetry_estimations.inside_offshore_limit and 
                 self.bathymetry_estimations.inside_roi and
                 self.bathymetry_estimations.delta_time_available)
 
