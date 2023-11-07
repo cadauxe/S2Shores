@@ -147,7 +147,7 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         infos['ChainVersions'] = self.chains_versions
         infos['Resolution X'] = str(self.sampling_step_x)
         infos['Resolution Y'] = str(self.sampling_step_y)
-
+        infos['OffshoreLimit_kms'] = str(self.max_offshore_distance)
         return infos
 
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++
