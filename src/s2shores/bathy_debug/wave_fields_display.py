@@ -747,14 +747,14 @@ def display_dft_sinograms_spectral_analysis(
 
     build_sinogram_spectral_display(
         axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False, cmap="cmc.cork")
+        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False, cmap="cmc.vik")
     build_correl_spectrum_matrix(
         axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'phase',
         'Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
-        ordonate=False, abscissa=False, cmap="cmc.cork")
+        ordonate=False, abscissa=False, cmap="cmc.vik")
     plt.tight_layout()
     point_id = f'{np.int(local_estimator.location.x)}_{np.int(local_estimator.location.y)}'
 
@@ -1258,7 +1258,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     plotval = np.concatenate((plotval, plotval[:, 0].reshape(plotval.shape[0], 1)), axis=1)
 
     a, r = np.meshgrid(np.deg2rad(directions), wavenumbers)
-    tcf = ax_polar.tricontourf(a.flatten(), r.flatten(), plotval.flatten(), 500, cmap="cmc.batlow_r")
+    tcf = ax_polar.tricontourf(a.flatten(), r.flatten(), plotval.flatten(), 500, cmap="gist_ncar_r")
     plt.colorbar(tcf, ax=ax_polar)
 
     ax_polar.set_title(title, fontsize=9, loc='center')
@@ -1312,7 +1312,6 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, WAVELENGTH]]=', arrow_max)
     polar = csm_amplitude * csm_phase
-    polar *= -np.sign(delta_time)
 
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
