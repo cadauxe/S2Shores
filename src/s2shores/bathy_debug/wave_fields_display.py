@@ -1282,7 +1282,6 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, WAVELENGTH]]=', arrow_max)
     polar = csm_amplitude * csm_phase
-    polar *= -np.sign(delta_time)
 
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
