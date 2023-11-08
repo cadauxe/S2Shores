@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as scp
 import scipy.ndimage.filters as filters
+import matplotlib.ticker as mticker
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
@@ -599,7 +600,9 @@ def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
 
     cbar = plt.colorbar(im, cax=cbaxes, ticks=[np.nanmin(values), np.nanmax(values)], orientation='horizontal')
     cbar.ax.tick_params(labelsize=5)
-    cbar.ax.xaxis.get_offset_text().set_fontsize(5)
+    f = mticker.ScalarFormatter(useOffset=False, useMathText=True)
+    cbar.ax.xaxis.set_major_formatter(f)
+    cbar.ax.xaxis.get_offset_text().set_fontsize(4)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
     # Put a nicer background color on the legend.
@@ -637,7 +640,9 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
    
     cbar = plt.colorbar(im, cax=cbaxes, ticks=[np.nanmin(values), np.nanmax(values)], orientation='horizontal')
     cbar.ax.tick_params(labelsize=5)
-    cbar.ax.xaxis.get_offset_text().set_fontsize(5)
+    f = mticker.ScalarFormatter(useOffset=False, useMathText=True)
+    cbar.ax.xaxis.set_major_formatter(f)
+    cbar.ax.xaxis.get_offset_text().set_fontsize(4)
 
     if type == 'amplitude':
         axes.plot(directions, ((np.var(values, axis=0) / np.max(np.var(values, axis=0))) * kfft.max()),
