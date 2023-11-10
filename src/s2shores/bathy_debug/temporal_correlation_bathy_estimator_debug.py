@@ -443,7 +443,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                '    c (m/s): {:s} \n'.format(celerities_txt) +
                '    gamma: {:s} \n'.format(linerities_txt) +
                '    status: {:d}'.format(self.metrics['status'])+ 
-               ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI) \n \n'
+               ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT) \n \n'
               ]
         
         if self.bathymetry_estimations:
