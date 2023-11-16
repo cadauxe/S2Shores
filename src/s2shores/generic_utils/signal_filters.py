@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 26 aout 2021
 """
-from scipy.signal import medfilt, detrend, butter, filtfilt
+from scipy.signal import medfilt, detrend, butter, lfilter
 
 import numpy as np
 
@@ -69,7 +69,7 @@ def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_peri
     :returns: filtered array
     """
     b, a = butter_bandpass(lowcut_period, highcut_period, fs)
-    filtered_array = filtfilt(b, a, array, axis=axis)
+    filtered_array = lfilter(b, a, array, axis=axis)
     return filtered_array
 
 def butter_bandpass(lowcut_period: float, highcut_period: float, fs: float, order: int=5)-> list:
