@@ -205,7 +205,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         # Create frame stack
         merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
-        merge_array[np.isnan(merge_array)] = 0 # Set nan to 0
+        #merge_array[np.isnan(merge_array)] = 0 # Set nan to 0
         
         # Select pixel positions randomly
         shape_y, shape_x = self.ortho_sequence.shape
@@ -220,8 +220,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                                     np.reshape(sampling_positions_y, (1, -1)))
 
         # Extract and detrend Time-series
-        time_series_detrend = detrend_signal(time_series[random_indexes, :], axis=1)
-        
+        try:
+            time_series_detrend = detrend_signal(time_series[random_indexes, :], axis=1)
+        except ValueError as excp:
+            raise SequenceImagesError('Time-series can not be computed because of the presrence of nans') from excp
+            
         # BP filtering, bypassed if low or high cutoff is set to 0
         if self.local_estimator_params['TUNING']['LOWCUT_PERIOD']!=0 and self.local_estimator_params['TUNING']['HIGHCUT_PERIOD']!=0:
             fps = 1/self.sampling_period
