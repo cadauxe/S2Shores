@@ -1,0 +1,17 @@
+# -----------------------------------------------
+# Configuration of code editing tools
+# -----------------------------------------------
+
+# ---------- Automated imports sorting ----------
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = True
+force_grid_wrap = 0
+use_parentheses = True
+line_length = 100
+src_paths = ["src", "tests", "docs"]
+
+# ---------- Automated pep8 formatting ----------
+[tool.autopep8]
+max_line_length = 100
+aggressive = 3
