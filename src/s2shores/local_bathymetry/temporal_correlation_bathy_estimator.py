@@ -82,6 +82,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     @property
     def stop_frame_id(self) -> FrameIdType:
         return cast(int, self.start_frame_id) + self.nb_lags
+    
+    @property
+    def sequence_length(self) -> int:
+        return len(self.global_estimator.selected_frames)
 
     @property
     def nb_lags(self) -> int:
@@ -170,14 +174,16 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 np.square((self.sampling_positions[1] - self.sampling_positions[1].T)))
         return self._distances
     
-    
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
         
+        # Skip estiamtion if window center is out of borders
+        self.center_pt_is_out()
+        
         # Normalise each frame
         self.preprocess_images()
-        
+
         # Select random pixel position within the frame stack and extract Time-series 
         self.create_sequence_time_series()
 
@@ -189,11 +195,25 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         
         # Extract wavelength and delta_x
         wavelength, distances = self.compute_wavefield()
-
+        
         # Save the estimation
         self.save_wave_field_estimation(direction_propagation, wavelength, distances)
             
-
+            
+    def center_pt_is_out(self) -> None:
+        """Raise an error if the central window point is out of borders, namely if the central
+        time-series is NaN or 0-mean.
+        
+        :raise SequenceImagesError: Central point is out of border, the estimation must be rejected
+        """
+        merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
+        shape_y, shape_x = self.ortho_sequence.shape
+        TS_mean = np.mean(merge_array[shape_y//2, shape_x//2, :])
+        
+        if not(np.isfinite(TS_mean)) or TS_mean==0:
+            raise SequenceImagesError('Window center pixel is out of border or has a 0 mean.')
+            
+            
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
         To do this random points are selected within the sequence of image and a temporal series
