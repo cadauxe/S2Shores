@@ -239,11 +239,14 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self._sampling_positions = (np.reshape(sampling_positions_x, (1, -1)),
                                     np.reshape(sampling_positions_y, (1, -1)))
 
-        # Extract and detrend Time-series
-        try:
-            time_series_detrend = detrend_signal(time_series[random_indexes, :], axis=1)
-        except ValueError as excp:
-            raise SequenceImagesError('Time-series can not be computed because of the presrence of nans') from excp
+        # Extract and detrend Time-series        
+        if self.sequence_length>=10:
+            try:
+                time_series_detrend = detrend_signal(time_series[random_indexes,:], axis=1)
+            except ValueError as excp:
+                raise SequenceImagesError('Time-series can not be computed because of the presence of nans') from excp
+        else:
+            time_series_detrend = time_series[random_indexes,:]
             
         # BP filtering, bypassed if low or high cutoff is set to 0
         if self.local_estimator_params['TUNING']['LOWCUT_PERIOD']!=0 and self.local_estimator_params['TUNING']['HIGHCUT_PERIOD']!=0:
