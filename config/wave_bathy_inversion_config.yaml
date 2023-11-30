@@ -12,8 +12,9 @@ GLOBAL_ESTIMATOR:
   DXP: 50.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
   DYP: 50.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
-  NKEEP: 1 # number of main waves directions to keep in the product
-  
+  NKEEP: 3 # number of main waves directions to keep in the product
+  OFFSHORE_LIMIT: 100 # maximum offshore distance in kilometers from the coast
+
   # window parameters
   WINDOW: 200.0 # thumbnail size - meters - ex. PHR : 400
   SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image. 
