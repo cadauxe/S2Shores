@@ -115,8 +115,9 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         dataset.spatial_ref.attrs['spatial_ref'] = self._ortho_stack.build_spatial_ref()
 
         # necessary to have a correct georeferencing
-	dataset.x.attrs['standard_name'] = "projection_x_coordinate"
-        dataset.y.attrs['standard_name'] = "projection_y_coordinate"
+        if 'x' in dataset.coords : # only if output_format is GRID
+            dataset.x.attrs['standard_name'] = "projection_x_coordinate"
+            dataset.y.attrs['standard_name'] = "projection_y_coordinate"
 
         infos = self.build_infos()
         infos.update(self._ortho_stack.build_infos())
