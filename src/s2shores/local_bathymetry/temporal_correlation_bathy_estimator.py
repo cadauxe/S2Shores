@@ -82,10 +82,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     @property
     def stop_frame_id(self) -> FrameIdType:
         return cast(int, self.start_frame_id) + self.nb_lags
-    
-    @property
-    def sequence_length(self) -> int:
-        return len(self.global_estimator.selected_frames)
 
     @property
     def nb_lags(self) -> int:
@@ -225,7 +221,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         # Create frame stack
         merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
-        #merge_array[np.isnan(merge_array)] = 0 # Set nan to 0
         
         # Select pixel positions randomly
         shape_y, shape_x = self.ortho_sequence.shape
@@ -240,27 +235,31 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                                     np.reshape(sampling_positions_y, (1, -1)))
 
         # Extract and detrend Time-series        
-        if self.sequence_length>=10:
+        if self.local_estimator_params['TUNING']['DETREND_TIME_SERIES']==1:
             try:
-                time_series_detrend = detrend_signal(time_series[random_indexes,:], axis=1)
+                time_series_selec = detrend_signal(time_series[random_indexes,:], axis=1)
             except ValueError as excp:
                 raise SequenceImagesError('Time-series can not be computed because of the presence of nans') from excp
+        elif self.local_estimator_params['TUNING']['DETREND_TIME_SERIES']==0:
+            time_series_selec = time_series[random_indexes,:]
         else:
-            time_series_detrend = time_series[random_indexes,:]
+            raise ValueError('DETREND_TIME_SERIES parameter must be 0 or 1.')
             
-        # BP filtering, bypassed if low or high cutoff is set to 0
-        if self.local_estimator_params['TUNING']['LOWCUT_PERIOD']!=0 and self.local_estimator_params['TUNING']['HIGHCUT_PERIOD']!=0:
+        # BP filtering
+        if self.local_estimator_params['TUNING']['FILTER_TIME_SERIES']==1:
             fps = 1/self.sampling_period
-            self._time_series = butter_bandpass_filter(time_series_detrend, 
+            self._time_series = butter_bandpass_filter(time_series_selec, 
                                                        lowcut_period=self.local_estimator_params['TUNING']['LOWCUT_PERIOD'], 
                                                        highcut_period=self.local_estimator_params['TUNING']['HIGHCUT_PERIOD'], 
                                                        fs=fps, 
                                                        axis=1)
+        elif self.local_estimator_params['TUNING']['DETREND_TIME_SERIES']==0:
+            self._time_series = time_series_selec                
         else:
-            self._time_series = time_series_detrend                
+            raise ValueError('FILTER_TIME_SERIES parameter must be 0 or 1.')
 
         if self.debug_sample:
-            self.metrics['detrend_time_series'] = time_series_detrend[0,:]
+            self.metrics['detrend_time_series'] = time_series_selec[0,:]
             self.metrics['filtered_time_series'] = self._time_series[0,:]
 
     
