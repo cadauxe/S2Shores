@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Definition of the EstimatedBathy class
 
-:author: THOUMYRE Grégoire
-:organization: CNES-LEGOS
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :created: 02/03/2023
 """
 from datetime import datetime

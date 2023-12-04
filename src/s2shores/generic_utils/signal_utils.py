@@ -5,7 +5,6 @@
 :organization: CNES, LEGOS, SHOM
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-:author: Romain Degoul
 """
 from functools import lru_cache
 from typing import Tuple  # @NoMove
