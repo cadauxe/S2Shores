@@ -36,6 +36,8 @@ class WavesSinogram:
         self.values = values
         self.size = values.size
 
+        # TODO: embed frequencies and DFT coefficients in a single object
+        # (for standard and interpolated DFTs)
         # Normalized frequencies available in the standard DFT when it exists
         nb_positive_coeffs_dft = int(np.ceil(self.size / 2))
         self._dft_frequencies = np.fft.fftfreq(self.size)[0:nb_positive_coeffs_dft]

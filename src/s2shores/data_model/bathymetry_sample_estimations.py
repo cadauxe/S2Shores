@@ -32,6 +32,7 @@ class BathymetrySampleEstimations(list):
     """ This class gathers information relevant to some location, whatever the bathymetry
     estimators, as well as a list of bathymetry estimations made at this location.
     """
+# TODO: add a keep_only() method to reduce the list to a maximum number of estimations.
 
     def __init__(self, location: Point, gravity: float, delta_time: float,
                  distance_to_shore: float, inside_roi: bool) -> None:
