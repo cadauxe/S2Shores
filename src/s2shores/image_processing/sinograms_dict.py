@@ -39,7 +39,8 @@ class SinogramsDict(QuantizedDirectionsDict):
             sinogram = QuantizedDirectionsDict.__getitem__(self, direction)
         except KeyError:
             # Check to see if the symmetric direction exists in the dictionary.
-            # If not, raise KeyError
+            # If it exists create the sinogram for the requested sinogram by symmetry
+            # If not, raise another KeyError
             opposite_sinogram = QuantizedDirectionsDict.__getitem__(self, direction + 180.)
             sinogram = opposite_sinogram.symmeterize()
             # insert created sinogram in self
