@@ -8,13 +8,12 @@
 :license: see LICENSE file
 :created: 7 mars 2021
 """
-from typing import Tuple, Callable, List, Any
+from typing import Any, Callable, List, Tuple
 
 import numpy as np
 
 from ..generic_utils.numpy_utils import circular_mask
 from ..image.image_geometry_types import ImageWindowType
-
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 

@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, Any, Tuple, cast
+from typing import Any, Optional, Tuple, cast
 
 import numpy as np
 

@@ -7,13 +7,12 @@
 :license: see LICENSE file
 :created: 11 sep 2021
 """
-from enum import IntEnum
-from typing import Union, List, Optional
 import warnings
-
-from shapely.geometry import Point
+from enum import IntEnum
+from typing import List, Optional, Union
 
 import numpy as np
+from shapely.geometry import Point
 
 from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimation import BathymetrySampleEstimation

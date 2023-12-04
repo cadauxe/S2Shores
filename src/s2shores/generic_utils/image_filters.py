@@ -9,9 +9,8 @@
 """
 from functools import lru_cache
 
-from scipy.signal import convolve2d
-
 import numpy as np
+from scipy.signal import convolve2d
 
 from .numpy_utils import circular_mask
 

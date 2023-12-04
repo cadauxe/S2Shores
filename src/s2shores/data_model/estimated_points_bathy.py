@@ -11,9 +11,8 @@ from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
 import numpy as np  # @NoMove
 from xarray import DataArray  # @NoMove
 
-from ..data_model.estimated_bathy import EstimatedBathy, \
-                                         DEBUG_LAYER, EXPERT_LAYER, NOMINAL_LAYER, \
-                                         METERS_UNIT, SPATIAL_REF
+from ..data_model.estimated_bathy import (DEBUG_LAYER, EXPERT_LAYER, METERS_UNIT, NOMINAL_LAYER,
+                                          SPATIAL_REF, EstimatedBathy)
 from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
@@ -247,25 +246,25 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                                'grid_mapping': SPATIAL_REF,
                                'coordinates': SPATIAL_REF}},
     'x': {'layer_type': NOMINAL_LAYER,
-                     'layer_name': 'X',
-                     'dimensions': DIMS_INDEX_TIME,
-                     'data_type': np.float32,
-                     'fill_value': np.nan,
-                     'precision': 3,
-                     'attrs': {'Dimension': 'UTM',
-                               'long_name': 'x_coordinates',
-                               'grid_mapping': SPATIAL_REF,
-                               'coordinates': SPATIAL_REF}},
+          'layer_name': 'X',
+          'dimensions': DIMS_INDEX_TIME,
+          'data_type': np.float32,
+          'fill_value': np.nan,
+          'precision': 3,
+          'attrs': {'Dimension': 'UTM',
+                    'long_name': 'x_coordinates',
+                    'grid_mapping': SPATIAL_REF,
+                    'coordinates': SPATIAL_REF}},
     'y': {'layer_type': NOMINAL_LAYER,
-                     'layer_name': 'Y',
-                     'dimensions': DIMS_INDEX_TIME,
-                     'data_type': np.float32,
-                     'fill_value': np.nan,
-                     'precision': 3,
-                     'attrs': {'Dimension': 'UTM',
-                               'long_name': 'y_coordinates',
-                               'grid_mapping': SPATIAL_REF,
-                               'coordinates': SPATIAL_REF}},
+          'layer_name': 'Y',
+          'dimensions': DIMS_INDEX_TIME,
+          'data_type': np.float32,
+          'fill_value': np.nan,
+          'precision': 3,
+          'attrs': {'Dimension': 'UTM',
+                    'long_name': 'y_coordinates',
+                    'grid_mapping': SPATIAL_REF,
+                    'coordinates': SPATIAL_REF}},
 }
 
 
@@ -285,10 +284,9 @@ class EstimatedPointsBathy(EstimatedBathy):
         # data is stored as a 1D array of python objects, here a dictionary containing bathy fields.
         self.estimated_bathy = np.empty((nb_samples), dtype=np.object_)
 
-    def store_estimations(self, index: int,  bathy_estimations: BathymetrySampleEstimations) -> None:
+    def store_estimations(self, index: int, bathy_estimations: BathymetrySampleEstimations) -> None:
         """ Store a set of bathymetry estimations at some location """
         self.estimated_bathy[index] = bathy_estimations
-        
 
     def _build_data_array(self, sample_property: str,
                           layer_definition: Dict[str, Any], nb_keep: int) -> DataArray:
@@ -316,11 +314,11 @@ class EstimatedPointsBathy(EstimatedBathy):
 
         not_found = 0
         for index in range(nb_samples):
-                try:
-                    self._fill_array(sample_property, layer_data, [index])
-                except WavesEstimationAttributeError:
-                    not_found += 1
-                    continue
+            try:
+                self._fill_array(sample_property, layer_data, [index])
+            except WavesEstimationAttributeError:
+                not_found += 1
+                continue
         if not_found == nb_samples:
             raise WavesEstimationAttributeError(f'no values defined for: {sample_property}')
 
@@ -337,9 +335,9 @@ class EstimatedPointsBathy(EstimatedBathy):
     def _fill_array(self, sample_property: str, layer_data: np.ndarray, index: List[int]) -> None:
         index = index[0]
         bathymetry_estimations = self.estimated_bathy[index]
-        if sample_property=='x':
+        if sample_property == 'x':
             layer_data[index] = np.array([bathymetry_estimations._location.x])
-        elif sample_property=='y':
+        elif sample_property == 'y':
             layer_data[index] = np.array([bathymetry_estimations._location.y])
         else:
             bathy_property = bathymetry_estimations.get_attribute(sample_property)

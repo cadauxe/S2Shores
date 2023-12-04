@@ -12,7 +12,6 @@ from typing import Union
 
 import numpy as np
 
-
 NdArrayOrFloat = Union[np.ndarray, float]
 SENSITIVITY_PRECISION = 0.0001
 

@@ -7,10 +7,10 @@
 :license: see LICENSE file
 :created: 05/05/2021
 """
-from typing import Tuple, List, Iterator  # @NoMove
+from typing import Iterator, List, Tuple  # @NoMove
 
 import numpy as np  # @NoMove
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Point, Polygon
 
 from ..generic_utils.numpy_utils import split_samples
 from ..waves_exceptions import WavesIndexingError

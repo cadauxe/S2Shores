@@ -7,8 +7,8 @@
 :license: see LICENSE file
 :created: 25/06/2021
 """
-from abc import abstractmethod, ABC
 import math
+from abc import ABC, abstractmethod
 
 from shapely.geometry import Point
 

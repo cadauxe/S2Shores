@@ -7,9 +7,9 @@
 :license: see LICENSE file
 :created: 23/06/2021
 """
-from typing import Tuple, Optional  # @NoMove
+from typing import Optional, Tuple  # @NoMove
 
-from osgeo import osr, gdal
+from osgeo import gdal, osr
 
 GDAL3_OR_GREATER = gdal.VersionInfo()[0] >= '3'
 SWAP_COORDS_EPSG = [4326]

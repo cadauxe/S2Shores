@@ -8,28 +8,26 @@
 :created: 18/06/2021
 """
 from copy import deepcopy
-from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
+from typing import TYPE_CHECKING, Optional, Tuple, cast  # @NoMove
 
+import numpy as np
 import pandas
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 
-import numpy as np
-
 from ..bathy_physics import wavelength_offshore
-from ..generic_utils.image_filters import detrend, clipping
+from ..generic_utils.image_filters import clipping, detrend
 from ..generic_utils.image_utils import cross_correlation
 from ..generic_utils.signal_filters import filter_mean, remove_median
 from ..generic_utils.signal_utils import find_period_from_zeros
-from ..image.ortho_sequence import OrthoSequence, FrameIdType
-from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image.ortho_sequence import FrameIdType, OrthoSequence
+from ..image_processing.waves_image import ImageProcessingFilters, WavesImage
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import SignalProcessingFilters
-from ..waves_exceptions import CorrelationComputationError, SequenceImagesError
-from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
+from ..waves_exceptions import (CorrelationComputationError, NotExploitableSinogram,
+                                SequenceImagesError, WavesEstimationError)
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
-
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -101,7 +99,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         nb_random_points = round(image_size * percentage_points / 100)
         random_indexes = np.random.randint(image_size, size=nb_random_points)
 
-        sampling_positions_x, sampling_positions_y = np.unravel_index(random_indexes, self.ortho_sequence.shape)
+        sampling_positions_x, sampling_positions_y = np.unravel_index(random_indexes,
+                                                                      self.ortho_sequence.shape)
         self._sampling_positions = (np.reshape(sampling_positions_x, (1, -1)),
                                     np.reshape(sampling_positions_y, (1, -1)))
 
@@ -110,41 +109,42 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def run(self) -> None:
         """ Run the local bathy estimator using correlation method
         """
-        
-        # Select random points on the frame stack 
+
+        # Select random points on the frame stack
         self.create_sequence_time_series()
-        
+
         # Pixel time-series Correlation + filter(detrend + clipping of corr_proj)
         filtered_image = self.correlation_image.apply_filters(self.correlation_image_filters)
         if self.debug_sample:
             self.metrics['correlation'] = deepcopy(self.correlation_image.pixels)
         self.correlation_image.pixels = filtered_image.pixels
-        
+
         # Radon transform
         radon_transform = WavesRadon(self.correlation_image, self.selected_directions)
         if self.debug_sample:
             self.metrics['radon_input'] = radon_transform.pixels
             self.metrics['radon_transform'] = radon_transform
-            
-        # Filter sinogram (remove_median, filter_mean), only used to compute propag direction 
+
+        # Filter sinogram (remove_median, filter_mean), only used to compute propag direction
         filtered_radon = radon_transform.apply_filters(self.radon_image_filters)
-        
+
         # Compute angle with max variance in filtered sinogram
         direction_propagation, variances = filtered_radon.get_direction_maximum_variance()
         if self.debug_sample:
             self.metrics['variances'] = variances
             self.metrics['direction'] = direction_propagation
-        
+
         # Extract projected sinogram at max var ang from non filtered radon
         sinogram_max_var = radon_transform[direction_propagation]
         sinogram_max_var_values = sinogram_max_var.values
         if self.debug_sample:
             self.metrics['sinogram_max_var'] = sinogram_max_var_values
-        
+
         # Extract wavelength from non filtered sinogram projected at max var angle (0-crossing)
         wavelength = self.compute_wavelength(sinogram_max_var_values)
-        
-        # Extract delta_x of the wave within time_lag from sinogram projected at max var angle (peaks)
+
+        # Extract delta_x of the wave within time_lag from sinogram projected at
+        # max var angle (peaks)
         distances = self.compute_distances(sinogram_max_var_values, wavelength)
 
         # Keep in mind that direction_estimations stores several estimations for a same
@@ -156,31 +156,30 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                                                            wavelength)
             estimation.delta_position = distance
             direction_estimations.append(estimation)
-            
+
         if self.debug_sample:
             self.metrics['propagation_duration'] = self.propagation_duration
             self.metrics['spatial_resolution'] = self.spatial_resolution
             self.metrics['direction_estimations'] = deepcopy(direction_estimations)
-            
-        ### AK: in fact the next steps are already done at the exit of local_bathy_estimator by the ortho_bathy_estimator
+
+        # AK: in fact the next steps are already done at the exit of local_bathy_estimator by the ortho_bathy_estimator
         # but 2nd sorting is disabled as no final_estimations_sorting class attribute is set here.
-        
+
         # Remove wave field estimations out of stroboscopic factor bounds and wave linearity bounds
         direction_estimations.remove_unphysical_wave_fields()
-        
+
         if self.debug_sample:
             self.metrics['status'] = direction_estimations.status
-            
+
         if not direction_estimations:
             raise WavesEstimationError('No correct wave field estimations have been found')
-            
+
         # Select wave field estimation presenting the minimum linearity (i.e min gamma)
         # (Is it a good criteria ? AK)
         direction_estimations.sort_on_attribute('linearity', reverse=False)
         best_estimation = direction_estimations[0]
-            
+
         self.bathymetry_estimations.append(best_estimation)
-        
 
     @property
     def sampling_positions(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -196,7 +195,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ :returns: A list of functions together with their parameters to be applied
         sequentially to all the images of the sequence before subsequent bathymetry estimation.
         """
-### TODO: Apply pre-processing filters
+# TODO: Apply pre-processing filters
         preprocessing_filters: ImageProcessingFilters = []
         return preprocessing_filters
 
@@ -226,7 +225,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         projected_matrix = np.nanmean(self.correlation_matrix) * np.ones(
             (np.max(indices_x) + 1, np.max(indices_y) + 1))
         projected_matrix[indices_x, indices_y] = values
-        
+
         if self.debug_sample:
             self.metrics['corr_indices_x'] = indices_x
             self.metrics['corr_indices_y'] = indices_y

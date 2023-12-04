@@ -11,9 +11,8 @@ from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
 import numpy as np  # @NoMove
 from xarray import DataArray  # @NoMove
 
-from ..data_model.estimated_bathy import EstimatedBathy, \
-                                         DEBUG_LAYER, EXPERT_LAYER, NOMINAL_LAYER, \
-                                         METERS_UNIT, SPATIAL_REF
+from ..data_model.estimated_bathy import (DEBUG_LAYER, EXPERT_LAYER, METERS_UNIT, NOMINAL_LAYER,
+                                          SPATIAL_REF, EstimatedBathy)
 from ..image.sampling_2d import Sampling2D
 from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
@@ -271,7 +270,6 @@ class EstimatedCartoBathy(EstimatedBathy):
         """ Store a set of bathymetry estimations at some location """
         index_x, index_y = self.carto_sampling.index_point(bathy_estimations.location)
         self.estimated_bathy[index_y, index_x] = bathy_estimations
-        
 
     def _build_data_array(self, sample_property: str,
                           layer_definition: Dict[str, Any], nb_keep: int) -> DataArray:

@@ -8,11 +8,9 @@
 :created: 4 mars 2021
 """
 from functools import lru_cache
-
-from typing import Optional, List  # @NoMove
+from typing import List, Optional  # @NoMove
 
 import numpy as np  # @NoMove
-
 
 from ..generic_utils.image_filters import circular_masking
 from ..generic_utils.numpy_utils import HashableNdArray
@@ -20,7 +18,6 @@ from ..generic_utils.symmetric_radon import symmetric_radon
 from .sinograms import Sinograms
 from .waves_image import WavesImage
 from .waves_sinogram import WavesSinogram
-
 
 DEFAULT_ANGLE_MIN = -180.
 DEFAULT_ANGLE_MAX = 180.

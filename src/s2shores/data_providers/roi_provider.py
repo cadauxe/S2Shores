@@ -7,12 +7,12 @@
 :license: see LICENSE file
 :created: 07/12/2021
 """
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional, cast  # @NoMove
 
 from osgeo import ogr
-from shapely.geometry import Polygon, Point, MultiPolygon, box
+from shapely.geometry import MultiPolygon, Point, Polygon, box
 
 from .localized_data_provider import LocalizedDataProvider
 

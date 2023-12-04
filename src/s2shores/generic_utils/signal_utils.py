@@ -10,9 +10,8 @@
 from functools import lru_cache
 from typing import Tuple  # @NoMove
 
-from scipy.signal import find_peaks
-
 import numpy as np
+from scipy.signal import find_peaks
 
 from .numpy_utils import HashableNdArray
 

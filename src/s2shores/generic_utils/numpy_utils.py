@@ -9,7 +9,6 @@
 """
 from functools import lru_cache
 from hashlib import sha1
-
 from typing import List
 
 import numpy as np

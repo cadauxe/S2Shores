@@ -7,9 +7,8 @@
 :license: see LICENSE file
 :created: 26 aout 2021
 """
-from scipy.signal import medfilt
-
 import numpy as np
+from scipy.signal import medfilt
 
 
 def filter_mean(array: np.ndarray, window: int) -> np.ndarray:

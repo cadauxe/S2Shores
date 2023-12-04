@@ -8,15 +8,13 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import List, Tuple, Callable, Any  # @NoMove
+from typing import Any, Callable, List, Tuple  # @NoMove
 
-
-from scipy.interpolate import interp1d
 import numpy as np
+from scipy.interpolate import interp1d
 
 from ..generic_utils.numpy_utils import HashableNdArray
 from ..generic_utils.signal_utils import get_unity_roots
-
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 

@@ -7,8 +7,7 @@
 :license: see LICENSE file
 :created: 29 novembre 2022
 """
-from ..data_model.bathymetry_sample_estimation import \
-    BathymetrySampleEstimation
+from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
 class SpatialCorrelationBathyEstimation(BathymetrySampleEstimation):

@@ -7,13 +7,11 @@
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Tuple,  # @NoMove
-                    cast)
-
-from scipy.signal import find_peaks
-from shapely.geometry import Point
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast  # @NoMove
 
 import numpy as np
+from scipy.signal import find_peaks
+from shapely.geometry import Point
 
 from ..bathy_physics import wavenumber_offshore
 from ..generic_utils.image_filters import desmooth, detrend
@@ -23,7 +21,6 @@ from ..image_processing.waves_radon import WavesRadon
 from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_bathy_estimation import SpatialDFTBathyEstimation
-
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport

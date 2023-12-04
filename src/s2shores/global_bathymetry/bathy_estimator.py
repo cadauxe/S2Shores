@@ -10,11 +10,9 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional  # @NoMove
 
-from shapely.geometry import Point
-
 import numpy as np
-
 import xarray as xr  # @NoMove
+from shapely.geometry import Point
 from xarray import Dataset  # @NoMove
 
 from ..image.image_geometry_types import MarginsType
@@ -199,8 +197,9 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
                 self._debug_samples.append(sample)
             else:
                 print(f'{sample} is not in roi-window_size/2.')
-        if self._debug_samples==[]:
-            raise ValueError("There is no point available to debug. Check your points' coordinates and the window size.")
+        if self._debug_samples == []:
+            raise ValueError(
+                "There is no point available to debug. Check your points' coordinates and the window size.")
 
     def set_debug_flag(self, sample: Point) -> None:
         """ Set or reset the debug flag for a given point depending on its presence into the set

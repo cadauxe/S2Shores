@@ -9,8 +9,7 @@
 """
 from matplotlib import pyplot as plt
 
-from ..local_bathymetry.spatial_correlation_bathy_estimator import \
-    SpatialCorrelationBathyEstimator
+from ..local_bathymetry.spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 from .wave_fields_display import (display_sinograms_1D_analysis_spatial_correlation,
                                   display_sinograms_spatial_correlation,
@@ -28,7 +27,7 @@ class SpatialCorrelationBathyEstimatorDebug(
         print(self.bathymetry_estimations)
 
         # Displays
-        if len(self.bathymetry_estimations) >0:
+        if len(self.bathymetry_estimations) > 0:
             waves_image = display_waves_images_spatial_correl(self)
             spatial_correl_sinograms = display_sinograms_spatial_correlation(self)
             spatial_correl_sino_analysis = display_sinograms_1D_analysis_spatial_correlation(self)
@@ -37,4 +36,4 @@ class SpatialCorrelationBathyEstimatorDebug(
             spatial_correl_sino_analysis.show()
             plt.show()
         else:
-            print('No estimation to display.')	
+            print('No estimation to display.')

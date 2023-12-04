@@ -9,13 +9,12 @@ to manage tomographic angles in several ways.
 :created: Thu Apr 1 2021
 """
 from functools import lru_cache
+from typing import List, Optional, Tuple, Union, cast  # @NoMove
 from warnings import warn
-from typing import Union, Tuple, List, cast, Optional  # @NoMove
-
-from skimage.transform import warp
-from skimage.util.dtype import img_as_float
 
 import numpy as np
+from skimage.transform import warp
+from skimage.util.dtype import img_as_float
 
 
 # TODO: use DirectionsQuantizer

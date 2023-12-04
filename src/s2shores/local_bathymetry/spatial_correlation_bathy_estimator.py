@@ -13,8 +13,7 @@ import numpy as np
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 
-from ..bathy_physics import (celerity_offshore, period_offshore,
-                             wavelength_offshore)
+from ..bathy_physics import celerity_offshore, period_offshore, wavelength_offshore
 from ..generic_utils.image_filters import desmooth, detrend
 from ..generic_utils.image_utils import normalized_cross_correlation
 from ..generic_utils.signal_utils import find_period_from_zeros
@@ -23,11 +22,9 @@ from ..image_processing.sinograms import Sinograms
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
-from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram
-
+from ..waves_exceptions import NotExploitableSinogram, WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
-from .spatial_correlation_bathy_estimation import \
-    SpatialCorrelationBathyEstimation
+from .spatial_correlation_bathy_estimation import SpatialCorrelationBathyEstimation
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
