@@ -15,7 +15,8 @@ GLOBAL_ESTIMATOR:
   DYP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
   NKEEP: 3 # number of main waves directions to keep in the product
-  
+  OFFSHORE_LIMIT: 100 # maximum offshore distance in kilometers from the coast
+
   # window parameters
   WINDOW: 800.0 # thumbnail size - meters - ex. PHR : 400
   SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image. 
@@ -48,12 +49,18 @@ TEMPORAL_CORRELATION:
   TEMPORAL_LAG: 1  # number of intervals between frames to let wave propagation happen (example 3 for a 1Hz sequence)
   PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation
   TUNING:
+    DETREND_TIME_SERIES: 0 #1 to enable or 0 to disable time-series detrending, should be disabled for tri-stereo and small sequences
+    FILTER_TIME_SERIES: 0 #1 to enable or 0 to disable time-series Band-Pass filtering, must be disabled when sequence sampling period does not meet the cut-off requirements
+    LOWCUT_PERIOD: 25 #seconds, must be greater than 2 times the sequence sampling period
+    HIGHCUT_PERIOD: 8 #seconds, must be greater than 2 times the sequence sampling period
     PEAK_DETECTION_HEIGHT_RATIO: 0.3
     PEAK_DETECTION_DISTANCE_RATIO: 0.5
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
     MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
-
+    SIGMA_CORRELATION_MASK: 2 # sigma value of the gaussian mask
+    MEDIAN_FILTER_KERNEL: 5 # kernel size used in the median filter applied to the projected 
+    
 #spatial_correlation
 SPATIAL_CORRELATION:
   CORRELATION_MODE: 'full' # np.correlate mode
