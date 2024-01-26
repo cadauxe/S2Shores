@@ -113,6 +113,11 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         # Assign relevant projection attribute of the spatial_ref variable
         dataset.spatial_ref.attrs['spatial_ref'] = self._ortho_stack.build_spatial_ref()
 
+        # necessary to have a correct georeferencing
+        if 'x' in dataset.coords : # only if output_format is GRID
+            dataset.x.attrs['standard_name'] = "projection_x_coordinate"
+            dataset.y.attrs['standard_name'] = "projection_y_coordinate"
+
         infos = self.build_infos()
         infos.update(self._ortho_stack.build_infos())
         for key, value in infos.items():
@@ -146,7 +151,7 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         infos['ChainVersions'] = self.chains_versions
         infos['Resolution X'] = str(self.sampling_step_x)
         infos['Resolution Y'] = str(self.sampling_step_y)
-
+        infos['OffshoreLimit_kms'] = str(self.max_offshore_distance)
         return infos
 
 # ++++++++++++++++++++++++++++ Debug support +++++++++++++++++++++++++++++

@@ -61,6 +61,28 @@ def circular_mask(nb_lines: int, nb_columns: int, dtype: npt.DTypeLike) -> np.nd
                 circle_in_rect[line][column] = 1
     return circle_in_rect
 
+@lru_cache()
+def gaussian_mask(nb_lines: int, nb_columns: int, sigma: float) -> np.ndarray:
+    """Computes the gaussian function centered on an array, to be used as a mask in some processing
+    (correlation for instance).
+
+    :param nb_lines: the number of lines of the image
+    :param nb_columns: the number of columns of the image
+    :returns: The array mask formed by a  centered 2D gaussian function
+    """
+    center = (nb_lines//2, nb_columns//2)
+    
+    # Create coordinate grid
+    x = np.arange(0, nb_columns)
+    y = np.arange(0, nb_lines)
+    X, Y = np.meshgrid(x, y)
+    
+    # Calculate Gaussian values
+    sigma_out = nb_lines/(2*sigma)
+    gaussian_matrix = np.exp(-((X - center[0])**2 + (Y - center[1])**2) / (2 * sigma_out**2))
+    
+    return gaussian_matrix
+    
 
 def split_samples(samples: np.ndarray, nb_parts: int) -> List[np.ndarray]:
     """ Split a sequence or array in a number of almost equal sized parts

@@ -25,7 +25,20 @@ def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, 
     """
     sign = np.sign(signal)
     diff = np.diff(sign)
-    zeros = np.where(diff != 0)[0]
+    crossing_idx = np.where(diff != 0)[0]
+    if len(crossing_idx)<=1:
+        raise ValueError('Not enough 0 crossing have been found on the signal. A minium of 2 is expected.')
+
+    # LinReg to find exact 0 crossing without reinterpolation
+    x_axis = np.arange(0, len(signal))-(len(signal) // 2)
+    x1 = x_axis[crossing_idx]
+    x2 = x_axis[crossing_idx+1]
+
+    y1 = signal[crossing_idx]
+    y2 = signal[crossing_idx+1]
+
+    zeros = (x1*y2 - x2*y1) / (y2 - y1)
+    
     demiperiods = np.diff(zeros)
     cond = demiperiods > (min_period / 2)
     demiperiods = demiperiods[cond]

@@ -42,11 +42,11 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         super().__init__(location, ortho_sequence, global_estimator, selected_directions)
 
         # Create figure
-        self._figure = plt.figure(constrained_layout=False, figsize=[9, 10])
-        self._gs = gridspec.GridSpec(4, 3, figure=self._figure, wspace=0.7, hspace=0.5)
+        self._figure = plt.figure(constrained_layout=False, figsize=[9, 14])
+        self._gs = gridspec.GridSpec(5, 2, figure=self._figure, wspace=0.7, hspace=0.5)
 
         # Set Main title
-        plt.suptitle(f'Debug info point {self.location.x} {self.location.y}',
+        plt.suptitle(f'Debug info \n Point {self.location.x} {self.location.y}',
                      fontsize='x-large',
                      bbox=dict(boxstyle='round', facecolor='lightgrey', edgecolor='red')
                      )
@@ -61,21 +61,20 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         except NotExploitableSinogram as excp:
             self.show_first_frame()
-            # self.show_first_frame_pre_processed() #Not implemented
             self.show_first_frame_selection()
+            self.show_first_TS()
             self.show_correlation_matrix()
-            self.show_correlation_matrix_filled()
             self.show_correlation_matrix_filled_filtered()
             self.show_radon_matrix()
+            self.show_failed_sinogram()
             self.show_depth_esti_values()
             self.dump_figure()
-            self.dump_debug_log()
             raise excp
 
         except CorrelationComputationError as excp:
             self.show_first_frame()
-            # self.show_first_frame_pre_processed() #Not implemented
             self.show_first_frame_selection()
+            self.show_first_TS()
             self.show_depth_esti_values()
             self.dump_figure()
             raise excp
@@ -121,27 +120,6 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                 radius * cartesian_dir_x,
                 radius * cartesian_dir_y)
 
-    def show_first_frame_pre_processed(self) -> None:
-        """ Show first frame after pre-processing in sequence for a debug point
-        """
-        # TBD
-
-        # Plot
-        subfigure = self._figure.add_subplot(self._gs[0, 1])
-        subfigure.matshow(np.ones((2, 2)))  # norm=Normalize(vmin=imin, vmax=imax))
-        subfigure.annotate('Not implemented',
-                           xy=(0, 0),
-                           xytext=(-0.32, 0.55),
-                           color='r',
-                           fontweight='bold',
-                           fontsize='small',
-                           bbox=dict(boxstyle='round', facecolor='white', edgecolor='red')
-                           )
-
-        plt.title('1st frame filtered')
-        plt.xlabel('X (m)')
-        plt.ylabel('Y (m)')
-
     def show_first_frame_selection(self) -> None:
         """ Show selection of pixels used in the correlation for a debug point
         """
@@ -157,15 +135,23 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         condition[x_position, y_position] = True
 
         # Plot in pixel positions
-        subfigure = self._figure.add_subplot(self._gs[0, 2])
-        # First frame displayed as background
-        #subfigure.matshow(first_image, norm=Normalize(vmin=imin, vmax=imax), alpha=0.5)
-        # Put selected pixels in red + scatter (usefull for big windows)
+        subfigure = self._figure.add_subplot(self._gs[0, 1])
         subfigure.matshow(np.where(condition, first_image, np.nan), interpolation='none')
-        #subfigure.scatter(y_position, x_position, c='r', s=0.5)
         plt.title('Selected pixels')
         plt.xlabel('Pixel ID X')
         plt.ylabel('Pixel ID Y')
+
+    def show_first_TS(self) -> None:
+        """ Show the first Normalised Timse-series of the dataset before and after BP filtering
+        """
+        subfigure = self._figure.add_subplot(self._gs[1, :])
+        subfigure.plot(self.metrics['detrend_time_series'], label='Detrended TS')
+        subfigure.plot(self.metrics['filtered_time_series'], label='Filtered TS')
+        plt.title('1st random TS')
+        plt.xlabel('Frame')
+        plt.ylabel('NormIntensity')
+        plt.legend()
+        plt.grid(True, linestyle='--', linewidth=0.5)
 
     def show_correlation_matrix(self) -> None:
         """ Show correlation matrix where correlations were actually computed between selected pixels for a debug point
@@ -189,7 +175,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         y_spatial_limits = np.array([-(wind_shape[0]), wind_shape[0]]) * spatial_res
 
         # Plot
-        subfigure = self._figure.add_subplot(self._gs[1, 0])
+        subfigure = self._figure.add_subplot(self._gs[2, 0])
         pmc = subfigure.imshow(
             np.where(
                 condition,
@@ -214,59 +200,11 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                            )
         plt.colorbar(pmc, cax=axins)
 
-    def show_correlation_matrix_filled(self) -> None:
-        """ Show correlation matrix where no value is filled with mean of correlation for a debug point
-        """
-
-        # Import correlation
-        correlation = self.metrics['correlation']
-        imin = np.min(correlation)
-        imax = np.max(correlation)
-
-        # Retrieve correlation spatial shape in meters
-        spatial_res = self.metrics['spatial_resolution']
-        wind_shape = self.ortho_sequence[0].pixels.shape
-        x_spatial_limits = np.array([-(wind_shape[1]), wind_shape[1]]) * spatial_res
-        y_spatial_limits = np.array([-(wind_shape[0]), wind_shape[0]]) * spatial_res
-
-        # Plot
-        subfigure = self._figure.add_subplot(self._gs[1, 1])
-        pmc = subfigure.imshow(
-            correlation,
-            norm=Normalize(
-                vmin=imin,
-                vmax=imax),
-            extent=[
-                x_spatial_limits[0],
-                x_spatial_limits[1],
-                y_spatial_limits[0],
-                y_spatial_limits[1]])
-        plt.title('Filled correlation')
-        plt.xlabel('dX')
-        plt.ylabel('dY')
-        # create an axis for the colorbar
-        axins = inset_axes(subfigure,
-                           width="5%",
-                           height="100%",
-                           loc="lower left",
-                           bbox_to_anchor=(1.05, 0., 1, 1),
-                           bbox_transform=subfigure.transAxes,
-                           borderpad=0
-                           )
-        plt.colorbar(pmc, cax=axins)
-
-        # Draw an arrow in the wave direction
-        radius = min(x_spatial_limits[1], y_spatial_limits[1]) / 2
-        if 'direction' in self.metrics:
-            cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
-            cartesian_dir_y = np.sin(np.deg2rad(self.metrics['direction']))
-            subfigure.arrow(0, 0, radius * cartesian_dir_x, radius * cartesian_dir_y)
-
     def show_correlation_matrix_filled_filtered(self) -> None:
         """ Show correlation matrix with filled values filtered before the radon transform for a debug point
         """
         # Import correlation
-        circular_corr = self.metrics['radon_input']
+        circular_corr = self.metrics['corr_radon_input']
         imin = np.min(circular_corr)
         imax = np.max(circular_corr)
 
@@ -279,7 +217,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']
 
         # Plot
-        subfigure = self._figure.add_subplot(self._gs[1, 2])
+        subfigure = self._figure.add_subplot(self._gs[2, 1])
         pmc = subfigure.imshow(
             circular_corr,
             extent=[
@@ -308,9 +246,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         radon_array, _ = self.metrics['radon_transform'].get_as_arrays()
 
         # Retrieve rho axis of radon transform
-        nb_directions, _ = radon_array.shape
+        nb_rho, _ = radon_array.shape
         spatial_res = self.metrics['spatial_resolution']
-        y_spatial_limits = np.array([-(nb_directions // 2), nb_directions // 2]) * spatial_res
+        y_spatial_limits = np.array([-(nb_rho // 2), nb_rho // 2]) * spatial_res
 
         # Import directions
         directions = self.selected_directions
@@ -320,7 +258,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         ang_labels = ['{:.0f}'.format(ang) + u'\N{DEGREE SIGN}' for ang in ang_ticks]
 
         # Plot
-        subfigure = self._figure.add_subplot(self._gs[2, :])
+        subfigure = self._figure.add_subplot(self._gs[3, :])
         subfigure.imshow(radon_array,
                          interpolation='nearest',
                          aspect='auto',
@@ -333,7 +271,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
               np.max(
                 self._metrics['variances'])) *
                 (
-                nb_directions -
+                nb_rho -
                 1) *
                 spatial_res) +
             y_spatial_limits[0],
@@ -350,7 +288,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                 self.metrics['direction'],
                 y_spatial_limits[0],
                 0,
-                (nb_directions - 2) * spatial_res,
+                (nb_rho - 2) * spatial_res,
                 color='orange')
             plt.annotate(f"{self.metrics['direction']}°",
                          (self.metrics['direction'] + 1, 10 + y_spatial_limits[0]),
@@ -366,20 +304,23 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         # Retreive axis of the sinogram value plot
         spatial_res = self.metrics['spatial_resolution']
-        x_spatial_axis = np.arange(-(len(sinogram_max_var) // 2),
-                                   len(sinogram_max_var) // 2 + 1) * spatial_res
+        x_spatial_axis = (np.arange(0, len(sinogram_max_var)) -
+                          (len(sinogram_max_var) // 2)) * spatial_res
         min_limit_x = np.min(x_spatial_axis)
         min_limit_y = np.min(sinogram_max_var)
 
         # Import zeros and max detections
-        wave_length_zeros = self.metrics['wave_length_zeros']
+        zeros = self.metrics['wave_spatial_zeros']
         max_indices = self.metrics['max_indices']
+        dx = self.metrics['wave_distance']
 
         # Plot
-        subfigure = self._figure.add_subplot(self._gs[3, 0:2])
+        subfigure = self._figure.add_subplot(self._gs[4, 0])
         subfigure.plot(x_spatial_axis, sinogram_max_var)
-        subfigure.plot(x_spatial_axis[wave_length_zeros], sinogram_max_var[wave_length_zeros], 'ro')
-        subfigure.plot(x_spatial_axis[max_indices], sinogram_max_var[max_indices], 'go')
+        subfigure.plot(zeros, np.zeros((len(zeros))), 'ro')
+        subfigure.plot(x_spatial_axis[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices],
+                       sinogram_max_var[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices], 'go')
+        subfigure.plot(dx, np.zeros(len(dx)), 'ko')
         plt.title(
             r'Projected sinogram at $\theta$' +
             '= {:.1f} °'.format(
@@ -400,7 +341,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                    len(sinogram_max_var) // 2 + 1) * spatial_res
 
         # Plot
-        subfigure = self._figure.add_subplot(self._gs[3, 0:2])
+        subfigure = self._figure.add_subplot(self._gs[4, 0])
         subfigure.plot(x_spatial_axis, sinogram_max_var)
         plt.xlabel(r'$\rho$ (m)')
         plt.ylabel('Corr')
@@ -409,49 +350,56 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
     def show_depth_esti_values(self) -> None:
         """ Show physical values for a debug point
         """
+        bathymetry_estimation = self.metrics['bathymetry_estimation']
 
-        subfigure = self._figure.add_subplot(self._gs[3, 2])
+        celerities_txt = str(["{:.2f}".format(elem)
+                             for elem in bathymetry_estimation.get_attribute('celerity')])
+        periods_txt = str(["{:.2f}".format(elem)
+                          for elem in bathymetry_estimation.get_attribute('period')])
+        depth_txt = str(["{:.2f}".format(elem)
+                        for elem in bathymetry_estimation.get_attribute('depth')])
+
+        subfigure = self._figure.add_subplot(self._gs[4, 1])
         subfigure.axis('off')
 
         if self.bathymetry_estimations:
             subfigure.annotate('For time lag = {:.3f} s\n'.format(self.metrics['propagation_duration']) +
                                'Estimated wave:\n' +
-                               r'$\theta$ = {:.1f}°'.format(self.metrics['direction']) + '\n' +
+                               r'$\theta$ = {:.1f}° from East'.format(self.metrics['direction']) + '\n' +
                                'L = {:.2f} m \n'.format(self.bathymetry_estimations[0].wavelength) +
-                               'T = {:.2f} s \n'.format(self.bathymetry_estimations[0].period) +
-                               'c = {:.2f} m/s \n'.format(self.bathymetry_estimations[0].celerity) +
-                               'H = {:.2f} m'.format(self.bathymetry_estimations[0].depth),
+                               'T = {:s} s \n'.format(periods_txt) +
+                               'c = {:s} m/s \n'.format(celerities_txt) +
+                               'H = {:s} m'.format(depth_txt),
                                xy=(0, 0),
-                               xytext=(-0.25, 0.25),
+                               # xytext=(-0.25,0.25),
+                               xytext=(0, 0.05),
                                color='r',
                                fontweight='bold',
                                bbox=dict(boxstyle='round', facecolor='white', edgecolor='red')
                                )
         else:
-            subfigure.annotate('For time lag = {:.3f} s\n'.format(self.metrics['propagation_duration']) +
-                               'ESTIMATION FAILED !',
-                               xy=(0, 0),
-                               xytext=(-0.5, 0.42),
-                               color='r',
-                               fontweight='bold',
-                               bbox=dict(boxstyle='round', facecolor='white', edgecolor='red')
-                               )
+            subfigure.annotate(
+                'For time lag = {:.3f} s\n'.format(
+                    self.metrics['propagation_duration']) + 'ESTIMATION FAILED !', xy=(
+                    0, 0), xytext=(
+                    0, 0.35), color='r', fontweight='bold', bbox=dict(
+                    boxstyle='round', facecolor='white', edgecolor='red'))
 
     def show_values(self) -> None:
         """ Construct debug log and print it for a debug point
         """
 
         # Retreive values to add in the log
-        direction_estimations = self.metrics['direction_estimations']
+        bathymetry_estimation = self.metrics['bathymetry_estimation']
         time_lag = self.metrics['propagation_duration']
 
-        celerities = direction_estimations.get_attribute('celerity')
+        celerities = bathymetry_estimation.get_attribute('celerity')
         celerities_txt = str(["{:.2f}".format(elem) for elem in celerities])
 
-        distances = direction_estimations.get_attribute('delta_position')
+        distances = bathymetry_estimation.get_attribute('delta_position')
         distances_txt = str(["{:.2f}".format(elem) for elem in distances])
 
-        linerities = direction_estimations.get_attribute('linearity')
+        linerities = bathymetry_estimation.get_attribute('linearity')
         linerities_txt = str(["{:.2f}".format(elem) for elem in linerities])
 
         spatial_res = self.ortho_sequence[0].resolution
@@ -466,35 +414,21 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                '    Lag number: {:d} frames\n'.format(self.local_estimator_params['TEMPORAL_LAG']) +
                '    Percentage points: {:d} % \n \n'.format(self.local_estimator_params['PERCENTAGE_POINTS']) +
                '  Image info:\n' +
-               '    center point: ' + str(direction_estimations.location) + '\n' +
+               '    center point: ' + str(bathymetry_estimation.location) + '\n' +
                '    Window size (m): ' + str(wind_size) + '\n' +
                '    Spatial res: {:.3f} m \n'.format(spatial_res) +
                '    Window shape (px): ' + str(wind_shape) + '\n \n' +
                '  Temporal correlation info:\n' +
                '    time lag: {:.2f} s \n'.format(time_lag) +
                '    max var angle: {:.1f}° (direction from East)\n'.format(self.metrics['direction']) +
-               '    estimated wavelength: {:.2f} m\n'.format(direction_estimations[0].wavelength) +
+               '    estimated wavelength: {:.2f} m\n'.format(bathymetry_estimation[0].wavelength) +
                '    dx (m): {:s} \n'.format(distances_txt) +
                '    c (m/s): {:s} \n'.format(celerities_txt) +
                '    gamma: {:s} \n'.format(linerities_txt) +
                '    status: {:d}'.format(self.metrics['status']) +
-               ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI) \n \n'
+               ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT) \n' +
+               'End of debug \n'
                ]
-
-        if self.bathymetry_estimations:
-            txt = [txt[0] +
-                   '  Bathymetry estimation info:\n' +
-                   '    gravity (m.s-2): {:.2f} \n'.format(self.bathymetry_estimations.get_attribute('gravity')) +
-                   '    wave direction: {:.1f}° (direction from North) \n'.format(self.bathymetry_estimations[0].direction_from_north) +
-                   '    estimated wavelength (m): {:.2f} \n'.format(self.bathymetry_estimations[0].wavelength) +
-                   '    wavenumber k (m-1): {:.6f} \n'.format(self.bathymetry_estimations[0].wavenumber) +
-                   '    estimated celerity (m/s): {:.2f} \n'.format(self.bathymetry_estimations[0].celerity) +
-                   '    estimated period (s): {:.2f}\n'.format(self.bathymetry_estimations[0].period) +
-                   '    offshore wavelength (m): {:.2f} \n'.format(self.bathymetry_estimations[0].wavelength_offshore) +
-                   '    stroboscopic factor: {:.2f} \n'.format(self.bathymetry_estimations[0].stroboscopic_factor) +
-                   '    estimated depth (m): {:.2f} \n'.format(self.bathymetry_estimations[0].depth)]
-
-        txt = [txt[0] + 'End of debug \n']
 
         self._debug_log = txt[0]
 
@@ -535,10 +469,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Full routine for debugging point
         """
         self.show_first_frame()
-        # self.show_first_frame_pre_processed() #Not implemented
         self.show_first_frame_selection()
+        self.show_first_TS()
         self.show_correlation_matrix()
-        self.show_correlation_matrix_filled()
         self.show_correlation_matrix_filled_filtered()
         self.show_radon_matrix()
         self.show_sinogram()
