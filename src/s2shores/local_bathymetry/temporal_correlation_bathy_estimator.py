@@ -22,9 +22,9 @@ from ..generic_utils.signal_utils import find_period_from_zeros
 from ..image.ortho_sequence import FrameIdType, OrthoSequence
 from ..image_processing.waves_image import ImageProcessingFilters, WavesImage
 from ..image_processing.waves_radon import WavesRadon, linear_directions
-from ..image_processing.waves_sinogram import WavesSinogram
+from ..image_processing.waves_sinogram import SignalProcessingFilters, WavesSinogram
 from ..waves_exceptions import (CorrelationComputationError, NotExploitableSinogram,
-                                SequenceImagesError, WavesEstimationError)
+                                SequenceImagesError)
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
 
@@ -142,8 +142,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self._correlation_matrix = cross_correlation(self._time_series[:, self.nb_lags:],
                                                              self._time_series[:, :-self.nb_lags])
             except ValueError as excp:
-                raise CorrelationComputationError(
-                    'Cross correlation can not be computed because of standard deviation of 0') from excp
+                msg = 'Cross correlation can not be computed because of standard deviation of 0'
+                raise CorrelationComputationError(msg) from excp
         return self._correlation_matrix
 
     @property
@@ -204,9 +204,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """
         merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
         shape_y, shape_x = self.ortho_sequence.shape
-        TS_mean = np.mean(merge_array[shape_y // 2, shape_x // 2, :])
+        ts_mean = np.mean(merge_array[shape_y // 2, shape_x // 2, :])
 
-        if not(np.isfinite(TS_mean)) or TS_mean == 0:
+        if not(np.isfinite(ts_mean)) or ts_mean == 0:
             raise SequenceImagesError('Window center pixel is out of border or has a 0 mean.')
 
     def create_sequence_time_series(self) -> None:
@@ -253,7 +253,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 time_series_selec,
                 lowcut_period=self.local_estimator_params['TUNING']['LOWCUT_PERIOD'],
                 highcut_period=self.local_estimator_params['TUNING']['HIGHCUT_PERIOD'],
-                fs=fps,
+                sampling_freq=fps,
                 axis=1)
         elif self.local_estimator_params['TUNING']['DETREND_TIME_SERIES'] == 0:
             self._time_series = time_series_selec
@@ -305,7 +305,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         return WavesImage(projected_matrix, self.spatial_resolution)
 
     def compute_radon_transform(self) -> float:
-        """Compute the Rason Transform from the correlation matrix and determine wave progation direction
+        """Compute the Rason Transform from the correlation matrix and determine wave
+        progation direction
 
         :returns: wave propagation direction
         """
@@ -331,7 +332,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         return direction_propagation
 
     def compute_wavefield(self) -> list:
-        """Extract wave chracteristics (wavelength and wave displacement) within the projected sinogram
+        """ Extract wave chracteristics (wavelength and wave displacement) within the
+        projected sinogram
 
         :returns: estimated wavelength and wave displacement
         """
@@ -347,7 +349,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def compute_wavelength(self) -> float:
         """ Wavelength computation (in meter)
 
-        :param sinogram : sinogram used to compute wave length
         :returns: wavelength and 0-crossing positions
         :raises NotExploitableSinogram: if wave length can not be computed from sinogram
         """
@@ -379,7 +380,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         # Find peaks
         tuning_parameters = self.local_estimator_params['TUNING']
         peaks, _ = find_peaks(sinogram[(x_axis >= zeros[0]) & (x_axis < zeros[-1])],
-                              height=tuning_parameters['PEAK_DETECTION_HEIGHT_RATIO'] * max_sinogram,
+                              height=tuning_parameters['PEAK_DETECTION_HEIGHT_RATIO'] *
+                              max_sinogram,
                               distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO'] * period)
 
         # Compute initial distance
@@ -388,14 +390,14 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         for dx_in in dx_in_list:
             # Find 0-crossing surrounding the peak
-            z1 = zeros[zeros > dx_in][0]
-            z2 = zeros[zeros <= dx_in][-1]
+            zeros_right = zeros[zeros > dx_in][0]
+            zeros_left = zeros[zeros <= dx_in][-1]
 
             # Refine distance
-            ref = [z1, z2][np.argmin(np.abs([z1, z2]))]
-            offset = np.sign(dx_in - ref) * (np.abs(z2 - z1) / 2)
-            dx = ref + offset
-            distances.append(dx)
+            ref = [zeros_right, zeros_left][np.argmin(np.abs([zeros_right, zeros_left]))]
+            offset = np.sign(dx_in - ref) * (np.abs(zeros_left - zeros_right) / 2)
+            distance = ref + offset
+            distances.append(distance)
 
         # Distance of the wave propagation
         distances = np.array(distances) * self.spatial_resolution

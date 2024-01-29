@@ -17,7 +17,7 @@ from ..waves_exceptions import WavesIndexingError
 
 
 class Sampling2D:
-    """ A 2S sampling is a subset of samples in a 2D space. It is built by taking consecutive
+    """ A 2D sampling is a subset of samples in a 2D space. It is built by taking consecutive
     samples in some samples coordinates lists, which means that there is no constraint on the
     spatial distribution of these samples. It is up to the caller to impose these constraints
     by providing increasing or decreasing ordered lists of coordinates or whatever desired order,

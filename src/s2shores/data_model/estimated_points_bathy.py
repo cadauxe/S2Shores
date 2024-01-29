@@ -30,7 +30,8 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'attrs': {'Dimension': 'Flags',
                          'long_name': 'Bathymetry estimation status',
                          'comment': '0: SUCCESS, 1: FAIL, 2: ON_GROUND, '
-                                    '3: NO_DATA, 4: NO_DELTA_TIME , 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT'}},
+                                    '3: NO_DATA, 4: NO_DELTA_TIME , '
+                                    '5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT'}},
     'depth': {'layer_type': NOMINAL_LAYER,
               'layer_name': 'Depth',
               'dimensions': DIMS_INDEX_NKEEP_TIME,
@@ -336,9 +337,9 @@ class EstimatedPointsBathy(EstimatedBathy):
         index = index[0]
         bathymetry_estimations = self.estimated_bathy[index]
         if sample_property == 'x':
-            layer_data[index] = np.array([bathymetry_estimations._location.x])
+            layer_data[index] = np.array([bathymetry_estimations.location.x])
         elif sample_property == 'y':
-            layer_data[index] = np.array([bathymetry_estimations._location.y])
+            layer_data[index] = np.array([bathymetry_estimations.location.y])
         else:
             bathy_property = bathymetry_estimations.get_attribute(sample_property)
             if layer_data.ndim == 1:

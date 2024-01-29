@@ -72,6 +72,7 @@ class Sinograms(SinogramsDict):
 
         :param wavenumbers: the set of wavenumbers to use for interpolating the DFT.
         :param directions: the set of directions for which the sinograms DFT must be interpolated
+        :raises ValueError: when there is no wavenumbers to interpolate from
         """
         # Interpolation can be done only if at least one frequency is requested
         if wavenumbers.size == 0:

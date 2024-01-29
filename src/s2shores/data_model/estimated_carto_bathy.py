@@ -31,7 +31,8 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'attrs': {'Dimension': 'Flags',
                          'long_name': 'Bathymetry estimation status',
                          'comment': '0: SUCCESS, 1: FAIL, 2: ON_GROUND, '
-                                    '3: NO_DATA, 4: NO_DELTA_TIME , 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT'}},
+                                    '3: NO_DATA, 4: NO_DELTA_TIME , '
+                                    '5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT'}},
     'depth': {'layer_type': NOMINAL_LAYER,
               'layer_name': 'Depth',
               'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -336,9 +337,9 @@ class EstimatedCartoBathy(EstimatedBathy):
         value: Union[np.ndarray, List[datetime]]
         for element in dims:
             if element == 'y':
-                value = self.carto_sampling._y_samples
+                value = self.carto_sampling.y_samples
             elif element == 'x':
-                value = self.carto_sampling._x_samples
+                value = self.carto_sampling.x_samples
             elif element == 'kKeep':
                 value = np.arange(1, nb_keep + 1)
             elif element == 'time':

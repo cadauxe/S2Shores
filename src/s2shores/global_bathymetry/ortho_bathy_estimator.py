@@ -43,6 +43,7 @@ class OrthoBathyEstimator:
     def compute_bathy(self) -> Dataset:
         """ Computes the bathymetry dataset for the samples belonging to a given subtile.
 
+        :raises ValueError: when output format is not a supported one
         :return: Estimated bathymetry dataset
         """
 
@@ -62,8 +63,7 @@ class OrthoBathyEstimator:
 
         if self.parent_estimator.output_format == 'POINT':
             # Estimate bathy on points
-            samples = self.parent_estimator._debug_samples
-            total_points = len(samples)
+            total_points = len(self.parent_estimator._debug_samples)
             estimated_bathy = EstimatedPointsBathy(total_points,
                                                    self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.parent_estimator._debug_samples
@@ -75,7 +75,7 @@ class OrthoBathyEstimator:
             samples = self.sampled_ortho.carto_sampling.x_y_sampling()
             total_points = self.sampled_ortho.carto_sampling.nb_samples
         else:
-            raise ValueError("Output format must be one of the proposed one in the config file.")
+            raise ValueError('Output format must be one of the proposed ones in the config file.')
 
         for index, sample in enumerate(samples):
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
@@ -115,7 +115,7 @@ class OrthoBathyEstimator:
                 bathy_estimations.remove_unphysical_wave_fields()
                 bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)
                 if self.parent_estimator.debug_sample:
-                    print(f'estimations after sorting :')
+                    print('estimations after sorting :')
                     print(bathy_estimations)
         except WavesException as excp:
             warn_msg = f'Unable to estimate bathymetry: {str(excp)}'

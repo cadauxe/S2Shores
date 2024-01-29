@@ -140,6 +140,7 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         """ Compute the wave length of the waves
 
         :param correlation_signal: spatial cross correlated signal
+        :raises NotExploitableSinogram: when no period can be found in the sinogram
         :returns: the wave length (m)
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)

@@ -109,7 +109,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.xlabel('X (m)')
         plt.ylabel('Y (m)')
 
-        # Draw an arrow in the wave direction
+        # Draw an arrow in the wave direction
         radius = min(x_spatial_limits[1], y_spatial_limits[1]) / 3
         if 'direction' in self.metrics:
             cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
@@ -191,9 +191,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.ylabel('dY')
         # create an axis for the colorbar
         axins = inset_axes(subfigure,
-                           width="5%",
-                           height="100%",
-                           loc="lower left",
+                           width='5%',
+                           height='100%',
+                           loc='lower left',
                            bbox_to_anchor=(1.05, 0., 1, 1),
                            bbox_transform=subfigure.transAxes,
                            borderpad=0
@@ -230,9 +230,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.ylabel('dY')
         # create an axis for the colorbar
         axins = inset_axes(subfigure,
-                           width="5%",
-                           height="100%",
-                           loc="lower left",
+                           width='5%',
+                           height='100%',
+                           loc='lower left',
                            bbox_to_anchor=(1.05, 0., 1, 1),
                            bbox_transform=subfigure.transAxes,
                            borderpad=0
@@ -335,7 +335,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Import sinogram
         sinogram_max_var = self.metrics['sinogram_max_var']
 
-        # Retreive axis of the sinogram value plot
+        # Retrieve axis of the sinogram value plot
         spatial_res = self.metrics['spatial_resolution']
         x_spatial_axis = np.arange(-(len(sinogram_max_var) // 2),
                                    len(sinogram_max_var) // 2 + 1) * spatial_res
@@ -352,11 +352,11 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """
         bathymetry_estimation = self.metrics['bathymetry_estimation']
 
-        celerities_txt = str(["{:.2f}".format(elem)
+        celerities_txt = str(['{:.2f}'.format(elem)
                              for elem in bathymetry_estimation.get_attribute('celerity')])
-        periods_txt = str(["{:.2f}".format(elem)
+        periods_txt = str(['{:.2f}'.format(elem)
                           for elem in bathymetry_estimation.get_attribute('period')])
-        depth_txt = str(["{:.2f}".format(elem)
+        depth_txt = str(['{:.2f}'.format(elem)
                         for elem in bathymetry_estimation.get_attribute('depth')])
 
         subfigure = self._figure.add_subplot(self._gs[4, 1])
@@ -394,19 +394,19 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         time_lag = self.metrics['propagation_duration']
 
         celerities = bathymetry_estimation.get_attribute('celerity')
-        celerities_txt = str(["{:.2f}".format(elem) for elem in celerities])
+        celerities_txt = str(['{:.2f}'.format(elem) for elem in celerities])
 
         distances = bathymetry_estimation.get_attribute('delta_position')
-        distances_txt = str(["{:.2f}".format(elem) for elem in distances])
+        distances_txt = str(['{:.2f}'.format(elem) for elem in distances])
 
         linerities = bathymetry_estimation.get_attribute('linearity')
-        linerities_txt = str(["{:.2f}".format(elem) for elem in linerities])
+        linerities_txt = str(['{:.2f}'.format(elem) for elem in linerities])
 
         spatial_res = self.ortho_sequence[0].resolution
         wind_shape = self.ortho_sequence[0].pixels.shape
         wind_size = tuple(['{:.3f} m'.format(val * spatial_res) for val in wind_shape])
 
-        # Construct the log
+        # Construct the log
 
         txt = ['Debug information: \n' +
                '  S2Shore config: \n' +
@@ -433,7 +433,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         self._debug_log = txt[0]
 
         # Print the log
-        print("")
+        print('')
         print(txt[0])
 
     def print_correlation_matrix_error(self) -> None:
@@ -462,7 +462,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                           f'Infos_point_{self.location.x}_{self.location.y}.txt'
                                           )
 
-            with open(debug_log_path, "w") as file:
+            with open(debug_log_path, 'w') as file:
                 file.write(self._debug_log)
 
     def explore_results(self) -> None:

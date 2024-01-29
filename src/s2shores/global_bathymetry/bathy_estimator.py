@@ -114,9 +114,9 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         dataset.spatial_ref.attrs['spatial_ref'] = self._ortho_stack.build_spatial_ref()
 
         # necessary to have a correct georeferencing
-        if 'x' in dataset.coords : # only if output_format is GRID
-            dataset.x.attrs['standard_name'] = "projection_x_coordinate"
-            dataset.y.attrs['standard_name'] = "projection_y_coordinate"
+        if 'x' in dataset.coords:  # only if output_format is GRID
+            dataset.x.attrs['standard_name'] = 'projection_x_coordinate'
+            dataset.y.attrs['standard_name'] = 'projection_y_coordinate'
 
         infos = self.build_infos()
         infos.update(self._ortho_stack.build_infos())
@@ -195,6 +195,7 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         """ Sets the list of sample points to debug
 
         :param samples: a list of (X,Y) tuples defining the points to debug
+        :raises ValueError: when no debug points are provided
         """
         self._debug_samples = []
         for sample in samples:
@@ -202,9 +203,9 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
                 self._debug_samples.append(sample)
             else:
                 print(f'{sample} is not in roi-window_size/2.')
-        if self._debug_samples == []:
-            raise ValueError(
-                "There is no point available to debug. Check your points' coordinates and the window size.")
+        if not self._debug_samples:
+            raise ValueError('There is no point available to debug. '
+                             'Check your points coordinates and the window size.')
 
     def set_debug_flag(self, sample: Point) -> None:
         """ Set or reset the debug flag for a given point depending on its presence into the set

@@ -7,9 +7,9 @@
 :license: see LICENSE file
 :created: 14/05/2021
 """
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
+from typing import Any, Dict, Hashable, List, Mapping
 
 import numpy as np  # @NoMove
 from xarray import DataArray, Dataset  # @NoMove
@@ -76,7 +76,7 @@ class EstimatedBathy():
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         """ Get coordinates dictionary
         :param dims:
-        :param nb_keeps:
+        :param nb_keep:
         :raise ValueError: if unknown dimension used in dims
         :return dict_coords: dictionary with coordinates
         """

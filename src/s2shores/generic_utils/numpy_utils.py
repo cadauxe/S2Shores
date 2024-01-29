@@ -28,9 +28,9 @@ def find(condition: np.ndarray) -> np.ndarray:
 
 
 def permute_axes(image: np.ndarray) -> np.ndarray:
-    n1, n2, n3 = np.shape(image)
-    permuted = np.zeros((n2, n3, n1))
-    for i in np.arange(n1):
+    dim1, dim2, dim3 = np.shape(image)
+    permuted = np.zeros((dim2, dim3, dim1))
+    for i in np.arange(dim1):
         permuted[:, :, i] = image[i, :, :]
     return permuted
 
@@ -61,6 +61,7 @@ def circular_mask(nb_lines: int, nb_columns: int, dtype: npt.DTypeLike) -> np.nd
                 circle_in_rect[line][column] = 1
     return circle_in_rect
 
+
 @lru_cache()
 def gaussian_mask(nb_lines: int, nb_columns: int, sigma: float) -> np.ndarray:
     """Computes the gaussian function centered on an array, to be used as a mask in some processing
@@ -68,21 +69,25 @@ def gaussian_mask(nb_lines: int, nb_columns: int, sigma: float) -> np.ndarray:
 
     :param nb_lines: the number of lines of the image
     :param nb_columns: the number of columns of the image
+    :param sigma: standard deviation of the gaussian
     :returns: The array mask formed by a  centered 2D gaussian function
     """
-    center = (nb_lines//2, nb_columns//2)
-    
     # Create coordinate grid
-    x = np.arange(0, nb_columns)
-    y = np.arange(0, nb_lines)
-    X, Y = np.meshgrid(x, y)
-    
+    x_index = np.arange(0, nb_columns)
+    y_index = np.arange(0, nb_lines)
+    x_coord, y_coord = np.meshgrid(x_index, y_index)
+
+    # Center coordinates
+    x_centered = x_coord - nb_lines//2
+    y_centered = y_coord - nb_columns//2
+
     # Calculate Gaussian values
-    sigma_out = nb_lines/(2*sigma)
-    gaussian_matrix = np.exp(-((X - center[0])**2 + (Y - center[1])**2) / (2 * sigma_out**2))
-    
+    sigma_x = nb_columns/(2*sigma)
+    sigma_y = nb_lines/(2*sigma)
+    gaussian_matrix = np.exp(-(x_centered**2 + y_centered**2) / (2*sigma_x*sigma_y))
+
     return gaussian_matrix
-    
+
 
 def split_samples(samples: np.ndarray, nb_parts: int) -> List[np.ndarray]:
     """ Split a sequence or array in a number of almost equal sized parts

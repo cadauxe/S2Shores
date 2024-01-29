@@ -150,7 +150,8 @@ class BathymetrySampleEstimations(list):
 
     @property
     def inside_offshore_limit(self) -> bool:
-        """ :returns: True if the distance to shore is inferior or equal to the offshore limit, False otherwise"""
+        """ :returns: True if the distance to shore is inferior or equal to the offshore limit,
+                      False otherwise"""
         return self._inside_offshore_limit
 
     @property

@@ -187,6 +187,7 @@ def gaussian_masking(image_array: np.ndarray, sigma: float) -> np.ndarray:
     """ Apply a gaussian mask to a matrix
 
     :param image_array: entry image
+    :param sigma: standard deviation of the gaussian
     :returns: gaussian maked image
     """
     mask = gaussian_mask(image_array.shape[0], image_array.shape[1], sigma)

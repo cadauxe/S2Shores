@@ -57,6 +57,14 @@ def sensitivity_indicator(wavelength: float, celerity: float, gravity: float) ->
 
 
 def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) -> float:
+    """ Estimate depth using the linear dispersive relation
+
+    :param wavenumber: wavenumber of the waves (m-1)
+    :param celerity: the celerity of the waves (m.s-1)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: the depth according to the linear dispersion relation, or np.Infinity if the
+              linearirty indicator is greater than 1.
+    """
     factor = linearity_indicator(1. / wavenumber, celerity, gravity)
     if abs(factor) > 1.:
         depth = np.Infinity

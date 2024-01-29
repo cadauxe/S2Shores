@@ -13,10 +13,8 @@ from matplotlib import pyplot as plt
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .wave_fields_display import (display_context, display_dft_sinograms,
-                                  display_dft_sinograms_spectral_analysis, display_initial_data,
-                                  display_polar_images_dft, display_radon_transforms,
-                                  display_waves_images_dft)
+from .wave_fields_display import (display_dft_sinograms, display_dft_sinograms_spectral_analysis,
+                                  display_polar_images_dft, display_waves_images_dft)
 
 
 class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEstimator):
@@ -26,7 +24,8 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
     def explore_results(self) -> None:
 
         self.print_variables()
-        print(f'estimations after direction refinement, before physical constraint filtering and before sorting :')
+        print('estimations after direction refinement, '
+              'before physical constraint filtering and before sorting :')
         print(self.bathymetry_estimations)
 
         # Displays

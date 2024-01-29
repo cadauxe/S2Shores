@@ -80,7 +80,7 @@ class WavesRadon(Sinograms):
 
         :param image: a 2D array containing an image
         :param selected_directions: a set of directions onto which the radon transform must be
-                                    provided. If unspecified, all integre angles between -180° and
+                                    provided. If unspecified, all integer angles between -180° and
                                     +180° are considered.
         :param directions_quantization: the step to use for quantizing direction angles, for
                                         indexing purposes. Direction quantization is such that the

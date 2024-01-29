@@ -21,13 +21,15 @@ def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, 
 
     :param signal: signal on which period is computed
     :param min_period: minimal period between two detected points
+    :raises ValueError: when not enough zero crossings are found or semiperiod cannot be determined
     :return: (period,zeros used to compute period)
     """
     sign = np.sign(signal)
     diff = np.diff(sign)
     crossing_idx = np.where(diff != 0)[0]
-    if len(crossing_idx)<=1:
-        raise ValueError('Not enough 0 crossing have been found on the signal. A minium of 2 is expected.')
+    if len(crossing_idx) <= 1:
+        raise ValueError(
+            'Not enough 0 crossing have been found on the signal. A minimum of 2 is expected.')
 
     # LinReg to find exact 0 crossing without reinterpolation
     x_axis = np.arange(0, len(signal))-(len(signal) // 2)
@@ -38,7 +40,7 @@ def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, 
     y2 = signal[crossing_idx+1]
 
     zeros = (x1*y2 - x2*y1) / (y2 - y1)
-    
+
     demiperiods = np.diff(zeros)
     cond = demiperiods > (min_period / 2)
     demiperiods = demiperiods[cond]
@@ -83,12 +85,12 @@ def find_dephasing(signal: np.ndarray, period: float) -> Tuple[float, np.ndarray
 def get_unity_roots(wrapped_frequencies: HashableNdArray, number_of_roots: int) -> np.ndarray:
     """ Compute complex roots of the unity for some frequencies
 
-    :param frequencies: 1D array of normalized frequencies where roots are needed
+    :param wrapped_frequencies: 1D array of normalized frequencies where roots are needed
     :param number_of_roots: Number of unity roots to compute, starting from 0
     :returns: number_of_roots complex roots of the unity corresponding to fr frequencies
     """
     frequencies = wrapped_frequencies.unwrap()
-    n = np.arange(number_of_roots)
+    roots_indexes = np.arange(number_of_roots)
     working_frequencies = np.expand_dims(frequencies, axis=1)
-    unity_roots = np.exp(-2j * np.pi * working_frequencies * n)
+    unity_roots = np.exp(-2j * np.pi * working_frequencies * roots_indexes)
     return unity_roots
