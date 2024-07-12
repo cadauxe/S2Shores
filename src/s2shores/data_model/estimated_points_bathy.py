@@ -316,11 +316,11 @@ class EstimatedPointsBathy(EstimatedBathy):
 
         not_found = 0
         for index in range(nb_samples):
-                try:
-                    self._fill_array(sample_property, layer_data, [index])
-                except WavesEstimationAttributeError:
-                    not_found += 1
-                    continue
+            try:
+                self._fill_array(sample_property, layer_data, [index])
+            except WavesEstimationAttributeError:
+                not_found += 1
+                continue
         if not_found == nb_samples:
             raise WavesEstimationAttributeError(f'no values defined for: {sample_property}')
 
