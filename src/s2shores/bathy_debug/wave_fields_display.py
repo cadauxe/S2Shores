@@ -431,8 +431,8 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     # Check if the direction belongs to the plotting interval [plt_min:plt_max]
     if max_var_theta < plt_min or max_var_theta > plt_max:
         max_var_theta %= -np.sign(max_var_theta) * 180.0
-    theta_label = '$\Theta${:.1f}° [Variance Max]'.format(max_var_theta)
-    theta_label_orig = '$\Theta${:.1f}° [Main Direction]'.format(main_theta)
+    theta_label = f'$\Theta${max_var_theta:.1f}° [Variance Max]'
+    theta_label_orig = f'$\Theta${main_theta:.1f}° [Main Direction]'
 
     axes.axvline(max_var_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
@@ -541,7 +541,7 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_debug_point_" + point_id + "_theta_"+ f'{int(main_direction)}' + ".png"),
+            f"display_sinograms_debug_point_{point_id}_theta_{int(main_direction)}.png"),
         dpi=300)
     dft_sino = plt.figure(2)
     return dft_sino
@@ -807,7 +807,7 @@ def display_dft_sinograms_spectral_analysis(
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_spectral_analysis_debug_point_" + point_id + "_theta_"+ f'{int(main_direction)}' + ".png"),
+            f"display_sinograms_spectral_analysis_debug_point_{point_id}_theta_{int(main_direction)}.png"),
         dpi=300)
     dft_sino_spectral = plt.figure(3)
     return dft_sino_spectral
@@ -861,7 +861,7 @@ def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
     if main_theta < plt_min or main_theta > plt_max:
         main_theta %= -np.sign(main_theta) * 180.0
-    theta_label = 'Sinogram 1D along \n$\Theta$={:.1f}°'.format(main_theta)
+    theta_label = f'Sinogram 1D along \n$\Theta$={main_theta:.1f}°'
     nb_pixels = np.shape(values1[:, index_theta])[0]
     absc = np.arange(-nb_pixels / 2, nb_pixels / 2)
     axes.plot(absc, np.flip((values1[:, index_theta] / np.max(np.abs(values1[:, index_theta])))),
@@ -911,8 +911,8 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray,
         main_theta %= -np.sign(main_theta) * 180.0
     if main_theta_slave < plt_min or main_theta_slave > plt_max:
         main_theta_slave %= -np.sign(main_theta_slave) * 180.0
-    theta_label_master = 'along Master Main Direction\n$\Theta$={:.1f}°'.format(main_theta)
-    theta_label_slave = 'along Slave Main Direction\n$\Theta$={:.1f}°'.format(main_theta_slave)
+    theta_label_master = f'along Master Main Direction\n$\Theta$={main_theta:.1f}°'
+    theta_label_slave = f'along Slave Main Direction\n$\Theta$={main_theta_slave:.1f}°'
     nb_pixels = np.shape(values[:, index_theta_master])[0]
     absc = np.arange(-nb_pixels / 2, nb_pixels / 2)
     axes.plot(absc,
@@ -994,8 +994,8 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # Compute Cross-Correlation between Sino1 [Master Man Direction] & Sino2 [Master Main Direction]
     sino_cross_corr_norm_master = normalized_cross_correlation(
         np.flip(sino1_1D), np.flip(sino2_1D_master), correl_mode)
-    label_correl_master = 'Sino1_1D[$\Theta$={:.1f}°] vs Sino2_1D[$\Theta$={:.1f}°]'.format(
-        main_theta_label, main_theta_label)
+    label_correl_master = (f'Sino1_1D[$\Theta$={main_theta_label:.1f}°] '
+                           f'vs Sino2_1D[$\Theta$={main_theta_label:.1f}°]')
     axes.plot(absc, sino_cross_corr_norm_master, color="red", lw=0.8, label=label_correl_master)
 
     sino2_1D_slave = values2[:, index_theta2_slave]
@@ -1007,8 +1007,8 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     sino_cross_corr_norm_slave = normalized_cross_correlation(
         np.flip(sino1_1D), np.flip(sino2_1D_slave), correl_mode)
 
-    label_correl_slave = 'Sino1_1D[$\Theta$={:.1f}°] vs Sino2_1D[$\Theta$={:.1f}°]'.format(
-        main_theta_label, main_theta_slave_label)
+    label_correl_slave = (f'Sino1_1D[$\Theta$={main_theta_label:.1f}°] '
+                          f'vs Sino2_1D[$\Theta$={main_theta_slave_label:.1f}°]')
     axes.plot(absc, sino_cross_corr_norm_slave, color="black", ls='--', lw=0.8,
               label=label_correl_slave)
 
@@ -1056,8 +1056,8 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
             slave_main_theta = slave_main_theta % (-np.sign(slave_main_theta) * 180.0)
 
         main_theta = slave_main_theta
-        title = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] \
-            and Sino1[All Directions]'.format(main_theta)
+        title = (f'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={main_theta:.1f}°]'
+                 f' and Sino1[All Directions]')
 
     if choice == 'one_dir':
         index_theta1 = int(np.where(directions1 == int(main_theta))[0])
@@ -1104,7 +1104,7 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
         if max_var_pos < plt_min or max_var_pos > plt_max:
             max_var_pos %= -np.sign(max_var_pos) * 180.0
 
-        max_var_label = '$\Theta$={:.1f}° [Variance Max]'.format(max_var_pos)
+        max_var_label = f'$\Theta$={max_var_pos:.1f}° [Variance Max]'
         axes.axvline(max_var_pos, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                      color='red', ls='--', lw=1, label=max_var_label, zorder=10)
 
@@ -1114,7 +1114,7 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
     if main_theta < plt_min or main_theta > plt_max:
         main_theta %= -np.sign(main_theta) * 180.0
-    theta_label = '$\Theta$={:.1f}°'.format(main_theta)
+    theta_label = f'$\Theta$={main_theta:.1f}°'
     axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
 
@@ -1187,8 +1187,8 @@ def display_sinograms_1D_analysis_spatial_correlation(
         theta_label = main_direction % (-np.sign(main_direction) * 180.0)
     else:
         theta_label = main_direction
-    title_sino1 = '[Master Image] Sinogram 1D along $\Theta$={:.1f}° '.format(theta_label)
-    title_sino2 = '[Slave Image] Sinogram 1D'.format(theta_label)
+    title_sino1 = f'[Master Image] Sinogram 1D along $\Theta$={theta_label:.1f}° '
+    title_sino2 = f'[Slave Image] Sinogram 1D{theta_label}'
     correl_mode = local_estimator.global_estimator.local_estimator_params['CORRELATION_MODE']
 
     build_sinogram_1D_display_master(
@@ -1205,14 +1205,12 @@ def display_sinograms_1D_analysis_spatial_correlation(
     # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
     # Check if the main direction belongs to the plotting interval [plt_min:plt_ramax]
 
-    title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={:.1f}°] \
-        and Sino2[All Directions]'.format(
-        theta_label)
-    title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] \
-        and Sino1[All Directions]'.format(
-        0)
-    title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n \
-        Sino1 and Sino2 for Each Direction'
+    title_cross_correl1 = (f'Normalized Cross-Correlation Signal between \n '
+                           f'Sino1[$\Theta$={theta_label:.1f}°] and Sino2[All Directions]')
+    title_cross_correl2 = (f'Normalized Cross-Correlation Signal between \n'
+                           f'Sino2[$\Theta$={0:.1f}°] and Sino1[All Directions]')
+    title_cross_correl_2D = ('2D-Normalized Cross-Correlation Signal between \n'
+                             'Sino1 and Sino2 for Each Direction')
 
     build_sinogram_2D_cross_correlation(
         axs[2, 0], title_cross_correl1, sinogram1, directions1, main_direction,
@@ -1232,7 +1230,7 @@ def display_sinograms_1D_analysis_spatial_correlation(
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator._debug_path,
-            "display_sinograms_1D_analysis_debug_point_" + point_id + "_theta_" + theta_id + ".png"),
+            f"display_sinograms_1D_analysis_debug_point_{point_id}_theta_{theta_id}.png"),
         dpi=300)
     # plt.show()
     dft_sino_spectral = plt.figure(3)
@@ -1291,8 +1289,8 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
 
     ax_polar.plot(np.radians((main_direction+180)%360), 1 / main_wavelength, '*', color='black')
 
-    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, \n$\lambda$={:.2f}m]'.format((direc_from_north),
-                                                                                 main_wavelength),
+    ax_polar.annotate((f'Peak at \n[$\Theta$={direc_from_north:.1f}°, \n'
+                       f'$\lambda$={main_wavelength:.2f}m]'),
                       xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',

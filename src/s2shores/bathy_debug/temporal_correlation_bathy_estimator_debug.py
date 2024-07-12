@@ -247,7 +247,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         min_dir = np.min(directions)
         max_dir = np.max(directions)
         ang_ticks = np.arange(min_dir, max_dir+2, 45)
-        ang_labels = ['{:.0f}'.format(ang)+ u'\N{DEGREE SIGN}' for ang in ang_ticks]
+        ang_labels = [f'{ang:.0f}'+ u'\N{DEGREE SIGN}' for ang in ang_ticks]
 
         # Plot
         subfigure = self._figure.add_subplot(self._gs[3, :])
@@ -303,7 +303,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         subfigure.plot(x_spatial_axis[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices],
                        sinogram_max_var[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices], 'go')
         subfigure.plot(dx, np.zeros(len(dx)), 'ko')
-        plt.title(r'Projected sinogram at $\theta$'+'= {:.1f} °'.format(self.metrics['direction']))
+        theta = self.metrics['direction']
+        plt.title(rf'Projected sinogram at $\theta$ = {theta:.1f} °')
         plt.xlabel(r'$\rho$ (m)')
         plt.ylabel('Corr')
         plt.grid(True, linestyle='--', linewidth=0.5)
@@ -333,21 +334,24 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """
         bathymetry_estimation = self.metrics['bathymetry_estimation']
 
-        celerities_txt = str(["{:.2f}".format(elem) for elem in bathymetry_estimation.get_attribute('celerity')])
-        periods_txt = str(["{:.2f}".format(elem) for elem in bathymetry_estimation.get_attribute('period')])
-        depth_txt = str(["{:.2f}".format(elem) for elem in bathymetry_estimation.get_attribute('depth')])
+        celerities_txt = str([f"{elem:.2f}" for elem in bathymetry_estimation.get_attribute('celerity')])
+        periods_txt = str([f"{elem:.2f}" for elem in bathymetry_estimation.get_attribute('period')])
+        depth_txt = str([f"{elem:.2f}" for elem in bathymetry_estimation.get_attribute('depth')])
 
         subfigure = self._figure.add_subplot(self._gs[4, 1])
         subfigure.axis('off')
 
+        metrics_propagation_duration = self.metrics['propagation_duration']
+
         if self.bathymetry_estimations:
-            subfigure.annotate('For time lag = {:.3f} s\n'.format(self.metrics['propagation_duration'])+
+            subfigure.annotate(f'For time lag = {metrics_propagation_duration:.3f} s\n'+
                                'Estimated wave:\n' +
-                               r'$\theta$ = {:.1f}° from East'.format(self.metrics['direction']) + '\n'+
+                               r'$\theta$ = {:.1f}° from East'.format(self.metrics['direction']) +
+                               '\n'+
                                'L = {:.2f} m \n'.format(self.bathymetry_estimations[0].wavelength) +
-                               'T = {:s} s \n'.format(periods_txt)+
-                               'c = {:s} m/s \n'.format(celerities_txt) +
-                               'H = {:s} m'.format(depth_txt),
+                               f'T = {periods_txt:s} s \n'+
+                               f'c = {celerities_txt:s} m/s \n' +
+                               f'H = {depth_txt:s} m',
                                xy=(0, 0),
                                #xytext=(-0.25,0.25),
                                xytext=(0,0.05),
@@ -356,7 +360,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
                                bbox=dict(boxstyle='round', facecolor='white', edgecolor='red')
                               )
         else:
-            subfigure.annotate('For time lag = {:.3f} s\n'.format(self.metrics['propagation_duration'])+
+            subfigure.annotate('For time lag = {metrics_propagation_duration:.3f} s\n'+
                                'ESTIMATION FAILED !',
                                xy=(0, 0),
                                xytext=(0,0.35),
@@ -375,13 +379,13 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         time_lag = self.metrics['propagation_duration']
 
         celerities = bathymetry_estimation.get_attribute('celerity')
-        celerities_txt = str(["{:.2f}".format(elem) for elem in celerities])
+        celerities_txt = str([f"{elem:.2f}" for elem in celerities])
 
         distances = bathymetry_estimation.get_attribute('delta_position')
-        distances_txt = str(["{:.2f}".format(elem) for elem in distances])
+        distances_txt = str([f"{elem:.2f}" for elem in distances])
 
         linerities = bathymetry_estimation.get_attribute('linearity')
-        linerities_txt = str(["{:.2f}".format(elem) for elem in linerities])
+        linerities_txt = str([f"{elem:.2f}" for elem in linerities])
 
         spatial_res = self.ortho_sequence[0].resolution
         wind_shape = self.ortho_sequence[0].pixels.shape
@@ -391,21 +395,21 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         txt = ['Debug information: \n'+
                '  S2Shore config: \n'+
-               '    Window size (m): {:.3f} m \n'.format(self.global_estimator.window_size_x)+
+               f'    Window size (m): {self.global_estimator.window_size_x:.3f} m \n'+
                '    Lag number: {:d} frames\n'.format(self.local_estimator_params['TEMPORAL_LAG'])+
                '    Percentage points: {:d} % \n \n'.format(self.local_estimator_params['PERCENTAGE_POINTS'])+
                '  Image info:\n'+
                '    center point: ' + str(bathymetry_estimation.location) +'\n'+
                '    Window size (m): '+str(wind_size) + '\n'+
                '    Spatial res: {:.3f} m \n'.format(spatial_res)+
-               '    Window shape (px): '+str(wind_shape) + '\n \n'+
+               f'    Window shape (px): {wind_shape}\n \n'+
                '  Temporal correlation info:\n'+
-               '    time lag: {:.2f} s \n'.format(time_lag) +
+               f'    time lag: {time_lag:.2f} s \n' +
                '    max var angle: {:.1f}° (direction from East)\n'.format(self.metrics['direction']) +
                '    estimated wavelength: {:.2f} m\n'.format(bathymetry_estimation[0].wavelength) +
-               '    dx (m): {:s} \n'.format(distances_txt) +
-               '    c (m/s): {:s} \n'.format(celerities_txt) +
-               '    gamma: {:s} \n'.format(linerities_txt) +
+               f'    dx (m): {distances_txt:s} \n' +
+               f'    c (m/s): {celerities_txt:s} \n' +
+               f'    gamma: {linerities_txt:s} \n' +
                '    status: {:d}'.format(self.metrics['status'])+
                ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT) \n'+
                'End of debug \n'
