@@ -32,6 +32,7 @@ Contents
    License <license>
    Authors <authors>
    Changelog <changelog>
+   Contributing <contributing>
    Module Reference <api/modules>
 
 
