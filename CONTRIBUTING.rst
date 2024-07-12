@@ -1,6 +1,6 @@
-=========================
+================================
 Contributing to Project S2Shores
-=========================
+================================
 
 This document provides guidelines and information on how to contribute effectively to the project.
 
@@ -19,49 +19,52 @@ Contributing Workflow
 To contribute to Project S2Shores, follow these steps:
 
 1. **Fork the repository:**
-   - Create a personal fork of the repository on GitHub.
+Create a personal fork of the repository on GitHub.
 
 2. **Clone your fork:**
-   - Clone your forked repository to your local machine:
-     ```bash
-     git clone https://github.com/your-username/S2Shores.git
-     cd S2Shores
-     ```
+Clone your forked repository to your local machine:
+```bash
+git clone https://github.com/your-username/S2Shores.git
+cd S2Shores
+```
 
 3. **Create a new branch:**
-   - Create a new branch for your feature or bugfix:
-     ```bash
-     git checkout -b feature-or-bugfix-name
-     ```
+Create a new branch for your feature or bugfix:
+
+```bash
+git checkout -b feature-or-bugfix-name
+```
 
 4. **Make your changes:**
-   - Implement your changes in the new branch. Follow the coding guide and ensure your code meets the quality standards.
+Implement your changes in the new branch. Follow the coding guide and ensure your code meets the quality standards.
 
 
 5. **Run linting and tests:**
-   - Ensure your code passes Pylint checks and all tests:
-     ```bash
-     pylint .
-     pytest
-     ```
+Ensure your code passes Pylint checks and all tests:
+```bash
+pylint .
+pytest
+```
 
 6. **Commit your changes:**
 
-   - Use the hooks provided to check your code quality before committing as described below.
-   Commit your changes with a descriptive commit message:
-     ```bash
-     git add .
-     git commit -m "Brief description of your changes"
-     ```
+Use the hooks provided to check your code quality before committing as described below.
+
+Commit your changes with a descriptive commit message:
+
+```bash
+git add .
+git commit -m "Brief description of your changes"
+```
 
 7. **Push to your fork:**
-   - Push your branch to your forked repository:
-     ```bash
-     git push origin feature-or-bugfix-name
-     ```
+Push your branch to your forked repository:
+```bash
+git push origin feature-or-bugfix-name
+```
 
 8. **Create a Pull Request:**
-   - Open a pull request (PR) from your branch to the main repository. Provide a detailed description of your changes and the issue it addresses.
+Open a pull request (PR) from your branch to the main repository. Provide a detailed description of your changes and the issue it addresses.
 
 Coding Guide
 ============
