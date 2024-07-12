@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Unit tests of the directional_array module
 
-:author: Alain Giros
+:authors: see AUTHORS file
 :organization: CNES
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file.
