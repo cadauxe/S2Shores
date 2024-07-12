@@ -74,8 +74,9 @@ class EstimatedBathy():
     @abstractmethod
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         """ Get coordinates dictionary
-        :param dims: 
-        :param nb_keeps: 
+
+        :param dims: list of dimensions
+        :param nb_keeps: the number of different bathymetry estimations to keep for one location
         :raise ValueError: if unknown dimension used in dims
         :return dict_coords: dictionary with coordinates
         """

@@ -81,6 +81,7 @@ def gaussian_mask(nb_lines: int, nb_columns: int, sigma: float) -> np.ndarray:
 
     :param nb_lines: the number of lines of the image
     :param nb_columns: the number of columns of the image
+    :param sigma: the standard deviation of the gaussian function
     :returns: The array mask formed by a  centered 2D gaussian function
     """
     center = (nb_lines//2, nb_columns//2)

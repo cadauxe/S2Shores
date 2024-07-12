@@ -86,7 +86,7 @@ def find_dephasing(signal: np.ndarray, period: float) -> Tuple[float, np.ndarray
 def get_unity_roots(wrapped_frequencies: HashableNdArray, number_of_roots: int) -> np.ndarray:
     """ Compute complex roots of the unity for some frequencies
 
-    :param frequencies: 1D array of normalized frequencies where roots are needed
+    :param wrapped_frequencies: 1D array of normalized frequencies where roots are needed
     :param number_of_roots: Number of unity roots to compute, starting from 0
     :returns: number_of_roots complex roots of the unity corresponding to fr frequencies
     """

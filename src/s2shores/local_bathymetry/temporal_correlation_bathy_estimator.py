@@ -350,8 +350,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
     def compute_wavelength(self) -> float:
         """ Wavelength computation (in meter)
-        
-        :param sinogram : sinogram used to compute wave length
+
         :returns: wavelength and 0-crossing positions
         :raises NotExploitableSinogram: if wave length can not be computed from sinogram
         """
@@ -370,7 +369,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
     def compute_distance(self, wavelength: float, zeros: float) -> np.ndarray:
         """ Propagated distance computation (in meter)
 
-        :param wavelength: wavelength estimated in the projected sinogram 
+        :param wavelength: wavelength estimated in the projected sinogram
         :param zeros: zeros-crossing positions
         :returns: propagation distances of the wave
         """
