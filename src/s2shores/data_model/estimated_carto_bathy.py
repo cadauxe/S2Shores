@@ -319,6 +319,12 @@ class EstimatedCartoBathy(EstimatedBathy):
     # TODO: split array filling in two methods: one for 2D (X, Y) and one for 3D (X, Y, kKeep)
 
     def _fill_array(self, sample_property: str, layer_data: np.ndarray, index: List[int]) -> None:
+        """ Fill a layer array with bathymetry estimations for a given location.
+
+        :param sample_property: name of the property to format as a DataArray
+        :param layer_data: the array to fill with the property values
+        :param index: the location in the estimated bathymetry array
+        """
         [y_index, x_index] = index
         bathymetry_estimations = self.estimated_bathy[y_index, x_index]
         bathy_property = bathymetry_estimations.get_attribute(sample_property)
@@ -334,6 +340,11 @@ class EstimatedCartoBathy(EstimatedBathy):
             layer_data[:, y_index, x_index] = np.array(bathy_property)
 
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
+        """ Get coordinates dictionary for the bathymetry DataArray
+
+        :param dims: list of dimensions
+        :param nb_keep: the number of different bathymetry estimations to keep for one location
+        :raise ValueError: if unknown dimension used in dims"""
         dict_coords: Dict[Hashable, Any] = {}
         value: Union[np.ndarray, List[datetime]]
         for element in dims:

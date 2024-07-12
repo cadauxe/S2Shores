@@ -27,6 +27,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
     """
 
     def explore_results(self) -> None:
+        """ Explore the results of the estimation process."""
 
         self.print_variables()
         print('estimations after direction refinement, before physical constraint filtering and before sorting :')
@@ -45,6 +46,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
 
 
     def print_variables(self) -> None:
+        """ Print the variables of the estimator."""
         metrics = self.metrics
 
         initial_sino1_fft = self.radon_transforms[0].get_sinograms_standard_dfts()

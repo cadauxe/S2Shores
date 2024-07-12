@@ -32,6 +32,10 @@ class DirectionsQuantizer:
         return self._quantization_step
 
     def quantize(self, direction: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+        """ Quantize a direction expressed in degrees to the nearest multiple of quantization_step
+
+        :param direction: the real valued angle(s) expressed in degrees
+        :returns: """
         if isinstance(direction, float):
             return self.quantize_float(direction)
         # Firstly, normalize direction between -180 and +180 degrees
@@ -44,6 +48,11 @@ class DirectionsQuantizer:
         return quantized_direction
 
     def quantize_float(self, direction: float) -> float:
+        """ Quantize a direction expressed in degrees to the nearest multiple of quantization_step
+
+        :param direction: the real valued angle expressed in degrees
+        :returns: the quantized angle expressed in degrees
+        """
         # direction between 0 and 360 degrees
         normalized_direction = cast(float, self.normalize(direction))
         index_direction = round(normalized_direction / self._quantization_step)

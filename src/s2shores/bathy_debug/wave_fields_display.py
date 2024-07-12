@@ -41,12 +41,23 @@ if TYPE_CHECKING:
 
 
 def display_curve(data: np.ndarray, legend: str) -> None:
+    """ Display a curve with a legend
+
+    :param data: the data to display
+    :param legend: the legend to display
+    """
     _, ax = plt.subplots()
     ax.plot(data)
     ax.set_title(legend)
 
 
 def display_3curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray) -> None:
+    """ Display 3 curves
+
+    :param data1: the first curve to display
+    :param data2: the second curve to display
+    :param data3: the third curve to display
+    """
     _, ax = plt.subplots(3)
     ax[0].plot(data1)
     ax[1].plot(data2)
@@ -55,6 +66,13 @@ def display_3curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray) -> 
 
 def display_4curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray,
                     data4: np.ndarray) -> None:
+    """ Display 4 curves
+
+    :param data1: the first curve to display
+    :param data2: the second curve to display
+    :param data3: the third curve to display
+    :param data4: the fourth curve to display
+    """
     _, ax = plt.subplots(nrows=2, ncols=2)
     ax[0, 0].plot(data1)
     ax[1, 0].plot(data2)
@@ -63,12 +81,18 @@ def display_4curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray,
 
 
 def display_image(data: np.ndarray, legend: str) -> None:
+    """ Display an image with a legend
+
+    :param data: the image to display
+    :param legend: the legend to display
+    """
     _, ax = plt.subplots()
     ax.imshow(data, aspect='auto', cmap='gray')
     ax.set_title(legend)
 
 
 def get_display_title(local_estimator: 'SpatialDFTBathyEstimator') -> str:
+    """ Get the title for the display of the estimator"""
     title = f'{local_estimator.global_estimator._ortho_stack.short_name} {local_estimator.location}'
     return title
 
@@ -76,6 +100,7 @@ def get_display_title(local_estimator: 'SpatialDFTBathyEstimator') -> str:
 def build_image_display(axes: Axes, title: str, image: np.ndarray,
                         directions: Optional[List[Tuple[float, float]]] = None,
                         cmap: Optional[str] = None) -> None:
+    """ Build an image display"""
     imin = np.min(image)
     imax = np.max(image)
     axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
@@ -94,6 +119,7 @@ def build_image_display(axes: Axes, title: str, image: np.ndarray,
 
 def build_directional_2d_display(axes: Axes, title: str, values: np.ndarray,
                                  directions: np.ndarray, **kwargs: dict) -> None:
+    """ Build a 2D display with given directions"""
     extent = [np.min(directions), np.max(directions), 0, values.shape[0]]
     imin = np.min(values)
     imax = np.max(values)
@@ -105,6 +131,7 @@ def build_directional_2d_display(axes: Axes, title: str, values: np.ndarray,
 
 def build_directional_curve_display(axes: Axes, title: str,
                                     values: np.ndarray, directions: np.ndarray) -> None:
+    """ Build a curve display with given directions"""
     axes.plot(directions, values)
     axes.set_xticks(directions[::20])
     plt.setp(axes.get_xticklabels(), fontsize=8)
@@ -112,6 +139,7 @@ def build_directional_curve_display(axes: Axes, title: str,
 
 
 def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+    """ Display the initial data of the object local_estimator"""
     plt.close('all')
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
@@ -136,6 +164,7 @@ def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
 
 
 def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -> str:
+    """ Get the title for the display of the estimator with the kernel size"""
     title = f'{local_estimator.global_estimator._ortho_stack.short_name} {local_estimator.location}'
     smooth_kernel_xsize = local_estimator.global_estimator.smoothing_lines_size
     smooth_kernel_ysize = local_estimator.global_estimator.smoothing_columns_size
@@ -520,6 +549,7 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
 
 def display_sinograms_spatial_correlation(
         local_estimator: 'SpatialCorrelationBathyEstimator') -> None:
+    """ Display the sinograms of the estimator"""
     # plt.close('all')
     nrows = 2
     ncols = 3
@@ -593,6 +623,7 @@ def display_sinograms_spatial_correlation(
 def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
                                     directions: np.ndarray, kfft: np.ndarray, plt_min: float, plt_max: float,
                                     ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
+    """ Build a 2D display with given directions"""
     extent = [np.min(directions), np.max(directions), 0.0, kfft.max()]
     im = axes.imshow(values, aspect='auto', origin="lower", extent=extent, **kwargs)
 

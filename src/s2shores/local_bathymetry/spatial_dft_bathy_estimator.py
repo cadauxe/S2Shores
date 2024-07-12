@@ -127,6 +127,12 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         return peaks
 
     def _process_peaks(self, peaks: np.ndarray, prominences: np.ndarray) -> np.ndarray:
+        """ Process the peaks found in the cross correlation spectrum of the radon transforms
+
+        :param peaks: the peaks found in the cross correlation spectrum
+        :param prominences: the prominences of the peaks
+        :returns: the peaks after processing
+        """
         # Find pairs of symmetric directions
         if self.debug_sample:
             print('initial peaks: ', peaks)

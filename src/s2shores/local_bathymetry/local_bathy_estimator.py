@@ -189,4 +189,6 @@ class LocalBathyEstimator(ABC):
 
     @metrics.setter
     def metrics(self, values: Dict[str, Any]) -> None:
+        """ Set the metrics dictionary of this estimator.
+        """
         self._metrics = deepcopy(values)

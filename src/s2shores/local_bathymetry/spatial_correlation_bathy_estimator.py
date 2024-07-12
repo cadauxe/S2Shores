@@ -76,6 +76,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
 
     @property
     def preprocessing_filters(self) -> ImageProcessingFilters:
+        """ The preprocessing filters to apply to the images before the wave field estimation
+        """
         preprocessing_filters: ImageProcessingFilters = []
         preprocessing_filters.append((detrend, []))
 
@@ -90,6 +92,8 @@ class SpatialCorrelationBathyEstimator(LocalBathyEstimator):
         return preprocessing_filters
 
     def run(self) -> None:
+        """ Run the spatial correlation bathymetry estimation
+        """
         self.preprocess_images()  # TODO: should be in the init ?
         estimated_direction = self.find_direction()
         self.compute_radon_transforms(estimated_direction)

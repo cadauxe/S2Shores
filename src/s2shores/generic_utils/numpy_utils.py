@@ -17,6 +17,10 @@ import numpy.typing as npt
 
 
 def sc_all(array: np.ndarray) -> bool:
+    """ Checks if all elements of a numpy array are True.
+    :param array: the numpy array to check
+    :returns: True if all elements are True, False otherwise
+    """
     for value in array.flat:
         if not value:
             return False
@@ -24,11 +28,19 @@ def sc_all(array: np.ndarray) -> bool:
 
 
 def find(condition: np.ndarray) -> np.ndarray:
+    """ Returns the indices of the elements of a numpy array that are True.
+    :param condition: the numpy array to check
+    :returns: the indices of the elements that are True
+    """
     res, = np.nonzero(np.ravel(condition))
     return res
 
 
 def permute_axes(image: np.ndarray) -> np.ndarray:
+    """ Permutes the axes of a 3D numpy array.
+    :param image: the 3D numpy array to permute
+    :returns: the permuted 3D numpy array
+    """
     n1, n2, n3 = np.shape(image)
     permuted = np.zeros((n2, n3, n1))
     for i in np.arange(n1):
@@ -104,6 +116,11 @@ def split_samples(samples: np.ndarray, nb_parts: int) -> List[np.ndarray]:
 
 
 def dump_numpy_variable(variable: np.ndarray, variable_name: str) -> None:
+    """ Dumps a numpy variable with its shape and dtype.
+
+    :param variable: the numpy variable to dump
+    :param variable_name: the name of the variable to dump
+    """
     if variable is not None:
         print(f'{variable_name} {variable.shape} {variable.dtype}')
     print(variable)

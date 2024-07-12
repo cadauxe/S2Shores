@@ -95,6 +95,12 @@ class OrthoBathyEstimator:
 
     def _run_local_bathy_estimator(self, sub_tile_images: OrthoSequence,
                                    estimation_point: Point) -> BathymetrySampleEstimations:
+        """ Run the local bathymetry estimator on the specified estimation point.
+
+        :param sub_tile_images: the ortho images sequence to use for the estimation
+        :param estimation_point: the point where to estimate the bathymetry
+        :return: the bathymetry estimations for the specified
+        """
 
         self.parent_estimator.set_debug_flag(estimation_point)
 

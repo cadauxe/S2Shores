@@ -52,6 +52,13 @@ class SinogramsDict(QuantizedDirectionsDict):
         return self._nb_samples
 
     def constrained_value(self, value: Any) -> Any:
+        """ Check that the value to insert is a WavesSinogram object and that it has the same size
+        as the first inserted Sinogram object.
+
+        :param value: the value to insert
+        :raises TypeError: when the value is not a WavesSinogram object
+        :raises ValueError: when the value has not the same size as the first inserted Sinogram
+        """
         if not isinstance(value, WavesSinogram):
             raise TypeError('Values for a SinogramsDict can only be a WavesSinogram object')
         if self._nb_samples < 0:
