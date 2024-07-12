@@ -3,9 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2020 CNES. All rights reserved.
+:copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: Mon Mar 23 2020
+:created: 23 March 2020
 """
 import math
 from typing import Union

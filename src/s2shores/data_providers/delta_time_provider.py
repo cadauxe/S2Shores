@@ -3,9 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2021 CNES. All rights reserved.
+:copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: 02/08/2021
+:created: 2 August 2021
 """
 from abc import abstractmethod, ABC
 import datetime

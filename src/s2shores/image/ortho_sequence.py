@@ -4,9 +4,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2022 CNES. All rights reserved.
+:copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: 7 april 2022
+:created: 7 April 2022
 """
 from datetime import datetime
 

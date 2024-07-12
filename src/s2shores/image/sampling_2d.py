@@ -3,9 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2021 CNES. All rights reserved.
+:copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: 05/05/2021
+:created: 5 May 2021
 """
 from typing import Tuple, List, Iterator  # @NoMove
 

@@ -2,10 +2,10 @@
 """ Definition of the EstimatedBathy class
 
 :authors: see AUTHORS file
-:organization: CNES-LEGOS
-:copyright: 2021 CNES. All rights reserved.
+:organization: CNES, LEGOS, SHOM
+:copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: 02/03/2023
+:created: 2 March 2023
 """
 from datetime import datetime
 from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union

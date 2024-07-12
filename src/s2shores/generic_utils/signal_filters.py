@@ -3,9 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2021 CNES. All rights reserved.
+:copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: 26 aout 2021
+:created: 26 August 2021
 """
 from scipy.signal import medfilt, detrend, butter, lfilter
 

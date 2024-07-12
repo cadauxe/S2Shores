@@ -4,9 +4,9 @@ to manage tomographic angles in several ways.
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2021 CNES. All rights reserved.
+:copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: Thu Apr 1 2021
+:created: 1 April 2021
 """
 from functools import lru_cache
 from warnings import warn

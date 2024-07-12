@@ -3,9 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2021 CNES. All rights reserved.
+:copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: 5 mars 2021
+:created: 5 March 2021
 """
 from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Tuple,  # @NoMove
                     cast)
