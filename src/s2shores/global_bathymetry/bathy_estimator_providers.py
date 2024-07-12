@@ -61,11 +61,11 @@ class BathyEstimatorProviders:
         if isinstance(provider_info, DisToShoreProvider):
             distoshore_provider = provider_info
         elif isinstance(provider_info, Path):
-            if (Path(provider_info).suffix.lower() == '.nc'):
+            if Path(provider_info).suffix.lower() == '.nc':
                 distoshore_provider = NetCDFDisToShoreProvider(provider_info, 4326,
                                                                x_axis_label='lon',
                                                                y_axis_label='lat')
-            elif (Path(provider_info).suffix.lower() == '.tif'):
+            elif Path(provider_info).suffix.lower() == '.tif':
                 distoshore_provider = GeotiffDisToShoreProvider(provider_info)
         else:
             # None or some other type, keep the current provider
