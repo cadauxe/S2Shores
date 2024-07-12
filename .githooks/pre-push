@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Redirect output to stderr
+exec 1>&2
+# Define the minimum acceptable pylint score
+MIN_SCORE=8
+
+# Run pylint and capture the output
+PYLINT_OUTPUT=$(pylint ./src)
+PYLINT_SCORE=$(echo "$PYLINT_OUTPUT" | grep "Your code has been rated at" | grep -o -E '[0-9]+\.[0-9]+' | head -n 1)
+
+
+# Output the pylint result
+# echo "$PYLINT_OUTPUT"
+
+# Check if the score is above the minimum threshold
+if [ $(echo "$PYLINT_SCORE < $MIN_SCORE" | bc -l) -eq 1 ]; then
+  echo "Pylint score $PYLINT_SCORE is below the acceptable threshold of $MIN_SCORE. Please fix the issues before committing."
+  exit 1
+fi
+
+
+# Run tests with pytest
+# echo "Running pytest..."
+# pytest tests/
+# if [ $? -ne 0 ]; then
+#   echo "Tests failed. Please fix the issues before pushing."
+#   exit 1
+# fi
+
+exit 0
