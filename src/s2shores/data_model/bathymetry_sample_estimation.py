@@ -79,7 +79,7 @@ class BathymetrySampleEstimation(WaveFieldSampleEstimation, BathymetrySampleInve
     def __str__(self) -> str:
         result = WaveFieldSampleEstimation.__str__(self)
         result += '\n' + BathymetrySampleInversion.__str__(self)
-        result += f'\nBathymetry Estimation: '
+        result += '\nBathymetry Estimation: '
         result += f' stroboscopic factor low depth: {self.stroboscopic_factor_low_depth:5.3f} '
         result += f' stroboscopic factor offshore: {self.stroboscopic_factor_offshore:5.3f} '
         return result

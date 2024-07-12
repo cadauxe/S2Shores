@@ -119,7 +119,7 @@ class OrthoBathyEstimator:
                 bathy_estimations.remove_unphysical_wave_fields()
                 bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)
                 if self.parent_estimator.debug_sample:
-                    print(f'estimations after sorting :')
+                    print('estimations after sorting :')
                     print(bathy_estimations)
         except WavesException as excp:
             warn_msg = f'Unable to estimate bathymetry: {str(excp)}'

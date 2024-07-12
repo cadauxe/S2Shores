@@ -71,6 +71,6 @@ def get_local_bathy_estimator_cls(local_estimator_code: str,
     except KeyError:
         msg = f'{local_estimator_code} is not a supported local bathymetry estimation method'
         if debug_mode:
-            msg += f' with debug mode'
+            msg += ' with debug mode'
         raise NotImplementedError(msg)
     return local_bathy_estimator_cls

@@ -24,7 +24,7 @@ class SpatialCorrelationBathyEstimatorDebug(
 
     def explore_results(self) -> None:
 
-        print(f'estimations after direction refinement :')
+        print('estimations after direction refinement :')
         print(self.bathymetry_estimations)
 
         # Displays
