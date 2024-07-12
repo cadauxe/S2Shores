@@ -29,7 +29,8 @@ def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, 
     diff = np.diff(sign)
     crossing_idx = np.where(diff != 0)[0]
     if len(crossing_idx)<=1:
-        raise ValueError('Not enough 0 crossing have been found on the signal. A minium of 2 is expected.')
+        raise ValueError('Not enough 0 crossing have been found on the signal. \
+                         A minium of 2 is expected.')
 
     # LinReg to find exact 0 crossing without reinterpolation
     x_axis = np.arange(0, len(signal))-(len(signal) // 2)

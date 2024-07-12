@@ -20,7 +20,9 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from ..local_bathymetry.temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
 from ..image.image_geometry_types import PointType
 from ..image.ortho_sequence import OrthoSequence
-from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram, CorrelationComputationError
+from ..waves_exceptions import (WavesEstimationError,
+                                NotExploitableSinogram,
+                                CorrelationComputationError)
 
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 
@@ -98,7 +100,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         subfigure = self._figure.add_subplot(self._gs[0, 0])
         subfigure.imshow(first_image,
                           norm=Normalize(vmin=imin, vmax=imax),
-                          extent=[x_spatial_limits[0], x_spatial_limits[1], y_spatial_limits[1], y_spatial_limits[0]]
+                          extent=[x_spatial_limits[0], x_spatial_limits[1],
+                                  y_spatial_limits[1], y_spatial_limits[0]]
                          )
         plt.title('1st frame')
         plt.xlabel('X (m)')
@@ -109,9 +112,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         if 'direction' in self.metrics:
             cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
             cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
-            subfigure.arrow(x_spatial_limits[1] // 2, y_spatial_limits[1] // 2, radius * cartesian_dir_x, radius * cartesian_dir_y)
-        
-        
+            subfigure.arrow(x_spatial_limits[1] // 2, y_spatial_limits[1] // 2,
+                            radius * cartesian_dir_x, radius * cartesian_dir_y)
+
+
     def show_first_frame_selection(self) -> None:
         """ Show selection of pixels used in the correlation for a debug point
         """
@@ -171,7 +175,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Plot
         subfigure = self._figure.add_subplot(self._gs[2, 0])
         pmc = subfigure.imshow(np.where(condition, correlation_raw, np.nan),
-                               extent=[x_spatial_limits[0], x_spatial_limits[1], y_spatial_limits[0], y_spatial_limits[1]]
+                               extent=[x_spatial_limits[0], x_spatial_limits[1],
+                                       y_spatial_limits[0], y_spatial_limits[1]]
                               )
         plt.title('Raw correlation')
         plt.xlabel('dX')
@@ -189,7 +194,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
 
     def show_correlation_matrix_filled_filtered(self) -> None:
-        """ Show correlation matrix with filled values filtered before the radon transform for a debug point
+        """ Show correlation matrix with filled values filtered before the radon
+        transform for a debug point
         """
         # Import correlation
         circular_corr = self.metrics['corr_radon_input']
@@ -199,13 +205,16 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         # Retrieve correlation spatial shape in meters
         spatial_res = self.metrics['spatial_resolution']
         wind_shape = self.ortho_sequence[0].pixels.shape
-        x_spatial_limits = np.array([-(wind_shape[1]), wind_shape[1] ])*spatial_res*self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']
-        y_spatial_limits = np.array([-(wind_shape[0]), wind_shape[0] ])*spatial_res*self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']
-        
+        x_spatial_limits = np.array([-(wind_shape[1]),
+                                     wind_shape[1] ])*spatial_res*self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']
+        y_spatial_limits = np.array([-(wind_shape[0]),
+                                     wind_shape[0] ])*spatial_res*self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']
+
         # Plot
         subfigure = self._figure.add_subplot(self._gs[2, 1])
-        pmc = subfigure.imshow(circular_corr, 
-                               extent=[x_spatial_limits[0], x_spatial_limits[1], y_spatial_limits[0], y_spatial_limits[1]]
+        pmc = subfigure.imshow(circular_corr,
+                               extent=[x_spatial_limits[0], x_spatial_limits[1],
+                                       y_spatial_limits[0], y_spatial_limits[1]]
                               )
         plt.title('Filtered correlation')
         plt.xlabel('dX')
@@ -260,7 +269,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         # Highlight max var angle corresponding to wave direction
         if 'direction' in self.metrics:
-            subfigure.arrow(self.metrics['direction'], y_spatial_limits[0], 0, (nb_rho-2)*spatial_res, color='orange')
+            subfigure.arrow(self.metrics['direction'], y_spatial_limits[0], 0,
+                            (nb_rho-2)*spatial_res, color='orange')
             plt.annotate(f"{self.metrics['direction']}°",
                          (self.metrics['direction'] + 1, 10+y_spatial_limits[0]),
                          color='orange',
@@ -276,7 +286,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         # Retreive axis of the sinogram value plot
         spatial_res = self.metrics['spatial_resolution']
-        x_spatial_axis = (np.arange(0, len(sinogram_max_var))-(len(sinogram_max_var) // 2))*spatial_res
+        x_spatial_axis = (np.arange(0,
+                                    len(sinogram_max_var))-(len(sinogram_max_var) // 2))*spatial_res
         min_limit_x = np.min(x_spatial_axis)
         min_limit_y = np.min(sinogram_max_var)
 
@@ -306,8 +317,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         # Retreive axis of the sinogram value plot
         spatial_res = self.metrics['spatial_resolution']
-        x_spatial_axis = np.arange(-(len(sinogram_max_var) // 2), len(sinogram_max_var) // 2 + 1)*spatial_res
-        
+        x_spatial_axis = np.arange(-(len(sinogram_max_var) // 2),
+                                   len(sinogram_max_var) // 2 + 1)*spatial_res
+
         # Plot
         subfigure = self._figure.add_subplot(self._gs[4, 0])
         subfigure.plot(x_spatial_axis, sinogram_max_var)

@@ -23,7 +23,9 @@ from ..image.ortho_sequence import OrthoSequence, FrameIdType
 from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
 from ..image_processing.waves_radon import WavesRadon, linear_directions
 from ..image_processing.waves_sinogram import WavesSinogram
-from ..waves_exceptions import WavesEstimationError, NotExploitableSinogram, CorrelationComputationError, SequenceImagesError
+from ..waves_exceptions import (NotExploitableSinogram,
+                                CorrelationComputationError,
+                                SequenceImagesError)
 
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation

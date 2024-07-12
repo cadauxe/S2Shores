@@ -86,7 +86,9 @@ class OrthoStack(ABC, OrthoLayout):
         """
 
     def build_spatial_ref(self) -> str:
-        """ :returns: a string of metadata describing the projection information for spatial_ref variable
+        """
+        :returns: a string of metadata describing the projection information
+                for spatial_ref variable
         """
         srs = osr.SpatialReference()
         srs.ImportFromEPSG(self.epsg_code)

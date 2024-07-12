@@ -57,8 +57,9 @@ def detrend_signal(array: np.ndarray, axis:int=0) -> np.ndarray:
     :returns: detrended array
     """
     return detrend(array, axis=axis)
-    
-def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_period: float, fs: float, axis: int=0) -> np.ndarray:
+
+def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_period: float,
+                           fs: float, axis: int=0) -> np.ndarray:
     """ Performs a Band-pass filtering using a Butterworth filter
 
     :param array: entry signal

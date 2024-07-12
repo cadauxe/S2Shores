@@ -204,7 +204,8 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
             else:
                 print(f'{sample} is not in roi-window_size/2.')
         if self._debug_samples==[]:
-            raise ValueError("There is no point available to debug. Check your points' coordinates and the window size.")
+            raise ValueError("There is no point available to debug. \
+                             Check your points' coordinates and the window size.")
 
     def set_debug_flag(self, sample: Point) -> None:
         """ Set or reset the debug flag for a given point depending on its presence into the set

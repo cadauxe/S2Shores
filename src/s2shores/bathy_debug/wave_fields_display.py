@@ -487,19 +487,21 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
         (sinogram1 / np.max(np.abs(sinogram1)))
 
-    # get main direction 
-    sorted_estimations_args = local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
+    # get main direction
+    sorted_estimations_args = \
+        local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
 
     main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[
         sorted_estimations_args[0]]
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
-    
+
     build_sinogram_display(
         axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1, sinogram2,
         main_direction, plt_min, plt_max)
     build_sinogram_difference_display(
-        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max, cmap='bwr')
+        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference,
+        directions2, plt_min, plt_max, cmap='bwr')
     build_sinogram_display(
         axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
         main_direction, plt_min, plt_max, ordonate=False)
@@ -535,15 +537,19 @@ def display_sinograms_spatial_correlation(
     image1_circle_filtered = first_image.pixels * first_image.circle_image
     image2_circle_filtered = second_image.pixels * second_image.circle_image
     pseudo_rgb_circle_filtered = create_pseudorgb(image1_circle_filtered, image2_circle_filtered)
-    build_display_waves_image(fig, axs[0, 0], 'Master Image Circle Filtered', image1_circle_filtered,
+    build_display_waves_image(fig, axs[0, 0], 'Master Image Circle Filtered',
+                              image1_circle_filtered,
                               subplot_pos=[nrows, ncols, 1],
                               resolution=first_image.resolution, directions = arrows, cmap='gray')
-    build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB Circle Filtered', pseudo_rgb_circle_filtered,
+    build_display_pseudorgb(fig, axs[0, 1], 'Pseudo RGB Circle Filtered',
+                            pseudo_rgb_circle_filtered,
                             resolution=first_image.resolution,
                             subplot_pos=[nrows, ncols, 2], coordinates=False)
-    build_display_waves_image(fig, axs[0, 2], 'Slave Image Circle Filtered', image2_circle_filtered,
+    build_display_waves_image(fig, axs[0, 2], 'Slave Image Circle Filtered',
+                              image2_circle_filtered,
                               resolution=second_image.resolution,
-                              subplot_pos=[nrows, ncols, 3], directions = arrows, cmap='gray', coordinates=False)
+                              subplot_pos=[nrows, ncols, 3], directions = arrows,
+                              cmap='gray', coordinates=False)
 
     # Second Plot line = Sinogram1 / Sinogram2-Sinogram1 / Sinogram2
     first_radon_transform = WavesRadon(first_image)
@@ -553,7 +559,8 @@ def display_sinograms_spatial_correlation(
     radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
         (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
-    main_direction = local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
+    main_direction = \
+        local_estimator._bathymetry_estimations.get_estimations_attribute('direction')[0]
 
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
@@ -562,7 +569,8 @@ def display_sinograms_spatial_correlation(
         axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1, sinogram2,
         main_direction, plt_min, plt_max)
     build_sinogram_difference_display(
-        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max, cmap='bwr')
+        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference,
+        directions2, plt_min, plt_max, cmap='bwr')
     build_sinogram_display(
         axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
         main_direction, plt_min, plt_max, ordonate=False)
@@ -687,8 +695,8 @@ def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEs
         build_sinogram_fft_display(axes, title, csm_amplitude, directions, kfft, plt_min, plt_max,
                                    type, ordonate=False, abscissa=False)
     if type == 'phase':
-        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft, plt_min, plt_max,
-                                   type, ordonate=False)
+        build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft,
+                                   plt_min, plt_max, type, ordonate=False)
 
 
 def display_dft_sinograms_spectral_analysis(
@@ -740,7 +748,8 @@ def display_dft_sinograms_spectral_analysis(
         'Cross Spectral Matrix (Amplitude)')
     build_sinogram_spectral_display(
         axs[1, 2], 'Spectral Amplitude Sinogram2 [DFT]',
-        np.abs(sino2_fft), directions2, kfft, plt_min, plt_max, ordonate=False, abscissa=False, cmap="cmc.oslo_r")
+        np.abs(sino2_fft), directions2, kfft, plt_min, plt_max, ordonate=False, abscissa=False,
+        cmap="cmc.oslo_r")
 
 
     csm_phase, spectrum_amplitude, sinograms_correlation_fft = \
@@ -752,7 +761,8 @@ def display_dft_sinograms_spectral_analysis(
 
     build_sinogram_spectral_display(
         axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False, cmap="cmc.vik")
+        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False,
+        cmap="cmc.vik")
     build_correl_spectrum_matrix(
         axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'phase',
         'Cross Spectral Matrix (Amplitude * Phase-shifts)')
@@ -772,9 +782,13 @@ def display_dft_sinograms_spectral_analysis(
     return dft_sino_spectral
 
 
-def build_correl_spectrum_matrix_spatial_correlation(axes: Axes, local_estimator: 'SpatialCorrelationBathyEstimator',
-                                                     sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
-                                                     type: str, title: str, refinement_phase: bool=False) -> None:
+def build_correl_spectrum_matrix_spatial_correlation(axes: Axes,
+                                                     local_estimator: 'SpatialCorrelationBathyEstimator',
+                                                     sino1_fft: np.ndarray,
+                                                     sino2_fft: np.ndarray,
+                                                     kfft: np.ndarray,
+                                                     type: str, title: str,
+                                                     refinement_phase: bool=False) -> None:
     """ Computes the cross correlation spectrum of the radon transforms of the images, possibly
         restricted to a limited set of directions.
 
@@ -804,9 +818,11 @@ def build_correl_spectrum_matrix_spatial_correlation(axes: Axes, local_estimator
                                    type, ordonate=False)
 
 
-def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
+def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray,
+                                     directions: np.ndarray,
                                      main_theta: float, plt_min: float, plt_max: float,
-                                     ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
+                                     ordonate: bool=True, abscissa: bool=True,
+                                     **kwargs: dict) -> None:
 
   #  index_theta = int(main_theta - np.min(directions))
     index_theta = np.where(directions == int(main_theta))[0]
@@ -840,9 +856,11 @@ def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray
     axes.tick_params(axis='both', which='major', labelsize=8)
 
 
-def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, directions: np.ndarray,
+def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray,
+                                    directions: np.ndarray,
                                     main_theta: float, plt_min: float, plt_max: float,
-                                    ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
+                                    ordonate: bool=True, abscissa: bool=True,
+                                    **kwargs: dict) -> None:
 
     normalized_var = (np.var(values, axis=0) /
                       np.max(np.var(values, axis=0)) - 0.5) * values.shape[0]
@@ -866,9 +884,13 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, 
     theta_label_slave = 'along Slave Main Direction\n$\Theta$={:.1f}°'.format(main_theta_slave)
     nb_pixels = np.shape(values[:, index_theta_master])[0]
     absc = np.arange(-nb_pixels / 2, nb_pixels / 2)
-    axes.plot(absc, np.flip((values[:, index_theta_master] / np.max(np.abs(values[:, index_theta_master])))),
+    axes.plot(absc,
+              np.flip((values[:, index_theta_master] / np.max(np.abs(values[:,
+                                                                            index_theta_master])))),
               color="orange", lw=0.8, label=theta_label_master)
-    axes.plot(absc, np.flip((values[:, index_theta_slave] / np.max(np.abs(values[:, index_theta_slave])))),
+    axes.plot(absc,
+              np.flip((values[:, index_theta_slave] / np.max(np.abs(values[:,
+                                                                           index_theta_slave])))),
               color="blue", lw=0.8, ls='--', label=theta_label_slave)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
@@ -894,8 +916,9 @@ def build_sinogram_1D_display_slave(axes: Axes, title: str, values: np.ndarray, 
 def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndarray,
                                         directions1: np.ndarray, main_theta: float,
                                         values2: np.ndarray, directions2: np.ndarray,
-                                        plt_min: float, plt_max: float, correl_mode: str, ordonate: bool=True,
-                                        abscissa: bool=True, **kwargs: dict) -> None:
+                                        plt_min: float, plt_max: float, correl_mode: str,
+                                        ordonate: bool=True, abscissa: bool=True,
+                                        **kwargs: dict) -> None:
 
     normalized_var = (np.var(values2, axis=0) /
                       np.max(np.var(values2, axis=0)) - 0.5) * values2.shape[0]
@@ -911,7 +934,8 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # theta_label1 = 'Sinogram1 1D'  # along \n$\Theta$={:.1f}°'.format(main_theta)
     nb_pixels1 = np.shape(values1[:, index_theta1])[0]
     absc = np.arange(-nb_pixels1 / 2, nb_pixels1 / 2)
-    # axes.plot(absc, np.flip((values1[:, index_theta1] / np.max(np.abs(values1[:, index_theta1])))),
+    # axes.plot(absc,
+    # np.flip((values1[:, index_theta1] / np.max(np.abs(values1[:, index_theta1])))),
     #          color="orange", lw=0.8, label=theta_label1)
 
     index_theta2_master = int(np.where(directions2 == int(main_theta))[0])
@@ -922,7 +946,8 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     # theta_label2_master = 'Sinogram2 1D MASTER'  # along \n$\Theta$={:.1f}°'.format(main_theta)
     #nb_pixels2 = np.shape(values2[:, index_theta2_master])[0]
     #absc2 = np.arange(-nb_pixels2 / 2, nb_pixels2 / 2)
-    # axes.plot(absc2, np.flip((values2[:, index_theta2_master] / np.max(np.abs(values2[:, index_theta2_master])))),
+    # axes.plot(absc2,
+    # np.flip((values2[:, index_theta2_master] / np.max(np.abs(values2[:, index_theta2_master])))),
     #          color="black", lw=0.8, ls='--', label=theta_label2_master)
 
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
@@ -944,7 +969,8 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
 
     sino2_1D_slave = values2[:, index_theta2_slave]
     # theta_label2_slave = 'Sinogram2 1D SLAVE'  # along \n$\Theta$={:.1f}°'.format(main_theta)
-    # axes.plot(absc2, np.flip((values2[:, index_theta2_slave] / np.max(np.abs(values2[:, index_theta2_slave])))),
+    # axes.plot(absc2,
+    # np.flip((values2[:, index_theta2_slave] / np.max(np.abs(values2[:, index_theta2_slave])))),
     #          color="green", lw=0.8, ls='--', label=theta_label2_slave)
     # Compute Cross-Correlation between Sino1 [Master Main Direction& Sino2 [Slave Main Direction]
     sino_cross_corr_norm_slave = normalized_cross_correlation(
@@ -977,10 +1003,10 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
 
 def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndarray,
                                         directions1: np.ndarray, main_theta: float,
-                                        values2: np.ndarray, plt_min: float, plt_max: float, correl_mode: str,
-                                        choice: str, imgtype: str, ordonate: bool=True,
-                                        abscissa: bool=True, cmap: Optional[str] = None,
-                                        **kwargs: dict) -> None:
+                                        values2: np.ndarray, plt_min: float, plt_max: float,
+                                        correl_mode: str, choice: str, imgtype: str,
+                                        ordonate: bool=True, abscissa: bool=True,
+                                        cmap: Optional[str] = None, **kwargs: dict) -> None:
 
     extent = [np.min(directions1), np.max(directions1),
               np.floor(-values1.shape[0] / 2),
@@ -999,8 +1025,8 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
             slave_main_theta = slave_main_theta % (-np.sign(slave_main_theta) * 180.0)
 
         main_theta = slave_main_theta
-        title = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
-            main_theta)
+        title = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] \
+            and Sino1[All Directions]'.format(main_theta)
 
     if choice == 'one_dir':
         index_theta1 = int(np.where(directions1 == int(main_theta))[0])
@@ -1148,18 +1174,22 @@ def display_sinograms_1D_analysis_spatial_correlation(
     # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
     # Check if the main direction belongs to the plotting interval [plt_min:plt_ramax]
 
-    title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={:.1f}°] and Sino2[All Directions]'.format(
+    title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={:.1f}°] \
+        and Sino2[All Directions]'.format(
         theta_label)
-    title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
+    title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] \
+        and Sino1[All Directions]'.format(
         0)
-    title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n Sino1 and Sino2 for Each Direction'
+    title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n \
+        Sino1 and Sino2 for Each Direction'
 
     build_sinogram_2D_cross_correlation(
         axs[2, 0], title_cross_correl1, sinogram1, directions1, main_direction,
         sinogram2, plt_min, plt_max, correl_mode, choice='one_dir', imgtype='master')
     build_sinogram_2D_cross_correlation(
         axs[2, 1], title_cross_correl_2D, sinogram1, directions1, main_direction,
-        sinogram2, plt_min, plt_max, correl_mode, choice='all_dir', imgtype='master', ordonate=False)
+        sinogram2, plt_min, plt_max, correl_mode, choice='all_dir', imgtype='master',
+        ordonate=False)
     build_sinogram_2D_cross_correlation(
         axs[2, 2], title_cross_correl2, sinogram2, directions2, main_direction,
         sinogram1, plt_min, plt_max, correl_mode, choice='one_dir', imgtype='slave', ordonate=False)
@@ -1229,8 +1259,9 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     print('DELTA PHASE', delta_phase)
 
     ax_polar.plot(np.radians((main_direction+180)%360), 1 / main_wavelength, '*', color='black')
-    
-    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, \n$\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
+
+    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, \n$\lambda$={:.2f}m]'.format((direc_from_north),
+                                                                                 main_wavelength),
                       xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',
@@ -1296,7 +1327,8 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     first_image = local_estimator.ortho_sequence[0]
 
     # First Plot line = Image1 / pseudoRGB / Image2
-    build_display_waves_image(fig, axs[0], 'Image1 [Cartesian Projection]', first_image.original_pixels,
+    build_display_waves_image(fig, axs[0], 'Image1 [Cartesian Projection]',
+                              first_image.original_pixels,
                               resolution=first_image.resolution,
                               subplot_pos=[nrows, ncols, 1],
                               directions=arrows, cmap='gray')
@@ -1321,7 +1353,8 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     # set negative values to 0 to avoid mirror display
     polar[polar < 0] = 0
     build_polar_display(fig, axs[1], 'CSM Amplitude * CSM Phase-Shifts [Polar Projection]',
-                        local_estimator, polar, first_image.resolution, dir_max_from_north, main_wavelength,
+                        local_estimator, polar, first_image.resolution,
+                        dir_max_from_north, main_wavelength,
                         subplot_pos=[1, 2, 2])
 
     plt.tight_layout()
