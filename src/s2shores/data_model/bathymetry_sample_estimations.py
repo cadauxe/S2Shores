@@ -45,7 +45,7 @@ class BathymetrySampleEstimations(list):
         self._gravity = gravity
         self._distance_to_shore = distance_to_shore
         self._inside_roi = inside_roi
-        self._inside_offshore_limit = inside_offshore_limit	
+        self._inside_offshore_limit = inside_offshore_limit
         self._delta_time = delta_time
 
         self._data_available = True
@@ -192,7 +192,7 @@ class BathymetrySampleEstimations(list):
         if self.distance_to_shore <= 0.:
             status = SampleStatus.ON_GROUND
         elif not self.inside_offshore_limit:
-            status = SampleStatus.BEYOND_OFFSHORE_LIMIT  
+            status = SampleStatus.BEYOND_OFFSHORE_LIMIT
         elif not self.inside_roi:
             status = SampleStatus.OUTSIDE_ROI
         elif not self.data_available:
@@ -206,11 +206,11 @@ class BathymetrySampleEstimations(list):
     def __str__(self) -> str:
         result = f'+++++++++ Set of estimations made at: {self.location} \n'
         result += f'  distance to shore: {self.distance_to_shore}   gravity: {self.gravity}\n'
-        result += f'  availability: '
+        result += '  availability: '
         result += f' (data: {self.data_available}, delta time: {self.delta_time_available})\n'
         result += f'  STATUS: {self.status}'
-        result += f' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME,'
-        result += f' 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT)\n'
+        result += ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME,'
+        result += ' 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT)\n'
         result += f'{len(self)} estimations available:\n'
         for index, estimation in enumerate(self):
             result += f'---- estimation {index} ---- type: {type(estimation).__name__}\n'

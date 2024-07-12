@@ -65,7 +65,7 @@ class LocalBathyEstimator(ABC):
         self.global_estimator = global_estimator
         self.debug_sample = self.global_estimator.debug_sample
         self.local_estimator_params = self.global_estimator.local_estimator_params
-    
+
         self.selected_directions = selected_directions
 
         # FIXME: distance to shore test should take into account windows sizes
@@ -94,7 +94,7 @@ class LocalBathyEstimator(ABC):
                   available for that point, False otherwise.
         """
         return (self.bathymetry_estimations.distance_to_shore > 0 and
-                self.bathymetry_estimations.inside_offshore_limit and 
+                self.bathymetry_estimations.inside_offshore_limit and
                 self.bathymetry_estimations.inside_roi and
                 self.bathymetry_estimations.delta_time_available)
 

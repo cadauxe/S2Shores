@@ -271,7 +271,7 @@ class EstimatedCartoBathy(EstimatedBathy):
         """ Store a set of bathymetry estimations at some location """
         index_x, index_y = self.carto_sampling.index_point(bathy_estimations.location)
         self.estimated_bathy[index_y, index_x] = bathy_estimations
-        
+
 
     def _build_data_array(self, sample_property: str,
                           layer_definition: Dict[str, Any], nb_keep: int) -> DataArray:

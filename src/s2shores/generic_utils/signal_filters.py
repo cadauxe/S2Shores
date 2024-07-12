@@ -42,7 +42,7 @@ def remove_median(array: np.ndarray, kernel_ratio: float) -> np.ndarray:
 
 def filter_median(array: np.ndarray, kernel_size: int) -> np.ndarray:
     """ Perform median filtering on a signal
-    
+
     :param array: entry signal
     :param kernel_size: size of the median kernel filtering the signal
     :returns: filtered array
@@ -51,7 +51,7 @@ def filter_median(array: np.ndarray, kernel_size: int) -> np.ndarray:
 
 def detrend_signal(array: np.ndarray, axis:int=0) -> np.ndarray:
     """Performs a detrend process on a signal
-    
+
     :param array: entry signal
     :param axis: axis on which the detrend is applied (default axis=0)
     :returns: detrended array
@@ -60,7 +60,7 @@ def detrend_signal(array: np.ndarray, axis:int=0) -> np.ndarray:
     
 def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_period: float, fs: float, axis: int=0) -> np.ndarray:
     """ Performs a Band-pass filtering using a Butterworth filter
-    
+
     :param array: entry signal
     :param lowcut_period: signal period in seconds defining low frequency cut-off
     :param highcut_period: signal period in seconds defining high frequency cut-off
@@ -74,7 +74,7 @@ def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_peri
 
 def butter_bandpass(lowcut_period: float, highcut_period: float, fs: float, order: int=5)-> list:
     """ Compute the BP Butterworth filter coefficients
-    
+
     :param lowcut_period: signal period in seconds defining low frequency cut-off
     :param highcut_period: signal period in seconds defining high frequency cut-off
     :param fs: signal sampling frequency (Hz)

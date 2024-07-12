@@ -37,4 +37,4 @@ class SpatialCorrelationBathyEstimatorDebug(
             spatial_correl_sino_analysis.show()
             plt.show()
         else:
-            print('No estimation to display.')	
+            print('No estimation to display.')

@@ -288,7 +288,7 @@ class EstimatedPointsBathy(EstimatedBathy):
     def store_estimations(self, index: int,  bathy_estimations: BathymetrySampleEstimations) -> None:
         """ Store a set of bathymetry estimations at some location """
         self.estimated_bathy[index] = bathy_estimations
-        
+
 
     def _build_data_array(self, sample_property: str,
                           layer_definition: Dict[str, Any], nb_keep: int) -> DataArray:

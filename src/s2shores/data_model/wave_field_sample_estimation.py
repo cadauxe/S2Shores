@@ -102,7 +102,7 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
                 if self.delta_time * value < 0:
 		            # delta_time and propagated distance have opposite signs
                     self._invert_direction()
-                    value = -value		    
+                    value = -value
 
             self._delta_position = value
             self._solve_shift_equations()
@@ -123,11 +123,11 @@ class WaveFieldSampleEstimation(WaveFieldSampleDynamics):
             if np.isnan(value) or value == 0:
                 value = np.nan
             else:
-                if self.delta_time * value < 0: 
+                if self.delta_time * value < 0:
                     # delta_time and delta_phase have opposite signs
-                    self._invert_direction()  
-                    value = -value	    
-            
+                    self._invert_direction()
+                    value = -value
+
             self._delta_phase = value
             self._solve_shift_equations()
 

@@ -40,7 +40,7 @@ def find_period_from_zeros(signal: np.ndarray, min_period: int) -> Tuple[float, 
     y2 = signal[crossing_idx+1]
 
     zeros = (x1*y2 - x2*y1) / (y2 - y1)
-    
+
     demiperiods = np.diff(zeros)
     cond = demiperiods > (min_period / 2)
     demiperiods = demiperiods[cond]

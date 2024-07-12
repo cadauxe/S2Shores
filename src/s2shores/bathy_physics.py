@@ -33,7 +33,7 @@ def sensitivity_indicator(wavelength: float, celerity: float, gravity: float) ->
     :param wavelength: wavelength of the waves (m)
     :param celerity: the celerity of the waves (m.s-1)
     :param gravity: acceleration of the gravity (m/s2)
-    :returns:  sensitivity (1/slope of the linear dispersion relation) 
+    :returns:  sensitivity (1/slope of the linear dispersion relation)
       Sensitivity as a function of the derivative of the linear dispersion relation
     """
 
@@ -43,7 +43,7 @@ def sensitivity_indicator(wavelength: float, celerity: float, gravity: float) ->
     # Derivative of d/dGAMMA( atanh (GAMMA) ):
     '''
         d/dGAMMA( GAMMA *  atanh (GAMMA) )  =  d/dGAMMA( GAMMA/2 ln( 1+GAMMA / 1-GAMMA ) )
-        derivative of that can be analitically be derived to 
+        derivative of that can be analitically be derived to
         d/dGAMMA = atanh(GAMMA) + GAMMA / (1 - GAMMA^2)
 
         and sensitivity (1/mu):

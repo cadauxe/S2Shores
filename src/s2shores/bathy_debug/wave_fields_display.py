@@ -240,7 +240,7 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
         radius = np.floor(min(l1, l2) / 2) - 5
         for direction, coeff_length in directions:
             arrow_length = radius * coeff_length / coeff_length_max
-            dir_rad = np.deg2rad(direction)  
+            dir_rad = np.deg2rad(direction)
             axes.arrow(l1 // 2, l2 // 2,
                        np.cos(dir_rad) * arrow_length, -np.sin(dir_rad) * arrow_length,
                        head_width=2, head_length=3, color='r')
@@ -395,8 +395,8 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
               color="white", lw=0.8, label='Normalized Variance \n Reference Sinogram')
 
     pos1 = np.where(normalized_var1 == np.max(normalized_var1))
-    max_var_theta = directions[pos1][0] 
-    # Check coherence of main direction between Master / Slave  
+    max_var_theta = directions[pos1][0]
+    # Check coherence of main direction between Master / Slave
     if max_var_theta * main_theta < 0:
         max_var_theta = max_var_theta % (np.sign(main_theta) * 180.0)
     # Check if the direction belongs to the plotting interval [plt_min:plt_max]
@@ -590,7 +590,7 @@ def build_sinogram_spectral_display(axes: Axes, title: str, values: np.ndarray,
 
     axes.plot(directions, ((np.max(values, axis=0) / np.max(np.max(values, axis=0))) * kfft.max()),
               color="black", lw=0.7, label='Normalized Maximum')
-    
+
     # colorbar
     cbbox = inset_axes(axes, '50%', '10%', loc = 'upper left')
     [cbbox.spines[k].set_visible(False) for k in cbbox.spines]
@@ -637,7 +637,7 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
     cbbox.tick_params(axis='both', left=False, top=False, right=False, bottom=False, labelleft=False, labeltop=False, labelright=False, labelbottom=False)
     cbbox.set_facecolor([1,1,1,0.7])
     cbaxes = inset_axes(cbbox, '70%', '20%', loc = 'upper center')
-   
+
     cbar = plt.colorbar(im, cax=cbaxes, ticks=[np.nanmin(values), np.nanmax(values)], orientation='horizontal')
     cbar.ax.tick_params(labelsize=5)
     f = mticker.ScalarFormatter(useOffset=False, useMathText=True)
@@ -670,7 +670,7 @@ def build_sinogram_fft_display(axes: Axes, title: str, values: np.ndarray, direc
 
 def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEstimator',
                                  sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
-                                 plt_min: float, plt_max: float, type: str, title: str, 
+                                 plt_min: float, plt_max: float, type: str, title: str,
                                  refinement_phase: bool=False) -> None:
     radon_transform = local_estimator.radon_transforms[0]
     if not refinement_phase:
@@ -808,9 +808,9 @@ def build_sinogram_1D_display_master(axes: Axes, title: str, values1: np.ndarray
                                      main_theta: float, plt_min: float, plt_max: float,
                                      ordonate: bool=True, abscissa: bool=True, **kwargs: dict) -> None:
 
-  #  index_theta = int(main_theta - np.min(directions))    
+  #  index_theta = int(main_theta - np.min(directions))
     index_theta = np.where(directions == int(main_theta))[0]
-   
+
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
     if main_theta < plt_min or main_theta > plt_max:
         main_theta %= -np.sign(main_theta) * 180.0
@@ -915,7 +915,7 @@ def build_sinogram_1D_cross_correlation(axes: Axes, title: str, values1: np.ndar
     #          color="orange", lw=0.8, label=theta_label1)
 
     index_theta2_master = int(np.where(directions2 == int(main_theta))[0])
-    index_theta2_slave = int(pos2[0][0])   
+    index_theta2_slave = int(pos2[0][0])
 
     # get 1D-sinogram2 along relevant direction
     sino2_1D_master = values2[:, index_theta2_master]
@@ -990,14 +990,14 @@ def build_sinogram_2D_cross_correlation(axes: Axes, title: str, values1: np.ndar
         normalized_var = (np.var(values1, axis=0) /
                           np.max(np.var(values1, axis=0)) - 0.5) * values1.shape[0]
         pos = np.where(normalized_var == np.max(normalized_var))
-        slave_main_theta = directions1[pos][0] 
+        slave_main_theta = directions1[pos][0]
         # Check coherence of main direction between Master / Slave
         if slave_main_theta * main_theta < 0:
             slave_main_theta = slave_main_theta % (np.sign(main_theta) * 180.0)
         # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
         if slave_main_theta < plt_min or slave_main_theta > plt_max:
             slave_main_theta = slave_main_theta % (-np.sign(slave_main_theta) * 180.0)
-        
+
         main_theta = slave_main_theta
         title = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
             main_theta)
@@ -1112,7 +1112,7 @@ def display_sinograms_1D_analysis_spatial_correlation(
 
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
-    
+
     build_sinogram_display(
         axs[0, 0], 'Sinogram1 [Radon Transform on Master Image]',
         sinogram1, directions1, sinogram2, main_direction, plt_min, plt_max, abscissa=False)
@@ -1211,7 +1211,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     direc_from_north = dfn_max
     main_direction = 270 - dfn_max
     main_wavelength = max_wvlgth
-    
+
     sorted_estimations_args = local_estimator._bathymetry_estimations.argsort_on_attribute(local_estimator.final_estimations_sorting)
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[sorted_estimations_args[0]]
     delta_phase = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_phase')[sorted_estimations_args[0]]
@@ -1253,8 +1253,8 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     # Values to be plotted
     plotval = np.abs(values) / np.max(np.abs(values))
 
-    #convert the direction coordinates in the polar plot axis (from   
-    directions = (directions + 180)%360       
+    #convert the direction coordinates in the polar plot axis (from
+    directions = (directions + 180)%360
     # Add the last element of the list to the list.
     # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
     ddir = np.diff(directions).mean()
@@ -1289,10 +1289,10 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     main_wavelength = local_estimator._bathymetry_estimations.get_estimations_attribute('wavelength')[
         sorted_estimations_args[0]]
     delta_time = local_estimator._bathymetry_estimations.get_estimations_attribute('delta_time')[sorted_estimations_args[0]]
-    dir_max_from_north = (270 - main_direction) % 360	
+    dir_max_from_north = (270 - main_direction) % 360
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in local_estimator.bathymetry_estimations]
 
-    print("ARROWS",arrows)    
+    print("ARROWS",arrows)
     first_image = local_estimator.ortho_sequence[0]
 
     # First Plot line = Image1 / pseudoRGB / Image2

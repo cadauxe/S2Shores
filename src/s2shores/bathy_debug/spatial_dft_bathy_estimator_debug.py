@@ -41,7 +41,7 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
             polar_plot = display_polar_images_dft(self)
             plt.show()
         else:
-            print('No estimation to display.')	
+            print('No estimation to display.')
 
 
     def print_variables(self) -> None:

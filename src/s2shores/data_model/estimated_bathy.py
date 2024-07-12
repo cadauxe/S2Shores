@@ -47,7 +47,7 @@ class EstimatedBathy():
         :param index: index where to store the estimations
         :param bathy_estimations: the whole set of bathy estimations data at one point.
         """
-    
+
     @classmethod
     @abstractmethod
     def _build_data_array(self, sample_property: str,
