@@ -92,7 +92,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "S2SHORES"
-copyright = "2022, CNES-LEGOS"
+copyright = "2022, CNES-LEGOS-SHOM"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
