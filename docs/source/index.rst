@@ -26,14 +26,27 @@ This is the documentation of **S2Shores**.
 Contents
 ========
 
+
 .. toctree::
+   :caption: Tutorials
    :maxdepth: 2
 
+   Getting started <getting_started>
+   Usage <usage>
+   Tutorial <tutorial>
+   Contributing <contributing>
+
+
+.. toctree::
+   :caption: References
+   :maxdepth: 1
+
+   Bibliography <bibliography>
+   Api Reference <api/modules>
    License <license>
    Authors <authors>
    Changelog <changelog>
-   Contributing <contributing>
-   Module Reference <api/modules>
+
 
 
 Indices and tables
