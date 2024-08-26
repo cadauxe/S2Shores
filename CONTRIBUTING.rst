@@ -66,6 +66,69 @@ git push origin feature-or-bugfix-name
 8. **Create a Pull Request:**
 Open a pull request (PR) from your branch to the main repository. Provide a detailed description of your changes and the issue it addresses.
 
+
+Handling Issues in Your Workflow
+=================================
+1. Linking Commits to Issues
+
+Creating a Branch for the Issue
+--------------------------------
+
+When you start working on a new issue, create a new branch with a descriptive name that includes the github issue number:
+
+```bash
+git checkout -b 42-fix-bug-in-module
+```
+
+This helps keep your work organized and makes it easy to track the changes related to a specific issue.
+
+Committing with Issue References
+--------------------------------
+
+When committing changes related to an issue, include the issue number in your commit message. This practice helps in linking the commit to the issue automatically in platforms like GitHub and GitLab:
+
+```bash
+git commit -m "Fix bug in module X related to #42"
+```
+The commit will be automatically linked to the issue #42 in the issue tracker.
+
+Pushing the Branch
+-------------------
+
+Push your branch to the remote repository:
+
+```bash
+git push origin 42-fix-bug-in-module
+```
+
+This allows others to review your work and ensures that the issue tracking is kept up to date.
+
+
+2. Closing Issues and creating a merge request
+
+Closing Issues
+--------------
+
+If your commit resolves an issue, you can automatically close the issue by using keywords in your commit message:
+
+```bash
+git commit -m "Fix bug in module X, closes #42"
+```
+This will close the issue when the commit is merged into the main branch.
+
+Creating a Merge Request/ Pull Request
+--------------------------------------
+
+When your work is complete, create a pull request (GitHub) from your branch to the main branch.
+In the description, reference the issue number again to ensure clarity:
+
+```markdown
+This merge request addresses issue #42 by fixing the bug in module X.
+```
+
+This practice ensures that your work is well-documented.
+
+
 Coding Guide
 ============
 
