@@ -5,7 +5,7 @@ Class managing the computation of wave fields from two images taken at a small t
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
+:copyright: 2021-2024 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 5 March 2021
 """
