@@ -255,7 +255,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 highcut_period=self.local_estimator_params['TUNING']['HIGHCUT_PERIOD'],
                 sampling_freq=fps,
                 axis=1)
-        elif self.local_estimator_params['TUNING']['DETREND_TIME_SERIES'] == 0:
+        elif self.local_estimator_params['TUNING']['FILTER_TIME_SERIES'] == 0:
             self._time_series = time_series_selec
         else:
             raise ValueError('FILTER_TIME_SERIES parameter must be 0 or 1.')
