@@ -9,10 +9,10 @@
 """
 from functools import lru_cache
 
+import numpy as np
 from scipy.signal import convolve2d
 
 from .numpy_utils import circular_mask, gaussian_mask
-import numpy as np
 
 
 def clipping(image_array: np.ndarray, ratio_size: float) -> np.ndarray:
@@ -175,17 +175,19 @@ def circular_masking(image_array: np.ndarray) -> np.ndarray:
 
 def normalise(image_array: np.ndarray) -> np.ndarray:
     """Performs normalisation of the matrix
-    
+
     :param image_array: entry image
     :returns: normalised image
     """
-    norm_image = (image_array-np.nanmean(image_array))/np.nanstd(image_array)
+    norm_image = (image_array - np.nanmean(image_array)) / np.nanstd(image_array)
     return norm_image
-    
+
+
 def gaussian_masking(image_array: np.ndarray, sigma: float) -> np.ndarray:
     """ Apply a gaussian mask to a matrix
-    
+
     :param image_array: entry image
+    :param sigma: standard deviation of the gaussian
     :returns: gaussian maked image
     """
     mask = gaussian_mask(image_array.shape[0], image_array.shape[1], sigma)

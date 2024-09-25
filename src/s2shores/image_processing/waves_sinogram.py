@@ -8,15 +8,13 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import List, Tuple, Callable, Any  # @NoMove
+from typing import Any, Callable, List, Tuple  # @NoMove
 
-
-from scipy.interpolate import interp1d
 import numpy as np
+from scipy.interpolate import interp1d
 
 from ..generic_utils.numpy_utils import HashableNdArray
 from ..generic_utils.signal_utils import get_unity_roots
-
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 
@@ -38,6 +36,8 @@ class WavesSinogram:
         self.values = values
         self.size = values.size
 
+        # TODO: embed frequencies and DFT coefficients in a single object
+        # (for standard and interpolated DFTs)
         # Normalized frequencies available in the standard DFT when it exists
         nb_positive_coeffs_dft = int(np.ceil(self.size / 2))
         self._dft_frequencies = np.fft.fftfreq(self.size)[0:nb_positive_coeffs_dft]

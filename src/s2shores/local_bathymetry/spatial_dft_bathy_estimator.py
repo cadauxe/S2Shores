@@ -7,8 +7,7 @@
 :license: see LICENSE file
 :created: 5 mars 2021
 """
-from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Tuple,  # @NoMove
-                    cast)
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast  # @NoMove
 
 import numpy as np
 from scipy.signal import find_peaks

@@ -7,15 +7,14 @@
 :license: see LICENSE file
 :created: 23/06/2021
 """
-from typing import Tuple, Optional  # @NoMove
+from typing import Optional, Tuple  # @NoMove
 
-from osgeo import osr, gdal
+from osgeo import gdal, osr
+
+from ..image.image_geometry_types import PointType
 
 GDAL3_OR_GREATER = gdal.VersionInfo()[0] >= '3'
 SWAP_COORDS_EPSG = [4326]
-
-# TODO: get rid of PointType
-PointType = Tuple[float, float]
 
 
 class LocalizedDataProvider:

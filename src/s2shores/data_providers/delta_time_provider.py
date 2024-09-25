@@ -7,14 +7,13 @@
 :license: see LICENSE file
 :created: 02/08/2021
 """
-from abc import abstractmethod, ABC
 import datetime
-from typing import Dict, Any, List  # @NoMove
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List  # @NoMove
 
 from shapely.geometry import Point
 
 from ..waves_exceptions import WavesException
-
 from .localized_data_provider import LocalizedDataProvider
 
 

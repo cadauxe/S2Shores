@@ -9,13 +9,12 @@ to manage tomographic angles in several ways.
 :created: Thu Apr 1 2021
 """
 from functools import lru_cache
+from typing import List, Optional, Tuple, Union, cast  # @NoMove
 from warnings import warn
-from typing import Union, Tuple, List, cast, Optional  # @NoMove
-
-from skimage.transform import warp
-from skimage.util.dtype import img_as_float
 
 import numpy as np
+from skimage.transform import warp
+from skimage.util.dtype import img_as_float
 
 
 # TODO: use DirectionsQuantizer
@@ -174,7 +173,6 @@ def _process_angles_subsets(angles: np.ndarray, largest: np.ndarray, smallest: n
     :param largest: largest set of indices of angles of the same sign which must be computed
     :param smallest: remaining angles indices (their sign is opposite to the sign of angles
                      pointed by the largest set)
-    :param angle_offset: the value to use to find the opposite direction (either -180. or 180.)
     :returns: The list of angles which must be computed together with their index in the projection
               The list of angles indexes which can be produced by a flip of another angle specified
               by its index.

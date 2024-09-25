@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 6 mars 2021
 """
-from typing import List, Callable, Tuple
+from typing import Callable, List, Tuple
 
 import numpy as np
 

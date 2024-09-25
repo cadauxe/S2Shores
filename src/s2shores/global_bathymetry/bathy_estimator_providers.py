@@ -12,13 +12,13 @@ from typing import Optional, Union  # @NoMove
 
 from shapely.geometry import Point
 
-
 from ..data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
-from ..data_providers.dis_to_shore_provider import (InfinityDisToShoreProvider, DisToShoreProvider,
-                                                    NetCDFDisToShoreProvider, GeotiffDisToShoreProvider)
-from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, GravityProvider,
-                                               ConstantGravityProvider)
-from ..data_providers.roi_provider import (RoiProvider, VectorFileRoiProvider)
+from ..data_providers.dis_to_shore_provider import (DisToShoreProvider, GeotiffDisToShoreProvider,
+                                                    InfinityDisToShoreProvider,
+                                                    NetCDFDisToShoreProvider)
+from ..data_providers.gravity_provider import (ConstantGravityProvider, GravityProvider,
+                                               LatitudeVaryingGravityProvider)
+from ..data_providers.roi_provider import RoiProvider, VectorFileRoiProvider
 from ..image.ortho_stack import OrthoStack
 
 
@@ -53,17 +53,17 @@ class BathyEstimatorProviders:
             self, provider_info: Optional[Union[Path, DisToShoreProvider]] = None) -> None:
         """ Sets the DisToShoreProvider to use with this estimator
 
-        :param provider_info: Either the DisToShoreProvider to use or a path to a netCDF or Geotiff file
-                           assuming a geographic NetCDF or Geotiff format.
+        :param provider_info: Either the DisToShoreProvider to use or a path to a netCDF or Geotiff
+                           file assuming a geographic NetCDF or Geotiff format.
         """
         if isinstance(provider_info, DisToShoreProvider):
             distoshore_provider = provider_info
         elif isinstance(provider_info, Path):
-            if (Path(provider_info).suffix.lower() == '.nc'):
+            if Path(provider_info).suffix.lower() == '.nc':
                 distoshore_provider = NetCDFDisToShoreProvider(provider_info, 4326,
                                                                x_axis_label='lon',
                                                                y_axis_label='lat')
-            elif (Path(provider_info).suffix.lower() == '.tif'):
+            elif Path(provider_info).suffix.lower() == '.tif':
                 distoshore_provider = GeotiffDisToShoreProvider(provider_info)
         else:
             # None or some other type, keep the current provider

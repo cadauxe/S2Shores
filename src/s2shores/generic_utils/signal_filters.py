@@ -7,9 +7,10 @@
 :license: see LICENSE file
 :created: 26 aout 2021
 """
-from scipy.signal import medfilt, detrend, butter, lfilter
+from typing import Tuple
 
 import numpy as np
+from scipy.signal import butter, detrend, lfilter, medfilt
 
 
 def filter_mean(array: np.ndarray, window: int) -> np.ndarray:
@@ -40,49 +41,55 @@ def remove_median(array: np.ndarray, kernel_ratio: float) -> np.ndarray:
         kernel_size = kernel_size + 1
     return array - filter_median(array, kernel_size)
 
+
 def filter_median(array: np.ndarray, kernel_size: int) -> np.ndarray:
     """ Perform median filtering on a signal
-    
+
     :param array: entry signal
     :param kernel_size: size of the median kernel filtering the signal
     :returns: filtered array
     """
     return medfilt(array, kernel_size)
 
-def detrend_signal(array: np.ndarray, axis:int=0) -> np.ndarray:
+
+def detrend_signal(array: np.ndarray, axis: int=0) -> np.ndarray:
     """Performs a detrend process on a signal
-    
+
     :param array: entry signal
     :param axis: axis on which the detrend is applied (default axis=0)
     :returns: detrended array
     """
     return detrend(array, axis=axis)
-    
-def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_period: float, fs: float, axis: int=0) -> np.ndarray:
+
+
+def butter_bandpass_filter(array: np.ndarray, lowcut_period: float, highcut_period: float,
+                           sampling_freq: float, axis: int=0) -> np.ndarray:
     """ Performs a Band-pass filtering using a Butterworth filter
-    
+
     :param array: entry signal
     :param lowcut_period: signal period in seconds defining low frequency cut-off
     :param highcut_period: signal period in seconds defining high frequency cut-off
-    :param fs: signal sampling frequency (Hz)
+    :param sampling_freq: signal sampling frequency (Hz)
     :param axis: axis on which the filtering is applied (default axis=0)
     :returns: filtered array
     """
-    b, a = butter_bandpass(lowcut_period, highcut_period, fs)
-    filtered_array = lfilter(b, a, array, axis=axis)
+    numerator, denominator = butter_bandpass(lowcut_period, highcut_period, sampling_freq)
+    filtered_array = lfilter(numerator, denominator, array, axis=axis)
     return filtered_array
 
-def butter_bandpass(lowcut_period: float, highcut_period: float, fs: float, order: int=5)-> list:
+
+def butter_bandpass(lowcut_period: float, highcut_period: float,
+                    sampling_freq: float, order: int=5) -> Tuple[np.ndarray, np.ndarray]:
     """ Compute the BP Butterworth filter coefficients
-    
+
     :param lowcut_period: signal period in seconds defining low frequency cut-off
     :param highcut_period: signal period in seconds defining high frequency cut-off
-    :param fs: signal sampling frequency (Hz)
-    :param order: fitler order (default=5)
+    :param sampling_freq: signal sampling frequency (Hz)
+    :param order: filter order (default=5)
     :returns: filter coefficients
     """
-    nyq = 0.5 * fs
-    low = (1/lowcut_period) / nyq
-    high = (1/highcut_period) / nyq
-    b, a = butter(order, [low, high], btype='band')
-    return b, a
+    nyq = 0.5 * sampling_freq
+    low = (1 / lowcut_period) / nyq
+    high = (1 / highcut_period) / nyq
+    numerator, denominator = butter(order, [low, high], btype='band')
+    return numerator, denominator

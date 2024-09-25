@@ -12,9 +12,9 @@ from typing import Union
 
 import numpy as np
 
-
 NdArrayOrFloat = Union[np.ndarray, float]
 SENSITIVITY_PRECISION = 0.0001
+
 
 def linearity_indicator(wavelength: float, celerity: float, gravity: float) -> float:
     """ Computes a linearity indicator of the depth estimation using the linear dispersive relation
@@ -28,12 +28,13 @@ def linearity_indicator(wavelength: float, celerity: float, gravity: float) -> f
 
 
 def sensitivity_indicator(wavelength: float, celerity: float, gravity: float) -> float:
-    """ Computes a sensitivity indicator of the depth estimation using the linear dispersive relation
+    """ Computes a sensitivity indicator of the depth estimation using the linear dispersive
+    relation
 
     :param wavelength: wavelength of the waves (m)
     :param celerity: the celerity of the waves (m.s-1)
     :param gravity: acceleration of the gravity (m/s2)
-    :returns:  sensitivity (1/slope of the linear dispersion relation) 
+    :returns:  sensitivity (1/slope of the linear dispersion relation)
       Sensitivity as a function of the derivative of the linear dispersion relation
     """
 
@@ -41,23 +42,29 @@ def sensitivity_indicator(wavelength: float, celerity: float, gravity: float) ->
     gamma = linearity_indicator(wavelength, celerity, gravity)
 
     # Derivative of d/dGAMMA( atanh (GAMMA) ):
-    '''
-        d/dGAMMA( GAMMA *  atanh (GAMMA) )  =  d/dGAMMA( GAMMA/2 ln( 1+GAMMA / 1-GAMMA ) )
-        derivative of that can be analitically be derived to 
-        d/dGAMMA = atanh(GAMMA) + GAMMA / (1 - GAMMA^2)
-
-        and sensitivity (1/mu):
-        mu = d/dGAMMA / tanh(GAMMA)
-        and the sensitivity is then 1 / mu:
-    '''
+    # d/dGAMMA( GAMMA *  atanh (GAMMA) )  =  d/dGAMMA( GAMMA/2 ln( 1+GAMMA / 1-GAMMA ) )
+    # derivative of that can be analitically be derived to
+    # d/dGAMMA = atanh(GAMMA) + GAMMA / (1 - GAMMA^2)
+    #
+    # and sensitivity (1/mu):
+    # mu = d/dGAMMA / tanh(GAMMA)
+    # and the sensitivity is then 1 / mu:
     if abs(gamma) >= 1.:
         sensitivity = SENSITIVITY_PRECISION
     else:
-        sensitivity = (1 / ((np.arctanh(gamma) + (gamma/(1-(gamma**2)))) / np.tanh(gamma) ) )
+        sensitivity = (1 / ((np.arctanh(gamma) + (gamma / (1 - (gamma**2)))) / np.tanh(gamma)))
     return sensitivity
 
 
 def depth_from_dispersion(wavenumber: float, celerity: float, gravity: float) -> float:
+    """ Estimate depth using the linear dispersive relation
+
+    :param wavenumber: wavenumber of the waves (m-1)
+    :param celerity: the celerity of the waves (m.s-1)
+    :param gravity: acceleration of the gravity (m/s2)
+    :returns: the depth according to the linear dispersion relation, or np.Infinity if the
+              linearirty indicator is greater than 1.
+    """
     factor = linearity_indicator(1. / wavenumber, celerity, gravity)
     if abs(factor) > 1.:
         depth = np.Infinity

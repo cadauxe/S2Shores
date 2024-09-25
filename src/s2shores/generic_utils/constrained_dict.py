@@ -7,8 +7,8 @@
 :license: see LICENSE file
 :created: 12 oct 2021
 """
-from typing import Any  # @NoMove
 from abc import ABC, abstractmethod
+from typing import Any  # @NoMove
 
 
 class ConstrainedDict(ABC, dict):

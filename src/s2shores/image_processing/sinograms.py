@@ -7,15 +7,13 @@
 :license: see LICENSE file
 :created: 4 mars 2021
 """
-from typing import Optional, Any, List, Tuple  # @NoMove @UnusedImport
+from typing import Any, List, Optional, Tuple  # @NoMove @UnusedImport
 
 import numpy as np  # @NoMove
 
-
 from ..generic_utils.numpy_utils import HashableNdArray
-
 from .sinograms_dict import SinogramsDict
-from .waves_sinogram import WavesSinogram, SignalProcessingFilters
+from .waves_sinogram import SignalProcessingFilters, WavesSinogram
 
 
 class Sinograms(SinogramsDict):
@@ -74,6 +72,7 @@ class Sinograms(SinogramsDict):
 
         :param wavenumbers: the set of wavenumbers to use for interpolating the DFT.
         :param directions: the set of directions for which the sinograms DFT must be interpolated
+        :raises ValueError: when there is no wavenumbers to interpolate from
         """
         # Interpolation can be done only if at least one frequency is requested
         if wavenumbers.size == 0:

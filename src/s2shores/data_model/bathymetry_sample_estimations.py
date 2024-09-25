@@ -7,16 +7,14 @@
 :license: see LICENSE file
 :created: 11 sep 2021
 """
-from enum import IntEnum
 import warnings
-
-from shapely.geometry import Point
-from typing import Union, List, Optional
+from enum import IntEnum
+from typing import List, Optional, Union
 
 import numpy as np
+from shapely.geometry import Point
 
 from ..waves_exceptions import WavesEstimationAttributeError
-
 from .bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
@@ -31,11 +29,11 @@ class SampleStatus(IntEnum):
     BEYOND_OFFSHORE_LIMIT = 6
 
 
-
 class BathymetrySampleEstimations(list):
     """ This class gathers information relevant to some location, whatever the bathymetry
     estimators, as well as a list of bathymetry estimations made at this location.
     """
+# TODO: add a keep_only() method to reduce the list to a maximum number of estimations.
 
     def __init__(self, location: Point, gravity: float, delta_time: float,
                  distance_to_shore: float, inside_roi: bool, inside_offshore_limit: bool) -> None:
@@ -45,7 +43,7 @@ class BathymetrySampleEstimations(list):
         self._gravity = gravity
         self._distance_to_shore = distance_to_shore
         self._inside_roi = inside_roi
-        self._inside_offshore_limit = inside_offshore_limit	
+        self._inside_offshore_limit = inside_offshore_limit
         self._delta_time = delta_time
 
         self._data_available = True
@@ -121,9 +119,9 @@ class BathymetrySampleEstimations(list):
         """
         try:
             return [getattr(estimation, attribute_name) for estimation in self]
-        except AttributeError:
+        except AttributeError as excp:
             err_msg = f'Attribute {attribute_name} undefined for some wave field estimation'
-            raise WavesEstimationAttributeError(err_msg)
+            raise WavesEstimationAttributeError(err_msg) from excp
 
     def remove_unphysical_wave_fields(self) -> None:
         """  Remove unphysical wave fields
@@ -152,7 +150,8 @@ class BathymetrySampleEstimations(list):
 
     @property
     def inside_offshore_limit(self) -> bool:
-        """ :returns: True if the distance to shore is inferior or equal to the offshore limit, False otherwise"""
+        """ :returns: True if the distance to shore is inferior or equal to the offshore limit,
+                      False otherwise"""
         return self._inside_offshore_limit
 
     @property
@@ -192,7 +191,7 @@ class BathymetrySampleEstimations(list):
         if self.distance_to_shore <= 0.:
             status = SampleStatus.ON_GROUND
         elif not self.inside_offshore_limit:
-            status = SampleStatus.BEYOND_OFFSHORE_LIMIT  
+            status = SampleStatus.BEYOND_OFFSHORE_LIMIT
         elif not self.inside_roi:
             status = SampleStatus.OUTSIDE_ROI
         elif not self.data_available:
@@ -206,11 +205,11 @@ class BathymetrySampleEstimations(list):
     def __str__(self) -> str:
         result = f'+++++++++ Set of estimations made at: {self.location} \n'
         result += f'  distance to shore: {self.distance_to_shore}   gravity: {self.gravity}\n'
-        result += f'  availability: '
+        result += '  availability: '
         result += f' (data: {self.data_available}, delta time: {self.delta_time_available})\n'
         result += f'  STATUS: {self.status}'
-        result += f' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME,'
-        result += f' 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT)\n'
+        result += ' (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME,'
+        result += ' 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT)\n'
         result += f'{len(self)} estimations available:\n'
         for index, estimation in enumerate(self):
             result += f'---- estimation {index} ---- type: {type(estimation).__name__}\n'

@@ -9,12 +9,10 @@
 """
 import time
 import warnings
-
 from typing import TYPE_CHECKING  # @NoMove
 
-from xarray import Dataset  # @NoMove
 from shapely.geometry import Point
-
+from xarray import Dataset  # @NoMove
 
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..data_model.estimated_carto_bathy import EstimatedCartoBathy
@@ -23,7 +21,6 @@ from ..image.ortho_sequence import OrthoSequence
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..waves_exceptions import WavesException
-
 
 if TYPE_CHECKING:
     from .bathy_estimator import BathyEstimator  # @UnusedImport
@@ -46,6 +43,7 @@ class OrthoBathyEstimator:
     def compute_bathy(self) -> Dataset:
         """ Computes the bathymetry dataset for the samples belonging to a given subtile.
 
+        :raises ValueError: when output format is not a supported one
         :return: Estimated bathymetry dataset
         """
 
@@ -62,12 +60,11 @@ class OrthoBathyEstimator:
 
         start = time.time()
         computed_points = 0
-        
+
         if self.parent_estimator.output_format == 'POINT':
             # Estimate bathy on points
-            samples = self.parent_estimator._debug_samples
-            total_points = len(samples)
-            estimated_bathy = EstimatedPointsBathy(total_points, 
+            total_points = len(self.parent_estimator._debug_samples)
+            estimated_bathy = EstimatedPointsBathy(total_points,
                                                    self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.parent_estimator._debug_samples
 
@@ -78,15 +75,14 @@ class OrthoBathyEstimator:
             samples = self.sampled_ortho.carto_sampling.x_y_sampling()
             total_points = self.sampled_ortho.carto_sampling.nb_samples
         else:
-            raise ValueError("Output format must be one of the proposed one in the config file.")
-	            
+            raise ValueError('Output format must be one of the proposed ones in the config file.')
 
         for index, sample in enumerate(samples):
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
             if bathy_estimations.distance_to_shore > 0 and bathy_estimations.inside_roi:
                 computed_points += 1
             # Store bathymetry sample estimations
-            estimated_bathy.store_estimations(index, bathy_estimations)            
+            estimated_bathy.store_estimations(index, bathy_estimations)
 
         comput_time = time.time() - start
         print(f'Computed {computed_points}/{total_points} points in: {comput_time:.2f} s')
@@ -108,18 +104,18 @@ class OrthoBathyEstimator:
                     print(f'Subtile shape {sub_tile_images[index].pixels.shape}')
                     print(f'Window inside ortho image coordinates: {window}')
                     print(f'--{ortho_sequence._images_id[index]} imagette {image_sequence}')
-		
+
             # TODO: use selected_directions argument
             local_bathy_estimator = local_bathy_estimator_factory(estimation_point, ortho_sequence,
                                                                   self.parent_estimator)
 
             bathy_estimations = local_bathy_estimator.bathymetry_estimations
-            if local_bathy_estimator.can_estimate_bathy() :
+            if local_bathy_estimator.can_estimate_bathy():
                 local_bathy_estimator.run()
-                bathy_estimations.remove_unphysical_wave_fields()	
+                bathy_estimations.remove_unphysical_wave_fields()
                 bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)
                 if self.parent_estimator.debug_sample:
-                    print(f'estimations after sorting :')
+                    print('estimations after sorting :')
                     print(bathy_estimations)
         except WavesException as excp:
             warn_msg = f'Unable to estimate bathymetry: {str(excp)}'

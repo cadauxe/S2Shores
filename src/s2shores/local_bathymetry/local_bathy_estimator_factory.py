@@ -12,22 +12,20 @@ from typing import TYPE_CHECKING, Dict, Optional, Type  # @NoMove
 import numpy as np
 from shapely.geometry import Point
 
-from ..bathy_debug.spatial_correlation_bathy_estimator_debug import \
-    SpatialCorrelationBathyEstimatorDebug
-from ..bathy_debug.spatial_dft_bathy_estimator_debug import \
-    SpatialDFTBathyEstimatorDebug
-from ..bathy_debug.temporal_correlation_bathy_estimator_debug import \
-    TemporalCorrelationBathyEstimatorDebug
+from ..bathy_debug.spatial_correlation_bathy_estimator_debug import (
+    SpatialCorrelationBathyEstimatorDebug)
+from ..bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstimatorDebug
+from ..bathy_debug.temporal_correlation_bathy_estimator_debug import (
+    TemporalCorrelationBathyEstimatorDebug)
 from ..image.ortho_sequence import OrthoSequence
 from .local_bathy_estimator import LocalBathyEstimator
-from .spatial_correlation_bathy_estimator import \
-    SpatialCorrelationBathyEstimator
+from .spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
-from .temporal_correlation_bathy_estimator import \
-    TemporalCorrelationBathyEstimator
+from .temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
+
 
 # Dictionary of classes to be instanciated for each local bathymetry estimator
 LOCAL_BATHY_ESTIMATION_CLS: Dict[str, Type[LocalBathyEstimator]]
@@ -68,9 +66,9 @@ def get_local_bathy_estimator_cls(local_estimator_code: str,
             local_bathy_estimator_cls = LOCAL_BATHY_ESTIMATION_CLS_DEBUG[local_estimator_code]
         else:
             local_bathy_estimator_cls = LOCAL_BATHY_ESTIMATION_CLS[local_estimator_code]
-    except KeyError:
+    except KeyError as excp:
         msg = f'{local_estimator_code} is not a supported local bathymetry estimation method'
         if debug_mode:
-            msg += f' with debug mode'
-        raise NotImplementedError(msg)
+            msg += ' with debug mode'
+        raise NotImplementedError(msg) from excp
     return local_bathy_estimator_cls

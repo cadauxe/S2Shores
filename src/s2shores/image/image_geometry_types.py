@@ -7,7 +7,7 @@
 :license: see LICENSE file
 :created: 18/05/2021
 """
-from typing import Tuple, Sequence
+from typing import Sequence, Tuple
 
 MarginsType = Tuple[float, float, float, float]
 

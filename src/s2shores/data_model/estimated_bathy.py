@@ -7,9 +7,9 @@
 :license: see LICENSE file
 :created: 14/05/2021
 """
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
+from typing import Any, Dict, Hashable, List, Mapping
 
 import numpy as np  # @NoMove
 from xarray import DataArray, Dataset  # @NoMove
@@ -24,6 +24,7 @@ ALL_LAYERS_TYPES = NOMINAL_LAYER
 
 METERS_UNIT = 'Meters [m]'
 SPATIAL_REF = 'spatial_ref'
+
 
 class EstimatedBathy():
     """ This class gathers all the estimated bathymetry samples in a whole dataset.
@@ -41,13 +42,13 @@ class EstimatedBathy():
 
     @classmethod
     @abstractmethod
-    def store_estimations(self, index:int, bathy_estimations: BathymetrySampleEstimations) -> None:
+    def store_estimations(self, index: int, bathy_estimations: BathymetrySampleEstimations) -> None:
         """ Store a set of bathymetry estimations at some location
 
         :param index: index where to store the estimations
         :param bathy_estimations: the whole set of bathy estimations data at one point.
         """
-    
+
     @classmethod
     @abstractmethod
     def _build_data_array(self, sample_property: str,
@@ -74,8 +75,8 @@ class EstimatedBathy():
     @abstractmethod
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         """ Get coordinates dictionary
-        :param dims: 
-        :param nb_keeps: 
+        :param dims:
+        :param nb_keep:
         :raise ValueError: if unknown dimension used in dims
         :return dict_coords: dictionary with coordinates
         """

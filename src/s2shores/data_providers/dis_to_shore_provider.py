@@ -7,19 +7,16 @@
 :license: see LICENSE file
 :created: 23/06/2021
 """
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional, Any  # @NoMove
-
-from shapely.geometry import Point
-
-from osgeo import gdal
-import xarray as xr  # @NoMove
+from typing import Any, Optional  # @NoMove
 
 import numpy as np
+import xarray as xr  # @NoMove
+from osgeo import gdal
+from shapely.geometry import Point
 
 from ..image.geo_transform import GeoTransform
-
 from .localized_data_provider import LocalizedDataProvider
 
 

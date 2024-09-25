@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Definition of the EstimatedBathy class
 
-:author: THOUMYRE Grégoire
-:organization: CNES-LEGOS
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
 :created: 02/03/2023
 """
 from datetime import datetime
@@ -11,9 +11,8 @@ from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
 import numpy as np  # @NoMove
 from xarray import DataArray  # @NoMove
 
-from ..data_model.estimated_bathy import EstimatedBathy, \
-                                         DEBUG_LAYER, EXPERT_LAYER, NOMINAL_LAYER, \
-                                         METERS_UNIT, SPATIAL_REF
+from ..data_model.estimated_bathy import (DEBUG_LAYER, EXPERT_LAYER, METERS_UNIT, NOMINAL_LAYER,
+                                          SPATIAL_REF, EstimatedBathy)
 from ..image.sampling_2d import Sampling2D
 from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
@@ -32,7 +31,8 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'attrs': {'Dimension': 'Flags',
                          'long_name': 'Bathymetry estimation status',
                          'comment': '0: SUCCESS, 1: FAIL, 2: ON_GROUND, '
-                                    '3: NO_DATA, 4: NO_DELTA_TIME , 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT'}},
+                                    '3: NO_DATA, 4: NO_DELTA_TIME , '
+                                    '5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT'}},
     'depth': {'layer_type': NOMINAL_LAYER,
               'layer_name': 'Depth',
               'dimensions': DIMS_Y_X_NKEEP_TIME,
@@ -271,7 +271,6 @@ class EstimatedCartoBathy(EstimatedBathy):
         """ Store a set of bathymetry estimations at some location """
         index_x, index_y = self.carto_sampling.index_point(bathy_estimations.location)
         self.estimated_bathy[index_y, index_x] = bathy_estimations
-        
 
     def _build_data_array(self, sample_property: str,
                           layer_definition: Dict[str, Any], nb_keep: int) -> DataArray:
@@ -338,9 +337,9 @@ class EstimatedCartoBathy(EstimatedBathy):
         value: Union[np.ndarray, List[datetime]]
         for element in dims:
             if element == 'y':
-                value = self.carto_sampling._y_samples
+                value = self.carto_sampling.y_samples
             elif element == 'x':
-                value = self.carto_sampling._x_samples
+                value = self.carto_sampling.x_samples
             elif element == 'kKeep':
                 value = np.arange(1, nb_keep + 1)
             elif element == 'time':

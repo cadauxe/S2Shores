@@ -86,7 +86,8 @@ class OrthoStack(ABC, OrthoLayout):
         """
 
     def build_spatial_ref(self) -> str:
-        """ :returns: a string of metadata describing the projection information for spatial_ref variable
+        """ :returns: a string of metadata describing the projection information for
+                      spatial_ref variable
         """
         srs = osr.SpatialReference()
         srs.ImportFromEPSG(self.epsg_code)
@@ -147,7 +148,6 @@ class OrthoStack(ABC, OrthoLayout):
         """ Class method building a set of SampledOrthoImage instances, forming a tiling of the
         specified orthorectifed image.
 
-        :param image: the orthorectified image onto which the sampling is defined
         :param nb_subtiles_max: the meximum number of tiles to create
         :param step_x: the sampling step to use along the X axis for building the tiles
         :param step_y: the sampling step to use along the X axis for building the tiles
