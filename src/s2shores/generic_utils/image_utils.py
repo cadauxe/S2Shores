@@ -19,9 +19,8 @@
   limitations under the License.
 """
 
-from scipy.signal import fftconvolve
-
 import numpy as np
+from scipy.signal import fftconvolve
 
 
 def cross_correlation(image1: np.ndarray, image2: np.ndarray) -> np.ndarray:

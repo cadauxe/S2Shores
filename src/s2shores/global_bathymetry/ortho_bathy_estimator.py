@@ -20,12 +20,10 @@
 """
 import time
 import warnings
-
 from typing import TYPE_CHECKING  # @NoMove
 
-from xarray import Dataset  # @NoMove
 from shapely.geometry import Point
-
+from xarray import Dataset  # @NoMove
 
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..data_model.estimated_carto_bathy import EstimatedCartoBathy
@@ -34,7 +32,6 @@ from ..image.ortho_sequence import OrthoSequence
 from ..image.sampled_ortho_image import SampledOrthoImage
 from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
 from ..waves_exceptions import WavesException
-
 
 if TYPE_CHECKING:
     from .bathy_estimator import BathyEstimator  # @UnusedImport
@@ -57,6 +54,7 @@ class OrthoBathyEstimator:
     def compute_bathy(self) -> Dataset:
         """ Computes the bathymetry dataset for the samples belonging to a given subtile.
 
+        :raises ValueError: when output format is not a supported one
         :return: Estimated bathymetry dataset
         """
 
@@ -76,8 +74,7 @@ class OrthoBathyEstimator:
 
         if self.parent_estimator.output_format == 'POINT':
             # Estimate bathy on points
-            samples = self.parent_estimator._debug_samples
-            total_points = len(samples)
+            total_points = len(self.parent_estimator._debug_samples)
             estimated_bathy = EstimatedPointsBathy(total_points,
                                                    self.sampled_ortho.ortho_stack.acquisition_time)
             samples = self.parent_estimator._debug_samples
@@ -89,8 +86,7 @@ class OrthoBathyEstimator:
             samples = self.sampled_ortho.carto_sampling.x_y_sampling()
             total_points = self.sampled_ortho.carto_sampling.nb_samples
         else:
-            raise ValueError("Output format must be one of the proposed one in the config file.")
-
+            raise ValueError('Output format must be one of the proposed ones in the config file.')
 
         for index, sample in enumerate(samples):
             bathy_estimations = self._run_local_bathy_estimator(sub_tile_images, sample)
@@ -106,12 +102,6 @@ class OrthoBathyEstimator:
 
     def _run_local_bathy_estimator(self, sub_tile_images: OrthoSequence,
                                    estimation_point: Point) -> BathymetrySampleEstimations:
-        """ Run the local bathymetry estimator on the specified estimation point.
-
-        :param sub_tile_images: the ortho images sequence to use for the estimation
-        :param estimation_point: the point where to estimate the bathymetry
-        :return: the bathymetry estimations for the specified
-        """
 
         self.parent_estimator.set_debug_flag(estimation_point)
 
@@ -131,7 +121,7 @@ class OrthoBathyEstimator:
                                                                   self.parent_estimator)
 
             bathy_estimations = local_bathy_estimator.bathymetry_estimations
-            if local_bathy_estimator.can_estimate_bathy() :
+            if local_bathy_estimator.can_estimate_bathy():
                 local_bathy_estimator.run()
                 bathy_estimations.remove_unphysical_wave_fields()
                 bathy_estimations.sort_on_attribute(local_bathy_estimator.final_estimations_sorting)

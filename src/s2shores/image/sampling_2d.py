@@ -18,17 +18,17 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from typing import Tuple, List, Iterator  # @NoMove
+from typing import Iterator, List, Tuple  # @NoMove
 
 import numpy as np  # @NoMove
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Point, Polygon
 
 from ..generic_utils.numpy_utils import split_samples
 from ..waves_exceptions import WavesIndexingError
 
 
 class Sampling2D:
-    """ A 2S sampling is a subset of samples in a 2D space. It is built by taking consecutive
+    """ A 2D sampling is a subset of samples in a 2D space. It is built by taking consecutive
     samples in some samples coordinates lists, which means that there is no constraint on the
     spatial distribution of these samples. It is up to the caller to impose these constraints
     by providing increasing or decreasing ordered lists of coordinates or whatever desired order,

@@ -23,15 +23,13 @@ from typing import Optional, Union  # @NoMove
 
 from shapely.geometry import Point
 
-
 from ..data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
-from ..data_providers.dis_to_shore_provider import (InfinityDisToShoreProvider,
-                                                    DisToShoreProvider,
-                                                    NetCDFDisToShoreProvider,
-                                                    GeotiffDisToShoreProvider)
-from ..data_providers.gravity_provider import (LatitudeVaryingGravityProvider, GravityProvider,
-                                               ConstantGravityProvider)
-from ..data_providers.roi_provider import (RoiProvider, VectorFileRoiProvider)
+from ..data_providers.dis_to_shore_provider import (DisToShoreProvider, GeotiffDisToShoreProvider,
+                                                    InfinityDisToShoreProvider,
+                                                    NetCDFDisToShoreProvider)
+from ..data_providers.gravity_provider import (ConstantGravityProvider, GravityProvider,
+                                               LatitudeVaryingGravityProvider)
+from ..data_providers.roi_provider import RoiProvider, VectorFileRoiProvider
 from ..image.ortho_stack import OrthoStack
 
 
@@ -67,7 +65,7 @@ class BathyEstimatorProviders:
         """ Sets the DisToShoreProvider to use with this estimator
 
         :param provider_info: Either the DisToShoreProvider to use or a path to a netCDF or Geotiff
-                            file assuming a geographic NetCDF or Geotiff format.
+                           file assuming a geographic NetCDF or Geotiff format.
         """
         if isinstance(provider_info, DisToShoreProvider):
             distoshore_provider = provider_info

@@ -22,7 +22,6 @@ from typing import Sequence
 
 from shapely.geometry.point import Point
 
-
 GdalGeoTransformType = Sequence[float]
 
 

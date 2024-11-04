@@ -18,7 +18,7 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from typing import Optional, Tuple, TYPE_CHECKING, cast  # @NoMove
+from typing import TYPE_CHECKING, Optional, Tuple, cast  # @NoMove
 
 import numpy as np
 import pandas
@@ -26,18 +26,16 @@ from scipy.signal import find_peaks
 from shapely.geometry import Point
 
 from ..bathy_physics import wavelength_offshore
-from ..generic_utils.image_filters import detrend, clipping, normalise, gaussian_masking
+from ..generic_utils.image_filters import clipping, detrend, gaussian_masking, normalise
 from ..generic_utils.image_utils import cross_correlation
-from ..generic_utils.signal_filters import detrend_signal, butter_bandpass_filter, filter_median
+from ..generic_utils.signal_filters import butter_bandpass_filter, detrend_signal, filter_median
 from ..generic_utils.signal_utils import find_period_from_zeros
-from ..image.ortho_sequence import OrthoSequence, FrameIdType
-from ..image_processing.waves_image import WavesImage, ImageProcessingFilters
+from ..image.ortho_sequence import FrameIdType, OrthoSequence
+from ..image_processing.waves_image import ImageProcessingFilters, WavesImage
 from ..image_processing.waves_radon import WavesRadon, linear_directions
-from ..image_processing.waves_sinogram import WavesSinogram
-from ..waves_exceptions import (NotExploitableSinogram,
-                                CorrelationComputationError,
+from ..image_processing.waves_sinogram import SignalProcessingFilters, WavesSinogram
+from ..waves_exceptions import (CorrelationComputationError, NotExploitableSinogram,
                                 SequenceImagesError)
-
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
 
@@ -71,11 +69,13 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         self._sampling_period: Optional[float] = None
 
         # Correlation filters
-        self.correlation_image_filters: ImageProcessingFilters = [(detrend, []),
-                                                                  (gaussian_masking, [self.local_estimator_params['TUNING']['SIGMA_CORRELATION_MASK']]),
-                                                                  (clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
+        self.correlation_image_filters: ImageProcessingFilters = [
+            (detrend, []), (gaussian_masking, [
+                self.local_estimator_params['TUNING']['SIGMA_CORRELATION_MASK']]), (clipping, [
+                    self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
         # Projected sinogram filter
-        self.sinogram_max_var_filters: SignalProcessingFilters = [(filter_median,[self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL']])]
+        self.sinogram_max_var_filters: SignalProcessingFilters = [
+            (filter_median, [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL']])]
 
         # Check if time lag is valid
         if self.local_estimator_params['TEMPORAL_LAG'] >= len(self.ortho_sequence):
@@ -86,7 +86,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
             self.metrics['sampling_duration'] = self.sampling_period
             self.metrics['propagation_duration'] = self.propagation_duration
             self.metrics['spatial_resolution'] = self.spatial_resolution
-
 
     @property
     def start_frame_id(self) -> FrameIdType:
@@ -154,8 +153,8 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
                 self._correlation_matrix = cross_correlation(self._time_series[:, self.nb_lags:],
                                                              self._time_series[:, :-self.nb_lags])
             except ValueError as excp:
-                raise CorrelationComputationError(
-                    'Cross correlation can not be computed because of standard deviation of 0') from excp
+                msg = 'Cross correlation can not be computed because of standard deviation of 0'
+                raise CorrelationComputationError(msg) from excp
         return self._correlation_matrix
 
     @property
@@ -208,7 +207,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         # Save the estimation
         self.save_wave_field_estimation(direction_propagation, wavelength, distances)
 
-
     def center_pt_is_out(self) -> None:
         """Raise an error if the central window point is out of borders, namely if the central
         time-series is NaN or 0-mean.
@@ -217,11 +215,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """
         merge_array = np.dstack([image.pixels for image in self.ortho_sequence])
         shape_y, shape_x = self.ortho_sequence.shape
-        TS_mean = np.mean(merge_array[shape_y//2, shape_x//2, :])
+        ts_mean = np.mean(merge_array[shape_y // 2, shape_x // 2, :])
 
-        if not(np.isfinite(TS_mean)) or TS_mean==0:
+        if not(np.isfinite(ts_mean)) or ts_mean == 0:
             raise SequenceImagesError('Window center pixel is out of border or has a 0 mean.')
-
 
     def create_sequence_time_series(self) -> None:
         """ This function computes an np.array of time series.
@@ -239,49 +236,50 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         shape_y, shape_x = self.ortho_sequence.shape
         image_size = shape_x * shape_y
         time_series = np.reshape(merge_array, (image_size, -1))
-        np.random.seed(0) # A seed is used here to reproduce same results
+        np.random.seed(0)  # A seed is used here to reproduce same results
         nb_random_points = round(image_size * percentage_points / 100)
         random_indexes = np.random.randint(image_size, size=nb_random_points)
 
-        sampling_positions_x, sampling_positions_y = np.unravel_index(random_indexes, self.ortho_sequence.shape)
+        sampling_positions_x, sampling_positions_y = np.unravel_index(
+            random_indexes, self.ortho_sequence.shape)
         self._sampling_positions = (np.reshape(sampling_positions_x, (1, -1)),
                                     np.reshape(sampling_positions_y, (1, -1)))
 
         # Extract and detrend Time-series
-        if self.local_estimator_params['TUNING']['DETREND_TIME_SERIES']==1:
+        if self.local_estimator_params['TUNING']['DETREND_TIME_SERIES'] == 1:
             try:
-                time_series_selec = detrend_signal(time_series[random_indexes,:], axis=1)
+                time_series_selec = detrend_signal(time_series[random_indexes, :], axis=1)
             except ValueError as excp:
-                raise SequenceImagesError('Time-series can not be computed because of the presence of nans') from excp
-        elif self.local_estimator_params['TUNING']['DETREND_TIME_SERIES']==0:
-            time_series_selec = time_series[random_indexes,:]
+                raise SequenceImagesError(
+                    'Time-series can not be computed because of the presence of nans') from excp
+        elif self.local_estimator_params['TUNING']['DETREND_TIME_SERIES'] == 0:
+            time_series_selec = time_series[random_indexes, :]
         else:
             raise ValueError('DETREND_TIME_SERIES parameter must be 0 or 1.')
 
         # BP filtering
-        if self.local_estimator_params['TUNING']['FILTER_TIME_SERIES']==1:
-            fps = 1/self.sampling_period
-            self._time_series = butter_bandpass_filter(time_series_selec,
-                                                       lowcut_period=self.local_estimator_params['TUNING']['LOWCUT_PERIOD'],
-                                                       highcut_period=self.local_estimator_params['TUNING']['HIGHCUT_PERIOD'],
-                                                       fs=fps,
-                                                       axis=1)
-        elif self.local_estimator_params['TUNING']['FILTER_TIME_SERIES']==0:
+        if self.local_estimator_params['TUNING']['FILTER_TIME_SERIES'] == 1:
+            fps = 1 / self.sampling_period
+            self._time_series = butter_bandpass_filter(
+                time_series_selec,
+                lowcut_period=self.local_estimator_params['TUNING']['LOWCUT_PERIOD'],
+                highcut_period=self.local_estimator_params['TUNING']['HIGHCUT_PERIOD'],
+                sampling_freq=fps,
+                axis=1)
+        elif self.local_estimator_params['TUNING']['FILTER_TIME_SERIES'] == 0:
             self._time_series = time_series_selec
         else:
             raise ValueError('FILTER_TIME_SERIES parameter must be 0 or 1.')
 
         if self.debug_sample:
-            self.metrics['detrend_time_series'] = time_series_selec[0,:]
-            self.metrics['filtered_time_series'] = self._time_series[0,:]
-
+            self.metrics['detrend_time_series'] = time_series_selec[0, :]
+            self.metrics['filtered_time_series'] = self._time_series[0, :]
 
     def compute_temporal_correlation(self) -> None:
         """ Compute the temporal correlation matrix using the created time-series sequence
         """
         filtered_correlation = self.correlation_image.apply_filters(self.correlation_image_filters)
         self.correlation_image.pixels = filtered_correlation.pixels
-
 
     def get_correlation_image(self) -> WavesImage:
         """ This function computes the correlation image by projecting the correlation matrix
@@ -317,9 +315,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         return WavesImage(projected_matrix, self.spatial_resolution)
 
-
     def compute_radon_transform(self) -> float:
-        """Compute the Rason Transform from the correlation matrix and determine wave progation direction
+        """Compute the Rason Transform from the correlation matrix and determine wave
+        progation direction
 
         :returns: wave propagation direction
         """
@@ -344,20 +342,20 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         return direction_propagation
 
-
     def compute_wavefield(self) -> list:
-        """Extract wave chracteristics (wavelength and wave displacement) within the projected sinogram
+        """ Extract wave chracteristics (wavelength and wave displacement) within the
+        projected sinogram
 
         :returns: estimated wavelength and wave displacement
         """
         # Extract wavelength from sinogram projected at max var angle (0-crossing)
         wavelength, wave_length_zeros = self.compute_wavelength()
 
-        # Extract delta_x of the wave within time_lag from sinogram projected at max var angle (peaks)
+        # Extract delta_x of the wave within time_lag from sinogram projected at
+        # max var angle (peaks)
         distance = self.compute_distance(wavelength, wave_length_zeros)
 
         return wavelength, distance
-
 
     def compute_wavelength(self) -> float:
         """ Wavelength computation (in meter)
@@ -367,7 +365,9 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """
         min_wavelength = wavelength_offshore(self.global_estimator.waves_period_min, self.gravity)
         try:
-            period, wave_length_zeros = find_period_from_zeros(self.sinogram_maxvar.values, int(min_wavelength / self.spatial_resolution))
+            period, wave_length_zeros = find_period_from_zeros(
+                self.sinogram_maxvar.values, int(
+                    min_wavelength / self.spatial_resolution))
         except ValueError as excp:
             raise NotExploitableSinogram('Wave length can not be computed from sinogram') from excp
         wave_length = period * self.spatial_resolution
@@ -375,7 +375,6 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         if self.debug_sample:
             self.metrics['wave_spatial_zeros'] = wave_length_zeros * self.spatial_resolution
         return wave_length, wave_length_zeros
-
 
     def compute_distance(self, wavelength: float, zeros: float) -> np.ndarray:
         """ Propagated distance computation (in meter)
@@ -385,15 +384,16 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         :returns: propagation distances of the wave
         """
         sinogram = self.sinogram_maxvar.values
-        x_axis = np.arange(0, len(sinogram))-(len(sinogram) // 2)
+        x_axis = np.arange(0, len(sinogram)) - (len(sinogram) // 2)
         period = int(wavelength / self.spatial_resolution)
         max_sinogram = np.max(sinogram[(x_axis >= zeros[0]) & (x_axis < zeros[-1])])
 
         # Find peaks
         tuning_parameters = self.local_estimator_params['TUNING']
         peaks, _ = find_peaks(sinogram[(x_axis >= zeros[0]) & (x_axis < zeros[-1])],
-                              height=tuning_parameters['PEAK_DETECTION_HEIGHT_RATIO']*max_sinogram,
-                              distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO']*period)
+                              height=tuning_parameters['PEAK_DETECTION_HEIGHT_RATIO'] *
+                              max_sinogram,
+                              distance=tuning_parameters['PEAK_DETECTION_DISTANCE_RATIO'] * period)
 
         # Compute initial distance
         dx_in_list = x_axis[(x_axis >= zeros[0]) & (x_axis < zeros[-1])][peaks]
@@ -401,14 +401,14 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         for dx_in in dx_in_list:
             # Find 0-crossing surrounding the peak
-            z1 = zeros[zeros>dx_in][0]
-            z2 = zeros[zeros<=dx_in][-1]
+            zeros_right = zeros[zeros > dx_in][0]
+            zeros_left = zeros[zeros <= dx_in][-1]
 
             # Refine distance
-            ref = [z1,z2][np.argmin(np.abs([z1,z2]))]
-            offset = np.sign(dx_in-ref)*(np.abs(z2-z1)/2)
-            dx = ref + offset
-            distances.append(dx)
+            ref = [zeros_right, zeros_left][np.argmin(np.abs([zeros_right, zeros_left]))]
+            offset = np.sign(dx_in - ref) * (np.abs(zeros_left - zeros_right) / 2)
+            distance = ref + offset
+            distances.append(distance)
 
         # Distance of the wave propagation
         distances = np.array(distances) * self.spatial_resolution
@@ -419,8 +419,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         return distances
 
-
-    def save_wave_field_estimation(self, estimated_direction: float, wavelength: float, distances: list) -> None:
+    def save_wave_field_estimation(
+            self,
+            estimated_direction: float,
+            wavelength: float,
+            distances: list) -> None:
         """ Saves the wavefield estimations
 
         :param estimated_direction: the waves estimated propagation direction
@@ -429,9 +432,11 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """
 
         for distance in distances:
-            bathymetry_estimation = cast(TemporalCorrelationBathyEstimation,
-                                         self.create_bathymetry_estimation(estimated_direction, wavelength)
-                                        )
+            bathymetry_estimation = cast(
+                TemporalCorrelationBathyEstimation,
+                self.create_bathymetry_estimation(
+                    estimated_direction,
+                    wavelength))
             bathymetry_estimation.delta_position = distance
 
             self.bathymetry_estimations.append(bathymetry_estimation)
@@ -440,3 +445,5 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         if self.debug_sample:
             self.metrics['bathymetry_estimation'] = self.bathymetry_estimations
             self.metrics['status'] = self.bathymetry_estimations.status
+        
+        

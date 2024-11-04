@@ -24,9 +24,8 @@ from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
 import numpy as np  # @NoMove
 from xarray import DataArray  # @NoMove
 
-from ..data_model.estimated_bathy import EstimatedBathy, \
-                                         DEBUG_LAYER, EXPERT_LAYER, NOMINAL_LAYER, \
-                                         METERS_UNIT, SPATIAL_REF
+from ..data_model.estimated_bathy import (DEBUG_LAYER, EXPERT_LAYER, METERS_UNIT, NOMINAL_LAYER,
+                                          SPATIAL_REF, EstimatedBathy)
 from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
@@ -44,7 +43,8 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                'attrs': {'Dimension': 'Flags',
                          'long_name': 'Bathymetry estimation status',
                          'comment': '0: SUCCESS, 1: FAIL, 2: ON_GROUND, '
-                                    '3: NO_DATA, 4: NO_DELTA_TIME , 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT'}},
+                                    '3: NO_DATA, 4: NO_DELTA_TIME , '
+                                    '5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT'}},
     'depth': {'layer_type': NOMINAL_LAYER,
               'layer_name': 'Depth',
               'dimensions': DIMS_INDEX_NKEEP_TIME,
@@ -260,25 +260,25 @@ BATHY_PRODUCT_DEF: Dict[str, Dict[str, Any]] = {
                                'grid_mapping': SPATIAL_REF,
                                'coordinates': SPATIAL_REF}},
     'x': {'layer_type': NOMINAL_LAYER,
-                     'layer_name': 'X',
-                     'dimensions': DIMS_INDEX_TIME,
-                     'data_type': np.float32,
-                     'fill_value': np.nan,
-                     'precision': 3,
-                     'attrs': {'Dimension': 'UTM',
-                               'long_name': 'x_coordinates',
-                               'grid_mapping': SPATIAL_REF,
-                               'coordinates': SPATIAL_REF}},
+          'layer_name': 'X',
+          'dimensions': DIMS_INDEX_TIME,
+          'data_type': np.float32,
+          'fill_value': np.nan,
+          'precision': 3,
+          'attrs': {'Dimension': 'UTM',
+                    'long_name': 'x_coordinates',
+                    'grid_mapping': SPATIAL_REF,
+                    'coordinates': SPATIAL_REF}},
     'y': {'layer_type': NOMINAL_LAYER,
-                     'layer_name': 'Y',
-                     'dimensions': DIMS_INDEX_TIME,
-                     'data_type': np.float32,
-                     'fill_value': np.nan,
-                     'precision': 3,
-                     'attrs': {'Dimension': 'UTM',
-                               'long_name': 'y_coordinates',
-                               'grid_mapping': SPATIAL_REF,
-                               'coordinates': SPATIAL_REF}},
+          'layer_name': 'Y',
+          'dimensions': DIMS_INDEX_TIME,
+          'data_type': np.float32,
+          'fill_value': np.nan,
+          'precision': 3,
+          'attrs': {'Dimension': 'UTM',
+                    'long_name': 'y_coordinates',
+                    'grid_mapping': SPATIAL_REF,
+                    'coordinates': SPATIAL_REF}},
 }
 
 
@@ -298,10 +298,9 @@ class EstimatedPointsBathy(EstimatedBathy):
         # data is stored as a 1D array of python objects, here a dictionary containing bathy fields.
         self.estimated_bathy = np.empty((nb_samples), dtype=np.object_)
 
-    def store_estimations(self, index: int,  bathy_estimations: BathymetrySampleEstimations) -> None:
+    def store_estimations(self, index: int, bathy_estimations: BathymetrySampleEstimations) -> None:
         """ Store a set of bathymetry estimations at some location """
         self.estimated_bathy[index] = bathy_estimations
-
 
     def _build_data_array(self, sample_property: str,
                           layer_definition: Dict[str, Any], nb_keep: int) -> DataArray:
@@ -348,18 +347,12 @@ class EstimatedPointsBathy(EstimatedBathy):
     # TODO: split array filling in two methods: one for 1D (Index) and one for 2D (Index, kKeep)
 
     def _fill_array(self, sample_property: str, layer_data: np.ndarray, index: List[int]) -> None:
-        """ Fill the layer_data array at a given index (1D: points, 2D: (Index, kKeep))
-
-        :param sample_property: name of the property to format as a DataArray
-        :param layer_data: the array to fill
-        :param index: the index where to fill the array
-        """
         index = index[0]
         bathymetry_estimations = self.estimated_bathy[index]
-        if sample_property=='x':
-            layer_data[index] = np.array([bathymetry_estimations._location.x])
-        elif sample_property=='y':
-            layer_data[index] = np.array([bathymetry_estimations._location.y])
+        if sample_property == 'x':
+            layer_data[index] = np.array([bathymetry_estimations.location.x])
+        elif sample_property == 'y':
+            layer_data[index] = np.array([bathymetry_estimations.location.y])
         else:
             bathy_property = bathymetry_estimations.get_attribute(sample_property)
             if layer_data.ndim == 1:
@@ -373,13 +366,6 @@ class EstimatedPointsBathy(EstimatedBathy):
                 layer_data[:, index] = np.array(bathy_property)
 
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
-        """ Get coordinates dictionary for the bathymetry dataset
-
-        :param dims: list of dimensions
-        :param nb_keep: the number of different bathymetry estimations to keep for one location
-        :raise ValueError: if unknown dimension used in dims
-        :return dict_coords: dictionary with coordinates
-        """
         dict_coords: Dict[Hashable, Any] = {}
         value: Union[np.ndarray, List[datetime]]
         for element in dims:

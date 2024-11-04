@@ -18,9 +18,9 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from datetime import datetime
-from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
+from typing import Any, Dict, Hashable, List, Mapping
 
 import numpy as np  # @NoMove
 from xarray import DataArray, Dataset  # @NoMove
@@ -35,6 +35,7 @@ ALL_LAYERS_TYPES = NOMINAL_LAYER
 
 METERS_UNIT = 'Meters [m]'
 SPATIAL_REF = 'spatial_ref'
+
 
 class EstimatedBathy():
     """ This class gathers all the estimated bathymetry samples in a whole dataset.
@@ -52,7 +53,7 @@ class EstimatedBathy():
 
     @classmethod
     @abstractmethod
-    def store_estimations(self, index:int, bathy_estimations: BathymetrySampleEstimations) -> None:
+    def store_estimations(self, index: int, bathy_estimations: BathymetrySampleEstimations) -> None:
         """ Store a set of bathymetry estimations at some location
 
         :param index: index where to store the estimations
@@ -85,7 +86,6 @@ class EstimatedBathy():
     @abstractmethod
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         """ Get coordinates dictionary
-
         :param dims: list of dimensions
         :param nb_keeps: the number of different bathymetry estimations to keep for one location
         :raise ValueError: if unknown dimension used in dims

@@ -23,7 +23,6 @@ from typing import Any, Dict, List, Optional  # @NoMove
 
 import numpy as np
 import xarray as xr  # @NoMove
-from numpy import dtype
 from shapely.geometry import Point
 from xarray import Dataset  # @NoMove
 
@@ -126,9 +125,9 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         dataset.spatial_ref.attrs['spatial_ref'] = self._ortho_stack.build_spatial_ref()
 
         # necessary to have a correct georeferencing
-        if 'x' in dataset.coords : # only if output_format is GRID
-            dataset.x.attrs['standard_name'] = "projection_x_coordinate"
-            dataset.y.attrs['standard_name'] = "projection_y_coordinate"
+        if 'x' in dataset.coords:  # only if output_format is GRID
+            dataset.x.attrs['standard_name'] = 'projection_x_coordinate'
+            dataset.y.attrs['standard_name'] = 'projection_y_coordinate'
 
         infos = self.build_infos()
         infos.update(self._ortho_stack.build_infos())
@@ -188,15 +187,15 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
                            (oversize factor will lead to a single point)
 
         """
-        x_samples = np.array([])
-        y_samples = np.array([])
+        x_samples: np.ndarray = np.array([])
+        y_samples: np.ndarray = np.array([])
         for subtile in self.subtiles:
             x_samples = np.concatenate((x_samples, subtile.carto_sampling.x_samples))
             y_samples = np.concatenate((y_samples, subtile.carto_sampling.y_samples))
-        x_samples_filtered = x_samples[np.logical_and(
-            x_samples > bottom_left_corner.x, x_samples < top_right_corner.x)][::decimation]
-        y_samples_filtered = y_samples[np.logical_and(
-            y_samples > bottom_left_corner.y, y_samples < top_right_corner.y)][::decimation]
+        x_samples_filtered = x_samples[np.logical_and(x_samples > bottom_left_corner.x,
+                                                      x_samples < top_right_corner.x)][::decimation]
+        y_samples_filtered = y_samples[np.logical_and(y_samples > bottom_left_corner.y,
+                                                      y_samples < top_right_corner.y)][::decimation]
         list_samples = []
         for x_coord in x_samples_filtered:
             for y_coord in y_samples_filtered:
@@ -207,6 +206,7 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
         """ Sets the list of sample points to debug
 
         :param samples: a list of (X,Y) tuples defining the points to debug
+        :raises ValueError: when no debug points are provided
         """
         self._debug_samples = []
         for sample in samples:
@@ -214,9 +214,9 @@ class BathyEstimator(BathyEstimatorParameters, BathyEstimatorProviders):
                 self._debug_samples.append(sample)
             else:
                 print(f'{sample} is not in roi-window_size/2.')
-        if self._debug_samples==[]:
-            raise ValueError("There is no point available to debug. \
-                             Check your points' coordinates and the window size.")
+        if not self._debug_samples:
+            raise ValueError('There is no point available to debug. '
+                             'Check your points coordinates and the window size.')
 
     def set_debug_flag(self, sample: Point) -> None:
         """ Set or reset the debug flag for a given point depending on its presence into the set

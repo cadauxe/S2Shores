@@ -19,8 +19,8 @@
   limitations under the License.
 """
 import unittest
-import numpy as np  # @NoMove
 
+import numpy as np  # @NoMove
 from s2shores.generic_utils.directional_array import DirectionalArray
 
 TEST_ARRAY1 = np.array([[1, 9, 4],

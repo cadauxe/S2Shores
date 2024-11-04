@@ -18,16 +18,14 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from enum import IntEnum
 import warnings
-
-from shapely.geometry import Point
-from typing import Union, List, Optional
+from enum import IntEnum
+from typing import List, Optional, Union
 
 import numpy as np
+from shapely.geometry import Point
 
 from ..waves_exceptions import WavesEstimationAttributeError
-
 from .bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
@@ -42,11 +40,11 @@ class SampleStatus(IntEnum):
     BEYOND_OFFSHORE_LIMIT = 6
 
 
-
 class BathymetrySampleEstimations(list):
     """ This class gathers information relevant to some location, whatever the bathymetry
     estimators, as well as a list of bathymetry estimations made at this location.
     """
+# TODO: add a keep_only() method to reduce the list to a maximum number of estimations.
 
     def __init__(self, location: Point, gravity: float, delta_time: float,
                  distance_to_shore: float, inside_roi: bool, inside_offshore_limit: bool) -> None:
@@ -132,9 +130,9 @@ class BathymetrySampleEstimations(list):
         """
         try:
             return [getattr(estimation, attribute_name) for estimation in self]
-        except AttributeError:
+        except AttributeError as excp:
             err_msg = f'Attribute {attribute_name} undefined for some wave field estimation'
-            raise WavesEstimationAttributeError(err_msg)
+            raise WavesEstimationAttributeError(err_msg) from excp
 
     def remove_unphysical_wave_fields(self) -> None:
         """  Remove unphysical wave fields
@@ -163,8 +161,8 @@ class BathymetrySampleEstimations(list):
 
     @property
     def inside_offshore_limit(self) -> bool:
-        """ :returns: True if the distance to shore is inferior or equal to
-        the offshore limit, False otherwise"""
+        """ :returns: True if the distance to shore is inferior or equal to the offshore limit,
+                      False otherwise"""
         return self._inside_offshore_limit
 
     @property

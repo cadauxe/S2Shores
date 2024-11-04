@@ -20,16 +20,14 @@
   limitations under the License.
 """
 from datetime import datetime
+from typing import List, Tuple, Union
 
 from shapely.geometry import Point
-from typing import Tuple, List, Union
-
 
 from ..data_providers.delta_time_provider import DeltaTimeProvider
 from ..image_processing.waves_image import WavesImage
 from ..waves_exceptions import SequenceImagesError
 from .image_geometry_types import ImageWindowType
-
 
 FrameIdType = Union[str, int, datetime]
 FramesIdsType = Union[List[str], List[int], List[datetime]]

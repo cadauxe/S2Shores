@@ -18,7 +18,7 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from typing import Tuple, Sequence
+from typing import Sequence, Tuple
 
 MarginsType = Tuple[float, float, float, float]
 

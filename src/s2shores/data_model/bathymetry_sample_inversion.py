@@ -18,14 +18,13 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from typing import cast, Tuple
+from typing import Tuple, cast
 
 import numpy as np
 
-from ..bathy_physics import (period_offshore, period_low_depth, wavelength_offshore,
-                             depth_from_dispersion, linearity_indicator)
+from ..bathy_physics import (depth_from_dispersion, linearity_indicator, period_low_depth,
+                             period_offshore, wavelength_offshore)
 from .wave_field_sample_dynamics import WaveFieldSampleDynamics
-
 
 KNOWN_DEPTH_ESTIMATION_METHODS = ['LINEAR']
 

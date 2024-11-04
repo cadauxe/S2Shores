@@ -20,10 +20,10 @@
 """
 from functools import lru_cache
 
+import numpy as np
 from scipy.signal import convolve2d
 
 from .numpy_utils import circular_mask, gaussian_mask
-import numpy as np
 
 
 def clipping(image_array: np.ndarray, ratio_size: float) -> np.ndarray:
@@ -69,6 +69,7 @@ def detrend(image_array: np.ndarray) -> np.ndarray:
 @lru_cache()
 def get_smoothing_kernel(Nr: int, Nc: int) -> np.ndarray:
     """
+
     Parameters
     ----------
     Nr : TYPE
@@ -111,6 +112,7 @@ def get_smoothing_kernel(Nr: int, Nc: int) -> np.ndarray:
 
 def smoothc(mI: np.ndarray, Nr: int, Nc: int) -> np.ndarray:
     """
+
     Parameters
     ----------
     mI : TYPE
@@ -145,13 +147,6 @@ def smoothc(mI: np.ndarray, Nr: int, Nc: int) -> np.ndarray:
 
 
 def desmooth(pixels: np.ndarray, nx: int, ny: int) -> np.ndarray:
-    """ Desmooth the pixels using the smooth2 function
-
-    :param pixels: input pixels
-    :param nx: number of points used to smooth rows
-    :param ny: number of points to smooth columns
-    :returns: desmoothed pixels
-    """
     smoothed_pixels = smooth2(pixels, nx, ny)
     desmoothed_pixels = pixels - smoothed_pixels
     return desmoothed_pixels
@@ -185,11 +180,6 @@ def smooth2(M: np.ndarray, nx: int, ny: int) -> np.ndarray:
 
 
 def circular_masking(image_array: np.ndarray) -> np.ndarray:
-    """ Apply a circular mask to a matrix
-
-    :param image_array: entry image
-    :returns: circular masked image
-    """
     mask = circular_mask(image_array.shape[0], image_array.shape[1], image_array.dtype)
     return image_array * mask
 
@@ -200,14 +190,15 @@ def normalise(image_array: np.ndarray) -> np.ndarray:
     :param image_array: entry image
     :returns: normalised image
     """
-    norm_image = (image_array-np.nanmean(image_array))/np.nanstd(image_array)
+    norm_image = (image_array - np.nanmean(image_array)) / np.nanstd(image_array)
     return norm_image
+
 
 def gaussian_masking(image_array: np.ndarray, sigma: float) -> np.ndarray:
     """ Apply a gaussian mask to a matrix
 
     :param image_array: entry image
-    :param sigma: sigma of the gaussian mask
+    :param sigma: standard deviation of the gaussian
     :returns: gaussian maked image
     """
     mask = gaussian_mask(image_array.shape[0], image_array.shape[1], sigma)

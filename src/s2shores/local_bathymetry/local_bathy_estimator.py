@@ -19,21 +19,19 @@ time intervals.
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from copy import deepcopy
+from typing import TYPE_CHECKING, Any, Dict, Optional, Type  # @NoMove
 
-from typing import Dict, Any, Optional, Type, TYPE_CHECKING  # @NoMove
-
-from shapely.geometry import Point
 import numpy as np
+from shapely.geometry import Point
 
 from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
 from ..data_providers.delta_time_provider import NoDeltaTimeValueError
-from ..image.ortho_sequence import OrthoSequence, FrameIdType
+from ..image.ortho_sequence import FrameIdType, OrthoSequence
 from ..image_processing.waves_image import ImageProcessingFilters
 from ..waves_exceptions import SequenceImagesError
-
 
 if TYPE_CHECKING:
     from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
@@ -83,11 +81,12 @@ class LocalBathyEstimator(ABC):
         distance = self.global_estimator.get_distoshore(self.location)
         gravity = self.global_estimator.get_gravity(self.location, 0.)
         inside_roi = self.global_estimator.is_inside_roi(self.location)
-        inside_offshore_limit = True if (distance <= self.global_estimator.max_offshore_distance or distance == np.Infinity) else False
+        inside_offshore_limit = (distance <= self.global_estimator.max_offshore_distance or
+                                 distance == np.Infinity)
 
-        self._bathymetry_estimations = BathymetrySampleEstimations(self._location, gravity,
-                                                                   np.nan,
-                                                                   distance, inside_roi, inside_offshore_limit)
+        self._bathymetry_estimations = BathymetrySampleEstimations(self._location, gravity, np.nan,
+                                                                   distance, inside_roi,
+                                                                   inside_offshore_limit)
         try:
             propagation_duration = self.ortho_sequence.get_time_difference(self._location,
                                                                            self.start_frame_id,

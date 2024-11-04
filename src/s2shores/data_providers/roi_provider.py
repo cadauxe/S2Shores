@@ -18,12 +18,12 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional, cast  # @NoMove
 
 from osgeo import ogr
-from shapely.geometry import Polygon, Point, MultiPolygon, box
+from shapely.geometry import MultiPolygon, Point, Polygon, box
 
 from .localized_data_provider import LocalizedDataProvider
 
