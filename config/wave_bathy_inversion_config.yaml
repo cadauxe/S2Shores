@@ -26,7 +26,7 @@ GLOBAL_ESTIMATOR:
   SELECTED_FRAMES: # Leave this list empty or comment the parameter to select all usable frames
   - "B02"
   - "B04"
-  
+
   # product characteristics
   OUTPUT_FORMAT: "GRID" # format of the output, among GRID and POINT
   DXP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
@@ -37,7 +37,7 @@ GLOBAL_ESTIMATOR:
 
   # window parameters
   WINDOW: 800.0 # thumbnail size - meters - ex. PHR : 400
-  SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image. 
+  SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image.
                 # Kernel size = 2*SM_LENGTH+1. Deactivation of the desmoothing filter with SM_LENGTH = 0.
 
   # physical constraints
@@ -46,20 +46,20 @@ GLOBAL_ESTIMATOR:
   MAX_T: 25 # maximal wave period - seconds
   MIN_WAVES_LINEARITY: 0.3 # minimal wave linearity - unitless
   MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
-  
+
   # depth inversion
   DEPTH_EST_METHOD: "LINEAR" # among LINEAR
-  
+
 #spatial_dft:
 SPATIAL_DFT:
   PROMINENCE_MAX_PEAK: 0.3 # find_peaks function tuning - search for the maximal peaks
   PROMINENCE_MULTIPLE_PEAKS: 0.1 # find_peaks function tuning - search for the kkeep max peaks
   UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period (S2 : False)
   ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
-  STEP_T: 0.05 # step for period sampling - seconds - 
+  STEP_T: 0.05 # step for period sampling - seconds -
   DEBUG:
     PLOT_MAX: 135
-    PLOT_MIN: -135 # Indication of the range in which the output should be displayed 
+    PLOT_MIN: -135 # Indication of the range in which the output should be displayed
                      # (i.e. in the[PLOT_MIN:PLOT_MAX] interval)- degrees
 
 #temporal_correlation
@@ -74,11 +74,11 @@ TEMPORAL_CORRELATION:
     PEAK_DETECTION_HEIGHT_RATIO: 0.3
     PEAK_DETECTION_DISTANCE_RATIO: 0.5
     RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
-    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length) 
+    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length)
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
     SIGMA_CORRELATION_MASK: 2 # sigma value of the gaussian mask
-    MEDIAN_FILTER_KERNEL: 5 # kernel size used in the median filter applied to the projected 
-    
+    MEDIAN_FILTER_KERNEL: 5 # kernel size used in the median filter applied to the projected
+
 #spatial_correlation
 SPATIAL_CORRELATION:
   CORRELATION_MODE: 'full' # np.correlate mode
@@ -86,5 +86,5 @@ SPATIAL_CORRELATION:
   PEAK_POSITION_MAX_FACTOR: 0.8 # peak_position - factor tunning for the maximum peak position
   DEBUG:
     PLOT_MAX: 135
-    PLOT_MIN: -135   # Indication of the range in which the output should be displayed 
+    PLOT_MIN: -135   # Indication of the range in which the output should be displayed
                      # (i.e. in the[PLOT_MIN:PLOT_MAX] interval)- degrees

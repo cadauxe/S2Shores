@@ -18,7 +18,6 @@
 numpy>=1.20
 scipy
 scikit-image
-
 xarray
 netcdf4
 pandas
