@@ -58,7 +58,7 @@ class InfinityDisToShoreProvider(DisToShoreProvider):
         :returns: positive infinity for any position
         """
         _ = point
-        return np.Infinity
+        return np.inf
 
 
 class NetCDFDisToShoreProvider(DisToShoreProvider):
