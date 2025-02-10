@@ -24,21 +24,24 @@ GLOBAL_ESTIMATOR:
   # the local estimator and the selected frames to use
   WAVE_EST_METHOD: "SPATIAL_DFT" # among SPATIAL_DFT, TEMPORAL_CORRELATION, SPATIAL_CORRELATION
   SELECTED_FRAMES: # Leave this list empty or comment the parameter to select all usable frames
+                   # S2 Configuration :
+                   #  - "B02"
+                   #  - "B04"
   - "B02"
   - "B04"
 
   # product characteristics
-  OUTPUT_FORMAT: "GRID" # format of the output, among GRID and POINT
+  OUTPUT_FORMAT: "GRID" # format of the output, to be chosen between GRID or POINT
   DXP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
   DYP: 500.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
-  LAYERS_TYPE: "DEBUG" # among NOMINAL, EXPERT or DEBUG. Allow NetCDF layers selection.
+  LAYERS_TYPE: "DEBUG" # Available modes : NOMINAL, EXPERT or DEBUG. Incremental output details.
   NKEEP: 3 # number of main waves directions to keep in the product
   OFFSHORE_LIMIT: 100 # maximum offshore distance in kilometers from the coast
 
   # window parameters
-  WINDOW: 800.0 # thumbnail size - meters - ex. PHR : 400
-  SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image.
-                # Kernel size = 2*SM_LENGTH+1. Deactivation of the desmoothing filter with SM_LENGTH = 0.
+  WINDOW: 800.0 # subwindow size - meters - ex. S2 : 800 - PHR : 400
+  SM_LENGTH: 0 # desmoothing filter size in pixels. Filtered image = image - smoothed image.
+                # Kernel size = 2*SM_LENGTH+1. Deactivation of the desmoothing filter with SM_LENGTH = 0. Ex. PHR : 10
 
   # physical constraints
   MIN_D: 2 #minimal depth - meters
@@ -48,15 +51,15 @@ GLOBAL_ESTIMATOR:
   MAX_WAVES_LINEARITY: 0.9 # maximal wave linearity - unitless
 
   # depth inversion
-  DEPTH_EST_METHOD: "LINEAR" # among LINEAR
+  DEPTH_EST_METHOD: "LINEAR" # Currently only LINEAR is available
 
 #spatial_dft:
 SPATIAL_DFT:
   PROMINENCE_MAX_PEAK: 0.3 # find_peaks function tuning - search for the maximal peaks
   PROMINENCE_MULTIPLE_PEAKS: 0.1 # find_peaks function tuning - search for the kkeep max peaks
-  UNWRAP_PHASE_SHIFT: False # False if DT<expected wave period (S2 : False)
+  UNWRAP_PHASE_SHIFT: False # False if the time delay between 2 frames is smaller than half the expected wave period (S2 : False)
   ANGLE_AROUND_PEAK_DIR: 10 # range of angles (-10,+10) to analyse around the spectral peak - degrees
-  STEP_T: 0.05 # step for period sampling - seconds -
+  STEP_T: 0.05 # period resolution in the spectral refinement step - in seconds -
   DEBUG:
     PLOT_MAX: 135
     PLOT_MIN: -135 # Indication of the range in which the output should be displayed
@@ -64,8 +67,8 @@ SPATIAL_DFT:
 
 #temporal_correlation
 TEMPORAL_CORRELATION:
-  TEMPORAL_LAG: 1  # number of intervals between frames to let wave propagation happen (example 3 for a 1Hz sequence)
-  PERCENTAGE_POINTS: 1 # percentage of selected points in the window for the computation
+  TEMPORAL_LAG: 1  # imposed lag in number of frames to let the wave propagation happen (Ex. : for a 3s delay with a 1Hz sequence, this value would be 3)
+  PERCENTAGE_POINTS: 1 # percentage of randomly selected points within the window on which the correlation is performed
   TUNING:
     DETREND_TIME_SERIES: 0 #1 to enable or 0 to disable time-series detrending, should be disabled for tri-stereo and small sequences
     FILTER_TIME_SERIES: 0 #1 to enable or 0 to disable time-series Band-Pass filtering, must be disabled when sequence sampling period does not meet the cut-off requirements
@@ -73,17 +76,17 @@ TEMPORAL_CORRELATION:
     HIGHCUT_PERIOD: 8 #seconds, must be greater than 2 times the sequence sampling period
     PEAK_DETECTION_HEIGHT_RATIO: 0.3
     PEAK_DETECTION_DISTANCE_RATIO: 0.5
-    RATIO_SIZE_CORRELATION: 1 # ratio used to clip correlation matrix from the middle
-    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove median of sinogram (a ratio of 0.25 uses a sliding window of 25% of signal length)
+    RATIO_SIZE_CORRELATION: 1 # ratio used to clip the correlation matrix from the middle
+    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: 0.25 # ratio used to remove the median of the sinogram (a ratio of 0.25 uses a sliding window of 25% of the signal length)
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: 5 # size in pixels of the mean filter window for sinogram
     SIGMA_CORRELATION_MASK: 2 # sigma value of the gaussian mask
-    MEDIAN_FILTER_KERNEL: 5 # kernel size used in the median filter applied to the projected
+    MEDIAN_FILTER_KERNEL: 5 # kernel size used in the median filter applied to the projected sinogram
 
 #spatial_correlation
 SPATIAL_CORRELATION:
-  CORRELATION_MODE: 'full' # np.correlate mode
-  AUGMENTED_RADON_FACTOR: 0.01 # radon_augmentation - augment the resolution of the radon transform
-  PEAK_POSITION_MAX_FACTOR: 0.8 # peak_position - factor tunning for the maximum peak position
+  CORRELATION_MODE: 'full' # np.correlate mode, modes available : 'valid', 'same', 'full'
+  AUGMENTED_RADON_FACTOR: 0.01 # radon_augmentation - augment the resolution of the sinogram by this factor through interpolation
+  PEAK_POSITION_MAX_FACTOR: 0.8 # peak_position - factor tuning for the maximum peak position
   DEBUG:
     PLOT_MAX: 135
     PLOT_MIN: -135   # Indication of the range in which the output should be displayed
