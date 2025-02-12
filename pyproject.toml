@@ -9,10 +9,59 @@ multi_line_output = 0
 force_grid_wrap = 0
 include_trailing_comma = "False"
 use_parentheses = "True"
-src_paths = ["src", "tests", "docs"]
+src_paths = ["s2shores/src", "s2shores/tests", "s2shores/docs"]
 
 
 # ---------- Automated pep8 formatting ----------
 [tool.autopep8]
 max_line_length = 100
 aggressive = 3
+
+[build-system]
+requires = ["setuptools>=42", "setuptools_scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "s2shores"
+version = "0.1.0"
+description = "Bathymetry computing"
+authors = [
+    { name = "Alain Giros, et al." }
+]
+license = { text = "Apache-2.0" }  # Update if needed
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click",
+    "PyYAML",
+    "dask[dataframe]",
+    "dask[distributed]",
+    "rasterio",
+    "jupyter-server-proxy",
+    "pyarrow",
+    "numpy>=1.20",
+    "scipy",
+    "scikit-image",
+    "xarray",
+    "netcdf4",
+    "pandas",
+    "matplotlib",
+    "Sphinx>=4.1",
+    "setuptools",
+    "GDAL==3.10",
+    "Shapely>=1.6",
+    "cmcrameri"
+]
+
+[project.urls]
+Homepage = "https://github.com/CNES/s2shores"
+
+[project.scripts]
+s2shores = "bathylauncher.src.bathylauncher.products.bathy_launcher:process_command"
+
+[tool.setuptools.packages]
+find = { include = ["s2shores*", "bathylauncher*"] }
+
+[tool.setuptools_scm]
+fallback_version = "1.0"
+version_scheme = "no-guess-dev"

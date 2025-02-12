@@ -28,8 +28,8 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, TwoSlopeNorm
 from matplotlib.figure import Figure
 
-from .display_utils import get_display_title_with_kernel
-from .wave_images_display import build_display_waves_image
+import s2shores.bathy_debug.bathy_visualization.display_utils as display_utils
+import s2shores.bathy_debug.bathy_visualization.wave_images_display as wave_images_display
 
 
 def build_polar_plot(fig: Figure, axes: Axes, title: str, image: np.ndarray,
@@ -181,7 +181,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     nrows = 1
     ncols = 2
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 6))
-    fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
+    fig.suptitle(display_utils.get_display_title_with_kernel(local_estimator), fontsize=12)
 
     estimations = local_estimator.bathymetry_estimations
     sorted_estimations_args = estimations.argsort_on_attribute(
@@ -201,7 +201,7 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     first_image = local_estimator.ortho_sequence[0]
 
     # First Plot line = Image1 / pseudoRGB / Image2
-    build_display_waves_image(
+    wave_images_display.build_display_waves_image(
         fig,
         axs[0],
         'Image1 [Cartesian Projection]',

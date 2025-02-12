@@ -22,9 +22,9 @@ from matplotlib import pyplot as plt
 
 from ..local_bathymetry.spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .wave_fields_display import (display_sinograms_1D_analysis_spatial_correlation,
-                                  display_sinograms_spatial_correlation,
-                                  display_waves_images_spatial_correl)
+from s2shores.bathy_debug.bathy_visualization.sinogram_display import (display_sinograms_1D_analysis_spatial_correlation,
+                                  display_sinograms_spatial_correlation)
+from s2shores.bathy_debug.bathy_visualization.wave_images_display import display_waves_images_spatial_correl
 
 
 class SpatialCorrelationBathyEstimatorDebug(

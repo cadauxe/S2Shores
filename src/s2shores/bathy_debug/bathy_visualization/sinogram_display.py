@@ -19,6 +19,13 @@ Functions for displaying sinograms and related visualizations.
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
+import sys
+import pprint
+
+pprint.pprint(sys.path)
+
+import sys
+import pprint
 import os
 from typing import Optional
 
@@ -27,11 +34,11 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import matplotlib.ticker as mticker
-from .display_utils import normalized_cross_correlation
+from s2shores.generic_utils.image_utils import normalized_cross_correlation
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
-from ..image_processing.waves_radon import WavesRadon
+from s2shores.image_processing.waves_radon import WavesRadon
 
 from .wave_images_display import build_display_waves_image
 from .pseudorgb_display import build_display_pseudorgb, create_pseudorgb
