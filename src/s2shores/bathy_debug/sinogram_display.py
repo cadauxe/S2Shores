@@ -19,12 +19,13 @@ from matplotlib.axes import Axes
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from ..generic_utils.image_utils import normalized_cross_correlation
+from .display_utils import ceil_to_nearest_10, floor_to_nearest_10
 
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_dft_bathy_estimator import (
         SpatialDFTBathyEstimator)  # @UnusedImport
  
- def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
+def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
                            values2: np.ndarray, main_theta: float, plt_min: float, plt_max: float,
                            ordonate: bool=True, abscissa: bool=True, master: bool=True,
                            **kwargs: dict) -> None:

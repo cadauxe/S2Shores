@@ -37,6 +37,13 @@ def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -
         f'\n Smoothing Kernel Size = [{2 * smooth_kernel_xsize + 1}px*{2 * smooth_kernel_ysize + 1}px]' + filter_info
 
 
+def floor_to_nearest_10(val):
+    return np.floor(val / 10.0) * 10.0
+
+
+def ceil_to_nearest_10(val):
+    return np.ceil(val / 10.0) * 10.0
+
 # Auxiliary functions
 
 def display_curve(data: np.ndarray, legend: str) -> None:
@@ -293,14 +300,6 @@ def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     axs[1, 2].set_title('radon1 - radon2')
     display_energies(local_estimator, radon1, radon2)
     animate_sinograms(local_estimator, radon1, radon2)
-
-
-def floor_to_nearest_10(val):
-    return np.floor(val / 10.0) * 10.0
-
-
-def ceil_to_nearest_10(val):
-    return np.ceil(val / 10.0) * 10.0
 
 
 def sino1D_xcorr(sino1_1D, sino2_1D, correl_mode):
