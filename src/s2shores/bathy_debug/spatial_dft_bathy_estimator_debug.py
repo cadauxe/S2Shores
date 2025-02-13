@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .wave_fields_display import (display_dft_sinograms, display_dft_sinograms_spectral_analysis,
+from .spatial_dft_wave_fields_display import (display_dft_sinograms, display_dft_sinograms_spectral_analysis,
                                   display_polar_images_dft, display_waves_images_dft)
 
 
@@ -29,7 +29,6 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
         print(self.bathymetry_estimations)
 
         # Displays
-        # display_initial_data(self)
         if len(self.bathymetry_estimations) > 0:
             waves_image = display_waves_images_dft(self)
             dft_sinograms = display_dft_sinograms(self)
