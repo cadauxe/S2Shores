@@ -45,6 +45,7 @@ dependencies = [
     "xarray",
     "netcdf4",
     "pandas",
+    "pytest",
     "matplotlib",
     "Sphinx>=4.1",
     "setuptools",
