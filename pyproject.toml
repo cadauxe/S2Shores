@@ -24,9 +24,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "s2shores"
 version = "0.1.0"
-description = "Bathymetry computing"
+description = "A python library for estimating coastal bathymetry"
 authors = [
-    { name = "Alain Giros, et al." }
+    { name = "Rafael Almar, Stephanie Artigues, Erwin Bergsma, Romain Degoul, Alain Giros, Adrien Klotz, Yannick Lasne, Solange Lemai-Chenevier, Alexia Mondot, Gregoire Thoumyre, Pierre Tysebaert" }
 ]
 license = { text = "Apache-2.0" }  # Update if needed
 readme = "README.md"
@@ -49,7 +49,6 @@ dependencies = [
     "matplotlib",
     "Sphinx>=4.1",
     "setuptools",
-    "GDAL==3.10",
     "Shapely>=1.6",
     "cmcrameri"
 ]
