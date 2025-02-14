@@ -1,44 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-Class managing the computation of wave fields from two images taken at a small time interval.
-
+Some other avalaible display functions.
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 5 March 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
-
-  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
-  in compliance with the License. You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software distributed under the License
-  is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
-  or implied. See the License for the specific language governing permissions and
-  limitations under the License.
+:created: 5 mars 2021
 """
-import os
+
 from typing import TYPE_CHECKING, List, Optional, Tuple  # @NoMove
 
-import cmcrameri.cm as cmc
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.colors import Normalize, TwoSlopeNorm
-from matplotlib.figure import Figure
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib.colors import Normalize
 
 from ..image_processing.waves_radon import WavesRadon
-from .bathy_visualization.display_utils import (get_display_title,
-                                                get_display_title_with_kernel)
-from .bathy_visualization.sinogram_display import (build_sinogram_fft_display,
-                                                   animate_sinograms)
-from .bathy_visualization.wave_images_display import build_display_waves_image
 
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_correlation_bathy_estimator import (
@@ -46,11 +25,61 @@ if TYPE_CHECKING:
     from ..local_bathymetry.spatial_dft_bathy_estimator import (
         SpatialDFTBathyEstimator)  # @UnusedImport
 
+def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -> str:
+    title = f'{local_estimator.global_estimator._ortho_stack.short_name} {local_estimator.location}'
+    smooth_kernel_xsize = local_estimator.global_estimator.smoothing_lines_size
+    smooth_kernel_ysize = local_estimator.global_estimator.smoothing_columns_size
+    filter_info = ''
+    if smooth_kernel_xsize == 0 and smooth_kernel_ysize == 0:
+        filter_info = f' (i.e. Smoothing Filter DEACTIVATED!)'
+
+    return title + \
+        f'\n Smoothing Kernel Size = [{2 * smooth_kernel_xsize + 1}px*{2 * smooth_kernel_ysize + 1}px]' + filter_info
+
+
+def floor_to_nearest_10(val):
+    return np.floor(val / 10.0) * 10.0
+
+
+def ceil_to_nearest_10(val):
+    return np.ceil(val / 10.0) * 10.0
+
+# Auxiliary functions
+
+def display_curve(data: np.ndarray, legend: str) -> None:
+    _, ax = plt.subplots()
+    ax.plot(data)
+    ax.set_title(legend)
+
+
+def display_3curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray) -> None:
+    _, ax = plt.subplots(3)
+    ax[0].plot(data1)
+    ax[1].plot(data2)
+    ax[2].plot(data3)
+
+
+def display_4curves(data1: np.ndarray, data2: np.ndarray, data3: np.ndarray,
+                    data4: np.ndarray) -> None:
+    _, ax = plt.subplots(nrows=2, ncols=2)
+    ax[0, 0].plot(data1)
+    ax[1, 0].plot(data2)
+    ax[0, 1].plot(data3)
+    ax[1, 1].plot(data4)
+
+def display_image(data: np.ndarray, legend: str) -> None:
+    _, ax = plt.subplots()
+    ax.imshow(data, aspect='auto', cmap='gray')
+    ax.set_title(legend)
+
+def get_display_title(local_estimator: 'SpatialDFTBathyEstimator') -> str:
+    title = f'{local_estimator.global_estimator._ortho_stack.short_name} {local_estimator.location}'
+    return title
+
 
 def build_image_display(axes: Axes, title: str, image: np.ndarray,
                         directions: Optional[List[Tuple[float, float]]] = None,
                         cmap: Optional[str] = None) -> None:
-    """ Build an image display"""
     imin = np.min(image)
     imax = np.max(image)
     axes.imshow(image, norm=Normalize(vmin=imin, vmax=imax), cmap=cmap)
@@ -69,7 +98,6 @@ def build_image_display(axes: Axes, title: str, image: np.ndarray,
 
 def build_directional_2d_display(axes: Axes, title: str, values: np.ndarray,
                                  directions: np.ndarray, **kwargs: dict) -> None:
-    """ Build a 2D display with given directions"""
     extent = [np.min(directions), np.max(directions), 0, values.shape[0]]
     imin = np.min(values)
     imax = np.max(values)
@@ -81,15 +109,12 @@ def build_directional_2d_display(axes: Axes, title: str, values: np.ndarray,
 
 def build_directional_curve_display(axes: Axes, title: str,
                                     values: np.ndarray, directions: np.ndarray) -> None:
-    """ Build a curve display with given directions"""
     axes.plot(directions, values)
     axes.set_xticks(directions[::20])
     plt.setp(axes.get_xticklabels(), fontsize=8)
     axes.set_title(title)
 
-
 def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
-    """ Display the initial data of the object local_estimator"""
     plt.close('all')
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(12, 8))
     fig.suptitle(get_display_title(local_estimator), fontsize=12)
@@ -111,7 +136,6 @@ def display_initial_data(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     build_directional_2d_display(axs[0, 2], 'first radon transform', values, directions)
     values, directions = second_radon_transform.get_as_arrays()
     build_directional_2d_display(axs[1, 2], 'second radon transform', values, directions)
-
 
 def build_correl_spectrum_matrix_spatial_correlation(
         axes: Axes,
@@ -149,104 +173,6 @@ def build_correl_spectrum_matrix_spatial_correlation(
     if type == 'phase':
         build_sinogram_fft_display(axes, title, csm_amplitude * csm_phase, directions, kfft,
                                    type, ordonate=False)
-
-
-def build_polar_display(fig: Figure, axes: Axes, title: str,
-                        local_estimator: 'SpatialDFTBathyEstimator',
-                        values: np.ndarray, resolution: float, dfn_max: float, max_wvlgth: float,
-                        subplot_pos: [float, float, float],
-                        refinement_phase: bool=False, **kwargs: dict) -> None:
-
-    radon_transform = local_estimator.radon_transforms[0]
-    if not refinement_phase:
-        _, directions = radon_transform.get_as_arrays()
-    else:
-        directions = radon_transform.directions_interpolated_dft
-
-
-    # define wavenumbers according to image resolution
-    Fs = 1 / resolution
-    nb_wavenumbers = radon_transform.get_as_arrays()[0].shape[0]
-    wavenumbers = np.arange(0, Fs / 2, Fs / nb_wavenumbers)
-
-    # create polar axes in the foreground and remove its background to see through
-    subplot_locator = int(f'{subplot_pos[0]}{subplot_pos[1]}{subplot_pos[2]}')
-    ax_polar = plt.subplot(subplot_locator, polar=True)
-    polar_ticks = np.arange(8) * np.pi / 4.
-    # Xticks labels definition with 0° positioning to North with clockwise rotation
-    polar_labels = ['90°', '45°', '0°', '315°', '270°', '225°', '180°', '135°']
-
-    plt.xticks(polar_ticks, polar_labels, size=9, color='black')
-    for i, label in enumerate(ax_polar.get_xticklabels()):
-        label.set_rotation(i * 45)
-
-    # get relevant attributes
-    direc_from_north = dfn_max
-    main_direction = 270 - dfn_max
-    main_wavelength = max_wvlgth
-
-    estimations = local_estimator.bathymetry_estimations
-    sorted_estimations_args = estimations.argsort_on_attribute(
-        local_estimator.final_estimations_sorting)
-    delta_time = estimations.get_estimations_attribute('delta_time')[sorted_estimations_args[0]]
-    delta_phase = estimations.get_estimations_attribute('delta_phase')[sorted_estimations_args[0]]
-
-    # Constrains the Wavenumber plotting interval according to wavelength limitation set to 50m
-    ax_polar.set_ylim(0, 0.02)
-    requested_labels = np.array([500, 200, 100, 50, 25, main_wavelength]).round(2)
-    requested_labels = np.flip(np.sort(requested_labels))
-    rticks = 1 / requested_labels
-
-    # Main information display
-    print('MAIN DIRECTION', main_direction)
-    print('DIRECTION FROM NORTH', direc_from_north)
-    print('DELTA TIME', delta_time)
-    print('DELTA PHASE', delta_phase)
-
-    ax_polar.plot(np.radians((main_direction + 180) % 360), 1 / main_wavelength, '*', color='black')
-
-    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, \n$\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
-                      xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
-                      xytext=(0.5, 0.65),    # fraction, fraction
-                      textcoords='figure fraction',
-                      horizontalalignment='left',
-                      verticalalignment='bottom',
-                      fontsize=10, color='blue')
-
-    ax_polar.set_rgrids(rticks, labels=requested_labels, fontsize=12, angle=180, color='red')
-    ax_polar.text(np.radians(50), ax_polar.get_rmax() * 1.25, r'Wavelength $\lambda$ [m]',
-                  rotation=0, ha='center', va='center', color='red')
-    ax_polar.set_rlabel_position(70)            # Moves the tick-labels
-    ax_polar.set_rorigin(0)
-    ax_polar.tick_params(axis='both', which='major', labelrotation=0, labelsize=8)
-    ax_polar.grid(linewidth=0.5)
-
-    # Define background color
-    norm = TwoSlopeNorm(vcenter=1, vmin=0, vmax=3)
-    ax_polar.set_facecolor(plt.cm.bwr_r(norm(3.0)))
-
-    # Values to be plotted
-    plotval = np.abs(values) / np.max(np.abs(values))
-
-    # convert the direction coordinates in the polar plot axis (from
-    directions = (directions + 180) % 360
-    # Add the last element of the list to the list.
-    # This is necessary or the line from 330 deg to 0 degree does not join up on the plot.
-    ddir = np.diff(directions).mean()
-    directions = np.append(directions, directions[-1:] + ddir)
-
-    plotval = np.concatenate((plotval, plotval[:, 0].reshape(plotval.shape[0], 1)), axis=1)
-
-    a, r = np.meshgrid(np.deg2rad(directions), wavenumbers)
-    tcf = ax_polar.tricontourf(a.flatten(), r.flatten(), plotval.flatten(), 500, cmap='gist_ncar_r')
-    plt.colorbar(tcf, ax=ax_polar)
-
-    ax_polar.set_title(title, fontsize=9, loc='center')
-
-    axes.xaxis.tick_top()
-    axes.set_aspect('equal')
-    # Manage blank spaces
-    # plt.tight_layout()
 
 
 def display_radon_transforms(local_estimator: 'SpatialDFTBathyEstimator',
@@ -311,6 +237,40 @@ def display_energies(local_estimator: 'SpatialDFTBathyEstimator',
     ax.plot(radon2_obj.get_sinograms_energies() / image2_energy)
 
 
+def animate_sinograms(local_estimator: 'SpatialDFTBathyEstimator',
+                      radon1_obj: WavesRadon, radon2_obj: WavesRadon) -> None:
+
+    fig, ax = plt.subplots()
+    fig.suptitle(get_display_title(local_estimator), fontsize=12)
+
+    sinogram1_init = radon1_obj[radon1_obj.directions[0]]
+    sinogram2_init = radon2_obj[radon2_obj.directions[0]]
+    image1_energy = local_estimator.ortho_sequence[0].energy_inner_disk
+    image2_energy = local_estimator.ortho_sequence[1].energy_inner_disk
+
+    line1, = ax.plot(sinogram1_init.values)
+    line2, = ax.plot(sinogram2_init.values)
+    values1, _ = radon1_obj.get_as_arrays()
+    min_radon = np.amin(values1)
+    max_radon = np.amax(values1)
+    plt.ylim(min_radon, max_radon)
+    dir_text = ax.text(0, max_radon * 0.9, f'direction: 0, energy1: {sinogram1_init.energy}',
+                       fontsize=10)
+
+    def animate(direction: float):
+        sinogram1 = radon1_obj[direction]
+        sinogram2 = radon2_obj[direction]
+        line1.set_ydata(sinogram1.values)  # update the data.
+        line2.set_ydata(sinogram2.values)  # update the data.
+        dir_text.set_text(f'direction: {direction:4.1f}, '
+                          f' energy1: {sinogram1.energy/image1_energy:3.1f}, '
+                          f'energy2: {sinogram2.energy/image2_energy:3.1f}')
+        return line1, line2, dir_text
+
+    ani = animation.FuncAnimation(
+        fig, animate, frames=radon1_obj.directions, interval=100, blit=True, save_count=50)
+
+
 def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     radon1 = local_estimator.radon_transforms[0]
     radon2 = local_estimator.radon_transforms[1]
@@ -340,3 +300,20 @@ def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     axs[1, 2].set_title('radon1 - radon2')
     display_energies(local_estimator, radon1, radon2)
     animate_sinograms(local_estimator, radon1, radon2)
+
+
+def sino1D_xcorr(sino1_1D, sino2_1D, correl_mode):
+    length_max = max(len(sino1_1D), len(sino2_1D))
+    length_min = min(len(sino1_1D), len(sino2_1D))
+
+    if length_max == len(sino2_1D):
+        lags = np.arange(-length_max + 1, length_min)
+    else:
+        lags = np.arange(-length_min + 1, length_max)
+
+    cross_correl = np.correlate(
+        sino1_1D / np.std(sino1_1D),
+        sino2_1D / np.std(sino2_1D),
+        correl_mode) / length_min
+    return lags, cross_correl
+ 
