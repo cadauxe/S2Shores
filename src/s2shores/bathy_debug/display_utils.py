@@ -267,9 +267,6 @@ def animate_sinograms(local_estimator: 'SpatialDFTBathyEstimator',
                           f'energy2: {sinogram2.energy/image2_energy:3.1f}')
         return line1, line2, dir_text
 
-    ani = animation.FuncAnimation(
-        fig, animate, frames=radon1_obj.directions, interval=100, blit=True, save_count=50)
-
 
 def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     radon1 = local_estimator.radon_transforms[0]
