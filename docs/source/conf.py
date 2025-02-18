@@ -145,15 +145,34 @@ pygments_style = "sphinx"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
+
+# Title
+html_title = "S2Shores Documentation"
+html_short_title = "S2Shores Documentation"
+
+# Logo
+html_logo = "images/logo_s2shores.png" #Add the correct logo
+
+# Favicon
+html_favicon = "images/logo_s2shores.png"#Add the correct logo
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "sidebar_width": "300px",
-    "page_width": "1200px"
+    "logo_only": True,
+    "navigation_depth": 4,
 }
+
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = ["css/my_custom.css"]
+
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+html_static_path = ["_static"]
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -232,13 +251,16 @@ htmlhelp_basename = "s2shores-doc"
 # -- Options for LaTeX output ------------------------------------------------
 
 latex_elements = {
-    # The paper size ("letterpaper" or "a4paper").
-    # "papersize": "letterpaper",
-    # The font size ("10pt", "11pt" or "12pt").
-    # "pointsize": "10pt",
+    # The paper size ('letterpaper' or 'a4paper').
+    "papersize": "letterpaper",
+    # The font size ('10pt', '11pt' or '12pt').
+    "pointsize": "10pt",
     # Additional stuff for the LaTeX preamble.
-    # "preamble": "",
+    "preamble": "",
+    # Latex figure (float) alignment
+    "figure_align": "htbp",
 }
+numfig = True
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).

@@ -25,7 +25,8 @@ from ..generic_utils.numpy_utils import dump_numpy_variable
 from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 
-from .spatial_dft_wave_fields_display import (display_dft_sinograms, display_dft_sinograms_spectral_analysis,
+from .spatial_dft_wave_fields_display import (display_dft_sinograms,
+                                  display_dft_sinograms_spectral_analysis,
                                   display_polar_images_dft, display_waves_images_dft)
 
 

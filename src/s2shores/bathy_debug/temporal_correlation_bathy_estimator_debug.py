@@ -165,7 +165,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.grid(True, linestyle='--', linewidth=0.5)
 
     def show_correlation_matrix(self) -> None:
-        """ Show correlation matrix where correlations were actually computed between selected pixels for a debug point
+        """
+        Show correlation matrix where correlations were actually
+        computed between selected pixels for a debug point
         """
 
         # Import correlation
@@ -210,7 +212,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.colorbar(pmc, cax=axins)
 
     def show_correlation_matrix_filled_filtered(self) -> None:
-        """ Show correlation matrix with filled values filtered before the radon transform for a debug point
+        """
+        Show correlation matrix with filled values filtered
+        before the radon transform for a debug point
         """
         # Import correlation
         circular_corr = self.metrics['corr_radon_input']
@@ -323,8 +327,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         subfigure = self._figure.add_subplot(self._gs[4, 0])
         subfigure.plot(x_spatial_axis, sinogram_max_var)
         subfigure.plot(zeros, np.zeros((len(zeros))), 'ro')
-        subfigure.plot(x_spatial_axis[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices],
-                       sinogram_max_var[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices], 'go')
+        subfigure.plot(x_spatial_axis[(x_spatial_axis >= zeros[0]) &
+                                      (x_spatial_axis < zeros[-1])][max_indices],
+                       sinogram_max_var[(x_spatial_axis >= zeros[0]) &
+                                        (x_spatial_axis < zeros[-1])][max_indices], 'go')
         subfigure.plot(dx, np.zeros(len(dx)), 'ko')
         plt.title(f'Projected sinogram at $\\theta$ = {self.metrics["direction"]:.1f} °')
         plt.xlabel(r'$\rho$ (m)')
@@ -354,9 +360,12 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """
         bathymetry_estimation = self.metrics['bathymetry_estimation']
 
-        celerities_txt = str([f'{elem:.2f}' for elem in bathymetry_estimation.get_attribute('celerity')])
-        periods_txt = str([f'{elem:.2f}' for elem in bathymetry_estimation.get_attribute('period')])
-        depth_txt = str([f'{elem:.2f}' for elem in bathymetry_estimation.get_attribute('depth')])
+        celerities_txt = str([f'{elem:.2f}'
+                              for elem in bathymetry_estimation.get_attribute('celerity')])
+        periods_txt = str([f'{elem:.2f}'
+                           for elem in bathymetry_estimation.get_attribute('period')])
+        depth_txt = str([f'{elem:.2f}'
+                         for elem in bathymetry_estimation.get_attribute('depth')])
 
         subfigure = self._figure.add_subplot(self._gs[4, 1])
         subfigure.axis('off')
@@ -423,7 +432,8 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             f'    dx (m): {distances_txt:s} \n'
             f'    c (m/s): {celerities_txt:s} \n'
             f'    gamma: {linerities_txt:s} \n'
-            f'    status: {self.metrics["status"]:d} (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT) \n'
+            f'    status: {self.metrics["status"]:d} (0: SUCCESS, 1: FAIL, 2: ON_GROUND, '
+            f'3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT) \n'
             'End of debug \n']
 
         self._debug_log = txt[0]

@@ -38,6 +38,7 @@ dependencies = [
     "dask[distributed]",
     "rasterio",
     "jupyter-server-proxy",
+    "sphinx-rtd-theme",
     "pyarrow",
     "numpy>=1.20",
     "scipy",
@@ -46,6 +47,9 @@ dependencies = [
     "netcdf4",
     "pandas",
     "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "GDAL==3.8",
     "matplotlib",
     "Sphinx>=4.1",
     "setuptools",
@@ -56,11 +60,11 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/CNES/s2shores"
 
-[project.scripts]
-s2shores = "bathylauncher.src.bathylauncher.products.bathy_launcher:process_command"
-
 [tool.setuptools.packages]
 find = { include = ["s2shores*", "bathylauncher*"] }
+
+[project.scripts]
+s2shores = "src.s2shores.bathylauncher.bathy_processing:process_command"
 
 [tool.setuptools_scm]
 fallback_version = "1.0"

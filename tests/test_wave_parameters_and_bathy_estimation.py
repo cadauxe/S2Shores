@@ -16,7 +16,8 @@
 # data = loadmat(
 #     '/work/LEGOS/shore/bathy_files/Synthetic_Rachid_1min_1Hz_1m.mat')
 # Im_MATLAB = np.reshape(data['M'],
-#                        (-1, np.shape(data['Mt'])[1], np.shape(data['Mt'])[0]))[:, 400:480, 400:480]
+#                        (-1, np.shape(data['Mt'])[1],
+#                        np.shape(data['Mt'])[0]))[:, 400:480, 400:480]
 #
 # sequence_subtile = gdal.Open(
 #     'test_data/sequence_image_cap_breton.tif').ReadAsArray()

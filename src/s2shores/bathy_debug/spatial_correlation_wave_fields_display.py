@@ -74,7 +74,7 @@ def display_sinograms_1D_analysis_spatial_correlation(
         theta_label = main_direction % (-np.sign(main_direction) * 180.0)
     else:
         theta_label = main_direction
-    title_sino1 = f'[Master Image] Sinogram 1D along $\Theta$={theta_label:.1f}° '
+    title_sino1 = fr'[Master Image] Sinogram 1D along $\Theta$={theta_label:.1f}°'
     title_sino2 = '[Slave Image] Sinogram 1D'
     correl_mode = local_estimator.global_estimator.local_estimator_params['CORRELATION_MODE']
 
@@ -92,9 +92,12 @@ def display_sinograms_1D_analysis_spatial_correlation(
     # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
     # Check if the main direction belongs to the plotting interval [plt_min:plt_ramax]
 
-    title_cross_correl1 = f'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={theta_label:.1f}°] and Sino2[All Directions]'
-    title_cross_correl2 = f'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={0:.1f}°] and Sino1[All Directions]'
-    title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n Sino1 and Sino2 for Each Direction'
+    title_cross_correl1 = (fr'Normalized Cross-Correlation Signal between \n '
+                           fr'Sino1[$\Theta$={theta_label:.1f}°] and Sino2[All Directions]')
+    title_cross_correl2 = (fr'Normalized Cross-Correlation Signal between \n '
+                           fr'Sino2[$\Theta$={0:.1f}°] and Sino1[All Directions]')
+    title_cross_correl_2D = ('2D-Normalized Cross-Correlation Signal between \n '
+                             'Sino1 and Sino2 for Each Direction')
 
     build_sinogram_2D_cross_correlation(
         axs[2, 0], title_cross_correl1, sinogram1, directions1, main_direction,

@@ -81,13 +81,14 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
 
     build_sinogram_display(
-        axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1, sinogram2,
-        main_direction, plt_min, plt_max)
+        axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1,
+        sinogram2, main_direction, plt_min, plt_max)
     build_sinogram_difference_display(
-        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max, cmap='bwr')
+        axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2,
+        plt_min, plt_max, cmap='bwr')
     build_sinogram_display(
-        axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, plt_min, plt_max, ordonate=False)
+        axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2,
+        sinogram1, main_direction, plt_min, plt_max, ordonate=False)
 
     plt.tight_layout()
     point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
@@ -166,10 +167,11 @@ def display_dft_sinograms_spectral_analysis(
 
     build_sinogram_spectral_display(
         axs[2, 0], 'Spectral Amplitude Sinogram1 [DFT] * CSM_Phase',
-        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max, abscissa=False, cmap='cmc.vik')
+        np.abs(sino1_fft) * csm_phase, directions1, kfft, plt_min, plt_max,
+        abscissa=False, cmap='cmc.vik')
     build_correl_spectrum_matrix(
-        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'phase',
-        'Cross Spectral Matrix (Amplitude * Phase-shifts)')
+        axs[2, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max,
+        'phase','Cross Spectral Matrix (Amplitude * Phase-shifts)')
     build_sinogram_spectral_display(
         axs[2, 2], 'Spectral Amplitude Sinogram2 [DFT] * CSM_Phase',
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
