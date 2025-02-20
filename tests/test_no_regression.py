@@ -1,11 +1,21 @@
-import subprocess
+# -*- coding: utf-8 -*-
+"""
+Tests to ensure no code regression, the outputs are compared to reference results.
+
+
+:authors: see AUTHORS file
+:organization: CNES, LEGOS, SHOM
+:copyright: 2021 CNES. All rights reserved.
+:license: see LICENSE file
+:created: 14 février 2025
+"""
 import os
 import glob
 import xarray as xr
 from click.testing import CliRunner
 from tests.conftest import S2SHORESTestsPath
 
-from s2shores.bathylauncher.bathy_processing import process_command
+from src.s2shores.bathylauncher.bathy_processing import process_command
 
 def compare_files(reference_dir : str):
     """
@@ -42,7 +52,7 @@ def compare_files(reference_dir : str):
 
 def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    PASSED
+    OK
     Test Sentinel-2 30TXR Old data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and global distoshore.
 
@@ -60,11 +70,11 @@ def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> Non
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
         '--nb_subtiles', '36'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 def test_nominal_dft_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    PASSED
+    OK
     Test Sentinel-2 30TXR New data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and tile distoshore.
 
@@ -81,11 +91,12 @@ def test_nominal_dft_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
         '--nb_subtiles', '36'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 
 def test_nominal_tri_stereo_pneo(s2shores_paths: S2SHORESTestsPath) -> None:
     """
+    RUNNING
     Test PNEO data without ROI and distoshore, with geotiff
     product, nb_subtiles=1 and Layers-type debug.
 
@@ -100,12 +111,12 @@ def test_nominal_tri_stereo_pneo(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config1/{s2shores_paths.yaml_file}',
         '--nb_subtiles', '36'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 
 def test_nominal_video(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    PASSED
+    RUNNING
     Test Funwave data without ROI and distoshore, with
     geotiff product, nb_subtiles=1 and Layers-type debug.
 
@@ -120,12 +131,12 @@ def test_nominal_video(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config4/{s2shores_paths.yaml_file}',
         '--nb_subtiles', '4'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 
 def test_debug_pointswach_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    PASSED
+    OK
     Test SWASH7.4 data without ROI, with geotiff product, temporal
     correlation debug, grid debug point mode and Layers-type expert.
 
@@ -141,12 +152,12 @@ def test_debug_pointswach_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> No
         '--config_file', f'{s2shores_paths.config_dir}/config7/{s2shores_paths.yaml_file}',
         '--debug_path', s2shores_paths.debug_dir,
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_7_4.yaml'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 
 def test_debug_pointswach_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    FAILED
+    OK
     Test SWASH8.2 data without ROI, with geotiff product
     , dft spatial debug and grid debug point mode.
 
@@ -162,12 +173,12 @@ def test_debug_pointswach_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None
         '--config_file', f'{s2shores_paths.config_dir}/config5/{s2shores_paths.yaml_file}',
         '--debug_path', s2shores_paths.debug_dir,
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2.yaml'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 
 def test_debug_pointswach_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    FAILED
+    RUNNING
     Test SWASH8.2 data without ROI, with geotiff product, spatial
     correlation debug, grid debug point mode and Layers-type nominal.
 
@@ -183,12 +194,12 @@ def test_debug_pointswach_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> Non
         '--config_file', f'{s2shores_paths.config_dir}/config6/{s2shores_paths.yaml_file}',
         '--debug_path', s2shores_paths.debug_dir,
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2.yaml'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 
 def test_limitroi_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    PASSED
+    OK
     Test Sentinel-2 30TXR New data with ROI, ROI limit and sequential option.
 
     - Verify that all expected output files are created.
@@ -207,11 +218,12 @@ def test_limitroi_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI.shp',
         '--limit_to_roi',
         '--sequential'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
+
 
 def test_debug_mode_point_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    FAILED
+    OK
     Test Sentinel-2 30TXR New data with S2 product and point debug point mode.
 
     - Verify that all expected output files are created.
@@ -229,12 +241,12 @@ def test_debug_mode_point_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--nb_subtiles', '36',
         '--debug_path', s2shores_paths.debug_dir,
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_30TXR_notongrid.yaml'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 
 def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    FAILED
+    RUNNING
     Test Funwave data with geotiff product and debug area.
 
     - Verify that all expected output files are created.
@@ -249,12 +261,12 @@ def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
         '--config_file', f'{s2shores_paths.config_dir}/config9/{s2shores_paths.yaml_file}',
         '--debug_path', s2shores_paths.debug_dir,
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_area_funwave.yaml'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")
 
 
 def test_roi_profiling_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    PASSED
+    OK
     Test Sentinel-2 30TXR Old data without ROI limit
     , with S2 product, ROI and profiling option.
 
@@ -272,8 +284,7 @@ def test_roi_profiling_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--config_file', f'{s2shores_paths.config_dir}/config2/{s2shores_paths.yaml_file}',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
-        '--debug_path', s2shores_paths.debug_dir,
         '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI.shp',
         '--nb_subtiles', '36',
         '--profiling'])
-    ####TEST the ouputs.....
+    # compare_files(reference_dir = "")

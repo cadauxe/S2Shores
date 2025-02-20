@@ -2,66 +2,43 @@
 S2Shores
 ====================
 
-This is the documentation of **S2Shores**.
+This project gathers several estimators to be able to compute bathymetry from standard format such as sentinel2 or geotiff.
 
-Description de S2shores
+It uses inversion methods for bathymetry estimation based on the inversion of wave peaks and data provider services (delta time b.w. frames, gravity depending on latitude, distance to shore).
 
+Content
+==================
 
-Contents
-========
-
-**Install**
-
-* :doc:`install`
-
-.. toctree::
+* .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: Installation
 
-   install
+   Installation procedure <install>
 
-**Tutorials**
 
-* :doc:`tutorial`
-
-.. toctree::
+* .. toctree::
    :caption: Tutorials
    :maxdepth: 2
 
    Getting started <getting_started>
-   Usage <usage>
    Tutorial <tutorial>
    Contributing <contributing>
 
-**CLI**
 
-* :doc:`cli`
 
-.. toctree::
+* .. toctree::
+   :caption: Documentation
    :maxdepth: 1
-   :hidden:
-   :caption: CLI
 
-   cli
+   Command Line Interface <cli>
+   Python API <api/modules>
 
-**API**
 
-* :doc:`api`
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: API
-
-   api
-
-.. toctree::
+* .. toctree::
    :caption: References
    :maxdepth: 1
 
    Bibliography <bibliography>
-   Api Reference <api/modules>
    License <license>
    Authors <authors>
    Changelog <changelog>

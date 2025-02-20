@@ -33,9 +33,9 @@ import yaml
 
 from s2shores.image.ortho_stack import OrthoStack  # @NoMove
 
-from bathylauncher.bathy_launcher import BathyLauncher, ProductsDescriptor  # @UnusedImport
-from bathylauncher.products.geotiff_product import GeoTiffProduct
-from bathylauncher.products.s2_image_product import S2ImageProduct
+from s2shores.bathylauncher.bathy_launcher import BathyLauncher, ProductsDescriptor  # @UnusedImport
+from s2shores.bathylauncher.products.geotiff_product import GeoTiffProduct
+from s2shores.bathylauncher.products.s2_image_product import S2ImageProduct
 
 
 def create_timestamped_dir(output_dir_root: Path) -> Path:
