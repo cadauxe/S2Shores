@@ -20,7 +20,7 @@
 """
 from matplotlib import pyplot as plt
 
-from ..local_bathymetry.spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
+from s2shores.local_bathymetry.spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 
 from .spatial_correlation_wave_fields_display import (display_sinograms_1D_analysis_spatial_correlation,

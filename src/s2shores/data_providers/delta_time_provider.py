@@ -24,7 +24,7 @@ from typing import Any, Dict, List  # @NoMove
 
 from shapely.geometry import Point
 
-from ..waves_exceptions import WavesException
+from s2shores.waves_exceptions import WavesException
 from .localized_data_provider import LocalizedDataProvider
 
 

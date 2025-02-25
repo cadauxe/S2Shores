@@ -22,7 +22,7 @@ from typing import Any, List, Optional, Tuple  # @NoMove @UnusedImport
 
 import numpy as np  # @NoMove
 
-from ..generic_utils.numpy_utils import HashableNdArray
+from s2shores.generic_utils.numpy_utils import HashableNdArray
 from .sinograms_dict import SinogramsDict
 from .waves_sinogram import SignalProcessingFilters, WavesSinogram
 

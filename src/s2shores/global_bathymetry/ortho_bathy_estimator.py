@@ -25,13 +25,13 @@ from typing import TYPE_CHECKING  # @NoMove
 from shapely.geometry import Point
 from xarray import Dataset  # @NoMove
 
-from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
-from ..data_model.estimated_carto_bathy import EstimatedCartoBathy
-from ..data_model.estimated_points_bathy import EstimatedPointsBathy
-from ..image.ortho_sequence import OrthoSequence
-from ..image.sampled_ortho_image import SampledOrthoImage
-from ..local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
-from ..waves_exceptions import WavesException
+from s2shores.data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
+from s2shores.data_model.estimated_carto_bathy import EstimatedCartoBathy
+from s2shores.data_model.estimated_points_bathy import EstimatedPointsBathy
+from s2shores.image.ortho_sequence import OrthoSequence
+from s2shores.image.sampled_ortho_image import SampledOrthoImage
+from s2shores.local_bathymetry.local_bathy_estimator_factory import local_bathy_estimator_factory
+from s2shores.waves_exceptions import WavesException
 
 if TYPE_CHECKING:
     from .bathy_estimator import BathyEstimator  # @UnusedImport

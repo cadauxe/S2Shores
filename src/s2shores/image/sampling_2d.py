@@ -23,8 +23,8 @@ from typing import Iterator, List, Tuple  # @NoMove
 import numpy as np  # @NoMove
 from shapely.geometry import Point, Polygon
 
-from ..generic_utils.numpy_utils import split_samples
-from ..waves_exceptions import WavesIndexingError
+from s2shores.generic_utils.numpy_utils import split_samples
+from s2shores.waves_exceptions import WavesIndexingError
 
 
 class Sampling2D:

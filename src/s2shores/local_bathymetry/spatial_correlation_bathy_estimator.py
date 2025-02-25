@@ -24,16 +24,16 @@ import numpy as np
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 
-from ..bathy_physics import celerity_offshore, period_offshore, wavelength_offshore
-from ..generic_utils.image_filters import desmooth, detrend
-from ..generic_utils.image_utils import normalized_cross_correlation
-from ..generic_utils.signal_utils import find_period_from_zeros
-from ..image.ortho_sequence import FrameIdType, OrthoSequence
-from ..image_processing.sinograms import Sinograms
-from ..image_processing.waves_image import ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon, linear_directions
-from ..image_processing.waves_sinogram import WavesSinogram
-from ..waves_exceptions import NotExploitableSinogram, WavesEstimationError
+from s2shores.bathy_physics import celerity_offshore, period_offshore, wavelength_offshore
+from s2shores.generic_utils.image_filters import desmooth, detrend
+from s2shores.generic_utils.image_utils import normalized_cross_correlation
+from s2shores.generic_utils.signal_utils import find_period_from_zeros
+from s2shores.image.ortho_sequence import FrameIdType, OrthoSequence
+from s2shores.image_processing.sinograms import Sinograms
+from s2shores.image_processing.waves_image import ImageProcessingFilters
+from s2shores.image_processing.waves_radon import WavesRadon, linear_directions
+from s2shores.image_processing.waves_sinogram import WavesSinogram
+from s2shores.waves_exceptions import NotExploitableSinogram, WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_bathy_estimation import SpatialCorrelationBathyEstimation
 

@@ -27,7 +27,7 @@ from .polar_display import build_polar_display
 from .display_utils import get_display_title_with_kernel
 
 if TYPE_CHECKING:
-    from ..local_bathymetry.spatial_dft_bathy_estimator import (
+    from local_bathymetry.spatial_dft_bathy_estimator import (
         SpatialDFTBathyEstimator)  # @UnusedImport
 	
 def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:

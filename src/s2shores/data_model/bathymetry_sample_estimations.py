@@ -25,7 +25,7 @@ from typing import List, Optional, Union
 import numpy as np
 from shapely.geometry import Point
 
-from ..waves_exceptions import WavesEstimationAttributeError
+from s2shores.waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimation import BathymetrySampleEstimation
 
 

@@ -26,15 +26,15 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Type  # @NoMove
 import numpy as np
 from shapely.geometry import Point
 
-from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
-from ..data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
-from ..data_providers.delta_time_provider import NoDeltaTimeValueError
-from ..image.ortho_sequence import FrameIdType, OrthoSequence
-from ..image_processing.waves_image import ImageProcessingFilters
-from ..waves_exceptions import SequenceImagesError
+from s2shores.data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
+from s2shores.data_model.bathymetry_sample_estimations import BathymetrySampleEstimations
+from s2shores.data_providers.delta_time_provider import NoDeltaTimeValueError
+from s2shores.image.ortho_sequence import FrameIdType, OrthoSequence
+from s2shores.image_processing.waves_image import ImageProcessingFilters
+from s2shores.waves_exceptions import SequenceImagesError
 
 if TYPE_CHECKING:
-    from ..global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
+    from global_bathymetry.bathy_estimator import BathyEstimator  # @UnusedImport
 
 
 class LocalBathyEstimator(ABC):

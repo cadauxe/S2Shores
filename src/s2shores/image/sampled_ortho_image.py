@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING  # @NoMove
 
 from shapely.geometry import Point
 
-from ..image_processing.waves_image import WavesImage
+from s2shores.image_processing.waves_image import WavesImage
 from .image_geometry_types import ImageWindowType, MarginsType
 from .sampling_2d import Sampling2D
 

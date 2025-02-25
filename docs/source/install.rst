@@ -11,4 +11,4 @@ To install **S2shores**, create a conda environment and install the correct vers
     $ conda create -n env_name -y
     $ conda activate env_name
     $ conda install python=3.12 libgdal=3.8 -c conda-forge -y
-    $ pip install s2shores
+    $ pip install s2shores --no-cache-dir

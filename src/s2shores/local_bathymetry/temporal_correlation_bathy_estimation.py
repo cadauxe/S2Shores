@@ -18,7 +18,7 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
+from s2shores.data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
 class TemporalCorrelationBathyEstimation(BathymetrySampleEstimation):

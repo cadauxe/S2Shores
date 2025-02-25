@@ -14,8 +14,8 @@ from typing import Dict, List, Optional  # @NoMove
 from osgeo import gdal, osr
 from shapely.geometry import Polygon
 
-from ..data_providers.delta_time_provider import DeltaTimeProvider
-from ..image_processing.waves_image import WavesImage
+from s2shores.data_providers.delta_time_provider import DeltaTimeProvider
+from s2shores.image_processing.waves_image import WavesImage
 from .image_geometry_types import MarginsType
 from .ortho_layout import OrthoLayout
 from .ortho_sequence import FrameIdType, FramesIdsType

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING  # @NoMove
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..image_processing.waves_radon import WavesRadon
+from s2shores.image_processing.waves_radon import WavesRadon
 from .sinogram_display import (build_sinogram_display, 
                                build_sinogram_difference_display,
                                build_sinogram_1D_display_master,
@@ -28,7 +28,7 @@ from .waves_image_display import (create_pseudorgb,
 from .display_utils import get_display_title_with_kernel
 
 if TYPE_CHECKING:
-    from ..local_bathymetry.spatial_correlation_bathy_estimator import (
+    from local_bathymetry.spatial_correlation_bathy_estimator import (
         SpatialCorrelationBathyEstimator)  # @UnusedImport
  
 def display_sinograms_1D_analysis_spatial_correlation(

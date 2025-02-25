@@ -22,7 +22,7 @@ from typing import Any, List, Optional, Tuple, cast  # @NoMove
 
 import numpy as np  # @NoMove
 
-from ..generic_utils.quantized_directions_dict import QuantizedDirectionsDict
+from s2shores.generic_utils.quantized_directions_dict import QuantizedDirectionsDict
 from .waves_sinogram import WavesSinogram
 
 

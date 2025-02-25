@@ -21,8 +21,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from ..generic_utils.numpy_utils import dump_numpy_variable
-from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
+from s2shores.generic_utils.numpy_utils import dump_numpy_variable
+from s2shores.local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 
 from .spatial_dft_wave_fields_display import (display_dft_sinograms,

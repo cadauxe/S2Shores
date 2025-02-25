@@ -91,7 +91,12 @@ class S2DeltaTimeProvider(DeltaTimeProvider):
         from .s2_image_product import NB_BANDS_DETECTORS
         delta_times: Dict[str, dict] = {}
         with open(delta_times_csv_filepath, newline='') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=';')
+            dialect = csv.Sniffer().sniff(csvfile.read(1024))
+            csvfile.seek(0)  # Reset file pointer after reading for sniffing
+
+            reader = csv.DictReader(csvfile, delimiter=dialect.delimiter)
+
+            # reader = csv.DictReader(csvfile, delimiter=',')
             for row in reader:
                 src_band_id = row['bande_src']
                 if src_band_id not in delta_times.keys():

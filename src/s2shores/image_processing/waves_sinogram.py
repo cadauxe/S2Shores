@@ -24,8 +24,8 @@ from typing import Any, Callable, List, Tuple  # @NoMove
 import numpy as np
 from scipy.interpolate import interp1d
 
-from ..generic_utils.numpy_utils import HashableNdArray
-from ..generic_utils.signal_utils import get_unity_roots
+from s2shores.generic_utils.numpy_utils import HashableNdArray
+from s2shores.generic_utils.signal_utils import get_unity_roots
 
 SignalProcessingFilters = List[Tuple[Callable, List[Any]]]
 

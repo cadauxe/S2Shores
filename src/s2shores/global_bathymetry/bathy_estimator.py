@@ -26,9 +26,9 @@ import xarray as xr  # @NoMove
 from shapely.geometry import Point
 from xarray import Dataset  # @NoMove
 
-from ..image.image_geometry_types import MarginsType
-from ..image.ortho_stack import FramesIdsType, OrthoStack
-from ..image.sampled_ortho_image import SampledOrthoImage
+from s2shores.image.image_geometry_types import MarginsType
+from s2shores.image.ortho_stack import FramesIdsType, OrthoStack
+from s2shores.image.sampled_ortho_image import SampledOrthoImage
 from .bathy_estimator_parameters import BathyEstimatorParameters
 from .bathy_estimator_providers import BathyEstimatorProviders
 from .ortho_bathy_estimator import OrthoBathyEstimator

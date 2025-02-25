@@ -24,9 +24,9 @@ from typing import List, Tuple, Union
 
 from shapely.geometry import Point
 
-from ..data_providers.delta_time_provider import DeltaTimeProvider
-from ..image_processing.waves_image import WavesImage
-from ..waves_exceptions import SequenceImagesError
+from s2shores.data_providers.delta_time_provider import DeltaTimeProvider
+from s2shores.image_processing.waves_image import WavesImage
+from s2shores.waves_exceptions import SequenceImagesError
 from .image_geometry_types import ImageWindowType
 
 FrameIdType = Union[str, int, datetime]

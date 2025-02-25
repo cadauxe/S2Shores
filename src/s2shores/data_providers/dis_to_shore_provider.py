@@ -27,7 +27,7 @@ import xarray as xr  # @NoMove
 from osgeo import gdal
 from shapely.geometry import Point
 
-from ..image.geo_transform import GeoTransform
+from s2shores.image.geo_transform import GeoTransform
 from .localized_data_provider import LocalizedDataProvider
 
 

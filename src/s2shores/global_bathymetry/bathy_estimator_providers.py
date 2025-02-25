@@ -23,14 +23,14 @@ from typing import Optional, Union  # @NoMove
 
 from shapely.geometry import Point
 
-from ..data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
-from ..data_providers.dis_to_shore_provider import (DisToShoreProvider, GeotiffDisToShoreProvider,
+from s2shores.data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
+from s2shores.data_providers.dis_to_shore_provider import (DisToShoreProvider, GeotiffDisToShoreProvider,
                                                     InfinityDisToShoreProvider,
                                                     NetCDFDisToShoreProvider)
-from ..data_providers.gravity_provider import (ConstantGravityProvider, GravityProvider,
+from s2shores.data_providers.gravity_provider import (ConstantGravityProvider, GravityProvider,
                                                LatitudeVaryingGravityProvider)
-from ..data_providers.roi_provider import RoiProvider, VectorFileRoiProvider
-from ..image.ortho_stack import OrthoStack
+from s2shores.data_providers.roi_provider import RoiProvider, VectorFileRoiProvider
+from s2shores.image.ortho_stack import OrthoStack
 
 
 class BathyEstimatorProviders:

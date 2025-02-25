@@ -24,7 +24,7 @@ import numpy as np  # @NoMove
 from shapely.affinity import translate
 from shapely.geometry import Point, Polygon
 
-from ..generic_utils.tiling_utils import modular_sampling
+from s2shores.generic_utils.tiling_utils import modular_sampling
 from .geo_transform import GdalGeoTransformType, GeoTransform
 from .image_geometry_types import ImageWindowType, MarginsType
 from .sampling_2d import Sampling2D

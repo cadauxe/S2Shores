@@ -20,7 +20,7 @@
 """
 from typing import Optional, Tuple
 
-from ..image.ortho_stack import FramesIdsType
+from s2shores.image.ortho_stack import FramesIdsType
 
 
 class BathyEstimatorParameters:

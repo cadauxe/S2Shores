@@ -22,7 +22,7 @@ from typing import Optional, Tuple  # @NoMove
 
 from osgeo import gdal, osr
 
-from ..image.image_geometry_types import PointType
+from s2shores.image.image_geometry_types import PointType
 
 GDAL3_OR_GREATER = gdal.VersionInfo()[0] >= '3'
 SWAP_COORDS_EPSG = [4326]

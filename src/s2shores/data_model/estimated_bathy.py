@@ -25,7 +25,7 @@ from typing import Any, Dict, Hashable, List, Mapping
 import numpy as np  # @NoMove
 from xarray import DataArray, Dataset  # @NoMove
 
-from ..waves_exceptions import WavesEstimationAttributeError
+from s2shores.waves_exceptions import (WavesEstimationAttributeError)
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
 DEBUG_LAYER = ['DEBUG']

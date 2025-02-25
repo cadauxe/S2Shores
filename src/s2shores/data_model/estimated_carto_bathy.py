@@ -24,10 +24,10 @@ from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
 import numpy as np  # @NoMove
 from xarray import DataArray  # @NoMove
 
-from ..data_model.estimated_bathy import (DEBUG_LAYER, EXPERT_LAYER, METERS_UNIT, NOMINAL_LAYER,
+from s2shores.data_model.estimated_bathy import (DEBUG_LAYER, EXPERT_LAYER, METERS_UNIT, NOMINAL_LAYER,
                                           SPATIAL_REF, EstimatedBathy)
-from ..image.sampling_2d import Sampling2D
-from ..waves_exceptions import WavesEstimationAttributeError
+from s2shores.image.sampling_2d import Sampling2D
+from s2shores.waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
 DIMS_Y_X_NKEEP_TIME = ['time', 'kKeep', 'y', 'x']

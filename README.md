@@ -1,39 +1,27 @@
 # S2Shores
 
-BathyLauncher
 ======================
 
 This project gathers several estimators to be able to compute bathymetry from standard format such as sentinel2 or geotiff.
 
-It depends on S2Shores, a library providing inversion methods for bathymetry estimation based on the inversion of wave peaks and data provider services (delta time b.w. frames, gravity depending on latitude, distance to shore).
-
-
-## Versions compatibility :
-
-| BathyLauncher | S2Shores | 
-| ------ | ------ | 
-| V4.0 | V7.0 |
-
+It uses methods based on the inversion of wave peaks and data provider services (delta time b.w. frames, gravity depending on latitude, distance to shore) for bathymetry estimation.
 
 # Environment
 
-To create a conda environment :
+To create a conda environment with S2shores :
 
 ```
-conda create -p path_to_conda_env python –y # for instance 3.12.0
-conda activate path_to_conda_env
-conda install -c conda-forge gdal -y # for  instance 3.8.0 
-pip install -r s2shores/requirements.txt
-pip install -r bathylauncher/requirements.txt
-pip install s2shores
-pip install bathylauncher
+conda create -n env_name -y
+conda activate env_name
+conda install python=3.12 libgdal=3.8 -c conda-forge -y
+pip install s2shores --no-cache-dir
 ```
 
 
 # Context
 
 One configuration file is needed :
-- *wave_bathy_inversion_config.yaml* (an example can be found in the s2shores [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/new_computation_framework/config/wave_bathy_inversion_config.yaml)) : parameters for the bathymetry inversion method.
+- *wave_bathy_inversion_config.yaml* (an example can be found in the s2shores [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/industrialisation/config/wave_bathy_inversion_config.yaml?ref_type=heads)) : parameters for the bathymetry inversion method.
 
 
 # Main parameters
@@ -64,13 +52,13 @@ It takes the following arguments :
 
 ``--config_file`` YAML configuration file for bathymetry computation (wave_bathy_inversion_config.yaml).
 
-``[--debug_file]`` YAML file defining points or area to spy for debug purpose. Example of debug files are given in the bathylauncher [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/bathylauncher/-/tree/develop/config).
+``[--debug_file]`` YAML file defining points or area to spy for debug purpose. Example of debug files are given in the [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/industrialisation/config/wave_bathy_inversion_config.yaml?ref_type=heads).
 
 ``[--debug_path]`` Path to store debug information.
 
-``[--distoshore_file]`` Georeferenced netCDF file giving the distance of a point to the closest shore. This information is used to compute bathymetry only on the sea. If not specified, bathymetry is computed over the complete image footprint.
+``[--distoshore_file]`` Georeferenced netCDF file or GeoTif file giving the distance of a point to the closest shore. This information is used to compute bathymetry only on the sea. If not specified, bathymetry is computed over the complete image footprint.
 
-``[--delta_times_dir]`` Directory containing the files describing S2A and S2B delta times between detectors. Mandatory for processing a Sentinel2 product. Example of delta_times files for S2A and S2B based and the ESA handbook (delta_t constant per band) are given in the bathylauncher [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/bathylauncher/-/tree/develop/config). 
+``[--delta_times_dir]`` Directory containing the files describing S2A and S2B delta times between detectors. Mandatory for processing a Sentinel2 product. Example of delta_times files for S2A and S2B based and the ESA handbook (delta_t constant per band) are given in the bathylauncher [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/industrialisation/config/wave_bathy_inversion_config.yaml?ref_type=heads). 
 
 ``[--roi_file]`` Vector file specifying the polygon(s) where the bathymetry must be computed (geojson file format for instance). 
 
@@ -86,7 +74,7 @@ It takes the following arguments :
 
 # Launch() API
 
-It is also possible to launch a bathymetry estimation by using the launch() function of BathyLauncher. 
+It is also possible to launch a bathymetry estimation by using the launch() function. 
 
 #### Arguments :
 

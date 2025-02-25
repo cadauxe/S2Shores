@@ -21,7 +21,7 @@ time interval.
 """
 from abc import abstractmethod
 
-from ..local_bathymetry.local_bathy_estimator import LocalBathyEstimator
+from s2shores.local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 
 
 class LocalBathyEstimatorDebug(LocalBathyEstimator):

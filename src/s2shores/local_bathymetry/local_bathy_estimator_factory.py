@@ -23,12 +23,12 @@ from typing import TYPE_CHECKING, Dict, Optional, Type  # @NoMove
 import numpy as np
 from shapely.geometry import Point
 
-from ..bathy_debug.spatial_correlation_bathy_estimator_debug import (
+from s2shores.bathy_debug.spatial_correlation_bathy_estimator_debug import (
     SpatialCorrelationBathyEstimatorDebug)
-from ..bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstimatorDebug
-from ..bathy_debug.temporal_correlation_bathy_estimator_debug import (
+from s2shores.bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstimatorDebug
+from s2shores.bathy_debug.temporal_correlation_bathy_estimator_debug import (
     TemporalCorrelationBathyEstimatorDebug)
-from ..image.ortho_sequence import OrthoSequence
+from s2shores.image.ortho_sequence import OrthoSequence
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator

@@ -17,12 +17,12 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
-from ..image_processing.waves_radon import WavesRadon
+from s2shores.image_processing.waves_radon import WavesRadon
 
 if TYPE_CHECKING:
-    from ..local_bathymetry.spatial_correlation_bathy_estimator import (
+    from local_bathymetry.spatial_correlation_bathy_estimator import (
         SpatialCorrelationBathyEstimator)  # @UnusedImport
-    from ..local_bathymetry.spatial_dft_bathy_estimator import (
+    from local_bathymetry.spatial_dft_bathy_estimator import (
         SpatialDFTBathyEstimator)  # @UnusedImport
 
 def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -> str:

@@ -22,7 +22,7 @@ from typing import Tuple, cast
 
 import numpy as np
 
-from ..bathy_physics import (depth_from_dispersion, linearity_indicator, period_low_depth,
+from s2shores.bathy_physics import (depth_from_dispersion, linearity_indicator, period_low_depth,
                              period_offshore, wavelength_offshore)
 from .wave_field_sample_dynamics import WaveFieldSampleDynamics
 

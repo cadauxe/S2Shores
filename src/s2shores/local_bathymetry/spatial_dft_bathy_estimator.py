@@ -24,12 +24,12 @@ import numpy as np
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 
-from ..bathy_physics import wavenumber_offshore
-from ..generic_utils.image_filters import desmooth, detrend
-from ..image.ortho_sequence import FrameIdType, OrthoSequence
-from ..image_processing.waves_image import ImageProcessingFilters
-from ..image_processing.waves_radon import WavesRadon
-from ..waves_exceptions import WavesEstimationError
+from s2shores.bathy_physics import wavenumber_offshore
+from s2shores.generic_utils.image_filters import desmooth, detrend
+from s2shores.image.ortho_sequence import FrameIdType, OrthoSequence
+from s2shores.image_processing.waves_image import ImageProcessingFilters
+from s2shores.image_processing.waves_radon import WavesRadon
+from s2shores.waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_bathy_estimation import SpatialDFTBathyEstimation
 

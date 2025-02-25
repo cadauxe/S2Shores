@@ -29,12 +29,12 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-from ..local_bathymetry.temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
-from ..image.image_geometry_types import PointType
-from ..image.ortho_sequence import OrthoSequence
-from ..local_bathymetry.temporal_correlation_bathy_estimator import (
+from s2shores.local_bathymetry.temporal_correlation_bathy_estimator import TemporalCorrelationBathyEstimator
+from s2shores.image.image_geometry_types import PointType
+from s2shores.image.ortho_sequence import OrthoSequence
+from s2shores.local_bathymetry.temporal_correlation_bathy_estimator import (
     TemporalCorrelationBathyEstimator)
-from ..waves_exceptions import (CorrelationComputationError, NotExploitableSinogram,
+from s2shores.waves_exceptions import (CorrelationComputationError, NotExploitableSinogram,
                                 WavesEstimationError)
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
 

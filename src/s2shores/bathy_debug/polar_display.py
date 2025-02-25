@@ -19,7 +19,7 @@ from matplotlib.figure import Figure
 
 
 if TYPE_CHECKING:
-    from ..local_bathymetry.spatial_dft_bathy_estimator import (
+    from local_bathymetry.spatial_dft_bathy_estimator import (
         SpatialDFTBathyEstimator)  # @UnusedImport
 
 def build_polar_display(fig: Figure, axes: Axes, title: str,

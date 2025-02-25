@@ -23,8 +23,8 @@ from typing import Any, Callable, List, Tuple
 
 import numpy as np
 
-from ..generic_utils.numpy_utils import circular_mask
-from ..image.image_geometry_types import ImageWindowType
+from s2shores.generic_utils.numpy_utils import circular_mask
+from s2shores.image.image_geometry_types import ImageWindowType
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 

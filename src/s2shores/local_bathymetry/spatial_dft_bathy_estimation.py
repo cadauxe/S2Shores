@@ -22,7 +22,7 @@ from typing import Tuple
 
 import numpy as np
 
-from ..data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
+from s2shores.data_model.bathymetry_sample_estimation import BathymetrySampleEstimation
 
 
 class SpatialDFTBathyEstimation(BathymetrySampleEstimation):
