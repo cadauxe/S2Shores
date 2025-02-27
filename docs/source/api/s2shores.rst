@@ -25,21 +25,21 @@ s2shores.bathy\_physics module
 
 .. automodule:: s2shores.bathy_physics
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 s2shores.waves\_exceptions module
 ---------------------------------
 
 .. automodule:: s2shores.waves_exceptions
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: s2shores
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

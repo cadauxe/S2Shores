@@ -17,21 +17,21 @@ s2shores.bathylauncher.bathy\_launcher module
 
 .. automodule:: s2shores.bathylauncher.bathy_launcher
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 s2shores.bathylauncher.bathy\_processing module
 -----------------------------------------------
 
 .. automodule:: s2shores.bathylauncher.bathy_processing
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: s2shores.bathylauncher
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

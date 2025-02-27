@@ -4,7 +4,9 @@ S2Shores
 
 This project gathers several estimators to be able to compute bathymetry from standard format such as sentinel2 or geotiff.
 
-It uses inversion methods for bathymetry estimation based on the inversion of wave peaks and data provider services (delta time b.w. frames, gravity depending on latitude, distance to shore).
+It uses methods based on the inversion of wave peaks and data provider services (delta time b.w. frames, gravity depending on latitude, distance to shore) for bathymetry estimation.
+
+S2shores can be used through its Python API or Command Line Interface.
 
 Content
 ==================
@@ -31,7 +33,8 @@ Content
    :maxdepth: 1
 
    Command Line Interface <cli>
-   Python API <api/modules>
+   Python API <api>
+   More details about S2shores functions <api/modules>
 
 
 * .. toctree::

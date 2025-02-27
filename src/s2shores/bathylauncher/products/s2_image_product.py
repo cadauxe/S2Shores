@@ -26,7 +26,7 @@ import numpy as np  # @NoMove
 
 from shapely.geometry import Polygon, Point
 from shapely.geometry.linestring import LineString
-from osgeo import gdal
+from osgeo import gdal, ogr
 from rasterio.features import shapes
 
 from s2shores.image.ortho_stack import OrthoStack, FrameIdType, FramesIdsType
@@ -395,12 +395,38 @@ class S2ImageProduct(OrthoStack):
             detfoo_raster = gdal.Open(str(det_footprint_filepath))
             detfoo = detfoo_raster.GetRasterBand(1).ReadAsArray()
             detfoo_geo_transform = detfoo_raster.GetGeoTransform()
-            for vec, detector_index in shapes(detfoo):
-                poly_coords = np.array(vec['coordinates'][0])
-                poly_coords[:,0] = (detfoo_geo_transform[0] +
-                                    poly_coords[:,0]*detfoo_geo_transform[1])
-                poly_coords[:,1] = (detfoo_geo_transform[3] +
-                                    poly_coords[:,1]*detfoo_geo_transform[5])
+
+            # Create an OGR in-memory vector layer to store the polygons
+            driver = ogr.GetDriverByName('Memory')
+            vector_ds = driver.CreateDataSource('out')
+            layer = vector_ds.CreateLayer('polygonized', geom_type=ogr.wkbPolygon)
+
+            # Create a field to store values (optional, depending on your needs)
+            field_defn = ogr.FieldDefn('value', ogr.OFTInteger)
+            layer.CreateField(field_defn)
+
+            # Polygonize the raster band into the vector layer
+            gdal.Polygonize(detfoo, None, layer, 0, [], callback=None)
+
+            # Process the generated polygons
+            for feature in layer:
+                geom = feature.GetGeometryRef()
+                if geom and geom.GetGeometryType() == ogr.wkbPolygon:
+                    ring = geom.GetGeometryRef(0)  # Outer ring of the polygon
+                    poly_coords = np.array(ring.GetPoints())
+
+                    # Apply the geotransform to convert pixel to geographic coordinates
+                    poly_coords[:, 0] = detfoo_geo_transform[0] + poly_coords[:, 0] * detfoo_geo_transform[1]
+                    poly_coords[:, 1] = detfoo_geo_transform[3] + poly_coords[:, 1] * detfoo_geo_transform[5]
+
+                # input('@'*50)
+                # for vec, detector_index in shapes(detfoo):
+                #     poly_coords = np.array(vec['coordinates'][0])
+                #     poly_coords[:, 0] = (detfoo_geo_transform[0] +
+                #                          poly_coords[:, 0] * detfoo_geo_transform[1])
+                #     poly_coords[:, 1] = (detfoo_geo_transform[3] +
+                #                          poly_coords[:, 1] * detfoo_geo_transform[5])
+
                 # detector_index==0 means NODATA
                 if detector_index>0:
                     detectors_footprints[int(detector_index)-1] = Polygon(poly_coords)
