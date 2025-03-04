@@ -17,7 +17,9 @@ class S2SHORESTestsPath():
     project_dir: Path
     def __post_init__(self):
         s2new = "S2A_MSIL1C_20200622T105631_N0500_R094_T30TXR_20231110T094313.SAFE"
+        s2new_cropped = "S2A_MSIL1C_20200622T105631_N0500_R094_T30TXR_20231110T094313_cropped.SAFE"
         s2old = "S2A_MSIL1C_20200622T105631_N0209_R094_T30TXR_20200622T130553.SAFE"
+        s2old_cropped = "S2A_MSIL1C_20200622T105631_N0209_R094_T30TXR_20200622T130553_cropped.SAFE"
 
         self.config_dir = self.project_dir / "tests" / "data" / "config"
         self.yaml_file = "wave_bathy_inversion_config.yaml"
@@ -25,8 +27,12 @@ class S2SHORESTestsPath():
         self.cli_path = self.project_dir / "src" / "s2shores" / "bathylauncher" / "bathy_processing.py"
         self.s2new_product_dir = (self.project_dir / "tests" / "data" / "products" / "S2_30TXR_NEW"
                                   / s2new)
+        self.s2new_cropped = (self.project_dir / "tests" / "data" / "products" / "S2_30TXR_NEW"
+                                  / s2new_cropped)
         self.s2old_product_dir = (self.project_dir / "tests" / "data" / "products" / "S2_30TXR_OLD"
                                   / s2old)
+        self.s2old_cropped = (self.project_dir / "tests" / "data" / "products" / "S2_30TXR_OLD"
+                                  / s2old_cropped)
         self.pneo_product_dir = (self.project_dir / "tests" / "data" / "products" /
                                  "PNEO_DUCK" / "Duck_PNEO_XS_b3_VT.tif")
         self.funwave_product_dir = (self.project_dir / "tests" / "data" / "products" /
