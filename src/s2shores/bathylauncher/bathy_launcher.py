@@ -110,9 +110,6 @@ class BathyLauncher:
         :param tries_max: Maximum try number before stop. Used to handle heavy amount of
                           simultaneous files opening (try/catch/wait/retry)
         """
-        print(products)
-        input('hihi')
-
         bathy_launcher = cls(cluster, sequential_run=sequential_run)
         for product_name, (product_path, product_cls, output_path, wave_params, nb_subtiles,
                            delta_times_path, distoshore_file_path, roi_file_path, limit_to_roi,

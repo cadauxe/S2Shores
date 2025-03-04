@@ -20,9 +20,8 @@ Content
 
 * .. toctree::
    :caption: Tutorials
-   :maxdepth: 2
+   :maxdepth: 1
 
-   Getting started <getting_started>
    Tutorial <tutorial>
    Contributing <contributing>
 

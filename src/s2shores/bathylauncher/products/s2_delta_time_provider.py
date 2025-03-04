@@ -95,8 +95,6 @@ class S2DeltaTimeProvider(DeltaTimeProvider):
             csvfile.seek(0)  # Reset file pointer after reading for sniffing
 
             reader = csv.DictReader(csvfile, delimiter=dialect.delimiter)
-
-            # reader = csv.DictReader(csvfile, delimiter=',')
             for row in reader:
                 src_band_id = row['bande_src']
                 if src_band_id not in delta_times.keys():

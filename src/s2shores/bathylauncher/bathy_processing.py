@@ -18,6 +18,9 @@
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
+import sys
+sys.path.insert(0, '/home/ecadaux/Documents/work/s2shores_OSS/s2shores/src')
+
 import cProfile
 from datetime import datetime
 from pathlib import Path

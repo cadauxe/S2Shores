@@ -393,43 +393,28 @@ class S2ImageProduct(OrthoStack):
         else:
             # Since processing baseline 400, detfoo files are in format .jp2
             detfoo_raster = gdal.Open(str(det_footprint_filepath))
-            detfoo = detfoo_raster.GetRasterBand(1).ReadAsArray()
-            detfoo_geo_transform = detfoo_raster.GetGeoTransform()
+            band = detfoo_raster.GetRasterBand(1)
 
-            # Create an OGR in-memory vector layer to store the polygons
-            driver = ogr.GetDriverByName('Memory')
-            vector_ds = driver.CreateDataSource('out')
-            layer = vector_ds.CreateLayer('polygonized', geom_type=ogr.wkbPolygon)
+            srs = detfoo_raster.GetSpatialRef()
+            driver = ogr.GetDriverByName("Memory")
+            fs = driver.CreateDataSource("detfoo_memory.shp")
 
-            # Create a field to store values (optional, depending on your needs)
-            field_defn = ogr.FieldDefn('value', ogr.OFTInteger)
-            layer.CreateField(field_defn)
-
-            # Polygonize the raster band into the vector layer
-            gdal.Polygonize(detfoo, None, layer, 0, [], callback=None)
+            layer = fs.CreateLayer("polygons", geom_type=ogr.wkbPolygon, srs=srs)
+            fielddefn = ogr.FieldDefn('image_value', 0)
+            layer.CreateField(fielddefn, 1)
+            gdal.Polygonize(band, None, layer, 0, [], None)
 
             # Process the generated polygons
             for feature in layer:
+                detector_index = feature.GetField("image_value")
                 geom = feature.GetGeometryRef()
+
                 if geom and geom.GetGeometryType() == ogr.wkbPolygon:
-                    ring = geom.GetGeometryRef(0)  # Outer ring of the polygon
+                    ring = geom.GetGeometryRef(0)
                     poly_coords = np.array(ring.GetPoints())
 
-                    # Apply the geotransform to convert pixel to geographic coordinates
-                    poly_coords[:, 0] = detfoo_geo_transform[0] + poly_coords[:, 0] * detfoo_geo_transform[1]
-                    poly_coords[:, 1] = detfoo_geo_transform[3] + poly_coords[:, 1] * detfoo_geo_transform[5]
+                    detectors_footprints[int(detector_index) - 1] = Polygon(poly_coords)
 
-                # input('@'*50)
-                # for vec, detector_index in shapes(detfoo):
-                #     poly_coords = np.array(vec['coordinates'][0])
-                #     poly_coords[:, 0] = (detfoo_geo_transform[0] +
-                #                          poly_coords[:, 0] * detfoo_geo_transform[1])
-                #     poly_coords[:, 1] = (detfoo_geo_transform[3] +
-                #                          poly_coords[:, 1] * detfoo_geo_transform[5])
-
-                # detector_index==0 means NODATA
-                if detector_index>0:
-                    detectors_footprints[int(detector_index)-1] = Polygon(poly_coords)
         return detectors_footprints
 
     def create_delta_time_provider(

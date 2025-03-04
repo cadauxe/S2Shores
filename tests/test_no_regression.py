@@ -15,18 +15,24 @@ import xarray as xr
 from click.testing import CliRunner
 from tests.conftest import S2SHORESTestsPath
 
-from src.s2shores.bathylauncher.bathy_processing import process_command
+from s2shores.bathylauncher.bathy_processing import process_command
 
 from dask.distributed import Client
 client = Client(dashboard_address=":8790")
 
 
-def compare_files(reference_dir : str):
+def compare_files(reference_dir : str, output_dir : str):
     """
-    ###TODO
+    Compares the contents of the reference directory with the most recently created
+    test output directory. Ensures that the filenames match and that the contents of
+    NetCDF files are identical.
+
+    :param reference_dir: The directory containing reference files.
+    :returns: True if the directories have identical filenames and matching NetCDF content.
+    :raises Exception: If filenames differ between the directories or NetCDF file contents do not match.
     """
     # Get all directories in the specified parent directory
-    dirs = [d for d in glob.glob(os.path.join(parent_dir, "*/")) if os.path.isdir(d)]
+    dirs = [d for d in glob.glob(os.path.join(output_dir, "*/")) if os.path.isdir(d)]
 
     # Find the most recently created directory, ie. the test output directory
     out_test_dir = max(dirs, key=os.path.getctime)
@@ -56,6 +62,7 @@ def compare_files(reference_dir : str):
 
 def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
+    18-15-46
     Test Sentinel-2 30TXR Old data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and global distoshore.
 
@@ -73,7 +80,8 @@ def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> Non
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
         '--nb_subtiles', '36'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir = f"{s2shores_paths.output_dir}/run_2025_02_20_09-53-17",
+                  output_dir = s2shores_paths.output_dir)
 
 def test_nominal_dft_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
@@ -85,15 +93,17 @@ def test_nominal_dft_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     runner = CliRunner()
 
-    runner.invoke(process_command, [
+    result = runner.invoke(process_command, [
         '--input_product', str(s2shores_paths.s2new_product_dir),
         '--product_type', 'S2',
         '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config3/wave_bathy_inversion_config_quick.yaml',
+        '--config_file', f'{s2shores_paths.config_dir}/config3/wave_bathy_inversion_config.yaml',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
         '--nb_subtiles', '36'])
-    # compare_files(reference_dir = "")
+
+    compare_files(reference_dir = f"{s2shores_paths.output_dir}/run_2025_02_20_10-06-02",
+                  output_dir = s2shores_paths.output_dir)
 
 
 def test_nominal_tri_stereo_pneo(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -112,7 +122,8 @@ def test_nominal_tri_stereo_pneo(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config1/{s2shores_paths.yaml_file}',
         '--nb_subtiles', '36'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_13-58-06",
+                  output_dir=s2shores_paths.output_dir)
 
 
 def test_nominal_video(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -131,7 +142,8 @@ def test_nominal_video(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config4/{s2shores_paths.yaml_file}',
         '--nb_subtiles', '4'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-27-08",
+                  output_dir=s2shores_paths.output_dir)
 
 
 def test_debug_pointswach_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -151,7 +163,8 @@ def test_debug_pointswach_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> No
         '--config_file', f'{s2shores_paths.config_dir}/config7/wave_bathy_inversion_config.yaml',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswach_temporal_corr',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_7_4.yaml'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_10-15-47",
+                  output_dir=s2shores_paths.output_dir)
 
 
 def test_debug_pointswach_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -171,7 +184,8 @@ def test_debug_pointswach_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None
         '--config_file', f'{s2shores_paths.config_dir}/config5/{s2shores_paths.yaml_file}',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswach_spatial_dft',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2.yaml'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_10-22-37",
+                  output_dir=s2shores_paths.output_dir)
 
 
 def test_debug_pointswach_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -191,7 +205,8 @@ def test_debug_pointswach_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> Non
         '--config_file', f'{s2shores_paths.config_dir}/config6/{s2shores_paths.yaml_file}',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswach_spatial_corr',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2.yaml'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_14-08-28",
+                  output_dir=s2shores_paths.output_dir)
 
 
 def test_limitroi_s2(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -214,13 +229,14 @@ def test_limitroi_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI.shp',
         '--limit_to_roi',
         '--sequential'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-06-32",
+                  output_dir=s2shores_paths.output_dir)
 
 
 def test_debug_mode_point_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test Sentinel-2 30TXR New data with S2 product and point debug point mode.
-debug_area_funwave
+
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
@@ -236,7 +252,8 @@ debug_area_funwave
         '--nb_subtiles', '36',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_mode_point_s2',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_30TXR_notongrid.yaml'])
-    # compare_files(reference_dir = "")
+    # compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-00-30",
+    # output_dir=s2shores_paths.output_dir)
 
 
 def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -255,7 +272,8 @@ def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
         '--config_file', f'{s2shores_paths.config_dir}/config9/{s2shores_paths.yaml_file}',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_area_funwave',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_area_funwave.yaml'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_24_10-35-23",
+                  output_dir=s2shores_paths.output_dir)
 
 
 def test_roi_profiling_s2(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -280,7 +298,8 @@ def test_roi_profiling_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI.shp',
         '--nb_subtiles', '36',
         '--profiling'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-14-27",
+                  output_dir=s2shores_paths.output_dir)
 
 
 def test_nominal_dft_s2_cnes_deltaT(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -301,7 +320,8 @@ def test_nominal_dft_s2_cnes_deltaT(s2shores_paths: S2SHORESTestsPath) -> None:
         '--delta_times_dir', f'{s2shores_paths.delta_times_dir}/cnes',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
         '--nb_subtiles', '36'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-14-27",
+                  output_dir=s2shores_paths.output_dir)
 
 def test_nominal_spatialcorr_s2_cnes_deltat(s2shores_paths: S2SHORESTestsPath) -> None:
     """
@@ -322,4 +342,5 @@ def test_nominal_spatialcorr_s2_cnes_deltat(s2shores_paths: S2SHORESTestsPath) -
         '--delta_times_dir', f'{s2shores_paths.delta_times_dir}/cnes',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
         '--nb_subtiles', '36'])
-    # compare_files(reference_dir = "")
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_24_17-36-22",
+                  output_dir=s2shores_paths.output_dir)

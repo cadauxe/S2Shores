@@ -138,6 +138,7 @@ Bathymetry is computed on Sentinel2 L1C products (PEPS format).
 
 
 # References
+
 Almar, R.; Bergsma, E.W.J.; Brodie, K.L.; Bak, A.S.; Artigues, S.; Lemai-Chenevier, S.; Cesbron, G.; Delvit, J.-M. Coastal Topo-Bathymetry from a Single-Pass Satellite Video: Insights in Space-Videos for Coastal Monitoring at Duck Beach (NC, USA). Remote Sens. 2022, 14, 1529. https://doi.org/10.3390/rs14071529
 
 Bergsma, E.W.J.; Almar, R.; Maisongrande, P. (2019). Radon-Augmented Sentinel-2 Satellite Imagery to Derive Wave-Patterns and Regional Bathymetry. Remote Sens. , 11, 1918. https://doi.org/10.3390/rs11161918
