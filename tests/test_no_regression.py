@@ -62,6 +62,7 @@ def compare_files(reference_dir : str, output_dir : str):
 
 def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
+
     Test Sentinel-2 30TXR Old data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and global distoshore.
 
@@ -79,7 +80,7 @@ def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> Non
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
         '--nb_subtiles', '36'])
-    compare_files(reference_dir = f"{s2shores_paths.output_dir}/run_2025_02_20_09-53-17",
+    compare_files(reference_dir = f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_09-53-17",
                   output_dir = s2shores_paths.output_dir)
 
 
@@ -124,7 +125,7 @@ def test_nominal_dft_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
         '--nb_subtiles', '36'])
 
-    compare_files(reference_dir = f"{s2shores_paths.output_dir}/run_2025_02_20_10-06-02",
+    compare_files(reference_dir = f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_10-06-02",
                   output_dir = s2shores_paths.output_dir)
 
 
@@ -164,7 +165,7 @@ def test_nominal_tri_stereo_pneo(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config1/{s2shores_paths.yaml_file}',
         '--nb_subtiles', '36'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_13-58-06",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_13-58-06",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -184,7 +185,7 @@ def test_nominal_video(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config4/{s2shores_paths.yaml_file}',
         '--nb_subtiles', '4'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-27-08",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_11-27-08",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -205,7 +206,7 @@ def test_debug_pointswach_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> No
         '--config_file', f'{s2shores_paths.config_dir}/config7/wave_bathy_inversion_config.yaml',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswach_temporal_corr',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_7_4.yaml'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_10-15-47",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_10-15-47",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -226,7 +227,7 @@ def test_debug_pointswach_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None
         '--config_file', f'{s2shores_paths.config_dir}/config5/{s2shores_paths.yaml_file}',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswach_spatial_dft',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2.yaml'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_10-22-37",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_10-22-37",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -247,7 +248,7 @@ def test_debug_pointswach_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> Non
         '--config_file', f'{s2shores_paths.config_dir}/config6/{s2shores_paths.yaml_file}',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswach_spatial_corr',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2.yaml'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_14-08-28",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_14-08-28",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -271,7 +272,7 @@ def test_limitroi_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI.shp',
         '--limit_to_roi',
         '--sequential'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-06-32",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_11-06-32",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -294,7 +295,7 @@ def test_debug_mode_point_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--nb_subtiles', '36',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_mode_point_s2',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_30TXR_notongrid.yaml'])
-    # compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-00-30",
+    # compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_11-00-30",
     # output_dir=s2shores_paths.output_dir)
 
 
@@ -314,7 +315,7 @@ def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
         '--config_file', f'{s2shores_paths.config_dir}/config9/{s2shores_paths.yaml_file}',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_area_funwave',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_area_funwave.yaml'])
-    # compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_24_10-35-23",
+    # compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_24_10-35-23",
     #               output_dir=s2shores_paths.output_dir)
 
 
@@ -340,12 +341,13 @@ def test_roi_profiling_s2(s2shores_paths: S2SHORESTestsPath) -> None:
         '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI.shp',
         '--nb_subtiles', '36',
         '--profiling'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-14-27",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_11-14-27",
                   output_dir=s2shores_paths.output_dir)
 
 
 def test_nominal_dft_s2_cnes_deltaT(s2shores_paths: S2SHORESTestsPath) -> None:
     """
+    9-11-26
     Test Sentinel-2 30TXR New data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and tile distoshore.
 
@@ -362,11 +364,12 @@ def test_nominal_dft_s2_cnes_deltaT(s2shores_paths: S2SHORESTestsPath) -> None:
         '--delta_times_dir', f'{s2shores_paths.delta_times_dir}/cnes',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
         '--nb_subtiles', '36'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/run_2025_02_20_11-14-27",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_11-14-27",
                   output_dir=s2shores_paths.output_dir)
 
 def test_nominal_spatialcorr_s2_cnes_deltat(s2shores_paths: S2SHORESTestsPath) -> None:
     """
+    9-9-56
     Test Sentinel-2 30TXR Old data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and global distoshore.
 

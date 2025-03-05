@@ -415,6 +415,17 @@ class S2ImageProduct(OrthoStack):
 
                     detectors_footprints[int(detector_index) - 1] = Polygon(poly_coords)
 
+            # detfoo_raster = gdal.Open(str(det_footprint_filepath))
+            # detfoo = detfoo_raster.GetRasterBand(1).ReadAsArray()
+            # detfoo_geo_transform = detfoo_raster.GetGeoTransform()
+            # for vec, detector_index in shapes(detfoo):
+            #     poly_coords = np.array(vec['coordinates'][0])
+            #     poly_coords[:, 0] = detfoo_geo_transform[0] + poly_coords[:, 0] * detfoo_geo_transform[1]
+            #     poly_coords[:, 1] = detfoo_geo_transform[3] + poly_coords[:, 1] * detfoo_geo_transform[5]
+            #     # detector_index==0 means NODATA
+            #     if detector_index > 0:
+            #         detectors_footprints[int(detector_index) - 1] = Polygon(poly_coords)
+
         return detectors_footprints
 
     def create_delta_time_provider(
