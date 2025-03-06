@@ -11,14 +11,12 @@ Tests to ensure no code regression, the outputs are compared to reference result
 """
 import os
 import glob
+import zipfile
 import xarray as xr
 from click.testing import CliRunner
 from tests.conftest import S2SHORESTestsPath
 
 from s2shores.bathylauncher.bathy_processing import process_command
-
-from dask.distributed import Client
-client = Client(dashboard_address=":8790")
 
 
 def compare_files(reference_dir : str, output_dir : str):
@@ -62,7 +60,6 @@ def compare_files(reference_dir : str, output_dir : str):
 
 def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-
     Test Sentinel-2 30TXR Old data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and global distoshore.
 
@@ -347,7 +344,6 @@ def test_roi_profiling_s2(s2shores_paths: S2SHORESTestsPath) -> None:
 
 def test_nominal_dft_s2_cnes_deltaT(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    9-11-26
     Test Sentinel-2 30TXR New data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and tile distoshore.
 
@@ -357,19 +353,18 @@ def test_nominal_dft_s2_cnes_deltaT(s2shores_paths: S2SHORESTestsPath) -> None:
     runner = CliRunner()
 
     runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.s2new_product_dir),
+        '--input_product', str(s2shores_paths.s2old_product_dir),
         '--product_type', 'S2',
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config3/{s2shores_paths.yaml_file}',
         '--delta_times_dir', f'{s2shores_paths.delta_times_dir}/cnes',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
         '--nb_subtiles', '36'])
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_20_11-14-27",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/run_2025_02_24_17-44-00",
                   output_dir=s2shores_paths.output_dir)
 
 def test_nominal_spatialcorr_s2_cnes_deltat(s2shores_paths: S2SHORESTestsPath) -> None:
     """
-    9-9-56
     Test Sentinel-2 30TXR Old data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and global distoshore.
 

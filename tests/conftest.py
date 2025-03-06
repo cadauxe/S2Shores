@@ -37,10 +37,16 @@ class S2SHORESTestsPath():
                                  "PNEO_DUCK" / "Duck_PNEO_XS_b3_VT.tif")
         self.funwave_product_dir = (self.project_dir / "tests" / "data" / "products" /
                                     "FUNWAVE" / "funwave.tif")
+        self.funwave_cropped = (self.project_dir / "tests" / "data" / "products" /
+                                    "FUNWAVE" / "funwave_cropped.tif")
         self.swach7_product_dir = (self.project_dir / "tests" / "data" / "products" /
                                    "SWASH_7_4" / "testcase_7_4.tif")
+        self.swach7_cropped = (self.project_dir / "tests" / "data" / "products" /
+                                   "SWASH_7_4" / "testcase_7_4_cropped.tif")
         self.swach8_product_dir = (self.project_dir / "tests" / "data" / "products" /
                                    "SWASH_8_2" / "testcase_8_2.tif")
+        self.swach8_cropped = (self.project_dir / "tests" / "data" / "products" /
+                                   "SWASH_8_2" / "testcase_8_2_cropped.tif")
         self.delta_times_dir = self.project_dir / "src" / "s2shores" / "bathylauncher" / "config"
         self.dis2shore_dir = self.project_dir / "tests" / "data" / "distoshore"
         self.debug_dir = self.project_dir / "tests" / "data" / "debug"
