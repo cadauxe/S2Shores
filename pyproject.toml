@@ -23,7 +23,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "s2shores"
-version = "0.1.5"
+version = "1.0.0"
 description = "A python library for estimating coastal bathymetry"
 authors = [
     { name = "Rafael Almar, Stephanie Artigues, Erwin Bergsma, Romain Degoul, Alain Giros, Adrien Klotz, Yannick Lasne, Solange Lemai-Chenevier, Alexia Mondot, Gregoire Thoumyre, Pierre Tysebaert" }
@@ -36,7 +36,7 @@ dependencies = [
     "PyYAML",
     "dask[dataframe]",
     "dask[distributed]",
-    "rasterio",
+#    "rasterio",
     "jupyter-server-proxy",
     "sphinx-rtd-theme",
     "pyarrow",
@@ -60,9 +60,6 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/CNES/S2Shores"
-
-#[tool.setuptools.packages]
-#find = { include = ["s2shores*", "bathylauncher*"] }
 
 [tool.setuptools]
 package-dir = {"" = "src"}

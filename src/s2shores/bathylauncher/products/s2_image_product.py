@@ -27,7 +27,7 @@ import numpy as np  # @NoMove
 from shapely.geometry import Polygon, Point
 from shapely.geometry.linestring import LineString
 from osgeo import gdal, ogr
-from rasterio.features import shapes
+# from rasterio.features import shapes
 
 from s2shores.image.ortho_stack import OrthoStack, FrameIdType, FramesIdsType
 
