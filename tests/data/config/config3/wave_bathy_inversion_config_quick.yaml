@@ -32,14 +32,14 @@ GLOBAL_ESTIMATOR:
 
   # product characteristics
   OUTPUT_FORMAT: "GRID" # format of the output, to be chosen between GRID or POINT
-  DXP: 400.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
-  DYP: 400.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
+  DXP: 200.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
+  DYP: 40.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # Available modes : NOMINAL, EXPERT or DEBUG. Incremental output details.
   NKEEP: 3 # number of main waves directions to keep in the product
   OFFSHORE_LIMIT: 1000 # maximum offshore distance in kilometers from the coast
 
   # window parameters
-  WINDOW: 40.0 # subwindow size - meters - ex. S2 : 800 - PHR : 400
+  WINDOW: 60.0 # subwindow size - meters - ex. S2 : 800 - PHR : 400
   SM_LENGTH: 10 # desmoothing filter size in pixels. Filtered image = image - smoothed image.
                 # Kernel size = 2*SM_LENGTH+1. Deactivation of the desmoothing filter with SM_LENGTH = 0. Ex. PHR : 10
 

@@ -4,10 +4,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 7 March 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 7 mars 2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -23,8 +22,8 @@ from typing import Any, Callable, List, Tuple
 
 import numpy as np
 
-from s2shores.generic_utils.numpy_utils import circular_mask
-from s2shores.image.image_geometry_types import ImageWindowType
+from ..generic_utils.numpy_utils import circular_mask
+from ..image.image_geometry_types import ImageWindowType
 
 ImageProcessingFilters = List[Tuple[Callable, List[Any]]]
 

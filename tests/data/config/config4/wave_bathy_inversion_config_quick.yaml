@@ -31,7 +31,7 @@ GLOBAL_ESTIMATOR:
 
   # product characteristics
   OUTPUT_FORMAT: "GRID" # format of the output, to be chosen between GRID or POINT
-  DXP: 400.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
+  DXP: 200.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR: 50
   DYP: 50.0 # output grid resolution - meters - S2 : 100-500 - ex. PHR : 50
   LAYERS_TYPE: "DEBUG" # Available modes : NOMINAL, EXPERT or DEBUG. Incremental output details.
   NKEEP: 3 # number of main waves directions to keep in the product

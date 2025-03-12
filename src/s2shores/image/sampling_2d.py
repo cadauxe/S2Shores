@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 5 May 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 05/05/2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -23,8 +22,8 @@ from typing import Iterator, List, Tuple  # @NoMove
 import numpy as np  # @NoMove
 from shapely.geometry import Point, Polygon
 
-from s2shores.generic_utils.numpy_utils import split_samples
-from s2shores.waves_exceptions import WavesIndexingError
+from ..generic_utils.numpy_utils import split_samples
+from ..waves_exceptions import WavesIndexingError
 
 
 class Sampling2D:

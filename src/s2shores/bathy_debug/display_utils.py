@@ -7,6 +7,16 @@ Some other avalaible display functions.
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 5 mars 2021
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+  in compliance with the License. You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under the License
+  is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+  or implied. See the License for the specific language governing permissions and
+  limitations under the License.
 """
 
 from typing import TYPE_CHECKING, List, Optional, Tuple  # @NoMove
@@ -17,12 +27,12 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 
-from s2shores.image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon
 
 if TYPE_CHECKING:
-    from local_bathymetry.spatial_correlation_bathy_estimator import (
+    from ..local_bathymetry.spatial_correlation_bathy_estimator import (
         SpatialCorrelationBathyEstimator)  # @UnusedImport
-    from local_bathymetry.spatial_dft_bathy_estimator import (
+    from ..local_bathymetry.spatial_dft_bathy_estimator import (
         SpatialDFTBathyEstimator)  # @UnusedImport
 
 def get_display_title_with_kernel(local_estimator: 'SpatialDFTBathyEstimator') -> str:
@@ -266,6 +276,9 @@ def animate_sinograms(local_estimator: 'SpatialDFTBathyEstimator',
                           f' energy1: {sinogram1.energy/image1_energy:3.1f}, '
                           f'energy2: {sinogram2.energy/image2_energy:3.1f}')
         return line1, line2, dir_text
+
+    ani = animation.FuncAnimation(
+        fig, animate, frames=radon1_obj.directions, interval=100, blit=True, save_count=50)
 
 
 def display_context(local_estimator: 'SpatialDFTBathyEstimator') -> None:

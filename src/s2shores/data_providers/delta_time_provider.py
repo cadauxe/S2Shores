@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 2 August 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 02/08/2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -24,7 +23,7 @@ from typing import Any, Dict, List  # @NoMove
 
 from shapely.geometry import Point
 
-from s2shores.waves_exceptions import WavesException
+from ..waves_exceptions import WavesException
 from .localized_data_provider import LocalizedDataProvider
 
 

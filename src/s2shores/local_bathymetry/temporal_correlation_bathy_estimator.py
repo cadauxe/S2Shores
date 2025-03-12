@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 18 June 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 18/06/2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -25,16 +24,16 @@ import pandas
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 
-from s2shores.bathy_physics import wavelength_offshore
-from s2shores.generic_utils.image_filters import clipping, detrend, gaussian_masking, normalise
-from s2shores.generic_utils.image_utils import cross_correlation
-from s2shores.generic_utils.signal_filters import butter_bandpass_filter, detrend_signal, filter_median
-from s2shores.generic_utils.signal_utils import find_period_from_zeros
-from s2shores.image.ortho_sequence import FrameIdType, OrthoSequence
-from s2shores.image_processing.waves_image import ImageProcessingFilters, WavesImage
-from s2shores.image_processing.waves_radon import WavesRadon, linear_directions
-from s2shores.image_processing.waves_sinogram import SignalProcessingFilters, WavesSinogram
-from s2shores.waves_exceptions import (CorrelationComputationError, NotExploitableSinogram,
+from ..bathy_physics import wavelength_offshore
+from ..generic_utils.image_filters import clipping, detrend, gaussian_masking, normalise
+from ..generic_utils.image_utils import cross_correlation
+from ..generic_utils.signal_filters import butter_bandpass_filter, detrend_signal, filter_median
+from ..generic_utils.signal_utils import find_period_from_zeros
+from ..image.ortho_sequence import FrameIdType, OrthoSequence
+from ..image_processing.waves_image import ImageProcessingFilters, WavesImage
+from ..image_processing.waves_radon import WavesRadon, linear_directions
+from ..image_processing.waves_sinogram import SignalProcessingFilters, WavesSinogram
+from ..waves_exceptions import (CorrelationComputationError, NotExploitableSinogram,
                                 SequenceImagesError)
 from .local_bathy_estimator import LocalBathyEstimator
 from .temporal_correlation_bathy_estimation import TemporalCorrelationBathyEstimation
@@ -445,5 +444,3 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         if self.debug_sample:
             self.metrics['bathymetry_estimation'] = self.bathymetry_estimations
             self.metrics['status'] = self.bathymetry_estimations.status
-        
-        

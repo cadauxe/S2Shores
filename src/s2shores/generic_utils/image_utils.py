@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 1 September 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 01/09/2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at

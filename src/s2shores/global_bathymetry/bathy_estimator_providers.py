@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 17 May 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 17/05/2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -23,14 +22,14 @@ from typing import Optional, Union  # @NoMove
 
 from shapely.geometry import Point
 
-from s2shores.data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
-from s2shores.data_providers.dis_to_shore_provider import (DisToShoreProvider, GeotiffDisToShoreProvider,
+from ..data_providers.delta_time_provider import DeltaTimeProvider, NoDeltaTimeProviderError
+from ..data_providers.dis_to_shore_provider import (DisToShoreProvider, GeotiffDisToShoreProvider,
                                                     InfinityDisToShoreProvider,
                                                     NetCDFDisToShoreProvider)
-from s2shores.data_providers.gravity_provider import (ConstantGravityProvider, GravityProvider,
+from ..data_providers.gravity_provider import (ConstantGravityProvider, GravityProvider,
                                                LatitudeVaryingGravityProvider)
-from s2shores.data_providers.roi_provider import RoiProvider, VectorFileRoiProvider
-from s2shores.image.ortho_stack import OrthoStack
+from ..data_providers.roi_provider import RoiProvider, VectorFileRoiProvider
+from ..image.ortho_stack import OrthoStack
 
 
 class BathyEstimatorProviders:

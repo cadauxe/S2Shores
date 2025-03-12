@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 4 March 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 4 mars 2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -23,9 +22,9 @@ from typing import List, Optional  # @NoMove
 
 import numpy as np  # @NoMove
 
-from s2shores.generic_utils.image_filters import circular_masking
-from s2shores.generic_utils.numpy_utils import HashableNdArray
-from s2shores.generic_utils.symmetric_radon import symmetric_radon
+from ..generic_utils.image_filters import circular_masking
+from ..generic_utils.numpy_utils import HashableNdArray
+from ..generic_utils.symmetric_radon import symmetric_radon
 from .sinograms import Sinograms
 from .waves_image import WavesImage
 from .waves_sinogram import WavesSinogram

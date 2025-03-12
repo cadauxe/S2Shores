@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 18 June 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 18/06/2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -23,12 +22,12 @@ from typing import TYPE_CHECKING, Dict, Optional, Type  # @NoMove
 import numpy as np
 from shapely.geometry import Point
 
-from s2shores.bathy_debug.spatial_correlation_bathy_estimator_debug import (
+from ..bathy_debug.spatial_correlation_bathy_estimator_debug import (
     SpatialCorrelationBathyEstimatorDebug)
-from s2shores.bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstimatorDebug
-from s2shores.bathy_debug.temporal_correlation_bathy_estimator_debug import (
+from ..bathy_debug.spatial_dft_bathy_estimator_debug import SpatialDFTBathyEstimatorDebug
+from ..bathy_debug.temporal_correlation_bathy_estimator_debug import (
     TemporalCorrelationBathyEstimatorDebug)
-from s2shores.image.ortho_sequence import OrthoSequence
+from ..image.ortho_sequence import OrthoSequence
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .spatial_dft_bathy_estimator import SpatialDFTBathyEstimator

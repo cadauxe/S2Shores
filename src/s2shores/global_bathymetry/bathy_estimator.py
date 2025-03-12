@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 17 May 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 17/05/2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -26,9 +25,9 @@ import xarray as xr  # @NoMove
 from shapely.geometry import Point
 from xarray import Dataset  # @NoMove
 
-from s2shores.image.image_geometry_types import MarginsType
-from s2shores.image.ortho_stack import FramesIdsType, OrthoStack
-from s2shores.image.sampled_ortho_image import SampledOrthoImage
+from ..image.image_geometry_types import MarginsType
+from ..image.ortho_stack import FramesIdsType, OrthoStack
+from ..image.sampled_ortho_image import SampledOrthoImage
 from .bathy_estimator_parameters import BathyEstimatorParameters
 from .bathy_estimator_providers import BathyEstimatorProviders
 from .ortho_bathy_estimator import OrthoBathyEstimator

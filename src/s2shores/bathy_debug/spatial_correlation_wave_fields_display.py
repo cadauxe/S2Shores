@@ -8,6 +8,16 @@ Class managing the computation of wave fields from two images taken at a small t
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 5 mars 2021
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+  in compliance with the License. You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under the License
+  is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+  or implied. See the License for the specific language governing permissions and
+  limitations under the License.
 """
 import os
 from typing import TYPE_CHECKING  # @NoMove
@@ -15,7 +25,7 @@ from typing import TYPE_CHECKING  # @NoMove
 import matplotlib.pyplot as plt
 import numpy as np
 
-from s2shores.image_processing.waves_radon import WavesRadon
+from ..image_processing.waves_radon import WavesRadon
 from .sinogram_display import (build_sinogram_display, 
                                build_sinogram_difference_display,
                                build_sinogram_1D_display_master,
@@ -28,7 +38,7 @@ from .waves_image_display import (create_pseudorgb,
 from .display_utils import get_display_title_with_kernel
 
 if TYPE_CHECKING:
-    from local_bathymetry.spatial_correlation_bathy_estimator import (
+    from ..local_bathymetry.spatial_correlation_bathy_estimator import (
         SpatialCorrelationBathyEstimator)  # @UnusedImport
  
 def display_sinograms_1D_analysis_spatial_correlation(
@@ -74,8 +84,8 @@ def display_sinograms_1D_analysis_spatial_correlation(
         theta_label = main_direction % (-np.sign(main_direction) * 180.0)
     else:
         theta_label = main_direction
-    title_sino1 = fr'[Master Image] Sinogram 1D along $\Theta$={theta_label:.1f}°'
-    title_sino2 = '[Slave Image] Sinogram 1D'
+    title_sino1 = '[Master Image] Sinogram 1D along $\Theta$={:.1f}° '.format(theta_label)
+    title_sino2 = '[Slave Image] Sinogram 1D'.format(theta_label)
     correl_mode = local_estimator.global_estimator.local_estimator_params['CORRELATION_MODE']
 
     build_sinogram_1D_display_master(
@@ -92,12 +102,11 @@ def display_sinograms_1D_analysis_spatial_correlation(
     # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
     # Check if the main direction belongs to the plotting interval [plt_min:plt_ramax]
 
-    title_cross_correl1 = (f'Normalized Cross-Correlation Signal between \n '
-                           fr'Sino1[$\Theta$={theta_label:.1f}°] and Sino2[All Directions]')
-    title_cross_correl2 = (f'Normalized Cross-Correlation Signal between \n '
-                           fr'Sino2[$\Theta$={0:.1f}°] and Sino1[All Directions]')
-    title_cross_correl_2D = ('2D-Normalized Cross-Correlation Signal between \n '
-                             'Sino1 and Sino2 for Each Direction')
+    title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={:.1f}°] and Sino2[All Directions]'.format(
+        theta_label)
+    title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
+        0)
+    title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n Sino1 and Sino2 for Each Direction'
 
     build_sinogram_2D_cross_correlation(
         axs[2, 0], title_cross_correl1, sinogram1, directions1, main_direction,

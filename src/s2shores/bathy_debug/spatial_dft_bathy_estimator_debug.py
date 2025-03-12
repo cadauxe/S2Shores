@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 5 March 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 5 mars 2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -21,12 +20,10 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from s2shores.generic_utils.numpy_utils import dump_numpy_variable
-from s2shores.local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
+from ..generic_utils.numpy_utils import dump_numpy_variable
+from ..local_bathymetry.spatial_dft_bathy_estimator import SpatialDFTBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-
-from .spatial_dft_wave_fields_display import (display_dft_sinograms,
-                                  display_dft_sinograms_spectral_analysis,
+from .spatial_dft_wave_fields_display import (display_dft_sinograms, display_dft_sinograms_spectral_analysis,
                                   display_polar_images_dft, display_waves_images_dft)
 
 
@@ -35,7 +32,6 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
     """
 
     def explore_results(self) -> None:
-        """ Explore the results of the estimation process."""
 
         self.print_variables()
         print('estimations after direction refinement, '
@@ -53,7 +49,6 @@ class SpatialDFTBathyEstimatorDebug(LocalBathyEstimatorDebug, SpatialDFTBathyEst
             print('No estimation to display.')
 
     def print_variables(self) -> None:
-        """ Print the variables of the estimator."""
         metrics = self.metrics
 
         initial_sino1_fft = self.radon_transforms[0].get_sinograms_standard_dfts()

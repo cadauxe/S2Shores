@@ -3,10 +3,7 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 2 March 2023
-:license: see LICENSE file
-
+:created: 02/03/2023
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -24,9 +21,9 @@ from typing import Any, Dict, Hashable, List, Mapping, Tuple, Union
 import numpy as np  # @NoMove
 from xarray import DataArray  # @NoMove
 
-from s2shores.data_model.estimated_bathy import (DEBUG_LAYER, EXPERT_LAYER, METERS_UNIT, NOMINAL_LAYER,
+from ..data_model.estimated_bathy import (DEBUG_LAYER, EXPERT_LAYER, METERS_UNIT, NOMINAL_LAYER,
                                           SPATIAL_REF, EstimatedBathy)
-from s2shores.waves_exceptions import WavesEstimationAttributeError
+from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
 DIMS_INDEX_NKEEP_TIME = ['time', 'kKeep', 'index']

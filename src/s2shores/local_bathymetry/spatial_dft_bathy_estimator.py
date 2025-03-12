@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 5 March 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 5 mars 2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -24,12 +23,12 @@ import numpy as np
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 
-from s2shores.bathy_physics import wavenumber_offshore
-from s2shores.generic_utils.image_filters import desmooth, detrend
-from s2shores.image.ortho_sequence import FrameIdType, OrthoSequence
-from s2shores.image_processing.waves_image import ImageProcessingFilters
-from s2shores.image_processing.waves_radon import WavesRadon
-from s2shores.waves_exceptions import WavesEstimationError
+from ..bathy_physics import wavenumber_offshore
+from ..generic_utils.image_filters import desmooth, detrend
+from ..image.ortho_sequence import FrameIdType, OrthoSequence
+from ..image_processing.waves_image import ImageProcessingFilters
+from ..image_processing.waves_radon import WavesRadon
+from ..waves_exceptions import WavesEstimationError
 from .local_bathy_estimator import LocalBathyEstimator
 from .spatial_dft_bathy_estimation import SpatialDFTBathyEstimation
 
@@ -137,12 +136,6 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         return peaks
 
     def _process_peaks(self, peaks: np.ndarray, prominences: np.ndarray) -> np.ndarray:
-        """ Process the peaks found in the cross correlation spectrum of the radon transforms
-
-        :param peaks: the peaks found in the cross correlation spectrum
-        :param prominences: the prominences of the peaks
-        :returns: the peaks after processing
-        """
         # Find pairs of symmetric directions
         if self.debug_sample:
             print('initial peaks: ', peaks)

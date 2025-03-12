@@ -4,10 +4,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 7 April 2022
+:copyright: 2022 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 7 april 2022
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -24,9 +23,9 @@ from typing import List, Tuple, Union
 
 from shapely.geometry import Point
 
-from s2shores.data_providers.delta_time_provider import DeltaTimeProvider
-from s2shores.image_processing.waves_image import WavesImage
-from s2shores.waves_exceptions import SequenceImagesError
+from ..data_providers.delta_time_provider import DeltaTimeProvider
+from ..image_processing.waves_image import WavesImage
+from ..waves_exceptions import SequenceImagesError
 from .image_geometry_types import ImageWindowType
 
 FrameIdType = Union[str, int, datetime]

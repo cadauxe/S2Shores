@@ -23,7 +23,7 @@ Content
    :maxdepth: 1
 
    Tutorial <tutorial>
-   Contributing <contributing>
+   Contribute to S2Shores <contributing>
 
 
 

@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 14 May 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 14/05/2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -25,7 +24,7 @@ from typing import Any, Dict, Hashable, List, Mapping
 import numpy as np  # @NoMove
 from xarray import DataArray, Dataset  # @NoMove
 
-from s2shores.waves_exceptions import (WavesEstimationAttributeError)
+from ..waves_exceptions import WavesEstimationAttributeError
 from .bathymetry_sample_estimations import BathymetrySampleEstimations
 
 DEBUG_LAYER = ['DEBUG']
@@ -86,8 +85,8 @@ class EstimatedBathy():
     @abstractmethod
     def _get_coords(self, dims: List[str], nb_keep: int) -> Mapping[Hashable, Any]:
         """ Get coordinates dictionary
-        :param dims: list of dimensions
-        :param nb_keeps: the number of different bathymetry estimations to keep for one location
+        :param dims:
+        :param nb_keep:
         :raise ValueError: if unknown dimension used in dims
         :return dict_coords: dictionary with coordinates
         """

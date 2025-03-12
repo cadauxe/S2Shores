@@ -7,6 +7,16 @@ Class managing the polar display.
 :copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
 :created: 5 mars 2021
+
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+  in compliance with the License. You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under the License
+  is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+  or implied. See the License for the specific language governing permissions and
+  limitations under the License.
 """
 import os
 from typing import TYPE_CHECKING # @NoMove
@@ -19,7 +29,7 @@ from matplotlib.figure import Figure
 
 
 if TYPE_CHECKING:
-    from local_bathymetry.spatial_dft_bathy_estimator import (
+    from ..local_bathymetry.spatial_dft_bathy_estimator import (
         SpatialDFTBathyEstimator)  # @UnusedImport
 
 def build_polar_display(fig: Figure, axes: Axes, title: str,
@@ -75,7 +85,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
 
     ax_polar.plot(np.radians((main_direction + 180) % 360), 1 / main_wavelength, '*', color='black')
 
-    ax_polar.annotate(f'Peak at \n[$\Theta$={(direc_from_north):.1f}°, \n$\lambda$={main_wavelength:.2f}m]',
+    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, \n$\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
                       xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',

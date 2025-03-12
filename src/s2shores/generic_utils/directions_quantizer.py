@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 12 October 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 12 Oct 2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -43,10 +42,6 @@ class DirectionsQuantizer:
         return self._quantization_step
 
     def quantize(self, direction: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
-        """ Quantize a direction expressed in degrees to the nearest multiple of quantization_step
-
-        :param direction: the real valued angle(s) expressed in degrees
-        :returns: """
         if isinstance(direction, float):
             return self.quantize_float(direction)
         # Firstly, normalize direction between -180 and +180 degrees
@@ -59,11 +54,6 @@ class DirectionsQuantizer:
         return quantized_direction
 
     def quantize_float(self, direction: float) -> float:
-        """ Quantize a direction expressed in degrees to the nearest multiple of quantization_step
-
-        :param direction: the real valued angle expressed in degrees
-        :returns: the quantized angle expressed in degrees
-        """
         # direction between 0 and 360 degrees
         normalized_direction = cast(float, self.normalize(direction))
         index_direction = round(normalized_direction / self._quantization_step)

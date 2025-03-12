@@ -17,7 +17,7 @@ class S2SHORESTestsPath():
     project_dir: Path
     def __post_init__(self):
         s2new = "S2A_MSIL1C_20200622T105631_N0500_R094_T30TXR_20231110T094313.SAFE"
-        s2new_cropped = "S2A_MSIL1C_20200622T105631_N0500_R094_T30TXR_20231110T094313_cropped.SAFE"
+        s2new_cropped = "S2A_MSIL1C_20200622T105631_N0500_R094_T30TXR_20231110T094313.SAFE"
         s2old = "S2A_MSIL1C_20200622T105631_N0209_R094_T30TXR_20200622T130553.SAFE"
         s2old_cropped = "S2A_MSIL1C_20200622T105631_N0209_R094_T30TXR_20200622T130553_cropped.SAFE"
 
@@ -27,7 +27,7 @@ class S2SHORESTestsPath():
         self.cli_path = self.project_dir / "src" / "s2shores" / "bathylauncher" / "bathy_processing.py"
         self.s2new_product_dir = (self.project_dir / "tests" / "data" / "products" / "S2_30TXR_NEW"
                                   / s2new)
-        self.s2new_cropped = (self.project_dir / "tests" / "data" / "products" / "S2_30TXR_NEW"
+        self.s2new_cropped = (self.project_dir / "tests" / "data" / "products" / "S2_30TXR_NEW_cropped"
                                   / s2new_cropped)
         self.s2old_product_dir = (self.project_dir / "tests" / "data" / "products" / "S2_30TXR_OLD"
                                   / s2old)
@@ -39,13 +39,13 @@ class S2SHORESTestsPath():
                                     "FUNWAVE" / "funwave.tif")
         self.funwave_cropped = (self.project_dir / "tests" / "data" / "products" /
                                     "FUNWAVE" / "funwave_cropped.tif")
-        self.swach7_product_dir = (self.project_dir / "tests" / "data" / "products" /
+        self.swash7_product_dir = (self.project_dir / "tests" / "data" / "products" /
                                    "SWASH_7_4" / "testcase_7_4.tif")
-        self.swach7_cropped = (self.project_dir / "tests" / "data" / "products" /
+        self.swash7_cropped = (self.project_dir / "tests" / "data" / "products" /
                                    "SWASH_7_4" / "testcase_7_4_cropped.tif")
-        self.swach8_product_dir = (self.project_dir / "tests" / "data" / "products" /
+        self.swash8_product_dir = (self.project_dir / "tests" / "data" / "products" /
                                    "SWASH_8_2" / "testcase_8_2.tif")
-        self.swach8_cropped = (self.project_dir / "tests" / "data" / "products" /
+        self.swash8_cropped = (self.project_dir / "tests" / "data" / "products" /
                                    "SWASH_8_2" / "testcase_8_2_cropped.tif")
         self.delta_times_dir = self.project_dir / "src" / "s2shores" / "bathylauncher" / "config"
         self.dis2shore_dir = self.project_dir / "tests" / "data" / "distoshore"

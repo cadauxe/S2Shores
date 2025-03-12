@@ -23,7 +23,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "s2shores"
-version = "1.0.0"
+version = "1.0.4"
 description = "A python library for estimating coastal bathymetry"
 authors = [
     { name = "Rafael Almar, Stephanie Artigues, Erwin Bergsma, Romain Degoul, Alain Giros, Adrien Klotz, Yannick Lasne, Solange Lemai-Chenevier, Alexia Mondot, Gregoire Thoumyre, Pierre Tysebaert" }
@@ -40,7 +40,7 @@ dependencies = [
     "jupyter-server-proxy",
     "sphinx-rtd-theme",
     "pyarrow",
-    "numpy>=1.20",
+    "numpy<2.0",
     "scipy",
     "myst-nb",
     "scikit-image",
@@ -50,7 +50,7 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",
-    "GDAL==3.8",
+#    "GDAL==3.9",
     "matplotlib",
     "Sphinx>=4.2",
     "setuptools",

@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 6 March 2021
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 6 mars 2021
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -22,7 +21,7 @@ from typing import Tuple, cast
 
 import numpy as np
 
-from s2shores.bathy_physics import (depth_from_dispersion, linearity_indicator, period_low_depth,
+from ..bathy_physics import (depth_from_dispersion, linearity_indicator, period_low_depth,
                              period_offshore, wavelength_offshore)
 from .wave_field_sample_dynamics import WaveFieldSampleDynamics
 

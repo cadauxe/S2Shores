@@ -3,10 +3,9 @@
 
 :authors: see AUTHORS file
 :organization: CNES, LEGOS, SHOM
-:copyright: 2024 CNES. All rights reserved.
-:created: 28 November 2022
+:copyright: 2021 CNES. All rights reserved.
 :license: see LICENSE file
-
+:created: 28 novembre 2022
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -20,9 +19,8 @@
 """
 from matplotlib import pyplot as plt
 
-from s2shores.local_bathymetry.spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
+from ..local_bathymetry.spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-
 from .spatial_correlation_wave_fields_display import (display_sinograms_1D_analysis_spatial_correlation,
                                   display_sinograms_spatial_correlation,
                                   display_waves_images_spatial_correl)
