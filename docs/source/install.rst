@@ -23,14 +23,34 @@ Please follow these steps:
     $ conda install gdal=3.9 -c conda-forge -y
     $ pip install s2shores==1.0.0 --no-cache-dir
 
-..
-    ----------------
-    Without Anaconda
-    ----------------
 
-    (To be tested)
-    small paragraph describing the install
-    Test the install
+----------------
+Without Anaconda
+----------------
+
+If you are not using Anaconda, you need to manually install GDAL and its development libraries before installing S2shores.
+
+Please follow these steps:
+
+.. code-block:: console
+
+    $ sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update
+    $ sudo apt-get update
+    $ sudo apt-get install gdal-bin
+    $ sudo apt-get install libgdal-dev
+    $ export CPLUS_INCLUDE_PATH=/usr/include/gdal
+    $ export C_INCLUDE_PATH=/usr/include/gdal
+
+
+Once GDAL is installed and the paths are correctly set, you can create a Python virtual environment and install S2shores with pip.
+
+.. code-block:: console
+
+    $ python -m venv env_name
+    $ source env_name/bin/activate
+    $ pip install GDAL
+    $ pip install s2shores==1.0.0 --no-cache-dir
+
 
 
 Installation on Windows
