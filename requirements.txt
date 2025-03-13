@@ -18,6 +18,7 @@ netcdf4
 pandas
 matplotlib
 Sphinx>=4.1
+sphinx-rtd-theme
 setuptools
 GDAL
 Shapely>=1.6

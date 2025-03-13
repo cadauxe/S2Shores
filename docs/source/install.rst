@@ -20,7 +20,8 @@ Please follow these steps:
 
     $ conda create -n env_name -y
     $ conda activate env_name
-    $ conda install gdal=3.9 -c conda-forge -y
+    $ conda install python=3.12 libgdal=3.9 -c conda-forge -y
+    $ pip install GDAL==3.9
     $ pip install s2shores==1.0.0 --no-cache-dir
 
 
@@ -48,7 +49,7 @@ Once GDAL is installed and the paths are correctly set, you can create a Python 
 
     $ python -m venv env_name
     $ source env_name/bin/activate
-    $ pip install GDAL
+    $ pip install GDAL #Regarding the libgdal-dev version available on your system
     $ pip install s2shores==1.0.0 --no-cache-dir
 
 
@@ -91,5 +92,5 @@ Once you have the appropriate .whl file, please follow these steps:
     $ python -m venv env_name
     $ env_name\Scripts\activate
     $ pip install path_to_the_wheel\GDAL-3.9.2-cp312-cp312-win_amd64.whl
-    $ pip install s2shores==win_v1.0.0 --no-cache-dir
+    $ pip install s2shores==1.0.0 --no-cache-dir
 
