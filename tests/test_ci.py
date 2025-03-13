@@ -161,6 +161,9 @@ def test_debug_pointswash_temporal_corr_quick(s2shores_paths: S2SHORESTestsPath)
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    if not(os.path.isdir(f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr')) :
+        os.mkdir(f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr')
+
     unzip_file(s2shores_paths.swash7_cropped.with_suffix('.zip'))
     runner = CliRunner()
 
@@ -182,6 +185,9 @@ def test_debug_pointswash_spatial_dft_quick(s2shores_paths: S2SHORESTestsPath) -
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    if not(os.path.isdir(f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft')) :
+        os.mkdir(f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft')
+
     unzip_file(s2shores_paths.swash8_cropped.with_suffix('.zip'))
     runner = CliRunner()
 
@@ -204,6 +210,9 @@ def test_debug_pointswash_spatial_corr_quick(s2shores_paths: S2SHORESTestsPath) 
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    if not(os.path.isdir(f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr')) :
+        os.mkdir(f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr')
+
     unzip_file(s2shores_paths.swash8_cropped.with_suffix('.zip'))
     runner = CliRunner()
 
@@ -249,6 +258,9 @@ def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    if not(os.path.isdir(f'{s2shores_paths.output_dir}/debug_mode_point_s2')) :
+        os.mkdir(f'{s2shores_paths.output_dir}/debug_mode_point_s2')
+
     runner = CliRunner()
 
     runner.invoke(process_command, [
@@ -273,6 +285,9 @@ def test_debug_area_funwave_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    if not(os.path.isdir(f'{s2shores_paths.output_dir}/debug_area_funwave')) :
+        os.mkdir(f'{s2shores_paths.output_dir}/debug_area_funwave')
+
     unzip_file(s2shores_paths.funwave_cropped.with_suffix('.zip'))
     runner = CliRunner()
 
