@@ -55,7 +55,7 @@ def compare_files(reference_dir : str, output_dir : str):
                f"Only in {reference_dir} : {reference_dir} - {out_test_dir}"
                f"Only in {out_test_dir} : {out_test_dir} - {reference_dir}")
 
-
+    print(out_test_files)
     #Assert the files in the reference directory are the same
     #than the ones in the lastly created directory
     ref_nc = [nc_file for nc_file in ref_files if ".nc" in nc_file]
@@ -124,7 +124,7 @@ def test_nominal_dft_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--product_type', 'S2',
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config3/wave_bathy_inversion_config_quick.yaml',
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
+        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR_cropped.TIF',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
         '--nb_subtiles', '36'])
 
@@ -232,7 +232,7 @@ def test_limitroi_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config2/wave_bathy_inversion_config_quick.yaml',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
+        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR_cropped.TIF',
         '--product_type', 'S2',
         '--nb_subtiles', '36',
         '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI-cropped.shp',
@@ -257,7 +257,7 @@ def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config8/wave_bathy_inversion_config_quick.yaml',
         '--delta_times_dir', str(s2shores_paths.delta_times_dir),
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
+        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR_cropped.TIF',
         '--nb_subtiles', '36',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_mode_point_s2',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_30TXR_notongrid_cropped.yaml'])
