@@ -1,0 +1,37 @@
+stages:
+  - quality
+  - test
+
+variables:
+  CONDA_ENV: "test_env"
+  PYTHON_VERSION: "3.12"
+  GDAL_VERSION: "3.9"
+
+before_script:
+  - apt-get update && apt-get install -y wget
+  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - source $HOME/miniconda/etc/profile.d/conda.sh
+  - conda update -n base -c defaults conda -y
+
+quality:
+  stage: quality
+  image: python:3.12
+  before_script:
+    - pip install pylint mccabe
+  script:
+    - pylint --disable=all --fail-under=10 --enable=too-many-statements src/s2shores
+    - pylint --disable=all --fail-under=10 --enable=too-many-nested-blocks src/s2shores
+    - ./continuous_integration/scripts/check_mccabe_complexity.sh 25 src/s2shores
+
+test:
+  stage: test
+  image: continuumio/miniconda3
+  script:
+    - source $HOME/miniconda/etc/profile.d/conda.sh
+    - conda create -n $CONDA_ENV python=$PYTHON_VERSION libgdal=$GDAL_VERSION -c conda-forge -c defaults -y
+    - conda activate $CONDA_ENV
+    - pip install gdal==$GDAL_VERSION
+    - pip install .
+    - pytest -m ci --cov-fail-under=65
