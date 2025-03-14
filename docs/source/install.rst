@@ -26,7 +26,7 @@ Please follow these steps:
 
 
 -----------
-Without pip
+With pip
 -----------
 
 If you are not using Anaconda, you need to manually install GDAL and its development libraries before installing S2shores.
@@ -73,7 +73,7 @@ Please follow these steps:
     $ pip install s2shores==1.0.0 --no-cache-dir
 
 -----------------------------
-Without pip (not recommended)
+With pip (not recommended, at your own risk)
 -----------------------------
 
 Installing S2shores without Anaconda is not recommended, particularly because it requires the use of an unknown wheel file that may be unmaintained or unreliable.
