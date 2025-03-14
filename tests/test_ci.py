@@ -25,6 +25,7 @@ import zipfile
 from osgeo import gdal
 import xarray as xr
 from click.testing import CliRunner
+import pytest
 from tests.conftest import S2SHORESTestsPath
 
 from s2shores.bathylauncher.bathy_processing import process_command
@@ -113,7 +114,7 @@ def test_nominal_spatialCorrelation_s2_quick(s2shores_paths: S2SHORESTestsPath) 
     compare_files(reference_dir = f"{s2shores_paths.output_dir}/CI_tests/nominal_spatialCorrelation_s2_quick",
                   output_dir = s2shores_paths.output_dir)
 
-
+@pytest.mark.ci
 def test_nominal_dft_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test Sentinel-2 30TXR New data without ROI, with S2 product,
@@ -137,7 +138,7 @@ def test_nominal_dft_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     compare_files(reference_dir = f"{s2shores_paths.output_dir}/CI_tests/nominal_dft_s2_quick",
                   output_dir = s2shores_paths.output_dir)
 
-
+@pytest.mark.ci
 def test_nominal_video_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test Funwave data without ROI and distoshore, with
@@ -160,7 +161,7 @@ def test_nominal_video_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/nominal_video_quick",
                   output_dir=s2shores_paths.output_dir)
 
-
+@pytest.mark.ci
 def test_debug_pointswash_temporal_corr_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test SWASH7.4 data without ROI, with geotiff product, temporal
@@ -187,7 +188,7 @@ def test_debug_pointswash_temporal_corr_quick(s2shores_paths: S2SHORESTestsPath)
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_temporal_corr_quick",
                   output_dir=s2shores_paths.output_dir)
 
-
+@pytest.mark.ci
 def test_debug_pointswash_spatial_dft_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test SWASH8.2 data without ROI, with geotiff product, spatial dft debug and grid debug point mode.
@@ -213,7 +214,7 @@ def test_debug_pointswash_spatial_dft_quick(s2shores_paths: S2SHORESTestsPath) -
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_dft_quick",
                   output_dir=s2shores_paths.output_dir)
 
-
+@pytest.mark.ci
 def test_debug_pointswash_spatial_corr_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test SWASH8.2 data without ROI, with geotiff product, spatial
@@ -240,7 +241,7 @@ def test_debug_pointswash_spatial_corr_quick(s2shores_paths: S2SHORESTestsPath) 
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_spatial_corr_quick",
                   output_dir=s2shores_paths.output_dir)
 
-
+@pytest.mark.ci
 def test_limitroi_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test Sentinel-2 30TXR New data with ROI, ROI limit and sequential option.
@@ -266,7 +267,7 @@ def test_limitroi_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/limitroi_s2_quick",
                   output_dir=s2shores_paths.output_dir)
 
-
+@pytest.mark.ci
 def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test Sentinel-2 30TXR New data with S2 product and point debug point mode.
@@ -295,7 +296,7 @@ def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
                   output_dir=s2shores_paths.output_dir)
 
 
-
+@pytest.mark.ci
 def test_debug_area_funwave_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test Funwave data with geotiff product and debug area.
@@ -320,7 +321,6 @@ def test_debug_area_funwave_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     print(result.output)
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_area_funwave_quick",
                    output_dir=s2shores_paths.output_dir)
-
 
 def test_roi_profiling_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
