@@ -22,6 +22,7 @@ Tests to ensure no code regression, the outputs are compared to reference result
 import os
 import glob
 import zipfile
+from osgeo import gdal
 import xarray as xr
 from click.testing import CliRunner
 from tests.conftest import S2SHORESTestsPath

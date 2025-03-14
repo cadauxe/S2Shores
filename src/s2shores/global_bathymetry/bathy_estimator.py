@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional  # @NoMove
 
 import numpy as np
+from osgeo import gdal
 import xarray as xr  # @NoMove
 from shapely.geometry import Point
 from xarray import Dataset  # @NoMove
