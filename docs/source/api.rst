@@ -10,11 +10,11 @@ This section describes the API of **S2shores**.
 API Function
 ------------
 
-It is possible to launch a bathymetry estimation by using the :doc:`launch() <api/s2shores.bathylauncher>` function.
+It is possible to launch a bathymetry estimation by using the `launch() <https://github.com/cadauxe/S2Shores/blob/industrialisation/src/s2shores/bathylauncher/bathy_launcher.py>`_ function.
 
 **Arguments :**
 
-* ``products: ProductsDescriptor`` : A dictionary of input products. For each product, the following characteristics are specified in a `tuple object <https://pynote.readthedocs.io/en/latest/DataTypes/Touples.html>`_ :
+* ``products: ProductsDescriptor`` : A dictionary of input products. For each product, the following characteristics are specified in a tuple object :
 
     .. code-block:: python
 
@@ -97,7 +97,7 @@ Configuration file
 ------------------
 
 One configuration file is needed to provide the parameters for the bathymetry inversion method.
-It must be named *wave_bathy_inversion_config.yaml* (an example can be found in the `S2shores Gitlab <https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/industrialisation/config/wave_bathy_inversion_config.yaml?ref_type=heads>`_.
+It must be named *wave_bathy_inversion_config.yaml* (an example can be found in the `S2shores GitHub <https://github.com/CNES/S2Shores/blob/main/config/wave_bathy_inversion_config.yaml>`_.
 
 The main parameters in *wave_bathy_inversion_config.yaml* are :
 

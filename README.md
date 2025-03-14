@@ -21,7 +21,7 @@ pip install s2shores --no-cache-dir
 # Context
 
 One configuration file is needed :
-- *wave_bathy_inversion_config.yaml* (an example can be found in the s2shores [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/industrialisation/config/wave_bathy_inversion_config.yaml?ref_type=heads)) : parameters for the bathymetry inversion method.
+- *wave_bathy_inversion_config.yaml* (an example can be found in the s2shores [config directory](https://github.com/CNES/S2Shores/blob/main/config/wave_bathy_inversion_config.yaml)) : parameters for the bathymetry inversion method.
 
 
 # Main parameters
@@ -52,13 +52,13 @@ It takes the following arguments :
 
 ``--config_file`` YAML configuration file for bathymetry computation (wave_bathy_inversion_config.yaml).
 
-``[--debug_file]`` YAML file defining points or area to spy for debug purpose. Example of debug files are given in the [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/industrialisation/config/wave_bathy_inversion_config.yaml?ref_type=heads).
+``[--debug_file]`` YAML file defining points or area to spy for debug purpose. Example of debug files are given in the [config directory](https://github.com/CNES/S2Shores/tree/main/src/s2shores/bathylauncher/config).
 
 ``[--debug_path]`` Path to store debug information.
 
 ``[--distoshore_file]`` Georeferenced netCDF file or GeoTif file giving the distance of a point to the closest shore. This information is used to compute bathymetry only on the sea. If not specified, bathymetry is computed over the complete image footprint.
 
-``[--delta_times_dir]`` Directory containing the files describing S2A and S2B delta times between detectors. Mandatory for processing a Sentinel2 product. Example of delta_times files for S2A and S2B based and the ESA handbook (delta_t constant per band) are given in the bathylauncher [config directory](https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/industrialisation/config/wave_bathy_inversion_config.yaml?ref_type=heads). 
+``[--delta_times_dir]`` Directory containing the files describing S2A and S2B delta times between detectors. Mandatory for processing a Sentinel2 product. Example of delta_times files for S2A and S2B based and the ESA handbook (delta_t constant per band) are given in the bathylauncher [config directory](https://github.com/CNES/S2Shores/tree/main/src/s2shores/bathylauncher/config). 
 
 ``[--roi_file]`` Vector file specifying the polygon(s) where the bathymetry must be computed (geojson file format for instance). 
 

@@ -97,7 +97,7 @@ Configuration file
 ------------------
 
 One configuration file is needed to provide the parameters for the bathymetry inversion method.
-It must be named *wave_bathy_inversion_config.yaml* (an example can be found in the `S2shores Gitlab <https://gitlab.cnes.fr/eolab/projects/bathymetrie/s2shores/-/blob/industrialisation/config/wave_bathy_inversion_config.yaml?ref_type=heads>`_.
+It must be named *wave_bathy_inversion_config.yaml* (an example can be found in the `S2shores GitHub <https://github.com/CNES/S2Shores/blob/main/config/wave_bathy_inversion_config.yaml>`_.
 
 The main parameters in *wave_bathy_inversion_config.yaml* are :
 
