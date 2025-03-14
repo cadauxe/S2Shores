@@ -72,9 +72,9 @@ Please follow these steps:
     $ conda install gdal=3.9 -c conda-forge -y
     $ pip install s2shores==1.0.0 --no-cache-dir
 
------------------------------
+--------------------------------------------
 With pip (not recommended, at your own risk)
------------------------------
+--------------------------------------------
 
 Installing S2shores without Anaconda is not recommended, particularly because it requires the use of an unknown wheel file that may be unmaintained or unreliable.
 

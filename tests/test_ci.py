@@ -107,7 +107,7 @@ def test_nominal_spatialCorrelation_s2_quick(s2shores_paths: S2SHORESTestsPath) 
         '--nb_subtiles', '36'])
 
     print(result.output)
-    compare_files(reference_dir = f"{s2shores_paths.output_dir}/CI_tests/nominal_spatialCorrelation_s2_quick_11s",
+    compare_files(reference_dir = f"{s2shores_paths.output_dir}/CI_tests/nominal_spatialCorrelation_s2_quick",
                   output_dir = s2shores_paths.output_dir)
 
 
@@ -131,7 +131,7 @@ def test_nominal_dft_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--nb_subtiles', '36'])
 
     print(result.output)
-    compare_files(reference_dir = f"{s2shores_paths.output_dir}/CI_tests/nominal_dft_s2_quick_11s",
+    compare_files(reference_dir = f"{s2shores_paths.output_dir}/CI_tests/nominal_dft_s2_quick",
                   output_dir = s2shores_paths.output_dir)
 
 
@@ -154,7 +154,7 @@ def test_nominal_video_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--nb_subtiles', '4'])
 
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/nominal_video_quick_8s",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/nominal_video_quick",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -181,7 +181,7 @@ def test_debug_pointswash_temporal_corr_quick(s2shores_paths: S2SHORESTestsPath)
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_7_4_cropped.yaml'])
 
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_temporal_corr_quick_5s",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_temporal_corr_quick",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -207,7 +207,7 @@ def test_debug_pointswash_spatial_dft_quick(s2shores_paths: S2SHORESTestsPath) -
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2_cropped.yaml'])
 
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_dft_quick_108s",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_dft_quick",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -234,7 +234,7 @@ def test_debug_pointswash_spatial_corr_quick(s2shores_paths: S2SHORESTestsPath) 
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2_cropped.yaml'])
 
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_spatial_corr_quick_114s",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_spatial_corr_quick",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -260,7 +260,7 @@ def test_limitroi_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--sequential'])
 
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/limitroi_s2_quick_6s",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/limitroi_s2_quick",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -288,7 +288,7 @@ def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_30TXR_notongrid_cropped.yaml'])
 
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_mode_point_s2_quick_33s",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_mode_point_s2_quick",
                   output_dir=s2shores_paths.output_dir)
 
 
@@ -315,7 +315,7 @@ def test_debug_area_funwave_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_area_funwave_cropped.yaml'])
 
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_area_funwave_quick_35s",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_area_funwave_quick",
                    output_dir=s2shores_paths.output_dir)
 
 
@@ -343,5 +343,5 @@ def test_roi_profiling_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--profiling'])
 
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/roi_profiling_s2_quick_8s",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/roi_profiling_s2_quick",
                   output_dir=s2shores_paths.output_dir)
