@@ -49,20 +49,22 @@ def compare_files(reference_dir : str, output_dir : str):
 
     if ref_files == out_test_files:
         print("Both directories contain the same filenames.")
-        return True
     else:
         raise Exception("Filenames differ between the directories.\n"
-               f"Only in {reference_dir} : {reference_dir} - {out_test_dir}"
-               f"Only in {out_test_dir} : {out_test_dir} - {reference_dir}")
+               f"Only in {reference_dir} : {[item for item in ref_files if item not in out_test_files]}\n"
+               f"Only in {out_test_dir} : {[item for item in out_test_files if item not in ref_files]}")
 
-    print(out_test_files)
     #Assert the files in the reference directory are the same
     #than the ones in the lastly created directory
-    ref_nc = [nc_file for nc_file in ref_files if ".nc" in nc_file]
-    out_nc = [nc_file for nc_file in out_test_files if ".nc" in nc_file]
+    for nc_file in ref_files :
+        if ".nc" in nc_file :
+            ref_nc = nc_file
+    for nc_file in out_test_files:
+        if ".nc" in nc_file:
+            out_nc = nc_file
 
-    ref_xr = xr.open_dataset(reference_dir / ref_nc)
-    out_xr = xr.open_dataset(out_test_dir / out_nc)
+    ref_xr = xr.open_dataset(os.path.join(reference_dir, ref_nc))
+    out_xr = xr.open_dataset(os.path.join(out_test_dir, out_nc))
 
     xr.testing.assert_equal(ref_xr, out_xr)
 
@@ -94,7 +96,7 @@ def test_nominal_spatialCorrelation_s2_quick(s2shores_paths: S2SHORESTestsPath) 
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    dis2shore_file = "GMT_intermediate_coast_distance_01d_test_5000.nc"
+    dis2shore_file = "GMT_intermediate_coast_distance_01d_test_5000_cropped.nc"
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
@@ -327,7 +329,7 @@ def test_roi_profiling_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    dis2shore_file = "GMT_intermediate_coast_distance_01d_test_5000.nc"
+    dis2shore_file = ("GMT_intermediate_coast_distance_01d_test_5000_cropped.nc")
 
     runner = CliRunner()
 
