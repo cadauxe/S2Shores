@@ -19,7 +19,7 @@ Tests to ensure no code regression, the outputs are compared to reference result
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-from ..tests.test_utils import compare_files
+from tests.test_utils import compare_files
 from click.testing import CliRunner
 from tests.conftest import S2SHORESTestsPath
 

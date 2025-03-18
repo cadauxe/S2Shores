@@ -49,7 +49,6 @@ dependencies = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",
-#    "GDAL==3.9",
     "matplotlib",
     "Sphinx>=4.2",
     "setuptools",
