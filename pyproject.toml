@@ -71,3 +71,8 @@ s2shores = "s2shores.bathylauncher.bathy_processing:process_command"
 [tool.setuptools_scm]
 fallback_version = "1.0"
 version_scheme = "no-guess-dev"
+
+[tool.pytest.ini_options]
+markers = [
+    "ci: mark to CI tests"
+]
