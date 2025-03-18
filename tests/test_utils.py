@@ -23,7 +23,7 @@ def compare_files(reference_dir : str, output_dir : str, debug_dir : str = None)
     ref_files = sorted(os.listdir(reference_dir))
     out_test_files = sorted(os.listdir(out_test_dir))
 
-    if "debug" in reference_dir :
+    if "debug" in ref_files :
         ref_files.remove("debug")
         assert debug_dir != None
         ref_debug_dir = os.path.join(reference_dir, "debug")
