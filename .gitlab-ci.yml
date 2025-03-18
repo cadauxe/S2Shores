@@ -10,8 +10,6 @@ workflow:
 stages:
   - init
   - quality # Generate quality report
-  - test # Step for SAST
-  - sonarqube # Send report to SonarQube
 
 # Default configuration for all jobs
 default:
@@ -43,12 +41,6 @@ variables:
   CONDA_SSL_VERIFY: "${CNES_CERTIFICATE}"
   PIP_SSL_VERIFY: "${CNES_CERTIFICATE}"
   REQUESTS_CA_BUNDLE: "${CNES_CERTIFICATE}"
-
-include:
-  - template: Jobs/SAST.latest.gitlab-ci.yml
-  - project: "usinelogicielle/public/gitlab-ci-templates" # Inclut le stage de qualité sonarqube
-    ref: v1.1.2 # référence de tag
-    file: "jobs/sonarqube-gitlab-ci.yml" 
 
 build-env:
   stage: init
@@ -84,11 +76,14 @@ pylint_analysis:
   image: ${ARTIFACTORY_HOST}/${TAG_IMAGE_CONDA}
   script:
     - source activate s2shores_env
-    - pip install --no-cache-dir --force-reinstall -e .
-    - pip install pylint
-    - pylint s2shores/ --recursive=y --exit-zero > pylint_report.json
-    - cat pylint_report.json
+    - pip install pylint mccabe
+    - ./continuous_integration/scripts/check_mccabe_complexity.sh 25 src/s2shores
+    - pylint --recursive=y --disable=all --fail-under=10 --enable=too-many-statements src/s2shores > pylint_report_statements.json
+    - pylint --recursive=y --disable=all --fail-under=10 --enable=too-many-nested-blocks src/s2shores  > pylint_report_nested-blocks.json
+    - cat pylint_report_statements.json
+    - cat pylint_report_nested-blocks.json
   artifacts:
     paths:
-      - ./pylint_report.json
+      - ./pylint_report_statements.json
+      - ./pylint_report_nested-blocks.json
     expire_in: 1 day
