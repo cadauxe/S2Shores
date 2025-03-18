@@ -19,68 +19,12 @@ Tests to ensure no code regression, the outputs are compared to reference result
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
-import os
-import glob
-import zipfile
-from wsgiref.validate import header_re
-
-import xarray as xr
+from test_utils import compare_files
 from click.testing import CliRunner
 from tests.conftest import S2SHORESTestsPath
 
 from s2shores.bathylauncher.bathy_processing import process_command
 
-
-def compare_files(reference_dir : str, output_dir : str, debug_dir : str = None):
-    """
-    Compares the contents of the reference directory with the most recently created
-    test output directory. Ensures that the filenames match and that the contents of
-    NetCDF files are identical.
-
-    :param reference_dir: The directory containing reference files.
-    :returns: True if the directories have identical filenames and matching NetCDF content.
-    :raises Exception: If filenames differ between the directories or NetCDF file contents do not match.
-    """
-    # Get all directories in the specified parent directory
-    dirs = [d for d in glob.glob(os.path.join(output_dir, "*/")) if os.path.isdir(d)]
-
-    # Find the most recently created directory, ie. the test output directory
-    out_test_dir = max(dirs, key=os.path.getctime)
-
-    ref_files = os.listdir(reference_dir)
-    out_test_files = os.listdir(out_test_dir)
-
-    if ref_files == out_test_files:
-        print("Both directories contain the same filenames.")
-        return True
-    else:
-        raise Exception("Filenames differ between the directories.\n"
-               f"Only in {reference_dir} : {reference_dir} - {out_test_dir}"
-               f"Only in {out_test_dir} : {out_test_dir} - {reference_dir}")
-
-    if "debug" in reference_dir :
-        assert debug_dir != None
-        ref_debug_dir = reference_dir / "debug"
-        ref_debug = os.listdir(ref_debug_dir)
-        out_test_debug = os.listdir(debug_dir)
-
-        if ref_debug == out_test_debug:
-            print("Both directories contain the same filenames.")
-            return True
-        else:
-            raise Exception("Filenames differ between the directories.\n"
-                            f"Only in {ref_debug_dir} : {ref_debug_dir} - {out_test_debug}"
-                            f"Only in {out_test_debug} : {out_test_debug} - {ref_debug_dir}")
-
-    #Assert the files in the reference directory are the same
-    #than the ones in the lastly created directory
-    ref_nc = [nc_file for nc_file in ref_files if ".nc" in nc_file]
-    out_nc = [nc_file for nc_file in out_test_files if ".nc" in nc_file]
-
-    ref_xr = xr.open_dataset(reference_dir / ref_nc)
-    out_xr = xr.open_dataset(out_test_dir / out_nc)
-
-    xr.testing.assert_equal(ref_xr, out_xr)
 
 
 def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> None:
