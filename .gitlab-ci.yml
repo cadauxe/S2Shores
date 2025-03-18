@@ -73,7 +73,7 @@ pytest:
   script:
     - source activate s2shores_env
     - pip install --no-cache-dir --force-reinstall -e .
-    - pytest -s tests/test_ci.py::test_nominal_dft_s2_quick --cov=s2shores --cov-report=xml:.ci-reports/coverage.xml --cov-report=term --junitxml=.ci-reports/junit-report.xml
+    - pytest -s tests --cov=s2shores --cov-report=xml:.ci-reports/coverage.xml --cov-report=term --junitxml=.ci-reports/junit-report.xml
   artifacts:
     paths:
       - ./.ci-reports/
