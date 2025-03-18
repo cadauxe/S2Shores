@@ -20,26 +20,27 @@ def compare_files(reference_dir : str, output_dir : str, debug_dir : str = None)
     # Find the most recently created directory, ie. the test output directory
     out_test_dir = max(dirs, key=os.path.getctime)
 
-    ref_files = os.listdir(reference_dir)
-    out_test_files = os.listdir(out_test_dir)
+    ref_files = sorted(os.listdir(reference_dir))
+    out_test_files = sorted(os.listdir(out_test_dir))
+
+    if "debug" in reference_dir :
+        ref_files.remove("debug")
+        assert debug_dir != None
+        ref_debug_dir = os.path.join(reference_dir, "debug")
+        ref_debug = sorted(os.listdir(ref_debug_dir))
+        out_test_debug = sorted(os.listdir(debug_dir))
+
+        if ref_debug == out_test_debug:
+            print("Both directories contain the same filenames.")
+        else:
+            raise Exception("Debug files differ between the directories.\n"
+                            f"Only in {ref_debug_dir} : {[item for item in ref_debug if item not in out_test_debug]}\n"
+                            f"Only in {debug_dir} : {[item for item in out_test_debug if item not in ref_debug]}")
 
     if ref_files == out_test_files:
         print("Both directories contain the same filenames.")
     else:
         raise Exception("Filenames differ between the directories.\n"
-                            f"Only in {reference_dir} : {[item for item in ref_files if item not in out_test_files]}\n"
-                            f"Only in {out_test_dir} : {[item for item in out_test_files if item not in ref_files]}")
-
-    if "debug" in reference_dir :
-        assert debug_dir != None
-        ref_debug_dir = reference_dir / "debug"
-        ref_debug = os.listdir(ref_debug_dir)
-        out_test_debug = os.listdir(debug_dir)
-
-        if ref_debug == out_test_debug:
-            print("Both directories contain the same filenames.")
-        else:
-            raise Exception("Filenames differ between the directories.\n"
                             f"Only in {reference_dir} : {[item for item in ref_files if item not in out_test_files]}\n"
                             f"Only in {out_test_dir} : {[item for item in out_test_files if item not in ref_files]}")
 

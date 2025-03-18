@@ -20,7 +20,7 @@ Tests to ensure no code regression, the outputs are compared to reference result
   limitations under the License.
 """
 import os
-from test_utils import compare_files, unzip_file
+from tests.test_utils import compare_files, unzip_file
 from click.testing import CliRunner
 import pytest
 from tests.conftest import S2SHORESTestsPath
@@ -28,6 +28,7 @@ from tests.conftest import S2SHORESTestsPath
 from s2shores.bathylauncher.bathy_processing import process_command
 
 
+@pytest.mark.ci
 def test_nominal_spatialCorrelation_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test Sentinel-2 30TXR Old data without ROI, with S2 product,
@@ -124,7 +125,8 @@ def test_debug_pointswash_temporal_corr_quick(s2shores_paths: S2SHORESTestsPath)
 
     print(result.output)
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_temporal_corr_quick",
-                  output_dir=s2shores_paths.output_dir)
+                  output_dir=s2shores_paths.output_dir,
+                  debug_dir = f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr')
 
 @pytest.mark.ci
 def test_debug_pointswash_spatial_dft_quick(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -150,7 +152,8 @@ def test_debug_pointswash_spatial_dft_quick(s2shores_paths: S2SHORESTestsPath) -
 
     print(result.output)
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_dft_quick",
-                  output_dir=s2shores_paths.output_dir)
+                  output_dir=s2shores_paths.output_dir,
+                  debug_dir = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft')
 
 @pytest.mark.ci
 def test_debug_pointswash_spatial_corr_quick(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -177,7 +180,8 @@ def test_debug_pointswash_spatial_corr_quick(s2shores_paths: S2SHORESTestsPath) 
 
     print(result.output)
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_pointswash_spatial_corr_quick",
-                  output_dir=s2shores_paths.output_dir)
+                  output_dir=s2shores_paths.output_dir,
+                  debug_dir = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr')
 
 @pytest.mark.ci
 def test_limitroi_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
@@ -231,7 +235,8 @@ def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
 
     print(result.output)
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_mode_point_s2_quick",
-                  output_dir=s2shores_paths.output_dir)
+                  output_dir=s2shores_paths.output_dir,
+                  debug_dir = f'{s2shores_paths.output_dir}/debug_mode_point_s2')
 
 
 @pytest.mark.ci
@@ -258,8 +263,10 @@ def test_debug_area_funwave_quick(s2shores_paths: S2SHORESTestsPath) -> None:
 
     print(result.output)
     compare_files(reference_dir=f"{s2shores_paths.output_dir}/CI_tests/debug_area_funwave_quick",
-                   output_dir=s2shores_paths.output_dir)
+                  output_dir=s2shores_paths.output_dir,
+                  debug_dir = f'{s2shores_paths.output_dir}/debug_area_funwave')
 
+@pytest.mark.ci
 def test_roi_profiling_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     Test Sentinel-2 30TXR Old data without ROI limit
