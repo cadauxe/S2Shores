@@ -1,0 +1,53 @@
+name: CI Workflow
+
+on:
+  pull_request:
+    branches:
+      - "main"
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+      - name: Create test env
+        shell: bash -l {0}
+        run: |
+          pip install pylint mccabe
+      - name: code quality
+        shell: bash -l {0}
+        run: |
+          pylint --disable=all --fail-under=10 --enable=too-many-statements src/s2shores
+          pylint --disable=all --fail-under=10 --enable=too-many-nested-blocks src/s2shores
+          ./continuous_integration/scripts/check_mccabe_complexity.sh 25 src/s2shores
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Python 3.12
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
+    - name: Setup Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: 3.12
+        auto-activate-base: false
+    - name: Create test env
+      shell: bash -l {0}
+      run: |
+        conda create -n test_env python=3.12 libgdal=3.9 -c conda-forge -c defaults -y
+        conda activate test_env
+        pip install gdal==3.9
+        pip install .
+    - name: test
+      shell: bash -l {0}
+      run: |
+        conda activate test_env
+        pytest -m ci --cov-fail-under=65

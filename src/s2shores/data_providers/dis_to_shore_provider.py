@@ -22,8 +22,8 @@ from pathlib import Path
 from typing import Any, Optional  # @NoMove
 
 import numpy as np
-import xarray as xr  # @NoMove
 from osgeo import gdal
+import xarray as xr  # @NoMove
 from shapely.geometry import Point
 
 from ..image.geo_transform import GeoTransform
