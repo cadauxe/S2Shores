@@ -143,21 +143,19 @@ class BathyLauncher:
                         debug_area = debug_params.get('DEBUG_AREA')
                         if debug_points is not None:
                             estimator.set_debug_samples([Point(float(point[0]), float(point[1]))
-                                                        for point in debug_points])
-                        else:
-                            if estimator.output_format == 'POINT':
-                                raise SystemExit(
-                                    'User must give a list of points if OUTPUT_FORMAT is POINT.')
+                                                         for point in debug_points])
+                        elif estimator.output_format == 'POINT':
+                            raise SystemExit(
+                                'User must give a list of points if OUTPUT_FORMAT is POINT.')
 
                         if debug_area is not None:
                             estimator.set_debug_area(Point(debug_area['BOTTOM_LEFT_CORNER']),
-                                                    Point(debug_area['TOP_RIGHT_CORNER']),
-                                                    debug_area['DECIMATION_NUMBER'])
+                                                     Point(debug_area['TOP_RIGHT_CORNER']),
+                                                     debug_area['DECIMATION_NUMBER'])
                         estimator.debug_path = debug_path
-                    else:
-                        if estimator.output_format == 'POINT':
-                            raise SystemExit('User must give a list of points if '
-                                             'OUTPUT_FORMAT is POINT.')
+                    elif estimator.output_format == 'POINT':
+                        raise SystemExit('User must give a list of points if '
+                                         'OUTPUT_FORMAT is POINT.')
                     break
                 except OSError as e:
                     if e.errno==24:

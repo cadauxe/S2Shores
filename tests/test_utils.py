@@ -1,6 +1,5 @@
 import glob
 import zipfile
-from osgeo import gdal
 import xarray as xr
 import os
 

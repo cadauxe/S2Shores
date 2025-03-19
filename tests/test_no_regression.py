@@ -7,7 +7,7 @@ Tests to ensure no code regression, the outputs are compared to reference result
 :organization: CNES, LEGOS, SHOM
 :copyright: 2024 CNES. All rights reserved.
 :license: see LICENSE file
-:created: 14/02/2025
+:created: 06/03/2025
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
   in compliance with the License. You may obtain a copy of the License at
@@ -19,6 +19,7 @@ Tests to ensure no code regression, the outputs are compared to reference result
   or implied. See the License for the specific language governing permissions and
   limitations under the License.
 """
+import os
 from tests.test_utils import compare_files
 from click.testing import CliRunner
 from tests.conftest import S2SHORESTestsPath
@@ -124,6 +125,11 @@ def test_debug_pointswash_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> No
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr'
+    if os.path.isdir(debug_path) :
+        os.remove(debug_path)
+    os.mkdir(debug_path)
+
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
@@ -147,6 +153,11 @@ def test_debug_pointswash_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft'
+    if os.path.isdir(debug_path):
+        os.remove(debug_path)
+    os.mkdir(debug_path)
+
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
@@ -170,6 +181,11 @@ def test_debug_pointswash_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> Non
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr'
+    if os.path.isdir(debug_path):
+        os.remove(debug_path)
+    os.mkdir(debug_path)
+
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
@@ -217,6 +233,11 @@ def test_debug_mode_point_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    debug_path = f'{s2shores_paths.output_dir}/debug_mode_point_s2'
+    if os.path.isdir(debug_path):
+        os.remove(debug_path)
+    os.mkdir(debug_path)
+
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
@@ -242,6 +263,11 @@ def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+    debug_path = f'{s2shores_paths.output_dir}/debug_area_funwave'
+    if os.path.isdir(debug_path):
+        os.remove(debug_path)
+    os.mkdir(debug_path)
+
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
