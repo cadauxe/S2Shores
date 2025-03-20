@@ -20,6 +20,8 @@ Tests to ensure no code regression, the outputs are compared to reference result
   limitations under the License.
 """
 import os
+import shutil
+
 from tests.test_utils import compare_files
 from click.testing import CliRunner
 from tests.conftest import S2SHORESTestsPath
@@ -127,7 +129,7 @@ def test_debug_pointswash_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> No
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr'
     if os.path.isdir(debug_path) :
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     runner = CliRunner()
@@ -155,7 +157,7 @@ def test_debug_pointswash_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     runner = CliRunner()
@@ -183,7 +185,7 @@ def test_debug_pointswash_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> Non
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     runner = CliRunner()
@@ -235,7 +237,7 @@ def test_debug_mode_point_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_mode_point_s2'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     runner = CliRunner()
@@ -265,7 +267,7 @@ def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_area_funwave'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     runner = CliRunner()
