@@ -20,6 +20,8 @@ Tests to ensure no code regression, the outputs are compared to reference result
   limitations under the License.
 """
 import os
+import shutil
+
 from osgeo import gdal
 from tests.test_utils import compare_files, unzip_file
 from click.testing import CliRunner
@@ -112,7 +114,7 @@ def test_debug_pointswash_temporal_corr_quick(s2shores_paths: S2SHORESTestsPath)
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     unzip_file(s2shores_paths.swash7_cropped.with_suffix('.zip'))
@@ -141,7 +143,7 @@ def test_debug_pointswash_spatial_dft_quick(s2shores_paths: S2SHORESTestsPath) -
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     unzip_file(s2shores_paths.swash8_cropped.with_suffix('.zip'))
@@ -171,7 +173,7 @@ def test_debug_pointswash_spatial_corr_quick(s2shores_paths: S2SHORESTestsPath) 
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     unzip_file(s2shores_paths.swash8_cropped.with_suffix('.zip'))
@@ -226,7 +228,7 @@ def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_mode_point_s2'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     runner = CliRunner()
@@ -258,7 +260,7 @@ def test_debug_area_funwave_quick(s2shores_paths: S2SHORESTestsPath) -> None:
     """
     debug_path = f'{s2shores_paths.output_dir}/debug_area_funwave'
     if os.path.isdir(debug_path):
-        os.remove(debug_path)
+        shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     unzip_file(s2shores_paths.funwave_cropped.with_suffix('.zip'))
