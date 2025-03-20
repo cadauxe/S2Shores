@@ -21,7 +21,7 @@ Please follow these steps:
     $ conda create -n env_name -y
     $ conda activate env_name
     $ conda install python=3.12 libgdal=3.9 -c conda-forge -y
-    $ pip install GDAL==3.9
+    $ pip install GDAL==3.10
     $ pip install s2shores==1.0.0 --no-cache-dir
 
 
@@ -69,7 +69,7 @@ Please follow these steps:
 
     $ conda create -n env_name -y
     $ conda activate env_name
-    $ conda install gdal=3.9 -c conda-forge -y
+    $ conda install gdal=3.10 -c conda-forge -y
     $ pip install s2shores==1.0.0 --no-cache-dir
 
 --------------------------------------------
@@ -83,7 +83,7 @@ You’ll need to install GDAL manually from a .whl (Windows Wheel) file, availab
 
 The version you will need is:
 
-    - GDAL-3.9.2-cp312-cp312-win_amd64.whl (for Python 3.12 on 64-bit Windows)
+    - GDAL-3.10.1-cp312-cp312-win_amd64.whl (for Python 3.12 on 64-bit Windows)
 
 Once you have the appropriate .whl file, please follow these steps:
 
@@ -91,6 +91,6 @@ Once you have the appropriate .whl file, please follow these steps:
 
     $ python -m venv env_name
     $ env_name\Scripts\activate
-    $ pip install path_to_the_wheel\GDAL-3.9.2-cp312-cp312-win_amd64.whl
+    $ pip install path_to_the_wheel\GDAL-3.10.1-cp312-cp312-win_amd64.whl
     $ pip install s2shores==1.0.0 --no-cache-dir
 
