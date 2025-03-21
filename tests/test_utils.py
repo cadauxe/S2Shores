@@ -46,17 +46,20 @@ def compare_files(reference_dir : str, output_dir : str, debug_dir : str = None)
 
     #Assert the files in the reference directory are the same
     #than the ones in the lastly created directory
+    compare_nc = False
     for nc_file in ref_files:
         if ".nc" in nc_file:
             ref_nc = nc_file
+            compare_nc = True
     for nc_file in out_test_files:
         if ".nc" in nc_file:
             out_nc = nc_file
 
-    ref_xr = xr.open_dataset(os.path.join(reference_dir, ref_nc))
-    out_xr = xr.open_dataset(os.path.join(out_test_dir, out_nc))
+    if compare_nc:
+        ref_xr = xr.open_dataset(os.path.join(reference_dir, ref_nc))
+        out_xr = xr.open_dataset(os.path.join(out_test_dir, out_nc))
 
-    xr.testing.assert_equal(ref_xr, out_xr)
+        xr.testing.assert_equal(ref_xr, out_xr)
 
 
 

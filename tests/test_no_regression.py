@@ -280,7 +280,7 @@ def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
         '--debug_path', f'{s2shores_paths.output_dir}/debug_area_funwave',
         '--debug_file', f'{s2shores_paths.debug_dir}/debug_area_funwave.yaml'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/debug_mode_point_s2",
+    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/debug_area_funwave",
                   output_dir=s2shores_paths.output_dir,
                   debug_dir = f'{s2shores_paths.output_dir}/debug_area_funwave')
 
