@@ -20,7 +20,7 @@ Please follow these steps:
 
     $ conda create -n env_name -y
     $ conda activate env_name
-    $ conda install python=3.12 libgdal=3.9 -c conda-forge -y
+    $ conda install python=3.12 libgdal=3.10 -c conda-forge -y
     $ pip install GDAL==3.10
     $ pip install s2shores==1.0.0 --no-cache-dir
 
