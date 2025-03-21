@@ -7,14 +7,14 @@ This project gathers several estimators to be able to compute bathymetry from st
 It uses methods based on the inversion of wave peaks and data provider services (delta time b.w. frames, gravity depending on latitude, distance to shore) for bathymetry estimation.
 
 The online documentation can be found [here](https://s2shores.readthedocs.io/en/latest/).
-[//]: # (Change link if necessary when final documentation has been pushed)
+<!-- Change link if necessary when final documentation has been pushed -->
 
 # Environment
 
 To create an environment with S2shores, two procedures are available with pip or conda.
 
-Please refer to the [install documentation](https://s2shores.readthedocs.io/en/latest/install.html).
-[//]: # (Change link if necessary when final documentation has been pushed)
+Please refer to the [installation documentation](https://s2shores.readthedocs.io/en/latest/install.html).
+<!-- Change link if necessary when final documentation has been pushed -->
 
 
 # Context
@@ -52,14 +52,14 @@ It takes the following arguments :
 ``--config_file`` YAML configuration file for bathymetry computation (wave_bathy_inversion_config.yaml).
 
 ``[--debug_file]`` YAML file defining points or area to spy for debug purpose. Example of debug files are given [here](https://github.com/CNES/S2Shores/tree/main/tests/data/debug).
-[//]: # (Change link when branch has been merged)
+<!-- Change link when branch has been merged -->
 
 ``[--debug_path]`` Path to store debug information.
 
 ``[--distoshore_file]`` Georeferenced netCDF file or GeoTif file giving the distance of a point to the closest shore. This information is used to compute bathymetry only on the sea. If not specified, bathymetry is computed over the complete image footprint.
 
 ``[--delta_times_dir]`` Directory containing the files describing S2A and S2B delta times between detectors. Mandatory for processing a Sentinel2 product. Example of delta_times files for S2A and S2B based and the ESA handbook (delta_t constant per band) are given [here](https://github.com/CNES/S2Shores/tree/main/src/s2shores/bathylauncher/config). 
-[//]: # (Change link when branch has been merged)
+<!-- Change link when branch has been merged -->
 
 ``[--roi_file]`` Vector file specifying the polygon(s) where the bathymetry must be computed (geojson file format for instance). 
 
