@@ -13,3 +13,4 @@ Contributors (alphabetic on surname)
 * Alexia Mondot <alexia.mondot@thales-services.fr>
 * Gregoire Thoumyre <gregoire.thoumyre@univ-tlse3.fr>
 * Pierre Tysebaert  <pierre.tysebaert@thalesgroup.com>
+* Ema Cadaux <ema.cadaux@cs-soprasteria.com>

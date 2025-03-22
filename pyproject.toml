@@ -9,10 +9,70 @@ multi_line_output = 0
 force_grid_wrap = 0
 include_trailing_comma = "False"
 use_parentheses = "True"
-src_paths = ["src", "tests", "docs"]
+src_paths = ["s2shores/src", "s2shores/tests", "s2shores/docs"]
 
 
 # ---------- Automated pep8 formatting ----------
 [tool.autopep8]
 max_line_length = 100
 aggressive = 3
+
+[build-system]
+requires = ["setuptools>=42", "setuptools_scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "s2shores"
+version = "1.0.0"
+description = "A python library for estimating coastal bathymetry"
+authors = [
+    { name = "Rafael Almar, Stephanie Artigues, Erwin Bergsma, Romain Degoul, Alain Giros, Adrien Klotz, Yannick Lasne, Solange Lemai-Chenevier, Alexia Mondot, Gregoire Thoumyre, Pierre Tysebaert" }
+]
+license = { text = "Apache-2.0" }  # Update if needed
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click",
+    "PyYAML",
+    "dask[dataframe]",
+    "dask[distributed]",
+    "jupyter-server-proxy",
+    "sphinx-rtd-theme",
+    "pyarrow",
+    "numpy<2.0",
+    "scipy",
+    "myst-nb",
+    "scikit-image",
+    "xarray",
+    "netcdf4",
+    "pandas",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "matplotlib",
+    "Sphinx>=4.2",
+    "setuptools",
+    "Shapely>=1.6",
+    "cmcrameri"
+]
+
+[project.urls]
+Homepage = "https://github.com/CNES/S2Shores"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+s2shores = "s2shores.bathylauncher.bathy_processing:process_command"
+
+[tool.setuptools_scm]
+fallback_version = "1.0"
+version_scheme = "no-guess-dev"
+
+[tool.pytest.ini_options]
+markers = [
+    "ci: mark to CI tests"
+]

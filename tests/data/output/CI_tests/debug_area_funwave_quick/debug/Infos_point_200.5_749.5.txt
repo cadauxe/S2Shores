@@ -1,0 +1,21 @@
+Debug information: 
+  S2Shore config: 
+    Window size (m): 100.000 m 
+    Lag number: 3 frames
+    Percentage points: 1 % 
+ 
+  Image info:
+    center point: POINT (200.5 749.5)
+    Window size (m): ('101.000 m', '101.000 m')
+    Spatial res: 1.000 m 
+    Window shape (px): (101, 101)
+ 
+  Temporal correlation info:
+    time lag: 3.00 s 
+    max var angle: 6.0° (direction from East)
+    estimated wavelength: 97.62 m
+    dx (m): ['28.45'] 
+    c (m/s): ['9.48'] 
+    gamma: ['0.59'] 
+    status: 0 (0: SUCCESS, 1: FAIL, 2: ON_GROUND, 3: NO_DATA, 4: NO_DELTA_TIME, 5: OUTSIDE_ROI, 6: BEYOND_OFFSHORE_LIMIT) 
+End of debug 
