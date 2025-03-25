@@ -50,3 +50,7 @@ MANIFEST
 
 # Per-project virtualenvs
 .venv*/
+
+# Tests outputs
+TestsS2Shores/output
+TestsS2Shores/products
