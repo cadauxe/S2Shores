@@ -15,7 +15,7 @@ def compare_files(reference_dir : str, output_dir : str, debug_dir : str = None)
     :raises Exception: If filenames differ between the directories or NetCDF file contents do not match.
     """
     # Get all directories in the specified parent directory
-    dirs = [d for d in glob.glob(os.path.join(output_dir, "*/")) if os.path.isdir(d)]
+    dirs = [d for d in glob.glob(os.path.join(output_dir, "run*/")) if os.path.isdir(d)]
 
     # Find the most recently created directory, ie. the test output directory
     out_test_dir = max(dirs, key=os.path.getctime)
@@ -23,6 +23,9 @@ def compare_files(reference_dir : str, output_dir : str, debug_dir : str = None)
     ref_files = sorted(os.listdir(reference_dir))
     out_test_files = sorted(os.listdir(out_test_dir))
 
+    if "profiling" in ref_files:
+        ref_files.remove("profiling")
+	
     if "debug" in ref_files :
         ref_files.remove("debug")
         assert debug_dir != None
