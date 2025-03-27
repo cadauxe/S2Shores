@@ -20,7 +20,7 @@ Please refer to the [installation documentation](https://s2shores.readthedocs.io
 # Context
 
 One configuration file is needed :
-- *wave_bathy_inversion_config.yaml* (an example can be found in the s2shores [config directory](https://github.com/CNES/S2Shores/blob/main/config/wave_bathy_inversion_config.yaml)) : parameters for the bathymetry inversion method.
+- *wave_bathy_inversion_config.yaml* (an example can be found in the s2shores [config directory](https://github.com/CNES/S2Shores/blob/main/tests/data/config/config2/wave_bathy_inversion_config.yaml)) : parameters for the bathymetry inversion method.
 
 
 # Main parameters
@@ -39,7 +39,7 @@ method: Gravity, Distoshore, Period, Wavenumber, Delta Celerity, Phase Shift, De
 
 # Command
 
-A command is available : ``bathy_processing.py`` 
+A command is available : ``s2shores`` 
 
 It takes the following arguments :
 
