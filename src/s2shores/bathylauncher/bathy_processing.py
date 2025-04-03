@@ -73,10 +73,39 @@ def create_timestamped_dir(output_dir_root: Path) -> Path:
               help='if set, allows run in a single thread, usefull for debugging purpose')
 @click.option('--profiling/--no-profiling', default=False,
               help='If set, print profiling information about the whole bathymetry estimation')
-def process_command(input_product: Path, product_type: str, output_dir: Path,
-                    config_file: Path, debug_file: Path, debug_path: Path, distoshore_file: Path,
-                    delta_times_dir: Path, roi_file: Path, limit_to_roi: bool,
-                    nb_subtiles: int, sequential: bool, profiling: bool) -> None:
+def process_command(
+    input_product: Path,
+    product_type: str,
+    output_dir: Path,
+    config_file: Path,
+    debug_file: Path,
+    debug_path: Path,
+    distoshore_file: Path,
+    delta_times_dir: Path,
+    roi_file: Path,
+    limit_to_roi: bool,
+    nb_subtiles: int,
+    sequential: bool,
+    profiling: bool,
+) -> None:
+    return _process_command(**locals())
+
+
+def _process_command(
+    input_product: Path,
+    product_type: str,
+    output_dir: Path,
+    config_file: Path,
+    debug_file: Path,
+    debug_path: Path,
+    distoshore_file: Path,
+    delta_times_dir: Path,
+    roi_file: Path,
+    limit_to_roi: bool,
+    nb_subtiles: int,
+    sequential: bool,
+    profiling: bool,
+) -> None:
     product_cls: Type[OrthoStack]
     if product_type == 'geotiff':
         product_cls = GeoTiffProduct

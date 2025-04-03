@@ -52,5 +52,4 @@ MANIFEST
 .venv*/
 
 # Tests outputs
-TestsS2Shores/output
-TestsS2Shores/products
+TestsS2Shores/*
