@@ -53,7 +53,8 @@ dependencies = [
     "Sphinx>=4.2",
     "setuptools",
     "Shapely>=1.6",
-    "cmcrameri"
+    "cmcrameri",
+    "pydantic"
 ]
 
 [project.urls]

@@ -8,13 +8,13 @@ from xarray import Dataset
 from s2shores.bathylauncher.products.geotiff_product import GeoTiffProduct
 from s2shores.bathylauncher.products.s2_image_product import S2ImageProduct
 from s2shores.bathylauncher.bathy_launcher import BathyLauncher
+from s2shores.global_bathymetry.bathy_config import BathyConfig
 from s2shores.global_bathymetry.bathy_estimator import BathyEstimator
 from s2shores.global_bathymetry.ortho_bathy_estimator import OrthoBathyEstimator
 from s2shores.image.ortho_sequence import OrthoSequence
 from s2shores.data_model.estimated_points_bathy import EstimatedPointsBathy
 from s2shores.local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 
-import s2shores
 
 def initialize_sequential_run(
         product_path: Path,
@@ -62,7 +62,7 @@ def initialize_bathy_estimator(
         product_path,
         product_cls,
         output_path,
-        read_config(config_path),
+        read_config(config_path).model_dump(),
         nb_subtiles=1,
     )
 
@@ -74,26 +74,23 @@ def initialize_bathy_estimator(
     return bathy_estimator
 
 
-def read_config(config_path: Path) -> dict[str, Any]:
+def read_config(config_path: Path) -> BathyConfig:
     with config_path.open() as file:
         wave_params = yaml.load(file, Loader=yaml.FullLoader)
 
-    if 'CHAINS_VERSIONS' not in wave_params:
-        wave_params['CHAINS_VERSIONS'] = f's2shores : {s2shores.__version__}'
-
-    return wave_params
+    return BathyConfig.model_validate(wave_params)
 
 
 def initialize_ortho_bathy_estimator(
         bathy_estimator: BathyEstimator,
-):
+) -> OrthoBathyEstimator:
     subtile = bathy_estimator.subtiles[0]
     return OrthoBathyEstimator(bathy_estimator, subtile)
 
 
 def build_ortho_sequence(
         ortho_bathy_estimator: OrthoBathyEstimator,
-):
+) -> OrthoSequence:
     estimation_point = ortho_bathy_estimator.parent_estimator._debug_samples[0]
     window = ortho_bathy_estimator.sampled_ortho.window_extent(estimation_point)
 
