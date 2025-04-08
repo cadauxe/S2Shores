@@ -57,7 +57,8 @@ def test_nominal_tri_stereo_pneo(test_path) -> None:
         '--product_type', 'geotiff',
         '--output_dir',  f'{output_path}',
         '--config_file', f'{test_path}/config/config1/{PARAMS_FILE}',
-        '--nb_subtiles', '36'])
+	'--roi_file', f'{test_path}/ROI/PNEO-DuckROI.shp',
+	'--limit_to_roi'])
     print(result.output)
     compare_files(reference_dir=f'{test_path}/reference_results/nominal_tri_stereo_pneo',
                   output_dir=f'{output_path}')
