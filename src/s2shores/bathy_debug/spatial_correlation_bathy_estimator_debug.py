@@ -21,9 +21,9 @@ from matplotlib import pyplot as plt
 
 from ..local_bathymetry.spatial_correlation_bathy_estimator import SpatialCorrelationBathyEstimator
 from .local_bathy_estimator_debug import LocalBathyEstimatorDebug
-from .spatial_correlation_wave_fields_display import (display_sinograms_1D_analysis_spatial_correlation,
-                                  display_sinograms_spatial_correlation,
-                                  display_waves_images_spatial_correl)
+from .spatial_correlation_wave_fields_display import (save_sinograms_1D_analysis_spatial_correlation,
+                                  save_sinograms_spatial_correlation,
+                                  save_waves_images_spatial_correl)
 
 
 class SpatialCorrelationBathyEstimatorDebug(
@@ -38,9 +38,9 @@ class SpatialCorrelationBathyEstimatorDebug(
 
         # Displays
         if len(self.bathymetry_estimations) > 0:
-            waves_image = display_waves_images_spatial_correl(self)
-            spatial_correl_sinograms = display_sinograms_spatial_correlation(self)
-            spatial_correl_sino_analysis = display_sinograms_1D_analysis_spatial_correlation(self)
+            waves_image = save_waves_images_spatial_correl(self)
+            spatial_correl_sinograms = save_sinograms_spatial_correlation(self)
+            spatial_correl_sino_analysis = save_sinograms_1D_analysis_spatial_correlation(self)
             waves_image.show()
             spatial_correl_sinograms.show()
             spatial_correl_sino_analysis.show()

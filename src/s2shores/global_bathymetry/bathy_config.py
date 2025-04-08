@@ -36,7 +36,7 @@ class GlobalEstimatorConfig(BaseModel):
     OFFSHORE_LIMIT: PositiveFloat
 
     WINDOW: PositiveFloat
-    SM_LENGTH: PositiveFloat
+    SM_LENGTH: PositiveInt
 
     MIN_D: PositiveFloat
     MIN_T: PositiveFloat
