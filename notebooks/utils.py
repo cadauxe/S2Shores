@@ -18,15 +18,15 @@ from s2shores.local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 
 def initialize_sequential_run(
         product_path: Path,
-        config_path: Path,
+        config: BathyConfig,
         point: Point,
-) -> tuple[BathyEstimator, OrthoBathyEstimator, OrthoSequence, dict[str, Any]]:
+) -> tuple[BathyEstimator, OrthoBathyEstimator, OrthoSequence]:
     bathy_launcher = BathyLauncher(cluster=None, sequential_run=True)
     bathy_estimator = initialize_bathy_estimator(
         bathy_launcher=bathy_launcher,
         product_path=product_path,
         output_path=...,
-        config_path=config_path,
+        config=config,
         point=point,
     )
     ortho_bathy_estimator = initialize_ortho_bathy_estimator(bathy_estimator)
@@ -36,7 +36,6 @@ def initialize_sequential_run(
         bathy_estimator,
         ortho_bathy_estimator,
         ortho_sequence,
-        bathy_estimator._waveparams,
     )
 
 
@@ -44,8 +43,8 @@ def initialize_bathy_estimator(
         bathy_launcher: BathyLauncher,
         product_path: Path,
         output_path: Path,
-        config_path: Path,
         point: Point,
+        config: BathyConfig,
 ) -> BathyEstimator:
     match product_path.suffix:
         case ".tif":
@@ -62,7 +61,7 @@ def initialize_bathy_estimator(
         product_path,
         product_cls,
         output_path,
-        read_config(config_path).model_dump(),
+        config.model_dump(),
         nb_subtiles=1,
     )
 

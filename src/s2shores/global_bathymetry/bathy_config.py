@@ -28,75 +28,75 @@ class GlobalEstimatorConfig(BaseModel):
     WAVE_EST_METHOD: Literal["SPATIAL_DFT", "TEMPORAL_CORRELATION", "SPATIAL_CORRELATION"]
     SELECTED_FRAMES: list[str | int] | None = None
 
-    OUTPUT_FORMAT: Literal["POINT", "GRID"]
-    DXP: PositiveFloat
-    DYP: PositiveFloat
-    LAYERS_TYPE: Literal["NOMINAL", "EXPERT", "DEBUG"]
-    NKEEP: PositiveInt
-    OFFSHORE_LIMIT: PositiveFloat
+    OUTPUT_FORMAT: Literal["POINT", "GRID"] = "POINT"
+    DXP: PositiveFloat = 5.
+    DYP: PositiveFloat = 5.
+    LAYERS_TYPE: Literal["NOMINAL", "EXPERT", "DEBUG"] = "DEBUG"
+    NKEEP: PositiveInt = 3
+    OFFSHORE_LIMIT: PositiveFloat = 100.
 
-    WINDOW: PositiveFloat
-    SM_LENGTH: PositiveInt
+    WINDOW: PositiveFloat = 200.
+    SM_LENGTH: PositiveInt = 10
 
-    MIN_D: PositiveFloat
-    MIN_T: PositiveFloat
-    MAX_T: PositiveFloat
-    MIN_WAVES_LINEARITY: PositiveFloat
-    MAX_WAVES_LINEARITY: PositiveFloat
+    MIN_D: PositiveFloat = 0.5
+    MIN_T: PositiveFloat = 5.
+    MAX_T: PositiveFloat = 25.
+    MIN_WAVES_LINEARITY: PositiveFloat = 0.1
+    MAX_WAVES_LINEARITY: PositiveFloat = 1.
 
-    DEPTH_EST_METHOD: Literal["LINEAR"]
+    DEPTH_EST_METHOD: Literal["LINEAR"] = "LINEAR"
 
 
 class DebugPlotConfig(BaseModel):
 
-    PLOT_MAX: float
-    PLOT_MIN: float
+    PLOT_MAX: float = 135.
+    PLOT_MIN: float = -135.
 
 
 class SpatialDFTConfig(BaseModel):
     
-    PROMINENCE_MAX_PEAK: PositiveFloat
-    PROMINENCE_MULTIPLE_PEAKS: PositiveFloat
-    UNWRAP_PHASE_SHIFT: bool
-    ANGLE_AROUND_PEAK_DIR: PositiveFloat
-    STEP_T: PositiveFloat
-    DEBUG: DebugPlotConfig
+    PROMINENCE_MAX_PEAK: PositiveFloat = 0.3
+    PROMINENCE_MULTIPLE_PEAKS: PositiveFloat = 0.1
+    UNWRAP_PHASE_SHIFT: bool = False
+    ANGLE_AROUND_PEAK_DIR: PositiveFloat = 10.
+    STEP_T: PositiveFloat = 0.05
+    DEBUG: DebugPlotConfig = DebugPlotConfig()
 
 
 class TemporalCorrelationTuningConfig(BaseModel):
 
-    DETREND_TIME_SERIES: Literal[0, 1]
-    FILTER_TIME_SERIES: Literal[0, 1]
-    LOWCUT_PERIOD: PositiveFloat
-    HIGHCUT_PERIOD: PositiveFloat
-    PEAK_DETECTION_HEIGHT_RATIO: PositiveFloat
-    PEAK_DETECTION_DISTANCE_RATIO: PositiveFloat
-    RATIO_SIZE_CORRELATION: PositiveFloat
-    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: PositiveInt
-    SIGMA_CORRELATION_MASK: PositiveFloat
-    MEDIAN_FILTER_KERNEL: PositiveInt
+    DETREND_TIME_SERIES: Literal[0, 1] = 0
+    FILTER_TIME_SERIES: Literal[0, 1] = 0
+    LOWCUT_PERIOD: PositiveFloat = 25.
+    HIGHCUT_PERIOD: PositiveFloat = 5.
+    PEAK_DETECTION_HEIGHT_RATIO: PositiveFloat = 0.3
+    PEAK_DETECTION_DISTANCE_RATIO: PositiveFloat= 0.5
+    RATIO_SIZE_CORRELATION: PositiveFloat = 1.
+    MEAN_FILTER_KERNEL_SIZE_SINOGRAM: PositiveInt = 5
+    SIGMA_CORRELATION_MASK: PositiveFloat = 2.
+    MEDIAN_FILTER_KERNEL: PositiveInt = 5
     
 
 class TemporalCorrelationConfig(BaseModel):
     
-    TEMPORAL_LAG: PositiveInt
-    PERCENTAGE_POINTS: float = Field(ge=0, le=1)
-    TUNING: TemporalCorrelationTuningConfig
+    TEMPORAL_LAG: PositiveInt = 1
+    PERCENTAGE_POINTS: float = Field(20, ge=0, le=100)
+    TUNING: TemporalCorrelationTuningConfig = TemporalCorrelationTuningConfig()
 
 
 class SpatialCorrelationConfig(BaseModel):
     
-    CORRELATION_MODE: Literal["full", "valid", "same"]
-    AUGMENTED_RADON_FACTOR: PositiveFloat
-    PEAK_POSITION_MAX_FACTOR: PositiveFloat
-    DEBUG: DebugPlotConfig
+    CORRELATION_MODE: Literal["full", "valid", "same"] = "full"
+    AUGMENTED_RADON_FACTOR: PositiveFloat = 0.01
+    PEAK_POSITION_MAX_FACTOR: PositiveFloat = 0.8
+    DEBUG: DebugPlotConfig = DebugPlotConfig()
 
 
 class BathyConfig(BaseModel):
     
     GLOBAL_ESTIMATOR: GlobalEstimatorConfig
-    SPATIAL_DFT: SpatialDFTConfig
-    TEMPORAL_CORRELATION: TemporalCorrelationConfig
-    SPATIAL_CORRELATION: SpatialCorrelationConfig
+    SPATIAL_DFT: SpatialDFTConfig = SpatialDFTConfig()
+    TEMPORAL_CORRELATION: TemporalCorrelationConfig = TemporalCorrelationConfig()
+    SPATIAL_CORRELATION: SpatialCorrelationConfig = SpatialCorrelationConfig()
 
     CHAINS_VERSIONS: str = f"s2shores : {__version__}"
