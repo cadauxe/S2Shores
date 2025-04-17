@@ -297,7 +297,7 @@ def save_waves_images_spatial_correl(
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator.debug_path,
-            'display_waves_images_debug_point_' + point_id + '_theta_' + theta_id + '.png'),
+            f'display_waves_images_debug_point_{point_id}_theta_{theta_id}.png'),
         dpi=300)
 
     return fig

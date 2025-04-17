@@ -61,8 +61,8 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     # Check if the direction belongs to the plotting interval [plt_min:plt_max]
     if max_var_theta < plt_min or max_var_theta > plt_max:
         max_var_theta %= -np.sign(max_var_theta) * 180.0
-    theta_label = '$\Theta${:.1f}° [Variance Max]'.format(max_var_theta)
-    theta_label_orig = '$\Theta${:.1f}° [Main Direction]'.format(main_theta)
+    theta_label = r'$\Theta${:.1f}° [Variance Max]'.format(max_var_theta)
+    theta_label_orig = r'$\Theta${:.1f}° [Main Direction]'.format(main_theta)
 
     axes.axvline(max_var_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
@@ -130,7 +130,7 @@ def build_sinogram_1D_display_master(
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
     if main_theta < plt_min or main_theta > plt_max:
         main_theta %= -np.sign(main_theta) * 180.0
-    theta_label = 'Sinogram 1D along \n$\Theta$={:.1f}°'.format(main_theta)
+    theta_label = r'Sinogram 1D along \n$\Theta$={:.1f}°'.format(main_theta)
     nb_pixels = np.shape(values1[:, index_theta])[0]
     absc = np.arange(-nb_pixels / 2, nb_pixels / 2)
     axes.plot(absc, np.flip((values1[:, index_theta] / np.max(np.abs(values1[:, index_theta])))),
@@ -141,7 +141,8 @@ def build_sinogram_1D_display_master(
     legend.get_frame().set_facecolor('C0')
     axes.grid(lw=0.5, color='gray', alpha=0.7, linestyle='-')
     axes.set_xticks(np.arange(ceil_to_nearest_10(-nb_pixels / 2),
-                              floor_to_nearest_10(nb_pixels / 2 + 10), 25))
+                              floor_to_nearest_10(nb_pixels / 2 + 10),
+                              nb_pixels // 4))
     axes.set_yticks(np.arange(-1, 1.2, 0.25))
     plt.setp(axes.get_xticklabels(), fontsize=8)
 
@@ -180,7 +181,7 @@ def build_sinogram_1D_cross_correlation(
     index_theta1 = int(np.where(directions1 == int(main_theta))[0])
     # get 1D-sinogram1 along relevant direction
     sino1_1D = values1[:, index_theta1]
-    # theta_label1 = 'Sinogram1 1D'  # along \n$\Theta$={:.1f}°'.format(main_theta)
+    # theta_label1 = r'Sinogram1 1D'  # along \n$\Theta$={:.1f}°'.format(main_theta)
     nb_pixels1 = np.shape(values1[:, index_theta1])[0]
     absc = np.arange(-nb_pixels1 / 2, nb_pixels1 / 2)
     # axes.plot(absc, np.flip((values1[:, index_theta1] / np.max(np.abs(values1[:, index_theta1])))),
@@ -191,7 +192,7 @@ def build_sinogram_1D_cross_correlation(
 
     # get 1D-sinogram2 along relevant direction
     sino2_1D_master = values2[:, index_theta2_master]
-    # theta_label2_master = 'Sinogram2 1D MASTER'  # along \n$\Theta$={:.1f}°'.format(main_theta)
+    # theta_label2_master = r'Sinogram2 1D MASTER'  # along \n$\Theta$={:.1f}°'.format(main_theta)
     # nb_pixels2 = np.shape(values2[:, index_theta2_master])[0]
     # absc2 = np.arange(-nb_pixels2 / 2, nb_pixels2 / 2)
     # axes.plot(absc2, np.flip((values2[:, index_theta2_master] / np.max(np.abs(values2[:, index_theta2_master])))),
@@ -210,7 +211,7 @@ def build_sinogram_1D_cross_correlation(
     # Compute Cross-Correlation between Sino1 [Master Man Direction] & Sino2 [Master Main Direction]
     sino_cross_corr_norm_master = normalized_cross_correlation(
         np.flip(sino1_1D), np.flip(sino2_1D_master), correl_mode)
-    label_correl_master = 'Sino1_1D[$\Theta$={:.1f}°] vs Sino2_1D[$\Theta$={:.1f}°]'.format(
+    label_correl_master = r'Sino1_1D[$\Theta$={:.1f}°] vs Sino2_1D[$\Theta$={:.1f}°]'.format(
         main_theta_label, main_theta_label)
     axes.plot(absc, sino_cross_corr_norm_master, color='red', lw=0.8, label=label_correl_master)
 
@@ -222,7 +223,7 @@ def build_sinogram_1D_cross_correlation(
     sino_cross_corr_norm_slave = normalized_cross_correlation(
         np.flip(sino1_1D), np.flip(sino2_1D_slave), correl_mode)
 
-    label_correl_slave = 'Sino1_1D[$\Theta$={:.1f}°] vs Sino2_1D[$\Theta$={:.1f}°]'.format(
+    label_correl_slave = r'Sino1_1D[$\Theta$={:.1f}°] vs Sino2_1D[$\Theta$={:.1f}°]'.format(
         main_theta_label, main_theta_slave_label)
     axes.plot(absc, sino_cross_corr_norm_slave, color='black', ls='--', lw=0.8,
               label=label_correl_slave)
@@ -232,7 +233,8 @@ def build_sinogram_1D_cross_correlation(
     legend.get_frame().set_facecolor('C0')
     axes.grid(lw=0.5, color='gray', alpha=0.7, linestyle='-')
     axes.set_xticks(np.arange(ceil_to_nearest_10(-nb_pixels1 / 2),
-                              floor_to_nearest_10(nb_pixels1 / 2 + 10), 25))
+                              floor_to_nearest_10(nb_pixels1 / 2 + 10),
+                              nb_pixels1 // 4))
     axes.set_yticks(np.arange(-1, 1.2, 0.25))
     plt.setp(axes.get_xticklabels(), fontsize=8)
 
@@ -275,8 +277,8 @@ def build_sinogram_1D_display_slave(
         main_theta %= -np.sign(main_theta) * 180.0
     if main_theta_slave < plt_min or main_theta_slave > plt_max:
         main_theta_slave %= -np.sign(main_theta_slave) * 180.0
-    theta_label_master = 'along Master Main Direction\n$\Theta$={:.1f}°'.format(main_theta)
-    theta_label_slave = 'along Slave Main Direction\n$\Theta$={:.1f}°'.format(main_theta_slave)
+    theta_label_master = 'along Master Main Direction\n$\\Theta$={:.1f}°'.format(main_theta)
+    theta_label_slave = 'along Slave Main Direction\n$\\Theta$={:.1f}°'.format(main_theta_slave)
     nb_pixels = np.shape(values[:, index_theta_master])[0]
     absc = np.arange(-nb_pixels / 2, nb_pixels / 2)
     axes.plot(absc,
@@ -300,7 +302,8 @@ def build_sinogram_1D_display_slave(
     legend.get_frame().set_facecolor('C0')
     axes.grid(lw=0.5, color='gray', alpha=0.7, linestyle='-')
     axes.set_xticks(np.arange(ceil_to_nearest_10(-nb_pixels / 2),
-                              floor_to_nearest_10(nb_pixels / 2 + 10), 25))
+                              floor_to_nearest_10(nb_pixels / 2 + 10),
+                              nb_pixels // 4))
     axes.set_yticks(np.arange(-1, 1.2, 0.25))
     plt.setp(axes.get_xticklabels(), fontsize=8)
 
@@ -372,7 +375,7 @@ def build_sinogram_2D_cross_correlation(
         if max_var_pos < plt_min or max_var_pos > plt_max:
             max_var_pos %= -np.sign(max_var_pos) * 180.0
 
-        max_var_label = '$\Theta$={:.1f}° [Variance Max]'.format(max_var_pos)
+        max_var_label = '$\\Theta$={:.1f}° [Variance Max]'.format(max_var_pos)
         axes.axvline(max_var_pos, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                      color='red', ls='--', lw=1, label=max_var_label, zorder=10)
 
@@ -382,7 +385,7 @@ def build_sinogram_2D_cross_correlation(
     # Check if the main direction belongs to the plotting interval [plt_min:plt_max]
     if main_theta < plt_min or main_theta > plt_max:
         main_theta %= -np.sign(main_theta) * 180.0
-    theta_label = '$\Theta$={:.1f}°'.format(main_theta)
+    theta_label = '$\\Theta$={:.1f}°'.format(main_theta)
     axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
 
@@ -399,7 +402,7 @@ def build_sinogram_2D_cross_correlation(
         xmax = directions1[pos_max[1]]
         ymax = np.floor(values1.shape[0] / 2) - pos_max[0]
         axes.scatter(xmax, ymax, c='r', s=20)
-        notation = 'Local Maximum \n [$\Theta$={:.1f}°]'.format(xmax[0])
+        notation = 'Local Maximum \n [$\\Theta$={:.1f}°]'.format(xmax[0])
         axes.annotate(notation, xy=(xmax, ymax), xytext=(xmax + 10, ymax + 10), color='red')
 
     if ordonate:
@@ -425,7 +428,7 @@ def slave_sinogram_2D_cross_corr(directions1, main_theta, plt_max, plt_min, titl
     if slave_main_theta < plt_min or slave_main_theta > plt_max:
         slave_main_theta = slave_main_theta % (-np.sign(slave_main_theta) * 180.0)
     main_theta = slave_main_theta
-    title = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
+    title = 'Normalized Cross-Correlation Signal between \n Sino2[$\\Theta$={:.1f}°] and Sino1[All Directions]'.format(
         main_theta)
     return main_theta, title
 
