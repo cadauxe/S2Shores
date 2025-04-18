@@ -69,9 +69,10 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
 
         # Correlation filters
         self.correlation_image_filters: ImageProcessingFilters = [
-            (detrend, []), (gaussian_masking, [
-                self.local_estimator_params['TUNING']['SIGMA_CORRELATION_MASK']]), (clipping, [
-                    self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']])]
+            (detrend, []),
+            (gaussian_masking, [self.local_estimator_params['TUNING']['SIGMA_CORRELATION_MASK']]),
+            (clipping, [self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']]),
+        ]
         # Projected sinogram filter
         self.sinogram_max_var_filters: SignalProcessingFilters = [
             (filter_median, [self.local_estimator_params['TUNING']['MEDIAN_FILTER_KERNEL']])]
@@ -185,7 +186,7 @@ class TemporalCorrelationBathyEstimator(LocalBathyEstimator):
         """ Run the local bathy estimator using correlation method
         """
 
-        # Skip estiamtion if window center is out of borders
+        # Skip estimation if window center is out of borders
         self.center_pt_is_out()
 
         # Normalise each frame
