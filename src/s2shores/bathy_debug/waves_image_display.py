@@ -68,7 +68,7 @@ def build_display_waves_image(fig: Figure, axes: Axes, title: str, image: np.nda
         axes.set_yticks([0, l2 - 1], ['', ''], fontsize=8)
         axes.set_xticks([0, l1 - 1], ['\n', ' \n'], fontsize=8)
 
-    if directions is not None:
+    if directions:
         # Normalization of arrows length
         coeff_length_max = np.max((list(zip(*directions))[1]))
         radius = np.floor(min(l1, l2) / 2) - 5

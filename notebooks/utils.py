@@ -1,10 +1,15 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 import yaml
-
 from shapely.geometry import Point
 from xarray import Dataset
+import numpy as np
 
+from s2shores.bathy_debug.waves_image_display import (
+    create_pseudorgb,
+    build_display_waves_image,
+    build_display_pseudorgb,
+)
 from s2shores.bathylauncher.products.geotiff_product import GeoTiffProduct
 from s2shores.bathylauncher.products.s2_image_product import S2ImageProduct
 from s2shores.bathylauncher.bathy_launcher import BathyLauncher
@@ -62,7 +67,7 @@ def initialize_bathy_estimator(
         product_cls,
         output_path,
         config.model_dump(),
-        nb_subtiles=1,
+        nb_subtiles=9,
     )
 
     bathy_estimator.set_delta_time_provider()
@@ -99,7 +104,7 @@ def build_ortho_sequence(
             ortho_bathy_estimator.sampled_ortho.read_frame_image(frame_id),
             frame_id,
         )
-    
+
     return ortho_sequence.extract_window(window)
 
 
@@ -132,3 +137,42 @@ def build_dataset(
         dataset.attrs[key] = value
 
     return dataset
+
+
+def plot_waves_row(
+        fig,
+        axs,
+        row_number: int,
+        pixels1: np.ndarray,
+        resolution1: float,
+        pixels2: np.ndarray,
+        resolution2: float,
+        nrows: int,
+        ncols: int,
+        title_suffix: str = "",
+        directions: list[tuple[float, int]] = None,
+        ):
+    build_display_waves_image(fig,
+                              axs[row_number, 0],
+                              f'Image1{title_suffix}',
+                              pixels1,
+                              resolution=resolution1,
+                              subplot_pos=[nrows, ncols, 1 + 3 * row_number],
+                              cmap='gray',
+                              directions=directions)
+    build_display_pseudorgb(fig,
+                            axs[row_number, 1],
+                            f'Pseudo RGB{title_suffix}',
+                            create_pseudorgb(pixels1, pixels2),
+                            resolution=resolution1,
+                            subplot_pos=[nrows, ncols, 2 + 3 * row_number],
+                            coordinates=False)
+    build_display_waves_image(fig,
+                              axs[row_number, 2],
+                              f'Image2{title_suffix}',
+                              pixels2,
+                              resolution=resolution2,
+                              subplot_pos=[nrows, ncols, 3 + 3 * row_number],
+                              directions=directions,
+                              cmap='gray',
+                              coordinates=False)

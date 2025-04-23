@@ -141,6 +141,7 @@ def save_sinograms_1D_analysis_spatial_correlation(
 
 def build_sinograms_spatial_correlation(
         local_estimator: 'SpatialCorrelationBathyEstimator',
+        main_direction: float = None,
 ) -> Figure:
     # plt.close('all')
     nrows = 2
@@ -152,8 +153,14 @@ def build_sinograms_spatial_correlation(
 
     # Since wfe.energy_ratio not available for SpatialCorrelation:
     default_arrow_length = np.shape(first_image.original_pixels)[0]
-    arrows = [(wfe.direction, default_arrow_length)
-              for wfe in local_estimator.bathymetry_estimations]
+    arrows = (
+        [(main_direction, default_arrow_length)]
+        if main_direction is not None
+        else [
+            (wfe.direction, default_arrow_length)
+            for wfe in local_estimator.bathymetry_estimations
+        ]
+    )
 
     # First Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
@@ -193,8 +200,13 @@ def build_sinograms_spatial_correlation(
     radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
         (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
-    main_direction = local_estimator.bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
+
+    if main_direction is None:
+        main_direction = (
+            local_estimator
+            .bathymetry_estimations
+            .get_estimations_attribute('direction')[0]
+        )
 
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']

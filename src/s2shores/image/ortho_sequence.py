@@ -73,7 +73,11 @@ class OrthoSequence(list):
         :raises SequenceImagesError: if the start or stop frames are unknown.
         """
         if start_frame_id not in self._images_id or stop_frame_id not in self._images_id:
-            msg = f'Start and/or stop frames are unknown in this image sequence: {self._images_id}'
+            msg = (
+                'Start and/or stop frames are unknown in this image sequence.\n'
+                f'Expected subset of: {self._images_id}.\n'
+                f'Got {start_frame_id}, {stop_frame_id}.'
+            )
             raise SequenceImagesError(msg)
         return self._delta_time_provider.get_delta_time(start_frame_id, stop_frame_id, location)
 
