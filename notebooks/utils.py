@@ -13,6 +13,7 @@ from s2shores.bathy_debug.waves_image_display import (
 from s2shores.bathylauncher.products.geotiff_product import GeoTiffProduct
 from s2shores.bathylauncher.products.s2_image_product import S2ImageProduct
 from s2shores.bathylauncher.bathy_launcher import BathyLauncher
+from s2shores.data_providers.delta_time_provider import DeltaTimeProvider
 from s2shores.global_bathymetry.bathy_config import BathyConfig
 from s2shores.global_bathymetry.bathy_estimator import BathyEstimator
 from s2shores.global_bathymetry.ortho_bathy_estimator import OrthoBathyEstimator
@@ -25,6 +26,7 @@ def initialize_sequential_run(
         product_path: Path,
         config: BathyConfig,
         point: Point,
+        delta_time_provider: DeltaTimeProvider = None,
 ) -> tuple[BathyEstimator, OrthoBathyEstimator, OrthoSequence]:
     bathy_launcher = BathyLauncher(cluster=None, sequential_run=True)
     bathy_estimator = initialize_bathy_estimator(
@@ -33,6 +35,7 @@ def initialize_sequential_run(
         output_path=...,
         config=config,
         point=point,
+        delta_time_provider=delta_time_provider,
     )
     ortho_bathy_estimator = initialize_ortho_bathy_estimator(bathy_estimator)
     ortho_sequence = build_ortho_sequence(ortho_bathy_estimator)
@@ -50,6 +53,7 @@ def initialize_bathy_estimator(
         output_path: Path,
         point: Point,
         config: BathyConfig,
+        delta_time_provider: DeltaTimeProvider,
 ) -> BathyEstimator:
     match product_path.suffix:
         case ".tif":
@@ -70,7 +74,7 @@ def initialize_bathy_estimator(
         nb_subtiles=9,
     )
 
-    bathy_estimator.set_delta_time_provider()
+    bathy_estimator.set_delta_time_provider(delta_time_provider)
 
     bathy_estimator.create_subtiles()
     bathy_estimator.set_debug_samples([point])
