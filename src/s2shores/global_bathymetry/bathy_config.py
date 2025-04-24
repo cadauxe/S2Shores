@@ -72,6 +72,7 @@ class TemporalCorrelationTuningConfig(BaseModel):
     PEAK_DETECTION_HEIGHT_RATIO: PositiveFloat = 0.3
     PEAK_DETECTION_DISTANCE_RATIO: PositiveFloat= 0.5
     RATIO_SIZE_CORRELATION: PositiveFloat = 1.
+    MEDIAN_FILTER_KERNEL_RATIO_SINOGRAM: PositiveFloat = 0.25
     MEAN_FILTER_KERNEL_SIZE_SINOGRAM: PositiveInt = 5
     SIGMA_CORRELATION_MASK: PositiveFloat = 2.
     MEDIAN_FILTER_KERNEL: PositiveInt = 5
