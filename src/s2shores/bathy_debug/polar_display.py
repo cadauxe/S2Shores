@@ -35,18 +35,24 @@ if TYPE_CHECKING:
 def build_polar_display(fig: Figure, axes: Axes, title: str,
                         local_estimator: 'SpatialDFTBathyEstimator',
                         values: np.ndarray, resolution: float, dfn_max: float, max_wvlgth: float,
-                        subplot_pos: [float, float, float],
-                        refinement_phase: bool=False, **kwargs: dict) -> None:
+                        subplot_pos: tuple[float, float, float],
+                        refinement_phase: bool=False,
+                        directions = None,
+                        nb_wavenumbers = None) -> None:
 
     radon_transform = local_estimator.radon_transforms[0]
-    if not refinement_phase:
-        _, directions = radon_transform.get_as_arrays()
-    else:
-        directions = radon_transform.directions_interpolated_dft
+    if directions is None:
+        if not refinement_phase:
+            _, directions = radon_transform.get_as_arrays()
+        else:
+            directions = radon_transform.directions_interpolated_dft
 
-    # define wavenumbers according to image resolution
     Fs = 1 / resolution
-    nb_wavenumbers = radon_transform.get_as_arrays()[0].shape[0]
+
+    if nb_wavenumbers is None:
+        # define wavenumbers according to image resolution
+        nb_wavenumbers = radon_transform.get_as_arrays()[0].shape[0]
+    
     wavenumbers = np.arange(0, Fs / 2, Fs / nb_wavenumbers)
 
     # create polar axes in the foreground and remove its background to see through

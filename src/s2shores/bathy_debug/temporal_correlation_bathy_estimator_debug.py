@@ -342,10 +342,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Show sinogram values at a certain angle for a debug point
         """
         subfigure = self._figure.add_subplot(self._gs[4, 0])
-        for line in self.build_sinogram_plot():
+        for line in self.build_projected_sinogram_plot():
             subfigure.add_line(line)
 
-    def build_sinogram_plot(self) -> AxesImage:
+    def build_projected_sinogram_plot(self) -> AxesImage:
         # Import sinogram
         sinogram_max_var = self.metrics['sinogram_max_var']
 

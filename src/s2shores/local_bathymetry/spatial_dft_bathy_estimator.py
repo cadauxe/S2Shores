@@ -185,8 +185,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 angles_half_range = self.local_estimator_params['ANGLE_AROUND_PEAK_DIR']
                 direction_index = peaks_dir_indices[peak_index]
                 tmp = np.arange(max(direction_index - angles_half_range, 0),
-                                min(direction_index + angles_half_range + 1, 360)
-                                )
+                                min(direction_index + angles_half_range + 1, 360),
+                                dtype=np.int64)
+
                 directions_range = self.radon_transforms[0].directions[tmp]
                 directions_ranges.append(directions_range)
 

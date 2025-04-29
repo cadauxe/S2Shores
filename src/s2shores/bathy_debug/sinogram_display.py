@@ -36,9 +36,17 @@ if TYPE_CHECKING:
         SpatialDFTBathyEstimator)  # @UnusedImport
 
 
-def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directions: np.ndarray,
-                           values2: np.ndarray, main_theta: float, plt_min: float, plt_max: float,
-                           ordonate: bool = True, abscissa: bool = True, master: bool = True,
+def build_sinogram_display(axes: Axes,
+                           title: str,
+                           values1: np.ndarray,
+                           directions: np.ndarray,
+                           values2: np.ndarray,
+                           plt_min: float,
+                           plt_max: float,
+                           main_theta: float = None,
+                           ordonate: bool = True,
+                           abscissa: bool = True,
+                           master: bool = True,
                            **kwargs: dict) -> None:
     extent = [np.min(directions), np.max(directions),
               np.floor(-values1.shape[0] / 2),
@@ -56,19 +64,20 @@ def build_sinogram_display(axes: Axes, title: str, values1: np.ndarray, directio
     pos1 = np.where(normalized_var1 == np.max(normalized_var1))
     max_var_theta = directions[pos1][0]
     # Check coherence of main direction between Master / Slave
-    if max_var_theta * main_theta < 0:
+    if main_theta is not None and (max_var_theta * main_theta < 0):
         max_var_theta = max_var_theta % (np.sign(main_theta) * 180.0)
     # Check if the direction belongs to the plotting interval [plt_min:plt_max]
     if max_var_theta < plt_min or max_var_theta > plt_max:
         max_var_theta %= -np.sign(max_var_theta) * 180.0
-    theta_label = r'$\Theta${:.1f}° [Variance Max]'.format(max_var_theta)
-    theta_label_orig = r'$\Theta${:.1f}° [Main Direction]'.format(main_theta)
 
+    theta_label = r'$\Theta${:.1f}° [Variance Max]'.format(max_var_theta)
     axes.axvline(max_var_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
                  color='orange', ls='--', lw=1, label=theta_label)
 
-    axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
-                 color='blue', ls='--', lw=1, label=theta_label_orig)
+    if main_theta is not None:
+        theta_label_orig = f'$\\Theta${main_theta:.1f}° [Main Direction]'
+        axes.axvline(main_theta, np.floor(-values1.shape[0] / 2), np.ceil(values1.shape[0] / 2),
+                     color='blue', ls='--', lw=1, label=theta_label_orig)
 
     legend = axes.legend(loc='upper right', shadow=True, fontsize=6)
     # Put a nicer background color on the legend.
@@ -513,12 +522,21 @@ def build_sinogram_spectral_display(
     axes.tick_params(axis='both', which='major', labelsize=8)
 
 
-def build_correl_spectrum_matrix(axes: Axes, local_estimator: 'SpatialDFTBathyEstimator',
-                                 sino1_fft: np.ndarray, sino2_fft: np.ndarray, kfft: np.ndarray,
-                                 plt_min: float, plt_max: float, type: str, title: str,
-                                 refinement_phase: bool = False) -> None:
+def build_correl_spectrum_matrix(axes: Axes,
+                                 local_estimator: 'SpatialDFTBathyEstimator',
+                                 sino1_fft: np.ndarray,
+                                 sino2_fft: np.ndarray,
+                                 kfft: np.ndarray,
+                                 plt_min: float,
+                                 plt_max: float,
+                                 type: str,
+                                 title: str,
+                                 refinement_phase: bool = False,
+                                 directions = None) -> None:
     radon_transform = local_estimator.radon_transforms[0]
-    if not refinement_phase:
+    if directions is not None:
+        pass
+    elif not refinement_phase:
         _, directions = radon_transform.get_as_arrays()
     else:
         directions = radon_transform.directions_interpolated_dft

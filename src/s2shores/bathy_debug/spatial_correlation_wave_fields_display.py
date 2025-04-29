@@ -70,13 +70,13 @@ def build_sinograms_1D_analysis_spatial_correlation(
 
     build_sinogram_display(
         axs[0, 0], 'Sinogram1 [Radon Transform on Master Image]',
-        sinogram1, directions1, sinogram2, main_direction, plt_min, plt_max, abscissa=False)
+        sinogram1, directions1, sinogram2, plt_min, plt_max, main_direction, abscissa=False)
     build_sinogram_difference_display(
         axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max,
         abscissa=False, cmap='bwr')
     build_sinogram_display(
         axs[0, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, plt_min, plt_max, ordonate=False, abscissa=False)
+        plt_min, plt_max, main_direction, ordonate=False, abscissa=False)
 
     # Second Plot line = SINO_1 [1D along estimated direction] / Cross-Correlation Signal /
     # SINO_2 [1D along estimated direction resulting from Image1]
@@ -213,12 +213,12 @@ def build_sinograms_spatial_correlation(
 
     build_sinogram_display(
         axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1, sinogram2,
-        main_direction, plt_min, plt_max)
+        plt_min, plt_max, main_direction)
     build_sinogram_difference_display(
         axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max, cmap='bwr')
     build_sinogram_display(
         axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, plt_min, plt_max, ordonate=False)
+        plt_min, plt_max, main_direction, ordonate=False)
 
     plt.tight_layout()
     return fig
