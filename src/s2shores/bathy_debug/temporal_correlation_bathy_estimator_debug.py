@@ -26,6 +26,7 @@ from matplotlib import gridspec
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.image import AxesImage
+from matplotlib.axes import Axes
 from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -97,10 +98,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """
         # Plot
         subfigure = self._figure.add_subplot(self._gs[0, 0])
-        subfigure.add_image(self.build_first_frame_plot())
+        self.build_first_frame_plot(subfigure)
 
-
-    def build_first_frame_plot(self) -> AxesImage:
+    def build_first_frame_plot(self, ax: Axes = plt) -> AxesImage:
         """Build the plot of the first frame."""
         # Import 1st frame
         first_image = self.ortho_sequence[0].pixels
@@ -113,7 +113,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         x_spatial_limits = np.array([0, wind_shape[1]]) * spatial_res
         y_spatial_limits = np.array([0, wind_shape[0]]) * spatial_res
 
-        image_plot = plt.imshow(
+        image_plot = ax.imshow(
             first_image,
             norm=Normalize(
                 vmin=imin,
@@ -132,7 +132,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         if 'direction' in self.metrics:
             cartesian_dir_x = np.cos(np.deg2rad(self.metrics['direction']))
             cartesian_dir_y = -np.sin(np.deg2rad(self.metrics['direction']))
-            plt.arrow(
+            ax.arrow(
                 x_spatial_limits[1] // 2,
                 y_spatial_limits[1] // 2,
                 radius * cartesian_dir_x,
@@ -144,10 +144,10 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Show selection of pixels used in the correlation for a debug point
         """
         subfigure = self._figure.add_subplot(self._gs[0, 1])
-        subfigure.add_image(self.build_first_frame_selection_plot())
+        self.build_first_frame_selection_plot(subfigure)
 
 
-    def build_first_frame_selection_plot(self) -> AxesImage:
+    def build_first_frame_selection_plot(self, ax: Axes = plt) -> AxesImage:
         """Build the plot of the selected pixels on the first frame."""
         # Import 1st frame
         first_image = self.ortho_sequence[0].pixels
@@ -159,7 +159,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         condition[x_position, y_position] = True
 
         # Plot in pixel positions
-        image_plot = plt.matshow(np.where(condition, first_image, np.nan), interpolation='none')
+        image_plot = ax.matshow(np.where(condition, first_image, np.nan), interpolation='none')
         plt.title('Selected pixels')
         plt.xlabel('Pixel ID X')
         plt.ylabel('Pixel ID Y')
@@ -170,15 +170,13 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Show the first Normalised Timse-series of the dataset before and after BP filtering
         """
         subfigure = self._figure.add_subplot(self._gs[1, :])
-        for line in self.build_first_TS_plot():
-            subfigure.add_line(line)
+        self.build_first_TS_plot(subfigure)
+        
 
-
-    def build_first_TS_plot(self) -> list[Line2D]:
+    def build_first_TS_plot(self, ax: Axes = plt) -> list[Line2D]:
         """Buidl the plot of the first normalized timeseries."""
-        plt.axes().add_line
-        lines = plt.plot(self.metrics['detrend_time_series'], label='Detrended TS')
-        lines += plt.plot(self.metrics['filtered_time_series'], label='Filtered TS')
+        lines = ax.plot(self.metrics['detrend_time_series'], label='Detrended TS')
+        lines += ax.plot(self.metrics['filtered_time_series'], label='Filtered TS')
         plt.title('1st random TS')
         plt.xlabel('Frame')
         plt.ylabel('NormIntensity')
@@ -191,9 +189,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Show correlation matrix where correlations were actually computed between selected pixels for a debug point
         """
         subfigure = self._figure.add_subplot(self._gs[2, 0])
-        subfigure.add_image(self.build_correlation_matrix_plot())
+        self.build_correlation_matrix_plot(subfigure)
 
-    def build_correlation_matrix_plot(self) -> AxesImage:
+    def build_correlation_matrix_plot(self, ax: Axes) -> AxesImage:
         # Import correlation
         correlation_raw = self.metrics['projected_corr_raw']
 
@@ -210,7 +208,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         y_spatial_limits = np.array([-(wind_shape[0]), wind_shape[0]]) * spatial_res
 
         # Plot
-        image_plot = plt.imshow(
+        image_plot = ax.imshow(
             np.where(
                 condition,
                 correlation_raw,
@@ -224,14 +222,13 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.xlabel('dX')
         plt.ylabel('dY')
         # create an axis for the colorbar
-        axins = inset_axes(image_plot.axes,
+        axins = inset_axes(ax,
                            width='5%',
                            height='100%',
                            loc='lower left',
                            bbox_to_anchor=(1.05, 0., 1, 1),
-                           bbox_transform=image_plot.axes.transAxes,
-                           borderpad=0
-                           )
+                           bbox_transform=ax.transAxes,
+                           borderpad=0)
         plt.colorbar(image_plot, cax=axins)
 
         return image_plot
@@ -240,9 +237,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Show correlation matrix with filled values filtered before the radon transform for a debug point
         """
         subfigure = self._figure.add_subplot(self._gs[2, 1])
-        subfigure.add_image(self.build_correlation_matrix_filled_filtered())
+        self.build_correlation_matrix_filled_filtered(subfigure)
 
-    def build_correlation_matrix_filled_filtered(self) -> AxesImage:
+    def build_correlation_matrix_filled_filtered(self, ax: Axes = plt) -> AxesImage:
         # Import correlation
         circular_corr = self.metrics['corr_radon_input']
 
@@ -255,7 +252,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
             self.local_estimator_params['TUNING']['RATIO_SIZE_CORRELATION']
 
         # Plot
-        image_plot = plt.imshow(
+        image_plot = ax.imshow(
             circular_corr,
             extent=[
                 x_spatial_limits[0],
@@ -266,14 +263,13 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.xlabel('dX')
         plt.ylabel('dY')
         # create an axis for the colorbar
-        axins = inset_axes(image_plot.axes,
+        axins = inset_axes(ax,
                            width='5%',
                            height='100%',
                            loc='lower left',
                            bbox_to_anchor=(1.05, 0., 1, 1),
-                           bbox_transform=image_plot.axes.transAxes,
-                           borderpad=0
-                           )
+                           bbox_transform=ax.transAxes,
+                           borderpad=0)
         plt.colorbar(image_plot, cax=axins)
 
         return image_plot
@@ -282,9 +278,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Show sinogram for a debug point
         """
         subfigure = self._figure.add_subplot(self._gs[3, :])
-        subfigure.add_image(self.build_radon_matrix_plot())
+        self.build_radon_matrix_plot(subfigure)
 
-    def build_radon_matrix_plot(self) -> AxesImage:
+    def build_radon_matrix_plot(self, ax: Axes = plt) -> AxesImage:
         # Import sinogram
         radon_array, _ = self.metrics['radon_transform'].get_as_arrays()
 
@@ -301,13 +297,12 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         ang_labels = ['{:.0f}'.format(ang) + u'\N{DEGREE SIGN}' for ang in ang_ticks]
 
         # Plot
-        image_plot = plt.imshow(radon_array,
-                   interpolation='nearest',
-                   aspect='auto',
-                   origin='lower',
-                   extent=[min_dir, max_dir, y_spatial_limits[0], y_spatial_limits[1]]
-                   )
-        plt.plot(
+        image_plot = ax.imshow(radon_array,
+                               interpolation='nearest',
+                               aspect='auto',
+                               origin='lower',
+                               extent=[min_dir, max_dir, y_spatial_limits[0], y_spatial_limits[1]])
+        ax.plot(
             self.selected_directions,
             (
                 (self._metrics['variances'] / np.max(self._metrics['variances']))
@@ -324,13 +319,13 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
 
         # Highlight max var angle corresponding to wave direction
         if 'direction' in self.metrics:
-            plt.arrow(
+            ax.arrow(
                 self.metrics['direction'],
                 y_spatial_limits[0],
                 0,
                 (nb_rho - 2) * spatial_res,
                 color='orange')
-            plt.annotate(f"{self.metrics['direction']}°",
+            ax.annotate(f"{self.metrics['direction']}°",
                          (self.metrics['direction'] + 1, 10 + y_spatial_limits[0]),
                          color='orange',
                          fontweight='bold'
@@ -342,10 +337,9 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         """ Show sinogram values at a certain angle for a debug point
         """
         subfigure = self._figure.add_subplot(self._gs[4, 0])
-        for line in self.build_projected_sinogram_plot():
-            subfigure.add_line(line)
+        self.build_projected_sinogram_plot(subfigure)
 
-    def build_projected_sinogram_plot(self) -> AxesImage:
+    def build_projected_sinogram_plot(self, ax: Axes = plt) -> AxesImage:
         # Import sinogram
         sinogram_max_var = self.metrics['sinogram_max_var']
 
@@ -362,15 +356,15 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         dx = self.metrics['wave_distance']
 
         # Plot
-        lines = plt.plot(x_spatial_axis, sinogram_max_var)
-        lines += plt.plot(zeros, np.zeros((len(zeros))), 'ro')
-        lines += plt.plot(
+        lines = ax.plot(x_spatial_axis, sinogram_max_var)
+        lines += ax.plot(zeros, np.zeros((len(zeros))), 'ro')
+        lines += ax.plot(
             x_spatial_axis[(x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices],
             sinogram_max_var[
                 (x_spatial_axis >= zeros[0]) & (x_spatial_axis < zeros[-1])][max_indices],
             'go',
         )
-        lines += plt.plot(dx, np.zeros(len(dx)), 'ko')
+        lines += ax.plot(dx, np.zeros(len(dx)), 'ko')
         plt.title(r'Projected sinogram at $\theta$= {:.1f} °'.format(self.metrics['direction']))
         plt.xlabel(r'$\rho$ (m)')
         plt.ylabel('Corr')

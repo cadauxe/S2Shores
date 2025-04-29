@@ -201,6 +201,7 @@ def build_dft_sinograms_spectral_analysis(
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
         ordonate=False, abscissa=False, cmap='cmc.vik')
     plt.tight_layout()
+    return fig
 
 def display_dft_sinograms_spectral_analysis(
         local_estimator: 'SpatialDFTBathyEstimator') -> Figure:

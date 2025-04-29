@@ -228,9 +228,9 @@ def save_sinograms_spatial_correlation(
         local_estimator: 'SpatialCorrelationBathyEstimator') -> Figure:
     fig = build_sinograms_spatial_correlation(local_estimator)
     point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
-    main_direction = local_estimator.bathymetry_estimations.get_estimations_attribute('direction')[
-            0]
-    theta_id = f'{int(main_direction)}'
+    theta_id = str(int(
+        local_estimator.bathymetry_estimations.get_estimations_attribute('direction')[0]
+    ))
 
     plt.savefig(
         os.path.join(
