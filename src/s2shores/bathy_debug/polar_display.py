@@ -84,10 +84,13 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     rticks = 1 / requested_labels
 
     # Main information display
-    print('MAIN DIRECTION', main_direction)
-    print('DIRECTION FROM NORTH', direc_from_north)
-    print('DELTA TIME', delta_time)
-    print('DELTA PHASE', delta_phase)
+    print(
+        f'MAIN DIRECTION {main_direction}',
+        f'DIRECTION FROM NORTH {direc_from_north}',
+        f'DELTA TIME {delta_time}',
+        f'DELTA PHASE {delta_phase}',
+        sep="\n"
+    )
 
     ax_polar.plot(np.radians((main_direction + 180) % 360), 1 / main_wavelength, '*', color='black')
 

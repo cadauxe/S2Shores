@@ -78,5 +78,12 @@ pylint_analysis:
     - source activate s2shores_env
     - pip install pylint mccabe
     - ./continuous_integration/scripts/check_mccabe_complexity.sh 25 src/s2shores
-    - pylint --recursive=y --disable=all --fail-under=10 --enable=too-many-statements src/s2shores
-    - pylint --recursive=y --disable=all --fail-under=10 --enable=too-many-nested-blocks src/s2shores
+    - pylint --recursive=y --disable=all --fail-under=10 --enable=too-many-statements src/s2shores > pylint_report_statements.json
+    - pylint --recursive=y --disable=all --fail-under=10 --enable=too-many-nested-blocks src/s2shores  > pylint_report_nested-blocks.json
+    - cat pylint_report_statements.json
+    - cat pylint_report_nested-blocks.json
+  artifacts:
+    paths:
+      - ./pylint_report_statements.json
+      - ./pylint_report_nested-blocks.json
+    expire_in: 1 day
