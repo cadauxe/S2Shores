@@ -191,7 +191,7 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         subfigure = self._figure.add_subplot(self._gs[2, 0])
         self.build_correlation_matrix_plot(subfigure)
 
-    def build_correlation_matrix_plot(self, ax: Axes) -> AxesImage:
+    def build_correlation_matrix_plot(self, ax: Axes = plt) -> AxesImage:
         # Import correlation
         correlation_raw = self.metrics['projected_corr_raw']
 
@@ -222,12 +222,12 @@ class TemporalCorrelationBathyEstimatorDebug(LocalBathyEstimatorDebug,
         plt.xlabel('dX')
         plt.ylabel('dY')
         # create an axis for the colorbar
-        axins = inset_axes(ax,
+        axins = inset_axes(image_plot.axes,
                            width='5%',
                            height='100%',
                            loc='lower left',
                            bbox_to_anchor=(1.05, 0., 1, 1),
-                           bbox_transform=ax.transAxes,
+                           bbox_transform=image_plot.axes.transAxes,
                            borderpad=0)
         plt.colorbar(image_plot, cax=axins)
 
