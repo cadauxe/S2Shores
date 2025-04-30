@@ -91,7 +91,7 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
 
     ax_polar.plot(np.radians((main_direction + 180) % 360), 1 / main_wavelength, '*', color='black')
 
-    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, \n$\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
+    ax_polar.annotate('Peak at \n[$\\Theta$={:.1f}°, \n$\\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
                       xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',

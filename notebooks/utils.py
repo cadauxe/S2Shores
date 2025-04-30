@@ -21,29 +21,28 @@ from s2shores.image.ortho_sequence import OrthoSequence
 from s2shores.data_model.estimated_points_bathy import EstimatedPointsBathy
 from s2shores.local_bathymetry.local_bathy_estimator import LocalBathyEstimator
 
+import matplotlib.pyplot as plt
 
 def initialize_sequential_run(
         product_path: Path,
         config: BathyConfig,
-        point: Point,
         delta_time_provider: DeltaTimeProvider = None,
-) -> tuple[BathyEstimator, OrthoBathyEstimator, OrthoSequence]:
+) -> tuple[BathyEstimator, OrthoBathyEstimator]:
     bathy_launcher = BathyLauncher(cluster=None, sequential_run=True)
     bathy_estimator = initialize_bathy_estimator(
         bathy_launcher=bathy_launcher,
         product_path=product_path,
         output_path=...,
         config=config,
-        point=point,
         delta_time_provider=delta_time_provider,
     )
     ortho_bathy_estimator = initialize_ortho_bathy_estimator(bathy_estimator)
-    ortho_sequence = build_ortho_sequence(ortho_bathy_estimator)
-
+    plt.imshow(ortho_bathy_estimator.sampled_ortho.read_frame_image(
+        ortho_bathy_estimator.parent_estimator.selected_frames[0]).pixels)
+    
     return (
         bathy_estimator,
         ortho_bathy_estimator,
-        ortho_sequence,
     )
 
 
@@ -51,7 +50,6 @@ def initialize_bathy_estimator(
         bathy_launcher: BathyLauncher,
         product_path: Path,
         output_path: Path,
-        point: Point,
         config: BathyConfig,
         delta_time_provider: DeltaTimeProvider,
 ) -> BathyEstimator:
@@ -75,12 +73,8 @@ def initialize_bathy_estimator(
     )
 
     bathy_estimator.set_delta_time_provider(delta_time_provider)
-
     bathy_estimator.create_subtiles()
-    bathy_estimator.set_debug_samples([point])
-    bathy_estimator._debug_sample = True
     return bathy_estimator
-
 
 def read_config(config_path: Path) -> BathyConfig:
     with config_path.open() as file:
@@ -98,8 +92,10 @@ def initialize_ortho_bathy_estimator(
 
 def build_ortho_sequence(
         ortho_bathy_estimator: OrthoBathyEstimator,
+        estimation_point: Point,
 ) -> OrthoSequence:
-    estimation_point = ortho_bathy_estimator.parent_estimator._debug_samples[0]
+    ortho_bathy_estimator.parent_estimator.set_debug_samples([estimation_point])
+    ortho_bathy_estimator.parent_estimator._debug_sample = True
     window = ortho_bathy_estimator.sampled_ortho.window_extent(estimation_point)
 
     ortho_sequence = OrthoSequence(ortho_bathy_estimator.parent_estimator.delta_time_provider)
