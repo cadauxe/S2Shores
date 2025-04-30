@@ -37,13 +37,53 @@ def initialize_sequential_run(
         delta_time_provider=delta_time_provider,
     )
     ortho_bathy_estimator = initialize_ortho_bathy_estimator(bathy_estimator)
-    plt.imshow(ortho_bathy_estimator.sampled_ortho.read_frame_image(
-        ortho_bathy_estimator.parent_estimator.selected_frames[0]).pixels)
-    
-    return (
-        bathy_estimator,
-        ortho_bathy_estimator,
+    plot_whole_image(ortho_bathy_estimator)
+
+    return bathy_estimator, ortho_bathy_estimator
+
+
+def plot_whole_image(ortho_bathy_estimator: OrthoBathyEstimator, point: Point = None):
+    img = ortho_bathy_estimator.sampled_ortho.read_frame_image(
+        ortho_bathy_estimator.parent_estimator.selected_frames[0]).pixels
+    ax_img = plt.imshow(img)
+    origin = (
+        ortho_bathy_estimator
+        .sampled_ortho
+        .ortho_stack
+        ._geo_transform
+        .image_coordinates(Point(0,0))
     )
+
+    spatial_layout = ortho_bathy_estimator.sampled_ortho.ortho_stack
+    spatial_xs = (str(spatial_layout._upper_left_corner.x),
+                  str(spatial_layout._lower_right_corner.x))
+    spatial_ys = (str(spatial_layout._lower_right_corner.y),
+                  str(spatial_layout._upper_left_corner.y))
+
+
+    if point is not None:
+        image_point = (
+            ortho_bathy_estimator
+            .sampled_ortho
+            .ortho_stack
+            ._geo_transform
+            .image_coordinates(point)
+        )
+        # plt.plot(image_point.y, img.shape[1] - image_point.x, "ro")
+        # plt.plot(0, 0, "ro")
+        # plt.plot(origin.y, origin.x, "bo")
+
+        # print("POINT (0 0) ->", origin)
+        # print(f"{point} -> {image_point}")
+
+    ax_img.axes.set_xticks((0, img.shape[1]))
+    ax_img.axes.set_xticklabels(spatial_xs)
+
+    ax_img.axes.set_yticks((0, img.shape[0]))
+    ax_img.axes.set_yticklabels(spatial_ys)
+
+
+    # print(f"{img.shape} -> ({spatial_xs[1]}, {spatial_ys[1]})")
 
 
 def initialize_bathy_estimator(
