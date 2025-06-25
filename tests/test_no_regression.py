@@ -24,81 +24,47 @@ import shutil
 
 from tests.test_utils import compare_files
 from click.testing import CliRunner
-from tests.conftest import S2SHORESTestsPath
 
 from s2shores.bathylauncher.bathy_processing import process_command
 
 
-
-def test_nominal_spatialCorrelation_s2(s2shores_paths: S2SHORESTestsPath) -> None:
-    """
-    Test Sentinel-2 30TXR Old data without ROI, with S2 product,
-    nb_subtiles>1, Layers-type debug and global distoshore.
-
-    - Verify that all expected output files are created.
-    - Ensure the generated .nc output file matches the reference.
-    """
-    dis2shore_file = "GMT_intermediate_coast_distance_01d_test_5000.nc"
-    runner = CliRunner()
-
-    result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.s2old_product_dir),
-        '--product_type', 'S2',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config2/{s2shores_paths.yaml_file}',
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
-        '--nb_subtiles', '36'])
-    print(result.output)
-    compare_files(reference_dir = f"{s2shores_paths.output_dir}/reference_results/nominal_spatialCorrelation_s2",
-                  output_dir = s2shores_paths.output_dir)
+S2NEW_FILE = "S2A_MSIL1C_20200622T105631_N0500_R094_T30TXR_20231110T094313.SAFE"
+S2OLD_FILE = "S2A_MSIL1C_20200622T105631_N0209_R094_T30TXR_20200622T130553.SAFE"
+FUNWAVE_FILE = "funwave.tif"
+PARAMS_FILE = "wave_bathy_inversion_config.yaml"
+DISTOSHORE_FILE_NC = "GMT_intermediate_coast_distance_01d_test_5000.nc"
+DISTOSHORE_FILE_TIF = "disToShore_30TXR.TIF"
+SWASH_8_2_FILE = "testcase_8_2.tif"
+SWASH_7_4_FILE = "testcase_7_4.tif"
+PNEO_FILE = "Duck_PNEO_XS_b3_VT.tif"
 
 
-def test_nominal_dft_s2(s2shores_paths: S2SHORESTestsPath) -> None:
-    """
-    Test Sentinel-2 30TXR New data without ROI, with S2 product,
-    nb_subtiles>1, Layers-type debug and tile distoshore.
-
-    - Verify that all expected output files are created.
-    - Ensure the generated .nc output file matches the reference.
-    """
-    runner = CliRunner()
-
-    result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.s2new_product_dir),
-        '--product_type', 'S2',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config3/wave_bathy_inversion_config.yaml',
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
-        '--nb_subtiles', '36'])
-    print(result.output)
-    compare_files(reference_dir = f"{s2shores_paths.output_dir}/reference_results/nominal_dft_s2",
-                  output_dir = s2shores_paths.output_dir)
-
-
-def test_nominal_tri_stereo_pneo(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_nominal_tri_stereo_pneo(test_path) -> None:
     """
     Test PNEO data without ROI and distoshore, with geotiff
     product, nb_subtiles=1 and Layers-type debug.
 
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
+
     """
+
+    output_path = f'{test_path}/output/nominal_tri_stereo_pneo'
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.pneo_product_dir),
+        '--input_product', f'{test_path}/products/PNEO_DUCK/{PNEO_FILE}',
         '--product_type', 'geotiff',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config1/{s2shores_paths.yaml_file}',
-        '--nb_subtiles', '36'])
+        '--output_dir',  f'{output_path}',
+        '--config_file', f'{test_path}/config/config1/{PARAMS_FILE}',
+	'--roi_file', f'{test_path}/ROI/PNEO-DuckROI.shp',
+	'--limit_to_roi'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/nominal_tri_stereo_pneo",
-                  output_dir=s2shores_paths.output_dir)
+    compare_files(reference_dir=f'{test_path}/reference_results/nominal_tri_stereo_pneo',
+                  output_dir=f'{output_path}')
 
 
-def test_nominal_video(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_nominal_video(test_path) -> None:
     """
     Test Funwave data without ROI and distoshore, with
     geotiff product, nb_subtiles=1 and Layers-type debug.
@@ -106,20 +72,22 @@ def test_nominal_video(s2shores_paths: S2SHORESTestsPath) -> None:
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
+
+    output_path = f'{test_path}/output/nominal_video'
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.funwave_product_dir),
+        '--input_product', f'{test_path}/products/FUNWAVE/{FUNWAVE_FILE}',
         '--product_type', 'geotiff',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config4/{s2shores_paths.yaml_file}',
+        '--output_dir', f'{output_path}',
+        '--config_file', f'{test_path}/config/config4/{PARAMS_FILE}',
         '--nb_subtiles', '4'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/nominal_video",
-                  output_dir=s2shores_paths.output_dir)
+    compare_files(reference_dir=f'{test_path}/reference_results/nominal_video',
+                  output_dir=f'{output_path}')
 
 
-def test_debug_pointswash_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_debug_pointswash_temporal_corr(test_path) -> None:
     """
     Test SWASH7.4 data without ROI, with geotiff product, temporal
     correlation debug, grid debug point mode and Layers-type expert.
@@ -127,7 +95,8 @@ def test_debug_pointswash_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> No
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr'
+    output_path = f'{test_path}/output/debug_pointswash_temporal_corr'
+    debug_path = f'{output_path}/debug'
     if os.path.isdir(debug_path) :
         shutil.rmtree(debug_path)
     os.mkdir(debug_path)
@@ -135,19 +104,19 @@ def test_debug_pointswash_temporal_corr(s2shores_paths: S2SHORESTestsPath) -> No
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.swash7_product_dir),
+        '--input_product', f'{test_path}/products/SWASH_7_4/{SWASH_7_4_FILE}',
         '--product_type', 'geotiff',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config7/wave_bathy_inversion_config.yaml',
-        '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr',
-        '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_7_4.yaml'])
+        '--output_dir', f'{output_path}',
+        '--config_file', f'{test_path}/config/config7/{PARAMS_FILE}',
+        '--debug_path', f'{debug_path}',
+        '--debug_file', f'{test_path}/debug/debug_points_SWASH_7_4.yaml'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/debug_pointswash_temporal_corr",
-                  output_dir=s2shores_paths.output_dir,
-                  debug_dir = f'{s2shores_paths.output_dir}/debug_pointswash_temporal_corr')
+    compare_files(reference_dir=f'{test_path}/reference_results/debug_pointswash_temporal_corr',
+                  output_dir=f'{output_path}',
+                  debug_dir = f'{debug_path}')
 
 
-def test_debug_pointswash_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_debug_pointswash_spatial_dft(test_path) -> None:
     """
     Test SWASH8.2 data without ROI, with geotiff product
     , dft spatial debug and grid debug point mode.
@@ -155,7 +124,8 @@ def test_debug_pointswash_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft'
+    output_path = f'{test_path}/output/debug_pointswash_spatial_dft'
+    debug_path = f'{output_path}/debug'
     if os.path.isdir(debug_path):
         shutil.rmtree(debug_path)
     os.mkdir(debug_path)
@@ -163,19 +133,19 @@ def test_debug_pointswash_spatial_dft(s2shores_paths: S2SHORESTestsPath) -> None
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.swash8_product_dir),
+        '--input_product', f'{test_path}/products/SWASH_8_2/{SWASH_8_2_FILE}',
         '--product_type', 'geotiff',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config5/{s2shores_paths.yaml_file}',
-        '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft',
-        '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2.yaml'])
+        '--output_dir', f'{output_path}',
+        '--config_file', f'{test_path}/config/config5/{PARAMS_FILE}',
+        '--debug_path', f'{debug_path}',
+        '--debug_file', f'{test_path}/debug/debug_points_SWASH_8_2.yaml'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/debug_pointswash_spatial_dft",
-                  output_dir=s2shores_paths.output_dir,
-                  debug_dir = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_dft')
+    compare_files(reference_dir=f'{test_path}/reference_results/debug_pointswash_spatial_dft',
+                  output_dir= f'{output_path}',
+                  debug_dir = f'{debug_path}')
 
 
-def test_debug_pointswash_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_debug_pointswash_spatial_corr(test_path) -> None:
     """
     Test SWASH8.2 data without ROI, with geotiff product, spatial
     correlation debug, grid debug point mode and Layers-type nominal.
@@ -183,27 +153,28 @@ def test_debug_pointswash_spatial_corr(s2shores_paths: S2SHORESTestsPath) -> Non
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    debug_path = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr'
-    if os.path.isdir(debug_path):
+    output_path = f'{test_path}/output/debug_pointswash_spatial_corr'
+    debug_path = f'{output_path}/debug'
+    if os.path.isdir(debug_path) :
         shutil.rmtree(debug_path)
     os.mkdir(debug_path)
-
+    
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.swash8_product_dir),
+        '--input_product', f'{test_path}/products/SWASH_8_2/{SWASH_8_2_FILE}',
         '--product_type', 'geotiff',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config6/{s2shores_paths.yaml_file}',
-        '--debug_path', f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr',
-        '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_SWASH_8_2.yaml'])
+        '--output_dir', f'{output_path}',
+        '--config_file', f'{test_path}/config/config6/{PARAMS_FILE}',
+        '--debug_path', f'{debug_path}',
+        '--debug_file', f'{test_path}/debug/debug_points_SWASH_8_2.yaml'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/debug_pointswash_spatial_corr",
-                  output_dir=s2shores_paths.output_dir,
-                  debug_dir = f'{s2shores_paths.output_dir}/debug_pointswash_spatial_corr')
+    compare_files(reference_dir=f'{test_path}/reference_results/debug_pointswash_spatial_corr',
+                  output_dir = f'{output_path}',
+                  debug_dir = f'{debug_path}')
 
 
-def test_limitroi_s2(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_limitroi_s2(test_path) -> None:
     """
     Test Sentinel-2 30TXR New data with ROI, ROI limit and sequential option.
 
@@ -213,78 +184,81 @@ def test_limitroi_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.s2new_product_dir),
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config2/{s2shores_paths.yaml_file}',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
+        '--input_product', f'{test_path}/products/S2_30TXR_NEW/{S2NEW_FILE}',
+        '--output_dir', f'{test_path}/output/limitroi_s2',
+        '--config_file', f'{test_path}/config/config2/{PARAMS_FILE}',
+        '--delta_times_dir', f'{test_path}/deltatimesS2/esa',
+        '--distoshore_file', f'{test_path}/distoshore/{DISTOSHORE_FILE_TIF}',
         '--product_type', 'S2',
         '--nb_subtiles', '36',
-        '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI.shp',
+        '--roi_file', f'{test_path}/ROI/30TXR-ROI.shp',
         '--limit_to_roi',
         '--sequential'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/limitroi_s2",
-                  output_dir=s2shores_paths.output_dir)
+    compare_files(reference_dir=f'{test_path}/reference_results/limitroi_s2',
+                  output_dir= f'{test_path}/output/limitroi_s2')
 
 
-def test_debug_mode_point_s2(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_debug_mode_point_s2(test_path) -> None:
     """
     Test Sentinel-2 30TXR New data with S2 product and point debug point mode.
 
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    debug_path = f'{s2shores_paths.output_dir}/debug_mode_point_s2'
-    if os.path.isdir(debug_path):
+    output_path = f'{test_path}/output/debug_mode_point_s2'
+    debug_path = f'{output_path}/debug'
+    if os.path.isdir(debug_path) :
         shutil.rmtree(debug_path)
     os.mkdir(debug_path)
 
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.s2new_product_dir),
+        '--input_product', f'{test_path}/products/S2_30TXR_NEW/{S2NEW_FILE}',
         '--product_type', 'S2',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config8/{s2shores_paths.yaml_file}',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
+        '--output_dir', f'{output_path}',
+        '--config_file', f'{test_path}/config/config8/{PARAMS_FILE}',
+        '--delta_times_dir', f'{test_path}/deltatimesS2/cnes',
+        '--distoshore_file', f'{test_path}/distoshore/{DISTOSHORE_FILE_TIF}',
         '--nb_subtiles', '36',
-        '--debug_path', f'{s2shores_paths.output_dir}/debug_mode_point_s2',
-        '--debug_file', f'{s2shores_paths.debug_dir}/debug_points_30TXR_notongrid.yaml'])
+        '--debug_path', f'{debug_path}',
+        '--debug_file', f'{test_path}/debug/debug_points_30TXR_notongrid.yaml'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/debug_mode_point_s2",
-                  output_dir=s2shores_paths.output_dir,
-                  debug_dir = f'{s2shores_paths.output_dir}/debug_mode_point_s2')
+    compare_files(reference_dir = f'{test_path}/reference_results/debug_mode_point_s2',
+                  output_dir = f'{output_path}',
+                  debug_dir = f'{debug_path}')
 
 
-def test_debug_area_funwave(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_debug_area_funwave(test_path) -> None:
     """
     Test Funwave data with geotiff product and debug area.
 
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    debug_path = f'{s2shores_paths.output_dir}/debug_area_funwave'
-    if os.path.isdir(debug_path):
+
+    output_path = f'{test_path}/output/debug_area_funwave'
+    debug_path = f'{output_path}/debug'
+    if os.path.isdir(debug_path) :
         shutil.rmtree(debug_path)
     os.mkdir(debug_path)
-
+    
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.funwave_product_dir),
+        '--input_product', f'{test_path}/products/FUNWAVE/{FUNWAVE_FILE}',
         '--product_type', 'geotiff',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config9/{s2shores_paths.yaml_file}',
-        '--debug_path', f'{s2shores_paths.output_dir}/debug_area_funwave',
-        '--debug_file', f'{s2shores_paths.debug_dir}/debug_area_funwave.yaml'])
+        '--output_dir', f'{output_path}',
+        '--config_file', f'{test_path}/config/config9/{PARAMS_FILE}',
+        '--debug_path', f'{debug_path}',
+        '--debug_file', f'{test_path}/debug/debug_area_funwave.yaml'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/debug_area_funwave",
-                  output_dir=s2shores_paths.output_dir,
-                  debug_dir = f'{s2shores_paths.output_dir}/debug_area_funwave')
+    compare_files(reference_dir=f'{test_path}/reference_results/debug_area_funwave',
+                  output_dir=f'{output_path}',
+                  debug_dir = f'{debug_path}')
 
-def test_roi_profiling_s2(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_roi_profiling_s2(test_path, capsys) -> None:
     """
     Test Sentinel-2 30TXR Old data without ROI limit
     , with S2 product, ROI and profiling option.
@@ -292,26 +266,35 @@ def test_roi_profiling_s2(s2shores_paths: S2SHORESTestsPath) -> None:
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    dis2shore_file = "GMT_intermediate_coast_distance_01d_test_5000.nc"
+    output_path = f'{test_path}/output/roi_profiling_s2'
+    profiling_path = f'{output_path}/profiling'
+    if os.path.isdir(profiling_path) :
+        shutil.rmtree(profiling_path)
+    os.mkdir(profiling_path)
 
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.s2old_product_dir),
+        '--input_product', f'{test_path}/products/S2_30TXR_OLD/{S2OLD_FILE}',
         '--product_type', 'S2',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config2/{s2shores_paths.yaml_file}',
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
-        '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI.shp',
-        '--nb_subtiles', '36',
+        '--output_dir', f'{output_path}',
+        '--config_file', f'{test_path}/config/config2/{PARAMS_FILE}',
+        '--distoshore_file', f'{test_path}/distoshore/{DISTOSHORE_FILE_NC}',
+        '--delta_times_dir', f'{test_path}/deltatimesS2/esa',
+        '--roi_file', f'{test_path}/ROI/30TXR-ROI.shp',
+        '--nb_subtiles', '36', 
         '--profiling'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/roi_profiling_s2",
-                  output_dir=s2shores_paths.output_dir)
+    captured = capsys.readouterr()
+    with open(f'{profiling_path}/profiling.txt', 'w') as p:
+        p.write(captured.out)
+
+    # no comparison of profiling files
+    compare_files(reference_dir=f"{test_path}/reference_results/roi_profiling_s2",
+                  output_dir=f'{output_path}')
 
 
-def test_nominal_dft_s2_cnes_deltaT(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_nominal_dft_s2_cnes_deltat(test_path) -> None:
     """
     Test Sentinel-2 30TXR New data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and tile distoshore.
@@ -322,36 +305,36 @@ def test_nominal_dft_s2_cnes_deltaT(s2shores_paths: S2SHORESTestsPath) -> None:
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.s2old_product_dir),
+        '--input_product', f'{test_path}/products/S2_30TXR_NEW/{S2NEW_FILE}',
         '--product_type', 'S2',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config3/{s2shores_paths.yaml_file}',
-        '--delta_times_dir', f'{s2shores_paths.delta_times_dir}/cnes',
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR.TIF',
+        '--output_dir', f'{test_path}/output/nominal_dft_s2_cnes_deltat',
+        '--config_file', f'{test_path}/config/config3/{PARAMS_FILE}',
+        '--delta_times_dir', f'{test_path}/deltatimesS2/cnes',
+        '--distoshore_file',  f'{test_path}/distoshore/{DISTOSHORE_FILE_TIF}',
         '--nb_subtiles', '36'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/nominal_dft_s2_cnes_deltaT",
-                  output_dir=s2shores_paths.output_dir)
+    compare_files(reference_dir=f"{test_path}/reference_results/nominal_dft_s2_cnes_deltat",
+                  output_dir=f'{test_path}/output/nominal_dft_s2_cnes_deltat')
 
-def test_nominal_spatialcorr_s2_cnes_deltat(s2shores_paths: S2SHORESTestsPath) -> None:
+def test_nominal_spatialcorr_s2_cnes_deltat(test_path) -> None:
     """
-    Test Sentinel-2 30TXR Old data without ROI, with S2 product,
+    Test Sentinel-2 30TXR New data without ROI, with S2 product,
     nb_subtiles>1, Layers-type debug and global distoshore.
 
     - Verify that all expected output files are created.
     - Ensure the generated .nc output file matches the reference.
     """
-    dis2shore_file = "GMT_intermediate_coast_distance_01d_test_5000.nc"
+
     runner = CliRunner()
 
     result = runner.invoke(process_command, [
-        '--input_product', str(s2shores_paths.s2old_product_dir),
+        '--input_product', f'{test_path}/products/S2_30TXR_NEW/{S2NEW_FILE}',
         '--product_type', 'S2',
-        '--output_dir', str(s2shores_paths.output_dir),
-        '--config_file', f'{s2shores_paths.config_dir}/config2/{s2shores_paths.yaml_file}',
-        '--delta_times_dir', f'{s2shores_paths.delta_times_dir}/cnes',
-        '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
+        '--output_dir', f'{test_path}/output/nominal_spatialcorr_s2_cnes_deltat',
+        '--config_file', f'{test_path}/config/config2/{PARAMS_FILE}',
+        '--delta_times_dir', f'{test_path}/deltatimesS2/cnes',
+        '--distoshore_file', f'{test_path}/distoshore/{DISTOSHORE_FILE_NC}',
         '--nb_subtiles', '36'])
     print(result.output)
-    compare_files(reference_dir=f"{s2shores_paths.output_dir}/reference_results/nominal_spatialcorr_s2_cnes_deltat",
-                  output_dir=s2shores_paths.output_dir)
+    compare_files(reference_dir=f"{test_path}/reference_results/nominal_spatialcorr_s2_cnes_deltat",
+                  output_dir=f'{test_path}/output/nominal_spatialcorr_s2_cnes_deltat')

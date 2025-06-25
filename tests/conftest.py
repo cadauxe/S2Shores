@@ -55,3 +55,17 @@ class S2SHORESTestsPath():
 @pytest.fixture
 def s2shores_paths(request) -> S2SHORESTestsPath:
     return S2SHORESTestsPath(Path(__file__).parent.parent)
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--test_path",
+        action="append",
+        default=[],
+        help="test directory to pass to test functions",
+    )
+
+
+def pytest_generate_tests(metafunc):
+    if "test_path" in metafunc.fixturenames:
+        metafunc.parametrize("test_path", metafunc.config.getoption("test_path"))
