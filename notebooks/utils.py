@@ -45,6 +45,7 @@ def initialize_sequential_run(
 def plot_whole_image(ortho_bathy_estimator: OrthoBathyEstimator, point: Point = None):
     img = ortho_bathy_estimator.sampled_ortho.read_frame_image(
         ortho_bathy_estimator.parent_estimator.selected_frames[0]).pixels
+    print("Image shape in pixels : ",img.shape)
     ax_img = plt.imshow(img)
     origin = (
         ortho_bathy_estimator
@@ -96,7 +97,7 @@ def initialize_bathy_estimator(
     match product_path.suffix:
         case ".tif":
             product_cls = GeoTiffProduct
-        case ".s2":
+        case ".SAFE":
             product_cls = S2ImageProduct
         case _:
             raise ValueError(
