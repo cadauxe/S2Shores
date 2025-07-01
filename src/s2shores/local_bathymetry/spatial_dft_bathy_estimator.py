@@ -125,7 +125,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         if peaks.size == 0:
             raise WavesEstimationError('Unable to find any directional peak')
 
-        metrics: Dict[str, Any] = {}
+        metrics: dict[str, Any] = {}
         if self.debug_sample:
             metrics['sinograms_correlation_fft'] = sinograms_correlation_fft
             metrics['total_spectrum'] = total_spectrum
@@ -176,8 +176,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
 
         return np.array(sorted(filtered_peaks_dir))
 
-    def prepare_refinement(self, peaks_dir_indices: np.ndarray) \
-            -> List[np.ndarray]:
+    def prepare_refinement(self, peaks_dir_indices: np.ndarray) -> list[np.ndarray]:
         """ Prepare the directions along which direction and wavenumber finding will be done.
         """
         directions_ranges = []
@@ -186,8 +185,9 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
                 angles_half_range = self.local_estimator_params['ANGLE_AROUND_PEAK_DIR']
                 direction_index = peaks_dir_indices[peak_index]
                 tmp = np.arange(max(direction_index - angles_half_range, 0),
-                                min(direction_index + angles_half_range + 1, 360)
-                                )
+                                min(direction_index + angles_half_range + 1, 360),
+                                dtype=np.int64)
+
                 directions_range = self.radon_transforms[0].directions[tmp]
                 directions_ranges.append(directions_range)
 
@@ -195,7 +195,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         return directions_ranges
 
     def find_spectral_peaks(self,
-                            directions_ranges: List[np.ndarray]) -> None:
+                            directions_ranges: list[np.ndarray]) -> None:
         """ Find refined directions from the resampled cross correlation spectrum of the radon
         transforms of the 2 images and identify wavenumbers of the peaks along these directions.
         """
@@ -210,7 +210,7 @@ class SpatialDFTBathyEstimator(LocalBathyEstimator):
         """ Find refined directions from the resampled cross correlation spectrum of the radon
         transforms of the 2 images and identify wavenumbers of the peaks along these directions.
         """
-        metrics: Dict[str, Any] = {}
+        metrics: dict[str, Any] = {}
         # Detailed analysis of the signal for positive phase shifts
         self.radon_transforms[0].interpolate_sinograms_dfts(wavenumbers, directions)
         self.radon_transforms[1].interpolate_sinograms_dfts(wavenumbers, directions)

@@ -18,6 +18,7 @@
   limitations under the License.
 """
 from typing import Optional  # @NoMove
+from re import findall
 
 import numpy as np  # @NoMove
 from shapely.affinity import translate
@@ -59,7 +60,7 @@ class OrthoLayout:
     def epsg_code(self) -> int:
         """ :returns: the epsg code of the projection
         """
-        return int(self._projection.split(',')[-1][1:-3])
+        return int(findall(r'\"EPSG\",\"(.*?)\"', self._projection)[-1])
 
     # TODO: define steps default values based on resolution
     def get_samples_positions(self, step_x: float, step_y: float, local_margins: MarginsType,

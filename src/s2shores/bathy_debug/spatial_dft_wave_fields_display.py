@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING # @NoMove
 
 import cmcrameri.cm as cmc
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 
 from .sinogram_display import (build_sinogram_display, 
@@ -39,8 +40,8 @@ from .display_utils import get_display_title_with_kernel
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_dft_bathy_estimator import (
         SpatialDFTBathyEstimator)  # @UnusedImport
-	
-def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+
+def build_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> Figure:	
     # plt.close('all')
     nrows = 2
     ncols = 3
@@ -84,38 +85,46 @@ def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     estimations = local_estimator.bathymetry_estimations
     sorted_estimations_args = estimations.argsort_on_attribute(
         local_estimator.final_estimations_sorting)
-    main_direction = estimations.get_estimations_attribute('direction')[
-        sorted_estimations_args[0]]
+    
+    try:
+        main_direction = estimations.get_estimations_attribute('direction')[
+            sorted_estimations_args[0]]
+    except IndexError:
+        main_direction = None
 
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
 
     build_sinogram_display(
         axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1, sinogram2,
-        main_direction, plt_min, plt_max)
+        plt_min, plt_max, main_direction)
     build_sinogram_difference_display(
         axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max, cmap='bwr')
     build_sinogram_display(
         axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, plt_min, plt_max, ordonate=False)
+        plt_min, plt_max, main_direction, ordonate=False)
 
     plt.tight_layout()
-    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
+    return fig
 
-    plt.savefig(
+def display_dft_sinograms(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+    fig = build_dft_sinograms(local_estimator)
+
+    estimations = local_estimator.bathymetry_estimations
+    sorted_estimations_args = estimations.argsort_on_attribute(
+        local_estimator.final_estimations_sorting)
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
+    main_direction = estimations.get_estimations_attribute('direction')[sorted_estimations_args[0]]
+    fig.savefig(
         os.path.join(
             local_estimator.global_estimator.debug_path,
-            'display_sinograms_debug_point_' +
-            point_id +
-            '_theta_' +
-            f'{int(main_direction)}' +
-            '.png'),
+            f'display_sinograms_debug_point_{point_id}_theta_{int(main_direction)}.png'),
         dpi=300)
-    dft_sino = plt.figure(2)
-    return dft_sino
+    
+    return fig
 
-def display_dft_sinograms_spectral_analysis(
-        local_estimator: 'SpatialDFTBathyEstimator') -> None:
+def build_dft_sinograms_spectral_analysis(
+        local_estimator: 'SpatialDFTBathyEstimator') -> Figure:
     # plt.close('all')
     nrows = 3
     ncols = 3
@@ -143,13 +152,13 @@ def display_dft_sinograms_spectral_analysis(
 
     build_sinogram_display(
         axs[0, 0], 'Sinogram1 [Radon Transform on Master Image]',
-        sinogram1, directions1, sinogram2, main_direction, plt_min, plt_max, abscissa=False)
+        sinogram1, directions1, sinogram2, plt_min, plt_max, main_direction, abscissa=False)
     build_sinogram_difference_display(
         axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max,
         abscissa=False, cmap='bwr')
     build_sinogram_display(
         axs[0, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, plt_min, plt_max, ordonate=False, abscissa=False)
+        plt_min, plt_max, main_direction, ordonate=False, abscissa=False)
 
     # Second Plot line = Spectral Amplitude of Sinogram1 [after DFT] / CSM Amplitude /
     # Spectral Amplitude of Sinogram2 [after DFT]
@@ -162,7 +171,14 @@ def display_dft_sinograms_spectral_analysis(
         axs[1, 0], 'Spectral Amplitude Sinogram1 [DFT]',
         np.abs(sino1_fft), directions1, kfft, plt_min, plt_max, abscissa=False, cmap='cmc.oslo_r')
     build_correl_spectrum_matrix(
-        axs[1, 1], local_estimator, sino1_fft, sino2_fft, kfft, plt_min, plt_max, 'amplitude',
+        axs[1, 1],
+        local_estimator,
+        sino1_fft,
+        sino2_fft,
+        kfft,
+        plt_min,
+        plt_max,
+        'amplitude',
         'Cross Spectral Matrix (Amplitude)')
     build_sinogram_spectral_display(axs[1, 2], 'Spectral Amplitude Sinogram2 [DFT]',
                                     np.abs(sino2_fft), directions2, kfft, plt_min, plt_max,
@@ -185,21 +201,46 @@ def display_dft_sinograms_spectral_analysis(
         np.abs(sino2_fft) * csm_phase, directions2, kfft, plt_min, plt_max,
         ordonate=False, abscissa=False, cmap='cmc.vik')
     plt.tight_layout()
+    return fig
+
+def display_dft_sinograms_spectral_analysis(
+        local_estimator: 'SpatialDFTBathyEstimator') -> Figure:
+    fig = build_dft_sinograms_spectral_analysis(local_estimator)
+
+    estimations = local_estimator.bathymetry_estimations
+    sorted_estimations_args = estimations.argsort_on_attribute(
+        local_estimator.final_estimations_sorting)
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
+    main_direction = estimations.get_estimations_attribute('direction')[sorted_estimations_args[0]]
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
+
+    fig.savefig(
+        os.path.join(
+            local_estimator.global_estimator.debug_path,
+            f'display_sinograms_spectral_analysis_debug_point_'
+            f'{point_id}_theta_{int(main_direction)}.png'
+        ),
+        dpi=300)
+
+    return fig
+
+def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+    fig = build_polar_images_dft(local_estimator)
+    
+    estimations = local_estimator.bathymetry_estimations
+    best_estimation_idx = estimations.argsort_on_attribute(
+        local_estimator.final_estimations_sorting)[0]
+    main_direction = estimations.get_estimations_attribute('direction')[best_estimation_idx]
+    theta_id = f'{int(main_direction)}'
     point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator.debug_path,
-            'display_sinograms_spectral_analysis_debug_point_' +
-            point_id +
-            '_theta_' +
-            f'{int(main_direction)}' +
-            '.png'),
+            f'display_polar_images_debug_point_{point_id}_theta_{theta_id}.png'),
         dpi=300)
-    dft_sino_spectral = plt.figure(3)
-    return dft_sino_spectral
 
-def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
+def build_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     # plt.close('all')
     nrows = 1
     ncols = 2
@@ -207,16 +248,11 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
     fig.suptitle(get_display_title_with_kernel(local_estimator), fontsize=12)
 
     estimations = local_estimator.bathymetry_estimations
-    sorted_estimations_args = estimations.argsort_on_attribute(
-        local_estimator.final_estimations_sorting)
-    main_direction = estimations.get_estimations_attribute('direction')[
-        sorted_estimations_args[0]]
-    ener_max = estimations.get_estimations_attribute('energy_ratio')[
-        sorted_estimations_args[0]]
-    main_wavelength = estimations.get_estimations_attribute('wavelength')[
-        sorted_estimations_args[0]]
-    delta_time = estimations.get_estimations_attribute('delta_time')[
-        sorted_estimations_args[0]]
+    best_estimation_idx = estimations.argsort_on_attribute(
+        local_estimator.final_estimations_sorting)[0]
+    main_direction = estimations.get_estimations_attribute('direction')[best_estimation_idx]
+    ener_max = estimations.get_estimations_attribute('energy_ratio')[best_estimation_idx]
+    main_wavelength = estimations.get_estimations_attribute('wavelength')[best_estimation_idx]
     dir_max_from_north = (270 - main_direction) % 360
     arrows = [(wfe.direction, wfe.energy_ratio) for wfe in estimations]
 
@@ -249,7 +285,6 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
 
     # Retrieve arguments corresponding to the arrow with the maximum energy
     arrow_max = (dir_max_from_north, ener_max, main_wavelength)
-    theta_id = f'{int(main_direction)}'
 
     print('-->ARROW SIGNING THE MAX ENERGY [DFN, ENERGY, WAVELENGTH]]=', arrow_max)
     polar = csm_amplitude * csm_phase
@@ -265,21 +300,11 @@ def display_polar_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> Non
         first_image.resolution,
         dir_max_from_north,
         main_wavelength,
-        subplot_pos=[
-            1,
-            2,
-            2])
-
+        subplot_pos=[1, 2, 2])
     plt.tight_layout()
-    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
 
-    plt.savefig(
-        os.path.join(
-            local_estimator.global_estimator.debug_path,
-            'display_polar_images_debug_point_' + point_id + '_theta_' + theta_id + '.png'),
-        dpi=300)
-    polar_plot = plt.figure(4)
-    return polar_plot
+    return fig
+
 
 def display_waves_images_dft(local_estimator: 'SpatialDFTBathyEstimator') -> None:
     # plt.close('all')

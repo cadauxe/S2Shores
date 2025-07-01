@@ -35,18 +35,24 @@ if TYPE_CHECKING:
 def build_polar_display(fig: Figure, axes: Axes, title: str,
                         local_estimator: 'SpatialDFTBathyEstimator',
                         values: np.ndarray, resolution: float, dfn_max: float, max_wvlgth: float,
-                        subplot_pos: [float, float, float],
-                        refinement_phase: bool=False, **kwargs: dict) -> None:
+                        subplot_pos: tuple[float, float, float],
+                        refinement_phase: bool=False,
+                        directions = None,
+                        nb_wavenumbers = None) -> None:
 
     radon_transform = local_estimator.radon_transforms[0]
-    if not refinement_phase:
-        _, directions = radon_transform.get_as_arrays()
-    else:
-        directions = radon_transform.directions_interpolated_dft
+    if directions is None:
+        if not refinement_phase:
+            _, directions = radon_transform.get_as_arrays()
+        else:
+            directions = radon_transform.directions_interpolated_dft
 
-    # define wavenumbers according to image resolution
     Fs = 1 / resolution
-    nb_wavenumbers = radon_transform.get_as_arrays()[0].shape[0]
+
+    if nb_wavenumbers is None:
+        # define wavenumbers according to image resolution
+        nb_wavenumbers = radon_transform.get_as_arrays()[0].shape[0]
+    
     wavenumbers = np.arange(0, Fs / 2, Fs / nb_wavenumbers)
 
     # create polar axes in the foreground and remove its background to see through
@@ -78,14 +84,17 @@ def build_polar_display(fig: Figure, axes: Axes, title: str,
     rticks = 1 / requested_labels
 
     # Main information display
-    print('MAIN DIRECTION', main_direction)
-    print('DIRECTION FROM NORTH', direc_from_north)
-    print('DELTA TIME', delta_time)
-    print('DELTA PHASE', delta_phase)
+    print(
+        f'MAIN DIRECTION {main_direction}',
+        f'DIRECTION FROM NORTH {direc_from_north}',
+        f'DELTA TIME {delta_time}',
+        f'DELTA PHASE {delta_phase}',
+        sep="\n"
+    )
 
     ax_polar.plot(np.radians((main_direction + 180) % 360), 1 / main_wavelength, '*', color='black')
 
-    ax_polar.annotate('Peak at \n[$\Theta$={:.1f}°, \n$\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
+    ax_polar.annotate('Peak at \n[$\\Theta$={:.1f}°, \n$\\lambda$={:.2f}m]'.format((direc_from_north), main_wavelength),
                       xy=[np.radians(main_direction % 180), (1 / main_wavelength)],  # theta, radius
                       xytext=(0.5, 0.65),    # fraction, fraction
                       textcoords='figure fraction',

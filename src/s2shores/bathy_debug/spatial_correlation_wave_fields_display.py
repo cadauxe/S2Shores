@@ -22,6 +22,7 @@ Class managing the computation of wave fields from two images taken at a small t
 import os
 from typing import TYPE_CHECKING  # @NoMove
 
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -33,16 +34,16 @@ from .sinogram_display import (build_sinogram_display,
                                build_sinogram_1D_display_slave,
                                build_sinogram_2D_cross_correlation)
 from .waves_image_display import (create_pseudorgb,
-                                   build_display_waves_image,
-                                   build_display_pseudorgb)
+                                  build_display_waves_image,
+                                  build_display_pseudorgb)
 from .display_utils import get_display_title_with_kernel
 
 if TYPE_CHECKING:
     from ..local_bathymetry.spatial_correlation_bathy_estimator import (
         SpatialCorrelationBathyEstimator)  # @UnusedImport
  
-def display_sinograms_1D_analysis_spatial_correlation(
-        local_estimator: 'SpatialCorrelationBathyEstimator') -> None:
+def build_sinograms_1D_analysis_spatial_correlation(
+        local_estimator: 'SpatialCorrelationBathyEstimator') -> Figure:
 
     # plt.close('all')
     nrows = 3
@@ -69,13 +70,13 @@ def display_sinograms_1D_analysis_spatial_correlation(
 
     build_sinogram_display(
         axs[0, 0], 'Sinogram1 [Radon Transform on Master Image]',
-        sinogram1, directions1, sinogram2, main_direction, plt_min, plt_max, abscissa=False)
+        sinogram1, directions1, sinogram2, plt_min, plt_max, main_direction, abscissa=False)
     build_sinogram_difference_display(
         axs[0, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max,
         abscissa=False, cmap='bwr')
     build_sinogram_display(
         axs[0, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, plt_min, plt_max, ordonate=False, abscissa=False)
+        plt_min, plt_max, main_direction, ordonate=False, abscissa=False)
 
     # Second Plot line = SINO_1 [1D along estimated direction] / Cross-Correlation Signal /
     # SINO_2 [1D along estimated direction resulting from Image1]
@@ -84,7 +85,7 @@ def display_sinograms_1D_analysis_spatial_correlation(
         theta_label = main_direction % (-np.sign(main_direction) * 180.0)
     else:
         theta_label = main_direction
-    title_sino1 = '[Master Image] Sinogram 1D along $\Theta$={:.1f}° '.format(theta_label)
+    title_sino1 = '[Master Image] Sinogram 1D along $\\Theta$={:.1f}° '.format(theta_label)
     title_sino2 = '[Slave Image] Sinogram 1D'.format(theta_label)
     correl_mode = local_estimator.global_estimator.local_estimator_params['CORRELATION_MODE']
 
@@ -102,9 +103,9 @@ def display_sinograms_1D_analysis_spatial_correlation(
     # Image [2D] Cross correl Sino2[main dir] with Sino1 all directions
     # Check if the main direction belongs to the plotting interval [plt_min:plt_ramax]
 
-    title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\Theta$={:.1f}°] and Sino2[All Directions]'.format(
+    title_cross_correl1 = 'Normalized Cross-Correlation Signal between \n Sino1[$\\Theta$={:.1f}°] and Sino2[All Directions]'.format(
         theta_label)
-    title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\Theta$={:.1f}°] and Sino1[All Directions]'.format(
+    title_cross_correl2 = 'Normalized Cross-Correlation Signal between \n Sino2[$\\Theta$={:.1f}°] and Sino1[All Directions]'.format(
         0)
     title_cross_correl_2D = '2D-Normalized Cross-Correlation Signal between \n Sino1 and Sino2 for Each Direction'
 
@@ -119,24 +120,29 @@ def display_sinograms_1D_analysis_spatial_correlation(
         sinogram1, plt_min, plt_max, correl_mode, choice='one_dir', imgtype='slave', ordonate=False)
 
     plt.tight_layout()
+    return fig
+
+def save_sinograms_1D_analysis_spatial_correlation(
+        local_estimator: 'SpatialCorrelationBathyEstimator') -> Figure:
+    fig = build_sinograms_1D_analysis_spatial_correlation(local_estimator)
+    main_direction = local_estimator.bathymetry_estimations.get_estimations_attribute('direction')[
+        0]
     point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
     theta_id = f'{int(main_direction)}'
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator.debug_path,
-            'display_sinograms_1D_analysis_debug_point_' +
-            point_id +
-            '_theta_' +
-            theta_id +
-            '.png'),
+            f'display_sinograms_1D_analysis_debug_point_{point_id}_theta_{theta_id}.png'),
         dpi=300)
     # plt.show()
-    dft_sino_spectral = plt.figure(3)
-    return dft_sino_spectral
+    return fig
 
-def display_sinograms_spatial_correlation(
-        local_estimator: 'SpatialCorrelationBathyEstimator') -> None:
+
+def build_sinograms_spatial_correlation(
+        local_estimator: 'SpatialCorrelationBathyEstimator',
+        main_direction: float = None,
+) -> Figure:
     # plt.close('all')
     nrows = 2
     ncols = 3
@@ -147,8 +153,14 @@ def display_sinograms_spatial_correlation(
 
     # Since wfe.energy_ratio not available for SpatialCorrelation:
     default_arrow_length = np.shape(first_image.original_pixels)[0]
-    arrows = [(wfe.direction, default_arrow_length)
-              for wfe in local_estimator.bathymetry_estimations]
+    arrows = (
+        [(main_direction, default_arrow_length)]
+        if main_direction is not None
+        else [
+            (wfe.direction, default_arrow_length)
+            for wfe in local_estimator.bathymetry_estimations
+        ]
+    )
 
     # First Plot line = Image1 Circle Filtered / pseudoRGB Circle Filtered/ Image2 Circle Filtered
     image1_circle_filtered = first_image.pixels * first_image.circle_image
@@ -188,37 +200,49 @@ def display_sinograms_spatial_correlation(
     radon_difference = (sinogram2 / np.max(np.abs(sinogram2))) - \
         (sinogram1 / np.max(np.abs(sinogram1)))
     # get main direction
-    main_direction = local_estimator.bathymetry_estimations.get_estimations_attribute('direction')[
-        0]
+
+    if main_direction is None:
+        main_direction = (
+            local_estimator
+            .bathymetry_estimations
+            .get_estimations_attribute('direction')[0]
+        )
 
     plt_min = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MIN']
     plt_max = local_estimator.global_estimator.local_estimator_params['DEBUG']['PLOT_MAX']
 
     build_sinogram_display(
         axs[1, 0], 'Sinogram1 [Radon Transform on Master Image]', sinogram1, directions1, sinogram2,
-        main_direction, plt_min, plt_max)
+        plt_min, plt_max, main_direction)
     build_sinogram_difference_display(
         axs[1, 1], 'Sinogram2 - Sinogram1', radon_difference, directions2, plt_min, plt_max, cmap='bwr')
     build_sinogram_display(
         axs[1, 2], 'Sinogram2 [Radon Transform on Slave Image]', sinogram2, directions2, sinogram1,
-        main_direction, plt_min, plt_max, ordonate=False)
+        plt_min, plt_max, main_direction, ordonate=False)
 
     plt.tight_layout()
-    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
+    return fig
 
-    theta_id = f'{int(main_direction)}'
+
+def save_sinograms_spatial_correlation(
+        local_estimator: 'SpatialCorrelationBathyEstimator') -> Figure:
+    fig = build_sinograms_spatial_correlation(local_estimator)
+    point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
+    theta_id = str(int(
+        local_estimator.bathymetry_estimations.get_estimations_attribute('direction')[0]
+    ))
 
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator.debug_path,
-            'display_sinograms_debug_point_' + point_id + '_theta_' + theta_id + '.png'),
+            f'display_sinograms_debug_point_{point_id}_theta_{theta_id}.png'),
         dpi=300)
     # plt.show()
-    dft_sino = plt.figure(2)
-    return dft_sino
+    return fig
 
-def display_waves_images_spatial_correl(
-        local_estimator: 'SpatialCorrelationBathyEstimation') -> None:
+
+def build_waves_images_spatial_correl(
+        local_estimator: 'SpatialCorrelationBathyEstimation') -> Figure:
     # plt.close('all')
     nrows = 3
     ncols = 3
@@ -273,16 +297,21 @@ def display_waves_images_spatial_correl(
                               resolution=second_image.resolution,
                               subplot_pos=[nrows, ncols, 9], cmap='gray', coordinates=False)
     plt.tight_layout()
+    return fig
+
+def save_waves_images_spatial_correl(
+        local_estimator: 'SpatialCorrelationBathyEstimator') -> Figure:
+    fig = build_waves_images_spatial_correl(local_estimator)
     point_id = f'{int(local_estimator.location.x)}_{int(local_estimator.location.y)}'
-
     main_dir = local_estimator.bathymetry_estimations.get_estimations_attribute('direction')[0]
-
     theta_id = f'{int(main_dir)}'
+
     plt.savefig(
         os.path.join(
             local_estimator.global_estimator.debug_path,
-            'display_waves_images_debug_point_' + point_id + '_theta_' + theta_id + '.png'),
+            f'display_waves_images_debug_point_{point_id}_theta_{theta_id}.png'),
         dpi=300)
-    # plt.show()
-    waves_image = plt.figure(1)
-    return waves_image
+
+    return fig
+
+
