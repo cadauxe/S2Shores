@@ -58,7 +58,7 @@ It takes the following arguments :
 
 ``[--distoshore_file]`` Georeferenced netCDF file or GeoTif file giving the distance of a point to the closest shore. This information is used to compute bathymetry only on the sea. If not specified, bathymetry is computed over the complete image footprint.
 
-``[--delta_times_dir]`` Directory containing the files describing S2A and S2B delta times between detectors. Mandatory for processing a Sentinel2 product. Example of delta_times files for S2A and S2B based and the ESA handbook (delta_t constant per band) are given [here](https://github.com/CNES/S2Shores/tree/main/src/s2shores/bathylauncher/config). 
+``[--delta_times_dir]`` Directory containing the files describing S2A, S2B and S2C delta times between detectors. Mandatory for processing a Sentinel2 product. Example of delta_times files for S2A, S2B and S2C based and the ESA handbook (delta_t constant per band) and CNES corrected delta-times are given [here](https://github.com/CNES/S2Shores/tree/main/src/s2shores/bathylauncher/config). 
 <!-- Change link when branch has been merged -->
 
 ``[--roi_file]`` Vector file specifying the polygon(s) where the bathymetry must be computed (geojson file format for instance). 
@@ -134,11 +134,15 @@ The other data will be given as informations in the bathymetry product.
 
 ``--input_product path_to/S2*_MSIL1C_*_*_*_T*_*.SAFE``
 
-Bathymetry is computed on Sentinel2 L1C products (PEPS format). 
+Bathymetry is computed on Sentinel2 L1C products (ESA format). 
 
 
 
 # References
+In the case of the use of recalculated CNES time-lag values using Sentinel 2 for dynamic problemsets, please kindly cite : 
+Binet, R., Bergsma, E., and Poulain, V.: ACCURATE SENTINEL-2 INTER-BAND TIME DELAYS, ISPRS Ann. Photogramm. Remote Sens. Spatial Inf. Sci., V-1-2022, 57–66, https://doi.org/10.5194/isprs-annals-V-1-2022-57-2022, 2022. 
+
+
 Almar, R., Bergsma, E. W., Maisongrande, P., & De Almeida, L. P. M. (2019). Wave-derived coastal bathymetry from satellite video imagery: A showcase with Pleiades persistent mode. Remote Sensing of Environment, 231, 111263. https://doi.org/10.1016/j.rse.2019.111263
 
 Almar, R.; Bergsma, E.W.J.; Brodie, K.L.; Bak, A.S.; Artigues, S.; Lemai-Chenevier, S.; Cesbron, G.; Delvit, J.-M. Coastal Topo-Bathymetry from a Single-Pass Satellite Video: Insights in Space-Videos for Coastal Monitoring at Duck Beach (NC, USA). Remote Sens. 2022, 14, 1529. https://doi.org/10.3390/rs14071529
