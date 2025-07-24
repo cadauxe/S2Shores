@@ -49,7 +49,7 @@ def test_nominal_spatialCorrelation_s2_quick(s2shores_paths: S2SHORESTestsPath) 
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config2/wave_bathy_inversion_config_quick.yaml',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
+        '--delta_times_dir', str(s2shores_paths.delta_times_dir_esa),
         '--nb_subtiles', '36'])
 
     print(result.output)
@@ -73,7 +73,7 @@ def test_nominal_dft_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config3/wave_bathy_inversion_config_quick.yaml',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR_cropped.TIF',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
+        '--delta_times_dir', str(s2shores_paths.delta_times_dir_esa),
         '--nb_subtiles', '36'])
 
     print(result.output)
@@ -206,7 +206,7 @@ def test_limitroi_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--input_product', str(s2shores_paths.s2new_cropped),
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config2/wave_bathy_inversion_config_quick.yaml',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
+        '--delta_times_dir', str(s2shores_paths.delta_times_dir_esa),
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR_cropped.TIF',
         '--product_type', 'S2',
         '--nb_subtiles', '36',
@@ -238,7 +238,7 @@ def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--product_type', 'S2',
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config8/wave_bathy_inversion_config_quick.yaml',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
+        '--delta_times_dir', str(s2shores_paths.delta_times_dir_esa),
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR_cropped.TIF',
         '--nb_subtiles', '36',
         '--debug_path', f'{s2shores_paths.output_dir}/debug_mode_point_s2',
@@ -298,7 +298,7 @@ def test_roi_profiling_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config2/wave_bathy_inversion_config_quick.yaml',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
+        '--delta_times_dir', str(s2shores_paths.delta_times_dir_esa),
         '--roi_file', f'{s2shores_paths.roi_dir}/30TXR-ROI-cropped.shp',
         '--nb_subtiles', '36',
         '--profiling'])

@@ -47,7 +47,8 @@ class S2SHORESTestsPath():
                                    "SWASH_8_2" / "testcase_8_2.tif")
         self.swash8_cropped = (self.project_dir / "tests" / "data" / "products" /
                                    "SWASH_8_2" / "testcase_8_2_cropped.tif")
-        self.delta_times_dir = self.project_dir / "src" / "s2shores" / "bathylauncher" / "config"
+        self.delta_times_dir_esa = self.project_dir / "src" / "s2shores" / "bathylauncher" / "config" / "ESA"
+        self.delta_times_dir_cnes = self.project_dir / "src" / "s2shores" / "bathylauncher" / "config" / "CNES"
         self.dis2shore_dir = self.project_dir / "tests" / "data" / "distoshore"
         self.debug_dir = self.project_dir / "tests" / "data" / "debug"
         self.roi_dir = self.project_dir / "tests" / "data" / "ROI"
