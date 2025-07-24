@@ -49,7 +49,7 @@ def test_nominal_spatialCorrelation_s2_quick(s2shores_paths: S2SHORESTestsPath) 
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config2/wave_bathy_inversion_config_quick.yaml',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/{dis2shore_file}',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
+        '--delta_times_dir', str(s2shores_paths.delta_times_dir_esa),
         '--nb_subtiles', '36'])
 
     print(result.output)
@@ -73,7 +73,7 @@ def test_nominal_dft_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         '--output_dir', str(s2shores_paths.output_dir),
         '--config_file', f'{s2shores_paths.config_dir}/config3/wave_bathy_inversion_config_quick.yaml',
         '--distoshore_file', f'{s2shores_paths.dis2shore_dir}/disToShore_30TXR_cropped.TIF',
-        '--delta_times_dir', str(s2shores_paths.delta_times_dir),
+        '--delta_times_dir', str(s2shores_paths.delta_times_dir_esa),
         '--nb_subtiles', '36'])
 
     print(result.output)
