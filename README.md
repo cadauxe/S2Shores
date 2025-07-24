@@ -1,5 +1,31 @@
 
-# S2Shores
+
+<h4>S2Shores, a coastal bathymetry estimation framework </h4>
+
+[![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0/)
+[![Documentation](https://readthedocs.org/projects/s2shores/badge/?version=latest)](https://s2shores.readthedocs.io/?badge=latest)
+
+<!--
+Add other buttons later.:
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
+[![Github Action](https://github.com/CNES/S2Shores/actions/workflows/cars-ci.yml/badge.svg?branch=main)](https://github.com/CNES/cars/actions)
+[![CI Status](github.com/CNES/S2Shores/.github/workflows/ci.yml/badge.svg)](https://github.com/CNES/S2Shores/actions)
+
+-->
+
+<!--
+<p>
+  <a href="#overview">Overview</a> •
+  <a href="#quick-start">Run environment</a> •
+  <a href="#documentation">Online documentation</a> •
+  <a href="#contribution">Contribution</a> •
+  <a href="#references">References</a>
+</p>
+</div>
+-->
+</div>
+
 
 Welcome to S2Shores, a Python package for estimating wave characteristics to derive bathymetries.
 S2Shores is a Python package designed to estimate wave characteristics for deriving bathymetries, initially tailored for optical spaceborne data but also compatible with other sensors like RADAR or LiDAR, given adequate spatiotemporal sampling. The package aims to detect bulk wave displacement over a time delay and estimate two of the five key variables (c, T, L, w, k) to solve for bathymetry using linear dispersion. It implements three methods: spatial DFT, spatial correlation, and temporal correlation. The spatial DFT method, designed for Sentinel 2 imagery, uses two images with a small time delay to find wave directions and characteristics through a Radon Transform and FFT. The spatial correlation method is similar but starts with a 2D image correlation. The temporal correlation method, robust to wave breaking conditions, uses random point sampling and pair-wise time-series correlation, applicable to various spatially distributed time-series data.
@@ -16,19 +42,19 @@ The work of S2Shores is an effort of a small group of people, we welcome you to 
 
 Ok, that’s it for the introduction. Enjoy and have fun!
 
-# Online documentation
+## Online documentation
 
 The online documentation can be found [here](https://s2shores.readthedocs.io/en/latest/).
 <!-- Change link if necessary when final documentation has been pushed -->
 
-# Run environment
+## Run environment
 
 S2Shores is python based, and as most python projects we prefer to work in an S2Shores specific python-environment. We presume, that if you read through the introduction, and you manage to come here that you are more than capable to install anaconda, miniconda or directly python on your PC or MAC. Once one of these are installed one can choose one of the two procedures to create an environment with S2Shores (pip or conda), for Windows, or Linux (and for an installation on MAC, follow Linux).
 
 For a detailed description we refer to the [installation documentation](https://s2shores.readthedocs.io/en/latest/install.html).
 <!-- Change link if necessary when final documentation has been pushed -->
 
-# How to run s2shores
+## How to run s2shores :ocean:
 
 After installation, S2Shores can simply be ran in the command-line by using the command : ``s2shores`` + input. There is obligatory commands (input_product, product_type, output_dir and config_file) and optional inputs denoted between squared brackets “[ ]” below.
 
@@ -150,7 +176,13 @@ The other data will be given as informations in the bathymetry product.
 ``--input_product path_to/S2*_MSIL1C_*_*_*_T*_*.SAFE``
 
 Bathymetry is computed on Sentinel2 L1C products (ESA format). 
+<!--
+## Contribution
 
+To do a bug report or a contribution, see the [**Contribution Guide**](https://github.com/CNES/cars/blob/master/CONTRIBUTING.md).
+
+For project evolution, see [**Changelog**](https://github.com/CNES/cars/blob/master/CHANGELOG.md).
+-->
 
 # References
 In the case of the use of recalculated CNES time-lag values using Sentinel 2 for dynamic problemsets, please cite : 
