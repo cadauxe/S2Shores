@@ -5,12 +5,12 @@
 [![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0/)
 [![Documentation](https://readthedocs.org/projects/s2shores/badge/?version=latest)](https://s2shores.readthedocs.io/?badge=latest)
-[![CI Status](github.com/CNES/S2Shores/.github/workflows/ci.yml/badge.svg)](https://github.com/CNES/S2Shores/actions)
 
 <!--
 Add other buttons later.:
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
 [![Github Action](https://github.com/CNES/S2Shores/actions/workflows/cars-ci.yml/badge.svg?branch=main)](https://github.com/CNES/cars/actions)
+[![CI Status](github.com/CNES/S2Shores/.github/workflows/ci.yml/badge.svg)](https://github.com/CNES/S2Shores/actions)
 
 -->
 
