@@ -27,8 +27,9 @@ Add other buttons later.:
 </div>
 
 
-Welcome to S2Shores, a Python package for estimating wave characteristics to derive bathymetries.
-S2Shores is a Python package designed to estimate wave characteristics for deriving bathymetries, initially tailored for optical spaceborne data but also compatible with other sensors like RADAR or LiDAR, given adequate spatiotemporal sampling. The package aims to detect bulk wave displacement over a time delay and estimate two of the five key variables (c, T, L, w, k) to solve for bathymetry using linear dispersion. It implements three methods: spatial DFT, spatial correlation, and temporal correlation. The spatial DFT method, designed for Sentinel 2 imagery, uses two images with a small time delay to find wave directions and characteristics through a Radon Transform and FFT. The spatial correlation method is similar but starts with a 2D image correlation. The temporal correlation method, robust to wave breaking conditions, uses random point sampling and pair-wise time-series correlation, applicable to various spatially distributed time-series data.
+Welcome to S2Shores, a Python package and framework to derive nearshore coastal bathymetries.
+
+S2Shores is a Python package designed to estimate wave characteristics for deriving bathymetries, initially tailored for optical spaceborne data but also compatible with other sensors like RADAR or LiDAR. The general S2Shores' philosophy is to detect bulk wave displacement over a time delay and estimate two of the five key variables (c, T, L, w, k) to solve for bathymetry using wave dispersion relationships (currently only the linear dispersion for free surface waves is implemented). The S2Shores framework contains three methods: spatial DFT, spatial correlation, and temporal correlation. The spatial DFT method, designed for Sentinel 2 imagery, uses two images with a small time delay to find wave directions and characteristics through a Radon Transform and FFT. The spatial correlation method is similar but starts with a 2D image correlation. The temporal correlation method, robust to wave breaking conditions, uses random point sampling and pair-wise time-series correlation, applicable to various spatially distributed time-series data.
 
 - **Spatial DFT**: Uses two images/frames with a small time delay to find multiple wave directions and characteristics through a Radon Transform, FFT, and cross-spectral correlation.
 - **Spatial Correlation**: Similar to spatial DFT but starts with a 2D image correlation and applies a Radon Transform.
@@ -48,7 +49,6 @@ The online documentation can be found [here](https://s2shores.readthedocs.io/en/
 <!-- Change link if necessary when final documentation has been pushed -->
 
 ## Run environment
-
 S2Shores is python based, and as most python projects we prefer to work in an S2Shores specific python-environment. We presume, that if you read through the introduction, and you manage to come here that you are more than capable to install anaconda, miniconda or directly python on your PC or MAC. Once one of these are installed one can choose one of the two procedures to create an environment with S2Shores (pip or conda), for Windows, or Linux (and for an installation on MAC, follow Linux).
 
 For a detailed description we refer to the [installation documentation](https://s2shores.readthedocs.io/en/latest/install.html).
@@ -79,7 +79,7 @@ In more detail, the command ``s2shores`` takes the following arguments :
 ``[--delta_times_dir]`` Directory containing the files describing S2A, S2B and S2C delta times between detectors. Mandatory for processing a Sentinel2 product. Example of delta_times files for S2A, S2B and S2C based and the ESA handbook (delta_t constant per band) and CNES corrected delta-times are given [here](https://github.com/CNES/S2Shores/tree/main/src/s2shores/bathylauncher/config). 
 <!-- Change link when branch has been merged -->
 
-``[--roi_file]`` Vector file specifying the polygon(s) where the bathymetry must be computed (geojson file format for instance). 
+``[--roi_file]`` Vector file specifying the polygon(s) where the bathymetry must be computed (geojson file format for instance). **currently only WGS84 (lat,lon) -- EPSG:4326 is supported**.
 
 ``[--limit_to_roi]`` If set and roi_file is specified, limit the bathymetry output to that roi.
 
@@ -92,12 +92,6 @@ In more detail, the command ``s2shores`` takes the following arguments :
 
 Detailed information on the configuration can be found here :
 - *wave_bathy_inversion_config.yaml* (an example can be found in the s2shores [config directory](https://github.com/CNES/S2Shores/blob/main/tests/data/config/config2/wave_bathy_inversion_config.yaml)) : parameters for the bathymetry inversion method.
-
-
-
-One configuration file is needed :
-- *wave_bathy_inversion_config.yaml* (an example can be found in the s2shores [config directory](https://github.com/CNES/S2Shores/blob/main/tests/data/config/config2/wave_bathy_inversion_config.yaml)) : parameters for the bathymetry inversion method.
-
 
 # Main parameters
 
@@ -116,7 +110,7 @@ method: Gravity, Distoshore, Period, Wavenumber, Delta Celerity, Phase Shift, De
 
 # Launch() API
 
-It is also possible to launch a bathymetry estimation by using the launch() function. 
+It is also possible to launch a bathymetry estimation by using the launch() function which takes similar  
 
 #### Arguments :
 
@@ -186,14 +180,18 @@ For project evolution, see [**Changelog**](https://github.com/CNES/cars/blob/mas
 
 # References
 In the case of the use of recalculated CNES time-lag values using Sentinel 2 for dynamic problemsets, please cite : 
-Binet, R., Bergsma, E., and Poulain, V. (2022) ACCURATE SENTINEL-2 INTER-BAND TIME DELAYS, ISPRS Ann. Photogramm. Remote Sens. Spatial Inf. Sci., V-1-2022, 57–66, https://doi.org/10.5194/isprs-annals-V-1-2022-57-2022 
+Binet, R., Bergsma, E., & Poulain, V. (2022). Accurate Sentinel-2 inter-band time delays. *ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences*, V-1-2022, 57–66. https://doi.org/10.5194/isprs-annals-V-1-2022-57-2022
 
-Almar, R., Bergsma, E. W., Maisongrande, P., & De Almeida, L. P. M. (2019). Wave-derived coastal bathymetry from satellite video imagery: A showcase with Pleiades persistent mode. Remote Sensing of Environment, 231, 111263. https://doi.org/10.1016/j.rse.2019.111263
+Almar, R., Bergsma, E. W. J., Maisongrande, P., & De Almeida, L. P. M. (2019). Wave-derived coastal bathymetry from satellite video imagery: A showcase with Pleiades persistent mode. *Remote Sensing of Environment*, 231, 111263. https://doi.org/10.1016/j.rse.2019.111263
 
-Almar, R.; Bergsma, E.W.J.; Brodie, K.L.; Bak, A.S.; Artigues, S.; Lemai-Chenevier, S.; Cesbron, G.; Delvit, J.-M. (2022 )Coastal Topo-Bathymetry from a Single-Pass Satellite Video: Insights in Space-Videos for Coastal Monitoring at Duck Beach (NC, USA). Remote Sens. 14, 1529. https://doi.org/10.3390/rs14071529
+Almar, R., Bergsma, E. W. J., Brodie, K. L., Bak, A. S., Artigues, S., Lemai-Chenevier, S., Cesbron, G., & Delvit, J.-M. (2022). Coastal topo-bathymetry from a single-pass satellite video: Insights in space-videos for coastal monitoring at Duck Beach (NC, USA). *Remote Sensing*, 14(7), 1529. https://doi.org/10.3390/rs14071529
 
-Almar, R.,  Bergsma, E.W.J., Thoumyre, G., Lemai-Chenevier, S., Loyer, S. Artigues, S., Salles, G., Garlan, T., Lifermann, A. (2024) Satellite-derived bathymetry from correlation of Sentinel-2 spectral bands to derive wave kinematics: Qualification of Sentinel-2 S2Shores estimates with hydrographic standards, Coastal Engineering, Volume 189,2024,104458,ISSN 0378-3839, https://doi.org/10.1016/j.coastaleng.2024.104458.
+Almar, R., Bergsma, E. W. J., Thoumyre, G., Lemai-Chenevier, S., Loyer, S., Artigues, S., Salles, G., Garlan, T., & Lifermann, A. (2024). Satellite-derived bathymetry from correlation of Sentinel-2 spectral bands to derive wave kinematics: Qualification of Sentinel-2 S2Shores estimates with hydrographic standards. *Coastal Engineering*, 189, 104458. https://doi.org/10.1016/j.coastaleng.2024.104458
 
-Bergsma, E.W.J.; Almar, R.; Maisongrande, P. (2019). Radon-Augmented Sentinel-2 Satellite Imagery to Derive Wave-Patterns and Regional Bathymetry. Remote Sens. , 11, 1918. https://doi.org/10.3390/rs11161918
+Bergsma, E. W. J., Almar, R., & Maisongrande, P. (2019). Radon-augmented Sentinel-2 satellite imagery to derive wave-patterns and regional bathymetry. *Remote Sensing*, 11(16), 1918. https://doi.org/10.3390/rs11161918
 
-Bergsma, E.W.J., Almar, R., Rolland, A., Binet, R., Brodie, K. L., & Bak, A. S. (2021). Coastal morphology from space: A showcase of monitoring the topography-bathymetry continuum. Remote Sensing of Environment, 261, 112469. https://doi.org/10.1016/j.rse.2019.111263 
+Bergsma, E. W. J., Almar, R., Rolland, A., Binet, R., Brodie, K. L., & Bak, A. S. (2021). Coastal morphology from space: A showcase of monitoring the topography-bathymetry continuum. *Remote Sensing of Environment*, 261, 112469. https://doi.org/10.1016/j.rse.2021.112469
+
+Klotz, A. N., Almar, R., Quenet, Y., Bergsma, E. W. J., Youssefi, D., Artigues, S., Rascle, N., Sy, B. A., & Ndour, A. (2024). Nearshore satellite-derived bathymetry from a single-pass satellite video: Improvements from adaptive correlation window size and modulation transfer function. *Remote Sensing of Environment*, 315, 114411. https://doi.org/10.1016/j.rse.2024.114411
+
+Klotz, A. N., Gurruchaga, P., Almar, R., Lange, A. M. Z., & Bergsma, E. W. J. (2025). Deriving nearshore bathymetry and waves characteristics from a single UAV video. *Coastal Engineering*, 104820. https://doi.org/10.1016/j.coastaleng.2025.104820

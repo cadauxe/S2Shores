@@ -4,13 +4,12 @@
 Tutorial
 ========
 
-..
     A tutorial for S2Shores CLI and Python APi is available here :
     .. toctree::
        :maxdepth: 1
 
-       tutorials/tuto_s2shores
+       tutorials/spatial_dft/spatial_dft
 
-The tutorial will be soon available.
+
 
 
