@@ -34,7 +34,7 @@ Content
    :caption: Tutorials
    :maxdepth: 2
 
-   Tutorial <tutorial>
+   Tutorial <tutorials/index>
    Contribute to S2Shores <contributing>
 
 
