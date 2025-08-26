@@ -46,7 +46,7 @@ def test_nominal_spatialCorrelation_s2_quick(s2shores_paths: S2SHORESTestsPath) 
         output_dir=s2shores_paths.output_dir,
         config_file=(s2shores_paths.config_dir/"config2"/"wave_bathy_inversion_config_quick.yaml"),
         distoshore_file=(s2shores_paths.dis2shore_dir / dis2shore_file),
-        delta_times_dir=s2shores_paths.delta_times_dir,
+        delta_times_dir=s2shores_paths.delta_times_dir_esa,
         nb_subtiles=36,
     )
 
@@ -70,7 +70,7 @@ def test_nominal_dft_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         debug_file=None,
         debug_path=None,
         distoshore_file=(s2shores_paths.dis2shore_dir/"disToShore_30TXR_cropped.TIF"),
-        delta_times_dir=s2shores_paths.delta_times_dir,
+        delta_times_dir=s2shores_paths.delta_times_dir_esa,
         nb_subtiles=36,
     )
 
@@ -199,7 +199,7 @@ def test_limitroi_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         output_dir=s2shores_paths.output_dir,
         config_file=(s2shores_paths.config_dir/"config2"/"wave_bathy_inversion_config_quick.yaml"),
         distoshore_file=(s2shores_paths.dis2shore_dir/"disToShore_30TXR_cropped.TIF"),
-        delta_times_dir=s2shores_paths.delta_times_dir,
+        delta_times_dir=s2shores_paths.delta_times_dir_esa,
         roi_file=(s2shores_paths.roi_dir/"30TXR-ROI-cropped.shp"),
         limit_to_roi=True,
         nb_subtiles=36,
@@ -230,7 +230,7 @@ def test_debug_mode_point_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         debug_file=(s2shores_paths.debug_dir/"debug_points_30TXR_notongrid_cropped.yaml"),
         debug_path=(s2shores_paths.output_dir/"debug_mode_point_s2"),
         distoshore_file=(s2shores_paths.dis2shore_dir/"disToShore_30TXR_cropped.TIF"),
-        delta_times_dir=s2shores_paths.delta_times_dir,
+        delta_times_dir=s2shores_paths.delta_times_dir_esa,
         nb_subtiles=36,
     )
 
@@ -284,7 +284,7 @@ def test_roi_profiling_s2_quick(s2shores_paths: S2SHORESTestsPath) -> None:
         output_dir=s2shores_paths.output_dir,
         config_file=(s2shores_paths.config_dir/"config2"/"wave_bathy_inversion_config_quick.yaml"),
         distoshore_file=(s2shores_paths.dis2shore_dir/dis2shore_file),
-        delta_times_dir=s2shores_paths.delta_times_dir,
+        delta_times_dir=s2shores_paths.delta_times_dir_esa,
         roi_file=(s2shores_paths.roi_dir/"30TXR-ROI-cropped.shp"),
         nb_subtiles=36,
         profiling=True

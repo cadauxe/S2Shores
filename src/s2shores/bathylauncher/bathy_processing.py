@@ -92,7 +92,7 @@ def bathy_process(input_product: Path, product_type: str, output_dir: Path,
         sequential = True
         cProfile.runctx(launch_instruction, globals(), locals())
     else:
-        eval(launch_instruction, globals(), locals())  # pylint: disable=eval-used
+        BathyLauncher.launch(products, gravity_type="LATITUDE_VARYING", sequential_run=sequential)  # pylint: disable=eval-used
 
     stop = time.time()
     print('Bathy estimation total time : ', stop - start)
